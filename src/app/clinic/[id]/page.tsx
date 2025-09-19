@@ -23,7 +23,7 @@ export default async function ClinicDetail({ params }: ClinicDetailProps) {
     return (
         <main className="p-6">
             <div className="max-w-xl mx-auto bg-white shadow-lg rounded-xl p-6">
-                <h1 className="text-2xl font-bold text-blue-600 mb-4">
+                <h1 className="text-2xl font-bold text-green-600 mb-4">
                     {clinic.clinic_name}
                 </h1>
 
