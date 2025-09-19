@@ -13,7 +13,7 @@ datasource db {
 model Clinic {
   clinic_id        String @id @default(cuid())
   clinic_name      String
-  slug             String
+  slug             String @unique
   clinic_location  String
   clinic_contactno String
 }
