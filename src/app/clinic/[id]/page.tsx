@@ -4,13 +4,15 @@ import prisma from "@/lib/db";
 import { notFound } from "next/navigation";
 
 interface ClinicDetailProps {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 export default async function ClinicDetail({ params }: ClinicDetailProps) {
+    const { id } = await params;
+
     const clinic = await prisma.clinic.findUnique({
         where: {
-            clinic_id: params.id,
+            clinic_id: id,
         },
     });
 
