@@ -1,18 +1,17 @@
-// app/clinic-locations/[id]/page.tsx
 
 import prisma from "@/lib/db";
 import { notFound } from "next/navigation";
 
 interface ClinicDetailProps {
-    params: Promise<{ id: string }>;
+    params: Promise<{ slug: string }>;
 }
 
 export default async function ClinicDetail({ params }: ClinicDetailProps) {
-    const { id } = await params;
+    const { slug } = await params;
 
     const clinic = await prisma.clinic.findUnique({
         where: {
-            clinic_id: id,
+            slug,
         },
     });
 
