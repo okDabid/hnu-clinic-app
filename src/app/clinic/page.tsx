@@ -17,7 +17,7 @@ export default async function ClinicLocations() {
                         className="p-4 border rounded-lg shadow-sm bg-white hover:bg-gray-50"
                     >
                         <Link href={`/clinic/${clinic.clinic_id}`}>
-                            <h2 className="text-lg font-semibold text-blue-600 hover:underline">
+                            <h2 className="text-lg font-semibold text-green-600 hover:underline">
                                 {clinic.clinic_name}
                             </h2>
                             <p className="text-gray-600">{clinic.clinic_location}</p>
