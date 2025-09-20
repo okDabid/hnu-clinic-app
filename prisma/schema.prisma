@@ -16,4 +16,6 @@ model Clinic {
   slug             String @unique
   clinic_location  String
   clinic_contactno String
+
+  @@index(slug)
 }
