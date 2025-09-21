@@ -1,10 +1,8 @@
-// app/clinic-locations/page.tsx
-
+// app/clinic/page.tsx
 import prisma from "@/lib/db";
 import Link from "next/link";
 
 export default async function ClinicLocations() {
-    // Fetch all clinics
     const clinics = await prisma.clinic.findMany();
 
     return (
@@ -21,6 +19,9 @@ export default async function ClinicLocations() {
                                 {clinic.clinic_name}
                             </h2>
                             <p className="text-gray-600">{clinic.clinic_location}</p>
+                            <p className="text-gray-800 font-semibold">
+                                {clinic.clinic_contactno}
+                            </p>
                         </Link>
                     </li>
                 ))}
