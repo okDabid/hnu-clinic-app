@@ -1,5 +1,5 @@
 
-import NurseForm from "./components/NurseForm";
+import AdminForm from "./admin/dashboard/AdminForm";
 
 export default function HomePage() {
   return (
@@ -9,7 +9,7 @@ export default function HomePage() {
       </h1>
 
       <div className="max-w-2xl mx-auto">
-        <NurseForm />
+        <AdminForm />
       </div>
     </main>
   );
