@@ -1,15 +1,14 @@
-// app/clinic-locations/new/page.tsx
 import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 
-// ✅ Server Action to handle form submission
+//Server Action to handle form submission
 async function addClinic(formData: FormData) {
     "use server";
 
     const clinic_name = formData.get("clinic_name") as string;
     const clinic_location = formData.get("clinic_location") as string;
     const clinic_contactno = formData.get("clinic_contactno") as string;
-    const slug = clinic_name.toLowerCase().replace(/\s+/g, "-"); // simple slug generator
+    const slug = clinic_name.toLowerCase().replace(/\s+/g, "-"); //simple slug generator
 
     await prisma.clinic.create({
         data: {
@@ -20,7 +19,7 @@ async function addClinic(formData: FormData) {
         },
     });
 
-    redirect("/clinic"); // ✅ go back to list after submit
+    redirect("/clinic"); // go back to list after submit
 }
 
 export default function NewClinicPage() {
