@@ -80,7 +80,7 @@ model Student {
 }
 
 model Employee {
-  emp_stud_id          String        @id @default(cuid())
+  emp_id               String        @id @default(cuid())
   user_id              String        @unique
   employee_id          String        @unique
   fname                String
