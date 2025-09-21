@@ -1,26 +1,45 @@
-// app/clinic-locations/new/page.tsx
 import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
 
-// ✅ Server Action to handle form submission
+// Server Action to handle form submission
 async function addClinic(formData: FormData) {
     "use server";
 
     const clinic_name = formData.get("clinic_name") as string;
     const clinic_location = formData.get("clinic_location") as string;
     const clinic_contactno = formData.get("clinic_contactno") as string;
-    const slug = clinic_name.toLowerCase().replace(/\s+/g, "-"); // simple slug generator
 
-    await prisma.clinic.create({
-        data: {
-            clinic_name,
-            clinic_location,
-            clinic_contactno,
-            slug,
-        },
-    });
+    // Validate contact number
+    if (!/^\d{11}$/.test(clinic_contactno)) {
+        throw new Error("Contact number must be 11 digits.");
+    }
 
-    redirect("/clinic"); // ✅ go back to list after submit
+    // Generate a slug (lowercase, replace spaces)
+    let slug = clinic_name.toLowerCase().replace(/\s+/g, "-");
+
+    // Ensure uniqueness by appending a counter if necessary
+    let uniqueSlug = slug;
+    let counter = 1;
+    while (await prisma.clinic.findUnique({ where: { slug: uniqueSlug } })) {
+        uniqueSlug = `${slug}-${counter}`;
+        counter++;
+    }
+
+    try {
+        await prisma.clinic.create({
+            data: {
+                clinic_name,
+                clinic_location,
+                clinic_contactno,
+                slug: uniqueSlug,
+            },
+        });
+    } catch (error: any) {
+        console.error("Error creating clinic:", error);
+        throw new Error("Failed to create clinic. Please try again.");
+    }
+
+    redirect("/clinic"); // Go back to list after submit
 }
 
 export default function NewClinicPage() {
@@ -64,6 +83,9 @@ export default function NewClinicPage() {
                             type="text"
                             name="clinic_contactno"
                             required
+                            maxLength={11}
+                            pattern="\d{11}"
+                            title="Contact number must be 11 digits"
                             className="mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
                         />
                     </div>
