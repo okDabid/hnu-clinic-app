@@ -65,6 +65,7 @@ model Student {
   gender               Gender
   department           String?
   program              String?
+  specialization       String?
   year_level           String?
   contactno            String?
   address              String?
