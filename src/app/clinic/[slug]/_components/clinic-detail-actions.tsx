@@ -129,7 +129,7 @@ export function ClinicDetailActions({
                         </DialogContent>
                     </Dialog>
 
-                    {/* --- Delete Clinic (red) --- */}
+                    {/* --- Delete Clinic --- */}
                     <DropdownMenuItem
                         className="text-red-600 font-semibold"
                         onSelect={(e) => {
