@@ -15,7 +15,7 @@ async function addClinic(formData: FormData) {
     }
 
     // Generate a slug (lowercase, replace spaces)
-    let slug = clinic_name.toLowerCase().replace(/\s+/g, "-");
+    const slug = clinic_name.toLowerCase().replace(/\s+/g, "-");
 
     // Ensure uniqueness by appending a counter if necessary
     let uniqueSlug = slug;
@@ -34,8 +34,11 @@ async function addClinic(formData: FormData) {
                 slug: uniqueSlug,
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error creating clinic:", error);
+        if (error instanceof Error) {
+            throw new Error(error.message || "Failed to create clinic. Please try again.");
+        }
         throw new Error("Failed to create clinic. Please try again.");
     }
 
@@ -46,15 +49,11 @@ export default function NewClinicPage() {
     return (
         <main className="p-6">
             <div className="max-w-md mx-auto bg-white shadow-lg rounded-xl p-6">
-                <h1 className="text-2xl font-bold text-green-600 mb-4">
-                    Add New Clinic
-                </h1>
+                <h1 className="text-2xl font-bold text-green-600 mb-4">Add New Clinic</h1>
 
                 <form action={addClinic} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Clinic Name
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700">Clinic Name</label>
                         <input
                             type="text"
                             name="clinic_name"
@@ -64,9 +63,7 @@ export default function NewClinicPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Location
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700">Location</label>
                         <input
                             type="text"
                             name="clinic_location"
@@ -76,9 +73,7 @@ export default function NewClinicPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Contact Number
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700">Contact Number</label>
                         <input
                             type="text"
                             name="clinic_contactno"
