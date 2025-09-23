@@ -31,22 +31,14 @@ export async function deleteClinic(clinicId: string) {
         return { error: "Missing clinic ID." };
     }
 
-    try {
-        await prisma.clinic.delete({
-            where: { clinic_id: clinicId },
-        });
+    await prisma.clinic.delete({
+        where: { clinic_id: clinicId },
+    });
 
-        // ✅ Bust cache so the clinic list updates
-        revalidatePath("/clinic");
+    // ✅ Bust cache so the clinic list updates
+    revalidatePath("/clinic");
 
-        return { success: true };
-    } catch (error: unknown) {
-        console.error("Error deleting clinic:", error);
-
-        if (error instanceof Error) {
-            return { error: error.message };
-        }
-
-        return { error: "Failed to delete clinic" };
-    }
+    // ✅ Redirect user back to the clinic list page
+    redirect("/clinic"); // will throw the NEXT_REDIRECT internally
 }
+
