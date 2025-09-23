@@ -13,6 +13,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { createUser } from "../../actions";
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardContent,
+} from "@/components/ui/card";
 
 export default function AdminForm() {
     // form state for Selects (shadcn Select doesn't submit by itself)
@@ -59,9 +65,7 @@ export default function AdminForm() {
             "Bachelor of Science in Computer Science",
             "Bachelor of Science in Information Technology",
         ],
-        "College of Law": [
-            "Juris Doctor (Non-Thesis Programme)",
-        ],
+        "College of Law": ["Juris Doctor (Non-Thesis Programme)"],
     };
 
     const bsEdSpecializations = [
@@ -82,293 +86,285 @@ export default function AdminForm() {
     const isIBED = department === "Integrated Basic Education Department";
 
     return (
-        <div className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Create New User</h2>
+        <Card className="w-full max-w-3xl shadow-xl">
+            <CardHeader className="border-b pb-4">
+                <CardTitle className="text-2xl font-bold text-green-600">
+                    Create New User
+                </CardTitle>
+            </CardHeader>
 
-            <form
-                action={async (formData: FormData) => {
-                    const res = await createUser(formData);
-                    if (res?.error) {
-                        toast.error(res.error);
-                    } else {
-                        toast.success(
-                            `✅ User created!\nUsername: ${res.username}\nPassword: ${res.password}`
-                        );
-                    }
-                }}
-                className="space-y-4"
-            >
-                {/* Role */}
-                <div className="flex flex-col">
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                        value={role}
-                        onValueChange={(val) => {
-                            setRole(val);
-                            // reset student-specific fields when role changes
-                            setDepartment("");
-                            setProgram("");
-                            setSpecialization("");
-                            setYearLevel("");
-                        }}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Student">Student</SelectItem>
-                            <SelectItem value="Faculty">Faculty</SelectItem>
-                            <SelectItem value="Nurse">Nurse</SelectItem>
-                            <SelectItem value="Doctor">Doctor</SelectItem>
-                            <SelectItem value="Working Scholar">Working Scholar</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {/* Hidden input so role is posted */}
-                    <input type="hidden" name="role" value={role} />
-                </div>
+            <CardContent className="pt-6">
+                <form
+                    action={async (formData: FormData) => {
+                        const res = await createUser(formData);
+                        if (res?.error) {
+                            toast.error(res.error);
+                        } else {
+                            toast.success(
+                                `✅ User created!\nUsername: ${res.username}\nPassword: ${res.password}`
+                            );
+                        }
+                    }}
+                    className="space-y-6"
+                >
+                    {/* Role */}
+                    <div className="space-y-2">
+                        <Label htmlFor="role">Role</Label>
+                        <Select
+                            value={role}
+                            onValueChange={(val) => {
+                                setRole(val);
+                                // reset student-specific fields when role changes
+                                setDepartment("");
+                                setProgram("");
+                                setSpecialization("");
+                                setYearLevel("");
+                            }}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Student">Student</SelectItem>
+                                <SelectItem value="Faculty">Faculty</SelectItem>
+                                <SelectItem value="Nurse">Nurse</SelectItem>
+                                <SelectItem value="Doctor">Doctor</SelectItem>
+                                <SelectItem value="Working Scholar">Working Scholar</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <input type="hidden" name="role" value={role} />
+                    </div>
 
-                {/* Student-only fields */}
-                {isStudent && (
-                    <>
-                        <div className="flex flex-col">
-                            <Label htmlFor="student_id">Student ID</Label>
-                            <Input name="student_id" />
-                        </div>
+                    {/* Student-only fields */}
+                    {isStudent && (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="student_id">Student ID</Label>
+                                <Input name="student_id" />
+                            </div>
 
-                        <div className="flex flex-col">
-                            <Label htmlFor="department">Department</Label>
-                            <Select
-                                value={department}
-                                onValueChange={(val) => {
-                                    setDepartment(val);
-                                    // reset dependent fields
-                                    setProgram("");
-                                    setSpecialization("");
-                                    setYearLevel("");
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select department" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="College of Education">
-                                        College of Education
-                                    </SelectItem>
-                                    <SelectItem value="College of Arts and Sciences">
-                                        College of Arts and Sciences
-                                    </SelectItem>
-                                    <SelectItem value="College of Business and Accountancy">
-                                        College of Business and Accountancy
-                                    </SelectItem>
-                                    <SelectItem value="College of Engineering and Computer Studies">
-                                        College of Engineering and Computer Studies
-                                    </SelectItem>
-                                    <SelectItem value="College of Health Sciences">
-                                        College of Health Sciences
-                                    </SelectItem>
-                                    <SelectItem value="College of Law">College of Law</SelectItem>
-                                    <SelectItem value="Integrated Basic Education Department">
-                                        Integrated Basic Education Department
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {/* Hidden input so department is posted */}
-                            <input type="hidden" name="department" value={department} />
-                        </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="department">Department</Label>
+                                <Select
+                                    value={department}
+                                    onValueChange={(val) => {
+                                        setDepartment(val);
+                                        setProgram("");
+                                        setSpecialization("");
+                                        setYearLevel("");
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select department" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.keys(programsByDepartment).map((dep) => (
+                                            <SelectItem key={dep} value={dep}>
+                                                {dep}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="Integrated Basic Education Department">
+                                            Integrated Basic Education Department
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <input type="hidden" name="department" value={department} />
+                            </div>
 
-                        {/* Program (hidden for IBED) */}
-                        {!isIBED && department && (
-                            <div className="flex flex-col">
-                                <Label htmlFor="program">Program</Label>
-                                {programsByDepartment[department] ? (
-                                    <>
+                            {/* Program (hidden for IBED) */}
+                            {!isIBED && department && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="program">Program</Label>
+                                    {programsByDepartment[department] ? (
+                                        <>
+                                            <Select
+                                                value={program}
+                                                onValueChange={(val) => {
+                                                    setProgram(val);
+                                                    setSpecialization("");
+                                                }}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select program" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {programsByDepartment[department].map((p) => (
+                                                        <SelectItem key={p} value={p}>
+                                                            {p}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <input type="hidden" name="program" value={program} />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Input
+                                                name="program_fallback_visible"
+                                                placeholder="Enter program"
+                                                value={program}
+                                                onChange={(e) => setProgram(e.target.value)}
+                                            />
+                                            <input type="hidden" name="program" value={program} />
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* BSEd specialization */}
+                            {program === "Bachelor of Secondary Education (BSEd)" && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="specialization">Specialization</Label>
+                                    <Select
+                                        value={specialization}
+                                        onValueChange={setSpecialization}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select specialization" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {bsEdSpecializations.map((s) => (
+                                                <SelectItem key={s} value={s}>
+                                                    {s}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <input
+                                        type="hidden"
+                                        name="specialization"
+                                        value={specialization}
+                                    />
+                                </div>
+                            )}
+
+                            {/* BSBA specialization */}
+                            {program ===
+                                "Bachelor of Science in Business Administration (BSBA)" && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="specialization">Specialization</Label>
                                         <Select
-                                            value={program}
-                                            onValueChange={(val) => {
-                                                setProgram(val);
-                                                setSpecialization("");
-                                            }}
+                                            value={specialization}
+                                            onValueChange={setSpecialization}
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select program" />
+                                                <SelectValue placeholder="Select specialization" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {programsByDepartment[department].map((p) => (
-                                                    <SelectItem key={p} value={p}>
-                                                        {p}
+                                                {bsbaSpecializations.map((s) => (
+                                                    <SelectItem key={s} value={s}>
+                                                        {s}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {/* Hidden input so program is posted */}
-                                        <input type="hidden" name="program" value={program} />
-                                    </>
-                                ) : (
-                                    <>
-                                        <Input
-                                            name="program_fallback_visible"
-                                            placeholder="Enter program"
-                                            value={program}
-                                            onChange={(e) => setProgram(e.target.value)}
+                                        <input
+                                            type="hidden"
+                                            name="specialization"
+                                            value={specialization}
                                         />
-                                        <input type="hidden" name="program" value={program} />
-                                    </>
+                                    </div>
                                 )}
-                            </div>
-                        )}
 
-                        {/* BSEd specialization */}
-                        {program === "Bachelor of Secondary Education (BSEd)" && (
-                            <div className="flex flex-col">
-                                <Label htmlFor="specialization">Specialization</Label>
-                                <Select
-                                    value={specialization}
-                                    onValueChange={setSpecialization}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select specialization" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {bsEdSpecializations.map((s) => (
-                                            <SelectItem key={s} value={s}>
-                                                {s}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {/* Hidden input so specialization is posted */}
-                                <input
-                                    type="hidden"
-                                    name="specialization"
-                                    value={specialization}
-                                />
-                            </div>
-                        )}
+                            {/* Year Level */}
+                            {department && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="year_level">Year Level</Label>
+                                    <Select value={yearLevel} onValueChange={setYearLevel}>
+                                        <SelectTrigger>
+                                            <SelectValue
+                                                placeholder={
+                                                    isIBED ? "Select grade" : "Select year level"
+                                                }
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {isIBED ? (
+                                                <>
+                                                    <SelectItem value="G1">Grade 1</SelectItem>
+                                                    <SelectItem value="G2">Grade 2</SelectItem>
+                                                    <SelectItem value="G3">Grade 3</SelectItem>
+                                                    <SelectItem value="G4">Grade 4</SelectItem>
+                                                    <SelectItem value="G5">Grade 5</SelectItem>
+                                                    <SelectItem value="G6">Grade 6</SelectItem>
+                                                    <SelectItem value="G7">Grade 7 (JHS)</SelectItem>
+                                                    <SelectItem value="G8">Grade 8 (JHS)</SelectItem>
+                                                    <SelectItem value="G9">Grade 9 (JHS)</SelectItem>
+                                                    <SelectItem value="G10">Grade 10 (JHS)</SelectItem>
+                                                    <SelectItem value="G11">Grade 11 (SHS)</SelectItem>
+                                                    <SelectItem value="G12">Grade 12 (SHS)</SelectItem>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <SelectItem value="1st Year">1st Year</SelectItem>
+                                                    <SelectItem value="2nd Year">2nd Year</SelectItem>
+                                                    <SelectItem value="3rd Year">3rd Year</SelectItem>
+                                                    <SelectItem value="4th Year">4th Year</SelectItem>
+                                                    <SelectItem value="5th Year">5th Year</SelectItem>
+                                                </>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <input type="hidden" name="year_level" value={yearLevel} />
+                                </div>
+                            )}
+                        </>
+                    )}
 
-                        {/* BSBA specialization */}
-                        {program === "Bachelor of Science in Business Administration (BSBA)" && (
-                            <div className="flex flex-col">
-                                <Label htmlFor="specialization">Specialization</Label>
-                                <Select
-                                    value={specialization}
-                                    onValueChange={setSpecialization}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select specialization" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {bsbaSpecializations.map((s) => (
-                                            <SelectItem key={s} value={s}>
-                                                {s}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {/* Hidden input so specialization is posted */}
-                                <input
-                                    type="hidden"
-                                    name="specialization"
-                                    value={specialization}
-                                />
-                            </div>
-                        )}
+                    {/* Employee ID for Faculty/Nurse/Doctor */}
+                    {(role === "Faculty" || role === "Nurse" || role === "Doctor") && (
+                        <div className="space-y-2">
+                            <Label htmlFor="employee_id">Employee ID</Label>
+                            <Input name="employee_id" />
+                        </div>
+                    )}
 
-                        {/* Year Level (Grades for IBED, College years otherwise) */}
-                        {department && (
-                            <div className="flex flex-col">
-                                <Label htmlFor="year_level">Year Level</Label>
-                                <Select value={yearLevel} onValueChange={setYearLevel}>
-                                    <SelectTrigger>
-                                        <SelectValue
-                                            placeholder={isIBED ? "Select grade" : "Select year level"}
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {isIBED ? (
-                                            <>
-                                                <SelectItem value="G1">Grade 1</SelectItem>
-                                                <SelectItem value="G2">Grade 2</SelectItem>
-                                                <SelectItem value="G3">Grade 3</SelectItem>
-                                                <SelectItem value="G4">Grade 4</SelectItem>
-                                                <SelectItem value="G5">Grade 5</SelectItem>
-                                                <SelectItem value="G6">Grade 6</SelectItem>
-                                                <SelectItem value="G7">Grade 7 (JHS)</SelectItem>
-                                                <SelectItem value="G8">Grade 8 (JHS)</SelectItem>
-                                                <SelectItem value="G9">Grade 9 (JHS)</SelectItem>
-                                                <SelectItem value="G10">Grade 10 (JHS)</SelectItem>
-                                                <SelectItem value="G11">Grade 11 (SHS)</SelectItem>
-                                                <SelectItem value="G12">Grade 12 (SHS)</SelectItem>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <SelectItem value="1st Year">1st Year</SelectItem>
-                                                <SelectItem value="2nd Year">2nd Year</SelectItem>
-                                                <SelectItem value="3rd Year">3rd Year</SelectItem>
-                                                <SelectItem value="4th Year">4th Year</SelectItem>
-                                                <SelectItem value="5th Year">5th Year</SelectItem>
-                                            </>
-                                        )}
-                                    </SelectContent>
-                                </Select>
-                                {/* Hidden input so year_level is posted */}
-                                <input type="hidden" name="year_level" value={yearLevel} />
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* Employee ID for Faculty/Nurse/Doctor */}
-                {(role === "Faculty" || role === "Nurse" || role === "Doctor") && (
-                    <div className="flex flex-col">
-                        <Label htmlFor="employee_id">Employee ID</Label>
-                        <Input name="employee_id" />
+                    {/* Names */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="fname">First Name</Label>
+                            <Input name="fname" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="mname">Middle Name</Label>
+                            <Input name="mname" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="lname">Last Name</Label>
+                            <Input name="lname" />
+                        </div>
                     </div>
-                )}
 
-                {/* Names */}
-                <div className="flex flex-col">
-                    <Label htmlFor="fname">First Name</Label>
-                    <Input name="fname" />
-                </div>
-                <div className="flex flex-col">
-                    <Label htmlFor="mname">Middle Name</Label>
-                    <Input name="mname" />
-                </div>
-                <div className="flex flex-col">
-                    <Label htmlFor="lname">Last Name</Label>
-                    <Input name="lname" />
-                </div>
+                    {/* DOB */}
+                    <div className="space-y-2">
+                        <Label htmlFor="date_of_birth">Date of Birth</Label>
+                        <Input type="date" name="date_of_birth" />
+                    </div>
 
-                {/* DOB */}
-                <div className="flex flex-col">
-                    <Label htmlFor="date_of_birth">Date of Birth</Label>
-                    <Input type="date" name="date_of_birth" />
-                </div>
+                    {/* Gender */}
+                    <div className="space-y-2">
+                        <Label htmlFor="gender">Gender</Label>
+                        <Select value={gender} onValueChange={setGender}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <input type="hidden" name="gender" value={gender} />
+                    </div>
 
-                {/* Gender */}
-                <div className="flex flex-col">
-                    <Label htmlFor="gender">Gender</Label>
-                    <Select value={gender} onValueChange={setGender}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {/* Hidden input so gender is posted */}
-                    <input type="hidden" name="gender" value={gender} />
-                </div>
-
-                {/* Submit */}
-                <Button
-                    type="submit"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                    Create User
-                </Button>
-            </form>
-        </div>
+                    {/* Submit */}
+                    <Button
+                        type="submit"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    >
+                        Create User
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
     );
 }

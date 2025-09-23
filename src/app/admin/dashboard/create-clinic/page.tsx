@@ -1,9 +1,8 @@
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import prisma from "@/lib/db";
 import { ClinicForm } from "@/components/clinic/ClinicForm";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import prisma from "@/lib/db";
 
-// ✅ Server Action
 async function addClinic(formData: FormData) {
     "use server";
 
@@ -31,10 +30,10 @@ async function addClinic(formData: FormData) {
     redirect("/clinic");
 }
 
-export default function NewClinicPage() {
+export default function CreateClinicPage() {
     return (
-        <main className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div>
             <ClinicForm action={addClinic} />
-        </main>
+        </div>
     );
 }
