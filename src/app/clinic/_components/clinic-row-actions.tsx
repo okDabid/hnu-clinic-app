@@ -63,7 +63,7 @@ export function ClinicRowActions({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end">
-                {/* Update Contact Number */}
+                {/* --- Update Contact Number --- */}
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -112,20 +112,22 @@ export function ClinicRowActions({
                     </DialogContent>
                 </Dialog>
 
-                {/* Delete Clinic */}
+                {/* --- Delete Clinic --- */}
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+                        <DropdownMenuItem
+                            onSelect={(e) => e.preventDefault()}
+                            className="text-red-600"
+                        >
                             Delete Clinic
                         </DropdownMenuItem>
                     </AlertDialogTrigger>
-
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
                                 This action cannot be undone. This will permanently delete this
-                                clinic and remove its data from the system.
+                                clinic and remove all of its data.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -135,7 +137,10 @@ export function ClinicRowActions({
                                     await deleteClinic(clinicId);
                                 }}
                             >
-                                <AlertDialogAction type="submit" className="bg-red-600 hover:bg-red-700">
+                                <AlertDialogAction
+                                    type="submit"
+                                    className="bg-red-600 hover:bg-red-700"
+                                >
                                     Delete
                                 </AlertDialogAction>
                             </form>
