@@ -164,7 +164,7 @@ export function ClinicDetailActions({
                         >
                             <AlertDialogAction
                                 type="submit"
-                                className="bg-red-600 hover:bg-red-700"
+                                className="bg-red-600 hover:bg-red-700 max-w-sm w-[100%]"
                             >
                                 Delete
                             </AlertDialogAction>
