@@ -15,7 +15,7 @@ async function addClinic(formData: FormData) {
     }
 
     // Generate a slug (lowercase, replace spaces)
-    let slug = clinic_name.toLowerCase().replace(/\s+/g, "-");
+    const slug = clinic_name.toLowerCase().replace(/\s+/g, "-");
 
     // Ensure uniqueness by appending a counter if necessary
     let uniqueSlug = slug;
@@ -34,8 +34,13 @@ async function addClinic(formData: FormData) {
                 slug: uniqueSlug,
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error creating clinic:", error);
+
+        if (error instanceof Error) {
+            throw new Error(error.message || "Failed to create clinic. Please try again.");
+        }
+
         throw new Error("Failed to create clinic. Please try again.");
     }
 
