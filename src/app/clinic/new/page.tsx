@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache"; // ✅ import this
 
 // Server Action to handle form submission
 async function addClinic(formData: FormData) {
@@ -34,6 +35,9 @@ async function addClinic(formData: FormData) {
                 slug: uniqueSlug,
             },
         });
+
+        // ✅ Bust cache so /clinic shows the new data immediately
+        revalidatePath("/clinic");
     } catch (error: unknown) {
         console.error("Error creating clinic:", error);
         if (error instanceof Error) {
@@ -53,7 +57,9 @@ export default function NewClinicPage() {
 
                 <form action={addClinic} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Clinic Name</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Clinic Name
+                        </label>
                         <input
                             type="text"
                             name="clinic_name"
@@ -63,7 +69,9 @@ export default function NewClinicPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Location</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Location
+                        </label>
                         <input
                             type="text"
                             name="clinic_location"
@@ -73,7 +81,9 @@ export default function NewClinicPage() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Contact Number</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Contact Number
+                        </label>
                         <input
                             type="text"
                             name="clinic_contactno"
