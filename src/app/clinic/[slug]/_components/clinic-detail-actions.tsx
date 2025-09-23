@@ -31,6 +31,11 @@ function SubmitBtn() {
     );
 }
 
+// Define a result type for the updateClinicContact action
+interface UpdateClinicContactResult {
+    error?: string;
+}
+
 export function ClinicDetailActions({
     clinicId,
     slug,
@@ -69,8 +74,8 @@ export function ClinicDetailActions({
 
                         <form
                             action={async (fd: FormData) => {
-                                const res = await updateClinicContact(fd);
-                                if (!(res as any)?.error) setOpen(false);
+                                const res: UpdateClinicContactResult = await updateClinicContact(fd);
+                                if (!res.error) setOpen(false);
                             }}
                             className="space-y-4"
                         >
