@@ -1,4 +1,3 @@
-// app/clinic/_components/clinic-row-actions.tsx
 "use client";
 
 import { useState } from "react";
@@ -17,10 +16,21 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFormStatus } from "react-dom";
-import { updateClinicContact } from "../actions";
+import { updateClinicContact, deleteClinic } from "../actions";
 
 function SubmitBtn() {
     const { pending } = useFormStatus();
@@ -53,10 +63,9 @@ export function ClinicRowActions({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end">
-                {/* Use a Dialog to collect the new number */}
+                {/* Update Contact Number */}
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        {/* prevent menu from closing before trigger opens dialog */}
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             Update Contact Number
                         </DropdownMenuItem>
@@ -102,6 +111,37 @@ export function ClinicRowActions({
                         </form>
                     </DialogContent>
                 </Dialog>
+
+                {/* Delete Clinic */}
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+                            Delete Clinic
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this
+                                clinic and remove its data from the system.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <form
+                                action={async () => {
+                                    await deleteClinic(clinicId);
+                                }}
+                            >
+                                <AlertDialogAction type="submit" className="bg-red-600 hover:bg-red-700">
+                                    Delete
+                                </AlertDialogAction>
+                            </form>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </DropdownMenuContent>
         </DropdownMenu>
     );

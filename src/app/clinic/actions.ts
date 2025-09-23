@@ -22,3 +22,31 @@ export async function updateClinicContact(formData: FormData) {
     revalidatePath(`/clinic/${slug}`);
     redirect(`/clinic/${slug}`);
 }
+
+/**
+ * Delete a clinic by ID
+ */
+export async function deleteClinic(clinicId: string) {
+    if (!clinicId) {
+        return { error: "Missing clinic ID." };
+    }
+
+    try {
+        await prisma.clinic.delete({
+            where: { clinic_id: clinicId },
+        });
+
+        // ✅ Bust cache so the clinic list updates
+        revalidatePath("/clinic");
+
+        return { success: true };
+    } catch (error: unknown) {
+        console.error("Error deleting clinic:", error);
+
+        if (error instanceof Error) {
+            return { error: error.message };
+        }
+
+        return { error: "Failed to delete clinic" };
+    }
+}
