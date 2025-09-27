@@ -29,12 +29,11 @@ export async function createUser(formData: FormData) {
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
         // 🟢 Create base user
-        const user = await prisma.users.create({
+        await prisma.users.create({
             data: {
                 username,
                 password: hashedPassword,
                 role,
-                // default status = Active
                 student: role === "Student" || role === "Working Scholar" ? {
                     create: {
                         student_id,
