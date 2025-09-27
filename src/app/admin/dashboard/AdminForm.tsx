@@ -20,14 +20,20 @@ import {
     CardContent,
 } from "@/components/ui/card";
 
+// Spinner icon
+import { Loader2 } from "lucide-react";
+
 export default function AdminForm() {
-    // form state for Selects (shadcn Select doesn't submit by itself)
+    // form state
     const [role, setRole] = useState("");
     const [gender, setGender] = useState("");
     const [department, setDepartment] = useState("");
     const [program, setProgram] = useState("");
     const [specialization, setSpecialization] = useState("");
     const [yearLevel, setYearLevel] = useState("");
+
+    // loading state
+    const [isLoading, setIsLoading] = useState(false);
 
     // Department -> Programs
     const programsByDepartment: Record<string, string[]> = {
@@ -96,13 +102,20 @@ export default function AdminForm() {
             <CardContent className="pt-6">
                 <form
                     action={async (formData: FormData) => {
-                        const res = await createUser(formData);
-                        if (res?.error) {
-                            toast.error(res.error);
-                        } else {
-                            toast.success(
-                                `✅ User created!\nUsername: ${res.username}\nPassword: ${res.password}`
-                            );
+                        try {
+                            setIsLoading(true);
+                            const res = await createUser(formData);
+                            if (res?.error) {
+                                toast.error(res.error);
+                            } else {
+                                toast.success(
+                                    `✅ User created!\nUsername: ${res.username}\nPassword: ${res.password}`
+                                );
+                            }
+                        } catch (error) {
+                            toast.error("Something went wrong. Please try again.");
+                        } finally {
+                            setIsLoading(false);
                         }
                     }}
                     className="space-y-6"
@@ -114,7 +127,6 @@ export default function AdminForm() {
                             value={role}
                             onValueChange={(val) => {
                                 setRole(val);
-                                // reset student-specific fields when role changes
                                 setDepartment("");
                                 setProgram("");
                                 setSpecialization("");
@@ -132,7 +144,7 @@ export default function AdminForm() {
                                 <SelectItem value="Working Scholar">Working Scholar</SelectItem>
                             </SelectContent>
                         </Select>
-                        <input type="hidden" name="role" value={role} />
+                        <input type="hidden" name="role" value={role} required />
                     </div>
 
                     {/* Student-only fields */}
@@ -140,7 +152,7 @@ export default function AdminForm() {
                         <>
                             <div className="space-y-2">
                                 <Label htmlFor="student_id">Student ID</Label>
-                                <Input name="student_id" />
+                                <Input name="student_id" required />
                             </div>
 
                             <div className="space-y-2">
@@ -168,7 +180,7 @@ export default function AdminForm() {
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <input type="hidden" name="department" value={department} />
+                                <input type="hidden" name="department" value={department} required />
                             </div>
 
                             {/* Program (hidden for IBED) */}
@@ -195,7 +207,7 @@ export default function AdminForm() {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <input type="hidden" name="program" value={program} />
+                                            <input type="hidden" name="program" value={program} required />
                                         </>
                                     ) : (
                                         <>
@@ -205,7 +217,7 @@ export default function AdminForm() {
                                                 value={program}
                                                 onChange={(e) => setProgram(e.target.value)}
                                             />
-                                            <input type="hidden" name="program" value={program} />
+                                            <input type="hidden" name="program" value={program} required />
                                         </>
                                     )}
                                 </div>
@@ -230,41 +242,32 @@ export default function AdminForm() {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <input
-                                        type="hidden"
-                                        name="specialization"
-                                        value={specialization}
-                                    />
+                                    <input type="hidden" name="specialization" value={specialization} required />
                                 </div>
                             )}
 
                             {/* BSBA specialization */}
-                            {program ===
-                                "Bachelor of Science in Business Administration (BSBA)" && (
-                                    <div className="space-y-2">
-                                        <Label htmlFor="specialization">Specialization</Label>
-                                        <Select
-                                            value={specialization}
-                                            onValueChange={setSpecialization}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select specialization" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {bsbaSpecializations.map((s) => (
-                                                    <SelectItem key={s} value={s}>
-                                                        {s}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <input
-                                            type="hidden"
-                                            name="specialization"
-                                            value={specialization}
-                                        />
-                                    </div>
-                                )}
+                            {program === "Bachelor of Science in Business Administration (BSBA)" && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="specialization">Specialization</Label>
+                                    <Select
+                                        value={specialization}
+                                        onValueChange={setSpecialization}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select specialization" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {bsbaSpecializations.map((s) => (
+                                                <SelectItem key={s} value={s}>
+                                                    {s}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <input type="hidden" name="specialization" value={specialization} required />
+                                </div>
+                            )}
 
                             {/* Year Level */}
                             {department && (
@@ -272,11 +275,7 @@ export default function AdminForm() {
                                     <Label htmlFor="year_level">Year Level</Label>
                                     <Select value={yearLevel} onValueChange={setYearLevel}>
                                         <SelectTrigger>
-                                            <SelectValue
-                                                placeholder={
-                                                    isIBED ? "Select grade" : "Select year level"
-                                                }
-                                            />
+                                            <SelectValue placeholder={isIBED ? "Select grade" : "Select year level"} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {isIBED ? (
@@ -305,7 +304,7 @@ export default function AdminForm() {
                                             )}
                                         </SelectContent>
                                     </Select>
-                                    <input type="hidden" name="year_level" value={yearLevel} />
+                                    <input type="hidden" name="year_level" value={yearLevel} required />
                                 </div>
                             )}
                         </>
@@ -315,7 +314,7 @@ export default function AdminForm() {
                     {(role === "Faculty" || role === "Nurse" || role === "Doctor") && (
                         <div className="space-y-2">
                             <Label htmlFor="employee_id">Employee ID</Label>
-                            <Input name="employee_id" />
+                            <Input name="employee_id" required />
                         </div>
                     )}
 
@@ -323,22 +322,22 @@ export default function AdminForm() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="fname">First Name</Label>
-                            <Input name="fname" />
+                            <Input name="fname" required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="mname">Middle Name</Label>
-                            <Input name="mname" />
+                            <Input name="mname" required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="lname">Last Name</Label>
-                            <Input name="lname" />
+                            <Input name="lname" required />
                         </div>
                     </div>
 
                     {/* DOB */}
                     <div className="space-y-2">
                         <Label htmlFor="date_of_birth">Date of Birth</Label>
-                        <Input type="date" name="date_of_birth" />
+                        <Input type="date" name="date_of_birth" required />
                     </div>
 
                     {/* Gender */}
@@ -353,15 +352,19 @@ export default function AdminForm() {
                                 <SelectItem value="Female">Female</SelectItem>
                             </SelectContent>
                         </Select>
-                        <input type="hidden" name="gender" value={gender} />
+                        <input type="hidden" name="gender" value={gender} required />
                     </div>
 
                     {/* Submit */}
                     <Button
                         type="submit"
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                        disabled={isLoading}
                     >
-                        Create User
+                        {isLoading && (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        )}
+                        {isLoading ? "Creating..." : "Create User"}
                     </Button>
                 </form>
             </CardContent>
