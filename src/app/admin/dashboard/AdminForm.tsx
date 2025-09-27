@@ -29,6 +29,15 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+type User = {
+    user_id: string;
+    username: string;
+    role: string;
+    status: "Active" | "Inactive";
+    idNumber: string;
+    fullName: string;
+};
+
 export default function AdminForm() {
     // -----------------
     // Form state
@@ -40,7 +49,7 @@ export default function AdminForm() {
     // -----------------
     // User management state
     // -----------------
-    const [users, setUsers] = useState<any[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
 
     // -----------------
     // Load users
@@ -69,7 +78,7 @@ export default function AdminForm() {
                 );
                 loadUsers();
             }
-        } catch (err) {
+        } catch {
             toast.error("Something went wrong. Please try again.");
         } finally {
             setIsLoading(false);
@@ -119,6 +128,14 @@ export default function AdminForm() {
                             </Select>
                             <input type="hidden" name="role" value={role} required />
                         </div>
+
+                        {/* Employee ID (only for Nurse & Doctor) */}
+                        {(role === "Nurse" || role === "Doctor") && (
+                            <div className="space-y-2">
+                                <Label htmlFor="employee_id">Employee ID</Label>
+                                <Input name="employee_id" required />
+                            </div>
+                        )}
 
                         {/* Names */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

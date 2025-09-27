@@ -113,7 +113,7 @@ export default function LoginPage() {
 
                     {/* ID Number */}
                     <div className="space-y-2 text-left">
-                        <Label htmlFor="id">ID Number</Label>
+                        <Label htmlFor="id"></Label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <Input
@@ -129,7 +129,7 @@ export default function LoginPage() {
 
                     {/* Password */}
                     <div className="space-y-2 text-left">
-                        <Label htmlFor="password">Password</Label>
+                        <Label htmlFor="password"></Label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <Input
