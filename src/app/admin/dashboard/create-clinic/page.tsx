@@ -3,6 +3,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 
+// -----------------
+// Server action: Add Clinic
+// -----------------
 async function addClinic(formData: FormData) {
     "use server";
 
@@ -26,14 +29,15 @@ async function addClinic(formData: FormData) {
         data: { clinic_name, clinic_location, clinic_contactno, slug: uniqueSlug },
     });
 
-    revalidatePath("/clinic");
-    redirect("/clinic");
+    revalidatePath("/admin/dashboard/create-clinic");
+    redirect("/admin/dashboard/create-clinic");
 }
 
+// -----------------
+// Page Component
+// -----------------
 export default function CreateClinicPage() {
     return (
-        <div>
-            <ClinicForm action={addClinic} />
-        </div>
+        <ClinicForm action={addClinic} />
     );
 }
