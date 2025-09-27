@@ -32,50 +32,38 @@ export async function createUser(formData: FormData) {
         const user = await prisma.users.create({
             data: {
                 username,
-                password: hashedPassword, // save hash instead of plain
+                password: hashedPassword,
                 role,
+                // default status = Active
+                student: role === "Student" || role === "Working Scholar" ? {
+                    create: {
+                        student_id,
+                        fname,
+                        mname,
+                        lname,
+                        date_of_birth: dob ? new Date(dob) : new Date(),
+                        gender: gender ?? "Male",
+                        department,
+                        program,
+                        specialization,
+                        year_level,
+                        status: "Active",
+                    }
+                } : undefined,
+                employee: role === "Faculty" || role === "Nurse" || role === "Doctor" ? {
+                    create: {
+                        employee_id,
+                        fname,
+                        mname,
+                        lname,
+                        date_of_birth: dob ? new Date(dob) : new Date(),
+                        gender: gender ?? "Male",
+                        status: "Active",
+                    }
+                } : undefined,
             },
         });
 
-        // Student / Working Scholar
-        if (role === "Student" || role === "Working Scholar") {
-            await prisma.student.create({
-                data: {
-                    student_id,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth: dob ? new Date(dob) : new Date(),
-                    gender: gender ?? "Male",
-                    department,
-                    program,
-                    specialization,
-                    year_level,
-                    user: {
-                        connect: { user_id: user.user_id },
-                    },
-                },
-            });
-        }
-
-        // Faculty / Nurse / Doctor
-        if (role === "Faculty" || role === "Nurse" || role === "Doctor") {
-            await prisma.employee.create({
-                data: {
-                    employee_id,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth: dob ? new Date(dob) : new Date(),
-                    gender: gender ?? "Male",
-                    user: {
-                        connect: { user_id: user.user_id },
-                    },
-                },
-            });
-        }
-
-        // 🟢 Return username + raw password so you can show it in toast
         return { username, password: rawPassword };
     } catch (err: unknown) {
         console.error("Error creating user:", err);
@@ -84,5 +72,71 @@ export async function createUser(formData: FormData) {
             return { error: err.message };
         }
         return { error: "An unexpected error occurred" };
+    }
+}
+
+// =============================
+// Get all users (with names & IDs)
+// =============================
+export async function getUsers() {
+    try {
+        const users = await prisma.users.findMany({
+            include: {
+                student: true,
+                employee: true,
+            },
+        });
+
+        return users.map((u) => ({
+            user_id: u.user_id,
+            username: u.username,
+            role: u.role,
+            status: u.student
+                ? u.student.status
+                : u.employee
+                    ? u.employee.status
+                    : "Active",
+            idNumber: u.student?.student_id || u.employee?.employee_id || "-",
+            fullName: u.student
+                ? `${u.student.fname} ${u.student.mname ?? ""} ${u.student.lname}`
+                : u.employee
+                    ? `${u.employee.fname} ${u.employee.mname ?? ""} ${u.employee.lname}`
+                    : "",
+        }));
+    } catch (err) {
+        console.error("Error fetching users:", err);
+        return [];
+    }
+}
+
+// =============================
+// Toggle user status
+// =============================
+export async function toggleUserStatus(userId: string, newStatus: "Active" | "Inactive") {
+    try {
+        // try update student first
+        const student = await prisma.student.findUnique({ where: { user_id: userId } });
+        if (student) {
+            await prisma.student.update({
+                where: { user_id: userId },
+                data: { status: newStatus },
+            });
+            return { success: true };
+        }
+
+        // otherwise update employee
+        const employee = await prisma.employee.findUnique({ where: { user_id: userId } });
+        if (employee) {
+            await prisma.employee.update({
+                where: { user_id: userId },
+                data: { status: newStatus },
+            });
+            return { success: true };
+        }
+
+        return { error: "User not found" };
+    } catch (err) {
+        console.error("Error toggling status:", err);
+        return { error: "Could not update status" };
     }
 }

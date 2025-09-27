@@ -1,4 +1,3 @@
-// src/components/clinic/ClinicForm.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Phone, MapPin, Building2 } from "lucide-react";
 
 export function ClinicForm({ action }: { action: (fd: FormData) => void }) {
     return (
-        <Card className="w-full max-w-lg shadow-xl">
+        <Card className="w-full shadow-xl rounded-2xl">
             <CardHeader className="border-b">
                 <CardTitle className="text-2xl font-bold text-green-600">
                     Add Clinic Details

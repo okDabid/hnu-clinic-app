@@ -26,7 +26,7 @@ export default function NurseDashboard() {
             {/* Grid of Actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {/* Manage Accounts */}
-                <Link href="/admin/accounts">
+                <Link href="/admin/dashboard">
                     <Card className="hover:shadow-lg transition">
                         <CardHeader>
                             <Users className="h-8 w-8 text-green-600 mb-2" />

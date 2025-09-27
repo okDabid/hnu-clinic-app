@@ -46,9 +46,8 @@ export async function POST(req: Request) {
         let redirect = "/";
         if (user.role === "Nurse") redirect = "/nurse/dashboard";
         if (user.role === "Doctor") redirect = "/doctor/dashboard";
-        if (user.role === "Student") redirect = "/student/dashboard";
+        if (user.role === "Student" || user.role === "Employee") redirect = "/patient/dashboard";
         if (user.role === "Working Scholar") redirect = "/scholar/dashboard";
-        if (user.role === "Patient") redirect = "/patient/dashboard";
 
         return NextResponse.json({ token, redirect });
     } catch (err) {

@@ -37,10 +37,11 @@ model Clinic {
 }
 
 model Users {
-  user_id  String @id @default(cuid())
-  username String @unique
+  user_id  String        @id @default(cuid())
+  username String        @unique
   password String
   role     String
+  status   AccountStatus @default(Active)
 
   student             Student?
   employee            Employee?
