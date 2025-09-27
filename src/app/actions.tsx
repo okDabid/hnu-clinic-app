@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 export async function createUser(formData: FormData) {
     try {
@@ -19,18 +20,24 @@ export async function createUser(formData: FormData) {
 
         const employee_id = (formData.get("employee_id") as string) || "";
 
+        // 🟢 Generate credentials
         const randomNum = Math.floor(Math.random() * 100000);
         const username = `USER${String(randomNum).padStart(3, "0")}`;
-        const password = Math.random().toString(36).substring(2, 10).toUpperCase();
+        const rawPassword = Math.random().toString(36).substring(2, 10).toUpperCase();
 
+        // 🟢 Hash password before saving
+        const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+        // 🟢 Create base user
         const user = await prisma.users.create({
             data: {
                 username,
-                password,
+                password: hashedPassword, // save hash instead of plain
                 role,
             },
         });
 
+        // Student / Working Scholar
         if (role === "Student" || role === "Working Scholar") {
             await prisma.student.create({
                 data: {
@@ -51,6 +58,7 @@ export async function createUser(formData: FormData) {
             });
         }
 
+        // Faculty / Nurse / Doctor
         if (role === "Faculty" || role === "Nurse" || role === "Doctor") {
             await prisma.employee.create({
                 data: {
@@ -67,7 +75,8 @@ export async function createUser(formData: FormData) {
             });
         }
 
-        return { username, password };
+        // 🟢 Return username + raw password so you can show it in toast
+        return { username, password: rawPassword };
     } catch (err: unknown) {
         console.error("Error creating user:", err);
 
