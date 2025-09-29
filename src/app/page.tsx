@@ -24,21 +24,23 @@ export default function HomePage() {
         <div className="flex justify-between items-center">
           {/* Logo + Title */}
           <div className="flex items-center gap-3">
-            <Image
-              src="/clinic-illustration.svg"
-              alt="logo"
-              width={48}
-              height={48}
-              priority
-              className="md:w-16 md:h-16"
-            />
+            <a href="/">
+              <Image
+                src="/clinic-illustration.svg"
+                alt="logo"
+                width={48}
+                height={48}
+                priority
+                className="md:w-16 md:h-16"
+              />
+            </a>
             <h1 className="text-lg md:text-2xl font-bold text-green-600">HNU Clinic</h1>
           </div>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-gray-700 hover:text-green-600">Features</a>
-            <a href="#about" className="text-gray-700 hover:text-green-600">About</a>
+            <a href="/about" className="text-gray-700 hover:text-green-600">About</a>
             <a href="#contact" className="text-gray-700 hover:text-green-600">Contact</a>
             <Link href="/login">
               <Button className="bg-green-600 hover:bg-green-700">Login</Button>
@@ -58,7 +60,7 @@ export default function HomePage() {
         {menuOpen && (
           <div className="flex flex-col gap-4 mt-4 md:hidden">
             <a href="#features" className="text-gray-700 hover:text-green-600">Features</a>
-            <a href="#about" className="text-gray-700 hover:text-green-600">About</a>
+            <a href="/about" className="text-gray-700 hover:text-green-600">About</a>
             <a href="#contact" className="text-gray-700 hover:text-green-600">Contact</a>
             <Link href="/login">
               <Button className="bg-green-600 hover:bg-green-700">Login</Button>
@@ -81,6 +83,16 @@ export default function HomePage() {
             <Button size="lg" className="bg-green-600 hover:bg-green-700">Book Appointment</Button>
             <Button size="lg" variant="outline">Learn More</Button>
           </div>
+        </div>
+        <div className="flex justify-center md:justify-end flex-1">
+          <Image
+            src="/header-illustration.svg"
+            alt="header illustration"
+            width={1000}   // high-res for large screens
+            height={800}   // keeps aspect ratio
+            priority
+            className="w-full max-w-md md:max-w-lg lg:max-w-2xl h-auto"
+          />
         </div>
       </section>
 
