@@ -23,7 +23,7 @@ export default function LoginPage() {
                 <CardContent className="p-6">
                     {/* Role Tabs */}
                     <Tabs defaultValue="doctor" onValueChange={setRole} className="w-full">
-                        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full mb-6">
+                        <TabsList className="flex flex-wrap w-full mb-6 bg-muted p-1 rounded-lg gap-2">
                             <TabsTrigger value="doctor">Doctor</TabsTrigger>
                             <TabsTrigger value="nurse">Nurse</TabsTrigger>
                             <TabsTrigger value="scholar">Scholar</TabsTrigger>
