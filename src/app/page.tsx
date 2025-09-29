@@ -34,7 +34,7 @@ export default function HomePage() {
                 className="md:w-16 md:h-16"
               />
             </a>
-            <h1 className="text-lg md:text-2xl font-bold text-green-600">HNU Clinic</h1>
+            <h1 className="text-lg md:text-2xl font-bold text-green-600 font-sans">HNU Clinic</h1>
           </div>
 
           {/* Desktop Nav */}

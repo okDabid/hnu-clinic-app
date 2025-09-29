@@ -64,9 +64,6 @@ export default function AboutPage() {
                 {/* Mobile Dropdown Nav */}
                 {menuOpen && (
                     <div className="flex flex-col gap-4 mt-4 md:hidden">
-                        <Link href="/" className="text-gray-700 hover:text-green-600">
-                            Home
-                        </Link>
                         <Link href="/#features" className="text-gray-700 hover:text-green-600">
                             Features
                         </Link>
@@ -140,49 +137,101 @@ export default function AboutPage() {
                         Meet Our Team
                     </h2>
                     <p className="text-gray-700 mb-12">
-                        Our dedicated team of doctors, nurses, working scholars, and staff
-                        are here to provide compassionate care and reliable health services.
+                        Our dedicated team of doctors and nurses are here to
+                        provide compassionate care and reliable health services.
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                    <div className="flex flex-col items-center gap-12">
+                        {/* Head */}
                         <div className="flex flex-col items-center">
                             <Image
-                                src=""
-                                alt="Doctor"
+                                src="/head-illustration.png"
+                                alt="Head"
                                 width={120}
                                 height={120}
                                 className="rounded-full mb-4"
                             />
-                            <h3 className="font-semibold text-lg">Chopper</h3>
-                            <p className="text-sm text-gray-600">Chief Physician</p>
+                            <h3 className="font-semibold text-lg text-green-600">Shanna Kathleen M. Escalona, MD</h3>
+                            <p className="text-sm text-gray-600">Head, Health Services Department</p>
                         </div>
 
-                        <div className="flex flex-col items-center">
-                            <Image
-                                src=""
-                                alt="Nurse"
-                                width={120}
-                                height={120}
-                                className="rounded-full mb-4"
-                            />
-                            <h3 className="font-semibold text-lg">Luffy</h3>
-                            <p className="text-sm text-gray-600">Head Nurse</p>
+                        {/* Physician + Dentists */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                            <div className="flex flex-col items-center">
+                                <Image
+                                    src="/physician-illustration.png"
+                                    alt="Physician"
+                                    width={120}
+                                    height={120}
+                                    className="rounded-full mb-4"
+                                />
+                                <h3 className="font-semibold text-lg text-green-600">Lovella I. Calvelo, MD</h3>
+                                <p className="text-sm text-gray-600">School Physician</p>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <Image
+                                    src="/dentist1-illustration.png"
+                                    alt="Dentist"
+                                    width={120}
+                                    height={120}
+                                    className="rounded-full mb-4"
+                                />
+                                <h3 className="font-semibold text-lg text-green-600">Minette B. Barrete</h3>
+                                <p className="text-sm text-gray-600">School Dentist</p>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <Image
+                                    src="/dentist2-illustration.png"
+                                    alt="Dentist"
+                                    width={120}
+                                    height={120}
+                                    className="rounded-full mb-4"
+                                />
+                                <h3 className="font-semibold text-lg text-green-600">Roche T. Pamaran</h3>
+                                <p className="text-sm text-gray-600">School Dentist</p>
+                            </div>
                         </div>
 
-                        <div className="flex flex-col items-center">
-                            <Image
-                                src=""
-                                alt="Scholar"
-                                width={120}
-                                height={120}
-                                className="rounded-full mb-4"
-                            />
-                            <h3 className="font-semibold text-lg">Zoro</h3>
-                            <p className="text-sm text-gray-600">Working Scholar</p>
+                        {/* Nurses */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+                            <div className="flex flex-col items-center">
+                                <Image
+                                    src="/nurse1-illustration.png"
+                                    alt="Nurse"
+                                    width={120}
+                                    height={120}
+                                    className="rounded-full mb-4"
+                                />
+                                <h3 className="font-semibold text-lg text-green-600">Cherly Marie B. Lagura, RN</h3>
+                                <p className="text-sm text-gray-600">School Nurse</p>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <Image
+                                    src="/nurse2-illustration.png"
+                                    alt="Nurse"
+                                    width={120}
+                                    height={120}
+                                    className="rounded-full mb-4"
+                                />
+                                <h3 className="font-semibold text-lg text-green-600">Evangeline Y. Guieb, RN</h3>
+                                <p className="text-sm text-gray-600">School Nurse</p>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <Image
+                                    src="/nurse3-illustration.png"
+                                    alt="Nurse"
+                                    width={120}
+                                    height={120}
+                                    className="rounded-full mb-4"
+                                />
+                                <h3 className="font-semibold text-lg text-green-600">Rhiza Rosario G. Magallones, RN</h3>
+                                <p className="text-sm text-gray-600">School Nurse</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
+
 
             {/* Footer */}
             <footer className="bg-white py-6 text-center text-gray-600">
