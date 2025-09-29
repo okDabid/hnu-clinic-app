@@ -232,6 +232,62 @@ export default function AboutPage() {
                 </div>
             </section>
 
+            {/* Services Section */}
+            <section className="px-6 md:px-12 py-16 bg-green-50">
+                <div className="max-w-5xl mx-auto text-center">
+                    <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
+                        Our Services
+                    </h2>
+                    <p className="text-gray-700 mb-12">
+                        Healthcare services at HNU Clinic are delivered through three core programs:
+                    </p>
+
+                    <div className="grid md:grid-cols-3 gap-8 text-left">
+                        {/* Health Assessment */}
+                        <Card className="rounded-2xl shadow-lg">
+                            <CardContent className="p-8">
+                                <h3 className="text-xl font-semibold text-green-600 mb-4">
+                                    Health Assessment Program
+                                </h3>
+                                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>Physical examinations</li>
+                                    <li>Consultations</li>
+                                    <li>Medical certificate issuance</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+
+                        {/* Dental Program */}
+                        <Card className="rounded-2xl shadow-lg">
+                            <CardContent className="p-8">
+                                <h3 className="text-xl font-semibold text-green-600 mb-4">
+                                    Dental Program
+                                </h3>
+                                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>Consultations and examinations</li>
+                                    <li>Oral prophylaxis</li>
+                                    <li>Tooth extractions</li>
+                                    <li>Dental certificate issuance</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+
+                        {/* Primary Care */}
+                        <Card className="rounded-2xl shadow-lg">
+                            <CardContent className="p-8">
+                                <h3 className="text-xl font-semibold text-green-600 mb-4">
+                                    Primary Care Program
+                                </h3>
+                                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>Support for urgent medical needs</li>
+                                    <li>Care for minor injuries</li>
+                                    <li>Assistance with sudden illnesses</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
 
             {/* Footer */}
             <footer className="bg-white py-6 text-center text-gray-600">
