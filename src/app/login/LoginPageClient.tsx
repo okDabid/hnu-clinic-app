@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,24 +11,6 @@ import { signIn } from "next-auth/react";
 
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
-    const searchParams = useSearchParams();
-    const router = useRouter();
-
-    // ✅ Show logout toast when redirected back with query param
-    useEffect(() => {
-        const logoutParam = searchParams.get("logout");
-        if (logoutParam === "success") {
-            toast.success("You have been logged out successfully.", {
-                position: "top-center",
-                duration: 4000,
-            });
-
-            // ✅ only remove after showing
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("logout");
-            router.replace(newUrl.toString());
-        }
-    }, [searchParams, router]);
 
     async function handleLogin(e: React.FormEvent<HTMLFormElement>, role: string) {
         e.preventDefault();

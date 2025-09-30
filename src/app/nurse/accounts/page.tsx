@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { createUser, getUsers, toggleUserStatus } from "@/app/nurse/actions";
 import {
     Card,
     CardHeader,
@@ -40,31 +39,62 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { CreateUserPayload, CreateUserResponse, UserSummary } from "@/app/nurse/actions";
 
-type User = UserSummary; // ✅ unify with actions.ts
+// Types for consistency with API
+type User = {
+    user_id: string;
+    username: string;
+    role: string;
+    status: "Active" | "Inactive";
+    fullName: string;
+};
+
+type CreateUserPayload = {
+    role: string;
+    fname: string;
+    mname?: string | null;
+    lname: string;
+    date_of_birth: string;
+    gender: "Male" | "Female";
+    employee_id?: string | null;
+    student_id?: string | null;
+    school_id?: string | null;
+    patientType?: "student" | "employee" | null;
+};
+
+type CreateUserResponse = {
+    id?: string;
+    password?: string;
+    error?: string;
+};
 
 export default function NurseAccountsPage() {
     const [role, setRole] = useState<string>("");
-    const [gender, setGender] = useState<"Male" | "Female" | "">(""); // ✅ strict
+    const [gender, setGender] = useState<"Male" | "Female" | "">("");
     const [loading, setLoading] = useState(false);
     const [users, setUsers] = useState<User[]>([]);
     const [patientType, setPatientType] = useState<"student" | "employee" | "">(
         ""
     );
 
+    // 🔹 Fetch users
     async function loadUsers() {
-        const data = await getUsers();
-        setUsers(data); // ✅ now matches User[]
+        try {
+            const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
+            const data = await res.json();
+            setUsers(data);
+        } catch {
+            toast.error("Failed to load users", { position: "top-center" });
+        }
     }
 
     useEffect(() => {
         loadUsers();
     }, []);
 
+    // 🔹 Create user
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-
         const formData = new FormData(e.currentTarget);
 
         const payload: CreateUserPayload = {
@@ -73,7 +103,7 @@ export default function NurseAccountsPage() {
             mname: formData.get("mname") as string,
             lname: formData.get("lname") as string,
             date_of_birth: formData.get("date_of_birth") as string,
-            gender: gender as "Male" | "Female", // ✅ cast
+            gender: gender as "Male" | "Female",
             employee_id:
                 role === "NURSE" ||
                     role === "DOCTOR" ||
@@ -84,27 +114,33 @@ export default function NurseAccountsPage() {
                 role === "PATIENT" && patientType === "student"
                     ? (formData.get("student_id") as string)
                     : null,
-            school_id: role === "SCHOLAR" ? (formData.get("school_id") as string) : null,
+            school_id:
+                role === "SCHOLAR" ? (formData.get("school_id") as string) : null,
             patientType: patientType || null,
         };
 
         try {
             setLoading(true);
-            const res: CreateUserResponse = await createUser(payload);
+            const res = await fetch("/api/nurse/accounts", {
+                method: "POST",
+                body: JSON.stringify(payload),
+                headers: { "Content-Type": "application/json" },
+            });
+            const data: CreateUserResponse = await res.json();
 
-            if (res?.error) {
-                toast.error(res.error, { position: "top-center" });
+            if (data.error) {
+                toast.error(data.error, { position: "top-center" });
             } else {
                 toast.success(
                     <div className="text-left space-y-1">
                         <p className="font-semibold text-green-700">Account Created!</p>
                         <p>
                             <span className="font-medium">ID:</span>{" "}
-                            <span className="text-green-800">{res.id}</span>
+                            <span className="text-green-800">{data.id}</span>
                         </p>
                         <p>
                             <span className="font-medium">Password:</span>{" "}
-                            <span className="text-green-800">{res.password}</span>
+                            <span className="text-green-800">{data.password}</span>
                         </p>
                     </div>,
                     { position: "top-center", duration: 6000 }
@@ -120,11 +156,20 @@ export default function NurseAccountsPage() {
         }
     }
 
+    // 🔹 Toggle status
     async function handleToggle(userId: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
-        await toggleUserStatus(userId, newStatus);
-        toast.success(`User ${newStatus}`, { position: "top-center" });
-        loadUsers();
+        try {
+            await fetch("/api/nurse/accounts", {
+                method: "PUT",
+                body: JSON.stringify({ userId, newStatus }),
+                headers: { "Content-Type": "application/json" },
+            });
+            toast.success(`User ${newStatus}`, { position: "top-center" });
+            loadUsers();
+        } catch {
+            toast.error("Failed to update user status", { position: "top-center" });
+        }
     }
 
     return (
@@ -231,7 +276,10 @@ export default function NurseAccountsPage() {
                         {/* Gender */}
                         <div className="space-y-2">
                             <Label>Gender</Label>
-                            <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
+                            <Select
+                                value={gender}
+                                onValueChange={(val) => setGender(val as "Male" | "Female")}
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select gender" />
                                 </SelectTrigger>
