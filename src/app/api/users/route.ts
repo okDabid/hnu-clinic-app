@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Role, AccountStatus } from "@prisma/client";
 
 // --------------------
 // Error Handler Helper
@@ -16,26 +15,10 @@ function handleError(error: unknown, message = "Server error") {
 }
 
 // --------------------
-// Types for relations
+// Local enums (instead of importing from Prisma)
 // --------------------
-type UserRelation = {
-    user_id: string;
-    username: string;
-    role: Role;
-    status: AccountStatus;
-};
-
-type StudentWithUser = {
-    fname: string;
-    lname: string;
-    mname: string | null;
-} & { user: UserRelation };
-
-type EmployeeWithUser = {
-    fname: string;
-    lname: string;
-    mname: string | null;
-} & { user: UserRelation };
+type Role = "NURSE" | "DOCTOR" | "SCHOLAR" | "PATIENT" | "ADMIN";
+type AccountStatus = "Active" | "Inactive";
 
 // --------------------
 // Create User (POST)
@@ -63,7 +46,6 @@ export async function POST(req: Request) {
         let username: string | null = null;
         let createdId: string | null = null;
 
-        // Determine ID/username based on role
         if (role === "NURSE" || role === "DOCTOR") {
             username = employee_id || `EMP-${Date.now()}`;
             createdId = username;
@@ -80,12 +62,12 @@ export async function POST(req: Request) {
             createdId = username;
         }
 
-        // 1️⃣ Create User first
+        // 1️⃣ Create User
         const user = await prisma.users.create({
             data: {
                 username: username!,
                 password: hashedPassword,
-                role,
+                role, // string union type
             },
         });
 
@@ -149,8 +131,8 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: true,
-                id: finalId, // ✅ Returns the correct profile ID
-                password: rawPassword, // ✅ Plain password returned once
+                id: finalId,
+                password: rawPassword,
             },
             { status: 201 }
         );
@@ -175,8 +157,8 @@ export async function GET() {
         const formatted = users.map((u) => ({
             user_id: u.user_id,
             username: u.username,
-            role: u.role,
-            status: u.status,
+            role: u.role as Role,
+            status: u.status as AccountStatus,
             fullName: u.student
                 ? `${u.student.fname} ${u.student.lname}`
                 : u.employee
@@ -199,7 +181,7 @@ export async function PATCH(req: Request) {
 
         await prisma.users.update({
             where: { user_id: userId },
-            data: { status },
+            data: { status: status as AccountStatus },
         });
 
         return NextResponse.json({ success: true });
