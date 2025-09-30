@@ -324,7 +324,7 @@ export default function NurseAccountsPage() {
                         <TableBody>
                             {users.map((user) => (
                                 <TableRow key={user.user_id}>
-                                    <TableCell>{user.username}</TableCell>
+                                    <TableCell>{user.user_id}</TableCell>
                                     <TableCell>{user.role}</TableCell>
                                     <TableCell>{user.fullName}</TableCell>
                                     <TableCell>
