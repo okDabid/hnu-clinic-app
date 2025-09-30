@@ -3,7 +3,6 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client"; // ✅ import enum
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -21,7 +20,7 @@ export const authOptions: NextAuthOptions = {
 
                 const id = String(credentials.id || "").trim();
                 const password = String(credentials.password || "");
-                const role = String(credentials.role || "").toUpperCase() as Role; // ✅ cast to Role enum
+                const role = String(credentials.role || "").toUpperCase(); // treat as string, or define your own Role type if needed
 
                 const user = await prisma.users.findFirst({
                     where: { username: id, role },
