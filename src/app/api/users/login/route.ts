@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Employee, Student, Users } from "@prisma/client";
+import type { Employee, Student, Users } from "@prisma/client"; // ✅ type-only
 
 export async function POST(req: Request) {
     try {
@@ -24,13 +24,12 @@ export async function POST(req: Request) {
                 include: { user: true },
             });
         } else if (role === "PATIENT") {
-            // Check as student first
+            // Check as student first, then employee
             userRecord =
                 (await prisma.student.findUnique({
                     where: { student_id: patient_id },
                     include: { user: true },
                 })) ||
-                // Or as employee
                 (await prisma.employee.findUnique({
                     where: { employee_id: patient_id },
                     include: { user: true },
@@ -39,13 +38,19 @@ export async function POST(req: Request) {
 
         // Not found
         if (!userRecord || !userRecord.user) {
-            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+            return NextResponse.json(
+                { error: "Invalid credentials" },
+                { status: 401 }
+            );
         }
 
         // Compare password
         const isValid = await bcrypt.compare(password, userRecord.user.password);
         if (!isValid) {
-            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+            return NextResponse.json(
+                { error: "Invalid credentials" },
+                { status: 401 }
+            );
         }
 
         return NextResponse.json({
@@ -56,6 +61,9 @@ export async function POST(req: Request) {
         });
     } catch (error) {
         console.error("Login error:", error);
-        return NextResponse.json({ error: "Server error" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Server error" },
+            { status: 500 }
+        );
     }
 }
