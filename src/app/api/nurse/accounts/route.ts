@@ -1,23 +1,39 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { customAlphabet } from "nanoid";
+import bcrypt from "bcryptjs";
+
+// Password generator (8 chars, alphanumeric)
+const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const generatePassword = customAlphabet(alphabet, 8);
 
 export async function POST(req: Request) {
     try {
         const payload = await req.json();
 
-        // Step 1: Create User account
+        // Generate random password
+        const plainPassword = generatePassword();
+
+        // Hash password before saving
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+        // Step 1: Create base user
         const newUser = await prisma.users.create({
             data: {
-                username: payload.username ?? payload.fname.toLowerCase() + "." + payload.lname.toLowerCase(), // example username
-                password: "autogen123", // replace with real password hashing
+                username:
+                    payload.username ??
+                    payload.fname.toLowerCase() + "." + payload.lname.toLowerCase(),
+                password: hashedPassword, // ✅ store hash
                 role: payload.role,
                 status: "Active",
             },
         });
 
-        // Step 2: Depending on role, create linked profile
+        let externalId: string | null = null;
+
+        // Step 2: Linked profiles
         if (payload.role === "PATIENT" && payload.patientType === "student") {
-            await prisma.student.create({
+            const student = await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.student_id,
@@ -28,10 +44,11 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
+            externalId = student.student_id;
         }
 
         if (payload.role === "PATIENT" && payload.patientType === "employee") {
-            await prisma.employee.create({
+            const employee = await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
@@ -42,10 +59,11 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
+            externalId = employee.employee_id;
         }
 
         if (payload.role === "NURSE" || payload.role === "DOCTOR") {
-            await prisma.employee.create({
+            const employee = await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
@@ -56,13 +74,14 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
+            externalId = employee.employee_id;
         }
 
         if (payload.role === "SCHOLAR") {
-            await prisma.student.create({
+            const scholar = await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: payload.school_id, // storing school_id as student_id for scholars
+                    student_id: payload.school_id, // storing school_id in student_id field
                     fname: payload.fname,
                     mname: payload.mname,
                     lname: payload.lname,
@@ -70,11 +89,13 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
+            externalId = scholar.student_id;
         }
 
+        // ✅ Return external ID + plaintext password (for toast)
         return NextResponse.json({
-            id: newUser.user_id,
-            password: "autogen123", // return generated password
+            id: externalId ?? newUser.username,
+            password: plainPassword,
         });
     } catch (err) {
         console.error("[POST /api/nurse/accounts]", err);
