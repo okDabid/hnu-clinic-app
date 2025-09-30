@@ -40,6 +40,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+// Types for consistency with API
 type User = {
     user_id: string;
     username: string;
@@ -62,8 +63,8 @@ type CreateUserPayload = {
 };
 
 type CreateUserResponse = {
-    id: string;
-    password: string;
+    id?: string;
+    password?: string;
     error?: string;
 };
 
@@ -76,7 +77,7 @@ export default function NurseAccountsPage() {
         ""
     );
 
-    // 🔹 Fetch users from API
+    // 🔹 Fetch users
     async function loadUsers() {
         try {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
@@ -91,7 +92,7 @@ export default function NurseAccountsPage() {
         loadUsers();
     }, []);
 
-    // 🔹 Submit create user form
+    // 🔹 Create user
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -127,7 +128,7 @@ export default function NurseAccountsPage() {
             });
             const data: CreateUserResponse = await res.json();
 
-            if (data?.error) {
+            if (data.error) {
                 toast.error(data.error, { position: "top-center" });
             } else {
                 toast.success(
@@ -155,10 +156,10 @@ export default function NurseAccountsPage() {
         }
     }
 
-    // 🔹 Toggle user active/inactive
+    // 🔹 Toggle status
     async function handleToggle(userId: string, current: "Active" | "Inactive") {
+        const newStatus = current === "Active" ? "Inactive" : "Active";
         try {
-            const newStatus = current === "Active" ? "Inactive" : "Active";
             await fetch("/api/nurse/accounts", {
                 method: "PUT",
                 body: JSON.stringify({ userId, newStatus }),
