@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { Role } from "@prisma/client"; // ✅ use Prisma enum
 
 // --------------------
 // Error Handler Helper
@@ -22,7 +22,8 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const role = (body.role as string).toUpperCase();
+        // ✅ parse as Role to avoid `any`
+        const role = (body.role as string).toUpperCase() as Role;
         const fname = body.fname as string;
         const mname = (body.mname as string) || null;
         const lname = body.lname as string;
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
             data: {
                 username: username!,
                 password: hashedPassword,
-                role: role as Role, // if "role" is enum in schema, change to correct type
+                role, // ✅ already typed as Role
             },
         });
 
@@ -127,8 +128,8 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: true,
-                id: finalId,          // ✅ Returns the correct profile ID
-                password: rawPassword // ✅ Plain password returned once
+                id: finalId, // ✅ Returns the correct profile ID
+                password: rawPassword, // ✅ Plain password returned once
             },
             { status: 201 }
         );
