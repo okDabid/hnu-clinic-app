@@ -23,13 +23,14 @@ export type CreateUserResponse = {
     success: boolean;
     id: string;
     password: string;
+    error?: string;
 };
 
 export type UserSummary = {
     user_id: string;
     username: string;
     role: string;
-    status: string;
+    status: "Active" | "Inactive";
     fullName: string;
 };
 

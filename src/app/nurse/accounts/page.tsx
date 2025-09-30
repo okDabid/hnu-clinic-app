@@ -40,19 +40,13 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import type { CreateUserPayload, CreateUserResponse, UserSummary } from "@/app/nurse/actions";
 
-type User = {
-    user_id: string;
-    username: string;
-    role: string;
-    status: "Active" | "Inactive";
-    idNumber?: string;
-    fullName: string;
-};
+type User = UserSummary; // ✅ unify with actions.ts
 
 export default function NurseAccountsPage() {
     const [role, setRole] = useState<string>("");
-    const [gender, setGender] = useState<string>("");
+    const [gender, setGender] = useState<"Male" | "Female" | "">(""); // ✅ strict
     const [loading, setLoading] = useState(false);
     const [users, setUsers] = useState<User[]>([]);
     const [patientType, setPatientType] = useState<"student" | "employee" | "">(
@@ -61,7 +55,7 @@ export default function NurseAccountsPage() {
 
     async function loadUsers() {
         const data = await getUsers();
-        setUsers(data);
+        setUsers(data); // ✅ now matches User[]
     }
 
     useEffect(() => {
@@ -73,13 +67,13 @@ export default function NurseAccountsPage() {
 
         const formData = new FormData(e.currentTarget);
 
-        const payload = {
+        const payload: CreateUserPayload = {
             role,
             fname: formData.get("fname") as string,
             mname: formData.get("mname") as string,
             lname: formData.get("lname") as string,
             date_of_birth: formData.get("date_of_birth") as string,
-            gender,
+            gender: gender as "Male" | "Female", // ✅ cast
             employee_id:
                 role === "NURSE" ||
                     role === "DOCTOR" ||
@@ -91,12 +85,12 @@ export default function NurseAccountsPage() {
                     ? (formData.get("student_id") as string)
                     : null,
             school_id: role === "SCHOLAR" ? (formData.get("school_id") as string) : null,
-            patientType,
+            patientType: patientType || null,
         };
 
         try {
             setLoading(true);
-            const res = await createUser(payload);
+            const res: CreateUserResponse = await createUser(payload);
 
             if (res?.error) {
                 toast.error(res.error, { position: "top-center" });
@@ -237,7 +231,7 @@ export default function NurseAccountsPage() {
                         {/* Gender */}
                         <div className="space-y-2">
                             <Label>Gender</Label>
-                            <Select value={gender} onValueChange={setGender}>
+                            <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select gender" />
                                 </SelectTrigger>
