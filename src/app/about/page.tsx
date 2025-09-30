@@ -17,7 +17,7 @@ export default function AboutPage() {
                 <div className="flex justify-between items-center">
                     {/* Logo + Title */}
                     <div className="flex items-center gap-3">
-                        <a href="/">
+                        <Link href="/">
                             <Image
                                 src="/clinic-illustration.svg"
                                 alt="logo"
@@ -26,7 +26,7 @@ export default function AboutPage() {
                                 priority
                                 className="md:w-16 md:h-16"
                             />
-                        </a>
+                        </Link>
                         <h1 className="text-lg md:text-2xl font-bold text-green-600">
                             HNU Clinic
                         </h1>

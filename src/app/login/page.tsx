@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function LoginPage() {
-    const [role, setRole] = useState("doctor");
-
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-green-50 p-6">
             {/* Logo + Title */}
@@ -22,7 +19,7 @@ export default function LoginPage() {
             <Card className="w-full max-w-md shadow-lg rounded-2xl">
                 <CardContent className="p-6">
                     {/* Role Tabs */}
-                    <Tabs defaultValue="doctor" onValueChange={setRole} className="w-full">
+                    <Tabs defaultValue="doctor" className="w-full">
                         <TabsList className="flex flex-wrap w-full mb-6 bg-muted p-1 rounded-lg gap-2">
                             <TabsTrigger value="doctor">Doctor</TabsTrigger>
                             <TabsTrigger value="nurse">Nurse</TabsTrigger>
