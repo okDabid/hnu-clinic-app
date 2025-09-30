@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { customAlphabet } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
 
 // Password generator (8 chars, alphanumeric)
@@ -11,29 +11,39 @@ export async function POST(req: Request) {
     try {
         const payload = await req.json();
 
-        // Generate random password
+        // Step 1: Generate a random password
         const plainPassword = generatePassword();
 
-        // Hash password before saving
+        // Step 2: Hash the password
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-        // Step 1: Create base user
+        // Step 3: Create a system username based on role
+        let username: string;
+        if (payload.role === "NURSE" || payload.role === "DOCTOR") {
+            username = `emp_${payload.employee_id}`;
+        } else if (payload.role === "PATIENT" && payload.patientType === "student") {
+            username = `stud_${payload.student_id}`;
+        } else if (payload.role === "PATIENT" && payload.patientType === "employee") {
+            username = `emp_${payload.employee_id}`;
+        } else if (payload.role === "SCHOLAR") {
+            username = `sch_${payload.school_id}`;
+        } else {
+            username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
+        }
+
+        // Step 4: Create User account
         const newUser = await prisma.users.create({
             data: {
-                username:
-                    payload.username ??
-                    payload.fname.toLowerCase() + "." + payload.lname.toLowerCase(),
-                password: hashedPassword, // ✅ store hash
+                username,
+                password: hashedPassword, // ✅ hashed, not plain
                 role: payload.role,
                 status: "Active",
             },
         });
 
-        let externalId: string | null = null;
-
-        // Step 2: Linked profiles
+        // Step 5: Create linked profile
         if (payload.role === "PATIENT" && payload.patientType === "student") {
-            const student = await prisma.student.create({
+            await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.student_id,
@@ -44,11 +54,10 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
-            externalId = student.student_id;
         }
 
         if (payload.role === "PATIENT" && payload.patientType === "employee") {
-            const employee = await prisma.employee.create({
+            await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
@@ -59,11 +68,10 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
-            externalId = employee.employee_id;
         }
 
         if (payload.role === "NURSE" || payload.role === "DOCTOR") {
-            const employee = await prisma.employee.create({
+            await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
@@ -74,14 +82,13 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
-            externalId = employee.employee_id;
         }
 
         if (payload.role === "SCHOLAR") {
-            const scholar = await prisma.student.create({
+            await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: payload.school_id, // storing school_id in student_id field
+                    student_id: payload.school_id, // use school_id as student_id
                     fname: payload.fname,
                     mname: payload.mname,
                     lname: payload.lname,
@@ -89,13 +96,21 @@ export async function POST(req: Request) {
                     gender: payload.gender,
                 },
             });
-            externalId = scholar.student_id;
         }
 
-        // ✅ Return external ID + plaintext password (for toast)
+        // Step 6: Return external ID + plain password once
         return NextResponse.json({
-            id: externalId ?? newUser.username,
-            password: plainPassword,
+            id:
+                payload.role === "PATIENT" && payload.patientType === "student"
+                    ? payload.student_id
+                    : (payload.role === "PATIENT" && payload.patientType === "employee") ||
+                        payload.role === "NURSE" ||
+                        payload.role === "DOCTOR"
+                        ? payload.employee_id
+                        : payload.role === "SCHOLAR"
+                            ? payload.school_id
+                            : newUser.username,
+            password: plainPassword, // shown once, not stored
         });
     } catch (err) {
         console.error("[POST /api/nurse/accounts]", err);
@@ -115,23 +130,41 @@ export async function GET() {
             },
         });
 
-        const formatted = users.map((u) => ({
-            // ✅ show external ID instead of cuid
-            user_id:
-                u.student?.student_id ??
-                u.employee?.employee_id ??
-                u.username, // fallback only if no profile exists
+        const formatted = users.map((u) => {
+            let displayId: string;
 
-            username: u.username,
-            role: u.role,
-            status: u.status,
-            fullName:
-                u.student?.fname && u.student?.lname
-                    ? `${u.student.fname} ${u.student.lname}`
-                    : u.employee?.fname && u.employee?.lname
-                        ? `${u.employee.fname} ${u.employee.lname}`
-                        : u.username,
-        }));
+            if (u.role === "PATIENT") {
+                // Patient → decide based on whether they're student or employee
+                if (u.student) {
+                    displayId = u.student.student_id;
+                } else if (u.employee) {
+                    displayId = u.employee.employee_id;
+                } else {
+                    displayId = u.username; // fallback if no linked record
+                }
+            } else if (u.role === "NURSE" || u.role === "DOCTOR") {
+                // Nurses & Doctors → always use employee_id
+                displayId = u.employee?.employee_id ?? u.username;
+            } else if (u.role === "SCHOLAR") {
+                // Scholars → use school_id stored as student_id
+                displayId = u.student?.student_id ?? u.username;
+            } else {
+                // Admin/others → fallback to username
+                displayId = u.username;
+            }
+
+            return {
+                user_id: displayId,
+                role: u.role,
+                status: u.status,
+                fullName:
+                    u.student?.fname && u.student?.lname
+                        ? `${u.student.fname} ${u.student.lname}`
+                        : u.employee?.fname && u.employee?.lname
+                            ? `${u.employee.fname} ${u.employee.lname}`
+                            : u.username,
+            };
+        });
 
         return NextResponse.json(formatted);
     } catch (err) {
