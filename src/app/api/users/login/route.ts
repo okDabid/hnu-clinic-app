@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import type { Employee, Student, Users } from "@prisma/client"; // ✅ type-only
+import { Prisma } from "@prisma/client"; // ✅ use Prisma namespace
 
 export async function POST(req: Request) {
     try {
@@ -9,8 +9,8 @@ export async function POST(req: Request) {
             await req.json();
 
         let userRecord:
-            | (Employee & { user: Users | null })
-            | (Student & { user: Users | null })
+            | (Prisma.EmployeeGetPayload<{ include: { user: true } }>)
+            | (Prisma.StudentGetPayload<{ include: { user: true } }>)
             | null = null;
 
         if (role === "NURSE" || role === "DOCTOR") {
@@ -24,7 +24,6 @@ export async function POST(req: Request) {
                 include: { user: true },
             });
         } else if (role === "PATIENT") {
-            // Check as student first, then employee
             userRecord =
                 (await prisma.student.findUnique({
                     where: { student_id: patient_id },
@@ -36,7 +35,6 @@ export async function POST(req: Request) {
                 }));
         }
 
-        // Not found
         if (!userRecord || !userRecord.user) {
             return NextResponse.json(
                 { error: "Invalid credentials" },
@@ -44,7 +42,6 @@ export async function POST(req: Request) {
             );
         }
 
-        // Compare password
         const isValid = await bcrypt.compare(password, userRecord.user.password);
         if (!isValid) {
             return NextResponse.json(
