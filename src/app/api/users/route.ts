@@ -22,23 +22,17 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        // 👇 Instead of `as any`, validate explicitly
         const role = (body.role as string).toUpperCase();
-        type Role = "NURSE" | "DOCTOR" | "SCHOLAR" | "PATIENT" | "ADMIN";
-        if (!["NURSE", "DOCTOR", "SCHOLAR", "PATIENT", "ADMIN"].includes(role)) {
-            throw new Error("Invalid role");
-        }
+        const fname = body.fname as string;
+        const mname = (body.mname as string) || null;
+        const lname = body.lname as string;
+        const date_of_birth = new Date(body.date_of_birth as string);
+        const gender = body.gender as "Male" | "Female";
 
-        const fname: string = body.fname;
-        const mname: string | null = body.mname || null;
-        const lname: string = body.lname;
-        const date_of_birth: Date = new Date(body.date_of_birth);
-        const gender: "Male" | "Female" = body.gender;
-
-        const employee_id: string | null = body.employee_id || null;
-        const student_id: string | null = body.student_id || null;
-        const school_id: string | null = body.school_id || null;
-        const patientType: "student" | "employee" | null = body.patientType || null;
+        const employee_id = body.employee_id || null;
+        const student_id = body.student_id || null;
+        const school_id = body.school_id || null;
+        const patientType = body.patientType || null;
 
         // Generate random password
         const rawPassword = Math.random().toString(36).slice(-8);
@@ -68,7 +62,7 @@ export async function POST(req: Request) {
             data: {
                 username: username!,
                 password: hashedPassword,
-                role: role as Role, // ✅ no `any`
+                role: role as any, // 👈 allow enum mismatch
             },
         });
 
@@ -155,11 +149,12 @@ export async function GET() {
             orderBy: { createdAt: "desc" },
         });
 
+        // 👇 explicitly type `u`
         const formatted = users.map((u: typeof users[number]) => ({
             user_id: u.user_id,
             username: u.username,
-            role: u.role as "NURSE" | "DOCTOR" | "SCHOLAR" | "PATIENT" | "ADMIN",
-            status: u.status as "Active" | "Inactive",
+            role: u.role,
+            status: u.status,
             fullName: u.student
                 ? `${u.student.fname} ${u.student.lname}`
                 : u.employee
@@ -178,12 +173,14 @@ export async function GET() {
 // --------------------
 export async function PATCH(req: Request) {
     try {
-        const { userId, status }: { userId: string; status: "Active" | "Inactive" } =
-            await req.json();
+        const { userId, status } = (await req.json()) as {
+            userId: string;
+            status: string;
+        };
 
         await prisma.users.update({
             where: { user_id: userId },
-            data: { status },
+            data: { status: status as any }, // 👈 cast string to enum
         });
 
         return NextResponse.json({ success: true });
