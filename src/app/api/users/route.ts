@@ -1,7 +1,8 @@
+// src/app/api/users/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import type { Role, AccountStatus } from "@prisma/client";
+import { Prisma, AccountStatus, Role } from "@prisma/client";
 
 // --------------------
 // Error Handler Helper
@@ -57,14 +58,16 @@ export async function POST(req: Request) {
             createdId = username;
         }
 
+        // 1️⃣ Create User first
         const user = await prisma.users.create({
             data: {
                 username: username!,
                 password: hashedPassword,
-                role,
+                role, // ✅ properly typed
             },
         });
 
+        // 2️⃣ Attach profile
         let finalId = createdId;
 
         if (role === "NURSE" || role === "DOCTOR") {
@@ -147,9 +150,13 @@ export async function GET() {
             orderBy: { createdAt: "desc" },
         });
 
-        type UserWithRelations = (typeof users)[number];
-
-        const formatted = users.map((u: UserWithRelations) => ({
+        const formatted = users.map((u): {
+            user_id: string;
+            username: string;
+            role: Role;
+            status: AccountStatus;
+            fullName: string;
+        } => ({
             user_id: u.user_id,
             username: u.username,
             role: u.role as Role,
