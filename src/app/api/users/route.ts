@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 // --------------------
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
             data: {
                 username: username!,
                 password: hashedPassword,
-                role: role as any, // if "role" is enum in schema, change to correct type
+                role: role as Role, // if "role" is enum in schema, change to correct type
             },
         });
 
