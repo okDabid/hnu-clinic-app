@@ -4,7 +4,29 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client"; // ✅ use generated enum
+import { Role } from "@prisma/client";
+
+// Extend NextAuth's types
+interface AppUser {
+    id: string;
+    name?: string | null;
+    role: Role;
+}
+
+// Extend JWT type
+interface AppJWT extends JWT {
+    id?: string;
+    role?: Role;
+}
+
+// Extend Session type
+interface AppSession extends Session {
+    user: {
+        id: string;
+        role: Role;
+        name?: string | null;
+    };
+}
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -15,7 +37,7 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
                 role: { label: "Role", type: "text" },
             },
-            async authorize(credentials) {
+            async authorize(credentials): Promise<AppUser | null> {
                 if (!credentials) {
                     throw new Error("Missing credentials.");
                 }
@@ -24,13 +46,11 @@ export const authOptions: NextAuthOptions = {
                 const password = String(credentials.password || "");
                 const roleStr = String(credentials.role || "").toUpperCase();
 
-                // ✅ Validate against Prisma enum
                 if (!Object.values(Role).includes(roleStr as Role)) {
                     throw new Error("Invalid role provided.");
                 }
                 const role = roleStr as Role;
 
-                // Find user in DB
                 const user = await prisma.users.findFirst({
                     where: { username: id, role },
                     include: { student: true, employee: true },
@@ -40,13 +60,11 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("No account found with these credentials.");
                 }
 
-                // Verify password
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) {
                     throw new Error("Invalid password.");
                 }
 
-                // Return safe user object
                 return {
                     id: user.user_id,
                     name: user.student
@@ -63,22 +81,24 @@ export const authOptions: NextAuthOptions = {
     session: { strategy: "jwt" },
 
     callbacks: {
-        async jwt({ token, user }): Promise<JWT> {
+        async jwt({ token, user }): Promise<AppJWT> {
             if (user) {
-                token.id = user.id;
-                token.role = (user as any).role; // token.role is typed as string | undefined
-                token.name = user.name ?? token.name;
+                const u = user as AppUser;
+                token.id = u.id;
+                token.role = u.role;
+                token.name = u.name ?? token.name;
             }
-            return token;
+            return token as AppJWT;
         },
 
-        async session({ session, token }): Promise<Session> {
+        async session({ session, token }): Promise<AppSession> {
+            const t = token as AppJWT;
             if (session.user) {
-                session.user.id = token.id ?? token.sub ?? "";
-                session.user.role = (token as any).role ?? "";
-                session.user.name = token.name ?? session.user.name;
+                session.user.id = t.id ?? token.sub ?? "";
+                session.user.role = t.role ?? Role.PATIENT; // fallback role
+                session.user.name = t.name ?? session.user.name;
             }
-            return session;
+            return session as AppSession;
         },
     },
 
