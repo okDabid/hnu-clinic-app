@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 
-export default function LoginPage() {
+export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -31,7 +31,10 @@ export default function LoginPage() {
         }
     }, [searchParams, router]);
 
-    async function handleLogin(e: React.FormEvent<HTMLFormElement>, role: string) {
+    async function handleLogin(
+        e: React.FormEvent<HTMLFormElement>,
+        role: string
+    ) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
 
@@ -63,9 +66,12 @@ export default function LoginPage() {
 
                 // Redirect based on role
                 if (payload.role === "NURSE") window.location.href = "/nurse";
-                else if (payload.role === "DOCTOR") window.location.href = "/doctor/dashboard";
-                else if (payload.role === "SCHOLAR") window.location.href = "/scholar/dashboard";
-                else if (payload.role === "PATIENT") window.location.href = "/patient";
+                else if (payload.role === "DOCTOR")
+                    window.location.href = "/doctor/dashboard";
+                else if (payload.role === "SCHOLAR")
+                    window.location.href = "/scholar/dashboard";
+                else if (payload.role === "PATIENT")
+                    window.location.href = "/patient";
                 else window.location.href = "/login";
             }
         } catch (err: unknown) {
@@ -75,14 +81,18 @@ export default function LoginPage() {
                 toast.error("Something went wrong", { position: "top-center" });
             }
         }
-
     }
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-green-50 p-6">
             {/* Logo + Title */}
             <div className="flex items-center gap-3 mb-8">
-                <Image src="/clinic-illustration.svg" alt="logo" width={50} height={50} />
+                <Image
+                    src="/clinic-illustration.svg"
+                    alt="logo"
+                    width={50}
+                    height={50}
+                />
                 <h1 className="text-2xl md:text-3xl font-bold text-green-600">
                     HNU Clinic Login
                 </h1>
@@ -101,60 +111,104 @@ export default function LoginPage() {
 
                         {/* Doctor */}
                         <TabsContent value="doctor">
-                            <form className="space-y-4" onSubmit={(e) => handleLogin(e, "doctor")}>
+                            <form
+                                className="space-y-4"
+                                onSubmit={(e) => handleLogin(e, "doctor")}
+                            >
                                 <Input name="employee_id" placeholder="Employee ID" required />
-                                <Input name="password" type="password" placeholder="Password" required />
+                                <Input
+                                    name="password"
+                                    type="password"
+                                    placeholder="Password"
+                                    required
+                                />
                                 <Button
                                     type="submit"
                                     disabled={loadingRole === "doctor"}
                                     className="w-full bg-green-600 hover:bg-green-700"
                                 >
-                                    {loadingRole === "doctor" ? "Logging in..." : "Login as Doctor"}
+                                    {loadingRole === "doctor"
+                                        ? "Logging in..."
+                                        : "Login as Doctor"}
                                 </Button>
                             </form>
                         </TabsContent>
 
                         {/* Nurse */}
                         <TabsContent value="nurse">
-                            <form className="space-y-4" onSubmit={(e) => handleLogin(e, "nurse")}>
+                            <form
+                                className="space-y-4"
+                                onSubmit={(e) => handleLogin(e, "nurse")}
+                            >
                                 <Input name="employee_id" placeholder="Employee ID" required />
-                                <Input name="password" type="password" placeholder="Password" required />
+                                <Input
+                                    name="password"
+                                    type="password"
+                                    placeholder="Password"
+                                    required
+                                />
                                 <Button
                                     type="submit"
                                     disabled={loadingRole === "nurse"}
                                     className="w-full bg-green-600 hover:bg-green-700"
                                 >
-                                    {loadingRole === "nurse" ? "Logging in..." : "Login as Nurse"}
+                                    {loadingRole === "nurse"
+                                        ? "Logging in..."
+                                        : "Login as Nurse"}
                                 </Button>
                             </form>
                         </TabsContent>
 
                         {/* Scholar */}
                         <TabsContent value="scholar">
-                            <form className="space-y-4" onSubmit={(e) => handleLogin(e, "scholar")}>
+                            <form
+                                className="space-y-4"
+                                onSubmit={(e) => handleLogin(e, "scholar")}
+                            >
                                 <Input name="school_id" placeholder="School ID" required />
-                                <Input name="password" type="password" placeholder="Password" required />
+                                <Input
+                                    name="password"
+                                    type="password"
+                                    placeholder="Password"
+                                    required
+                                />
                                 <Button
                                     type="submit"
                                     disabled={loadingRole === "scholar"}
                                     className="w-full bg-green-600 hover:bg-green-700"
                                 >
-                                    {loadingRole === "scholar" ? "Logging in..." : "Login as Scholar"}
+                                    {loadingRole === "scholar"
+                                        ? "Logging in..."
+                                        : "Login as Scholar"}
                                 </Button>
                             </form>
                         </TabsContent>
 
                         {/* Patient */}
                         <TabsContent value="patient">
-                            <form className="space-y-4" onSubmit={(e) => handleLogin(e, "patient")}>
-                                <Input name="patient_id" placeholder="Student ID or Employee ID" required />
-                                <Input name="password" type="password" placeholder="Password" required />
+                            <form
+                                className="space-y-4"
+                                onSubmit={(e) => handleLogin(e, "patient")}
+                            >
+                                <Input
+                                    name="patient_id"
+                                    placeholder="Student ID or Employee ID"
+                                    required
+                                />
+                                <Input
+                                    name="password"
+                                    type="password"
+                                    placeholder="Password"
+                                    required
+                                />
                                 <Button
                                     type="submit"
                                     disabled={loadingRole === "patient"}
                                     className="w-full bg-green-600 hover:bg-green-700"
                                 >
-                                    {loadingRole === "patient" ? "Logging in..." : "Login as Patient"}
+                                    {loadingRole === "patient"
+                                        ? "Logging in..."
+                                        : "Login as Patient"}
                                 </Button>
                             </form>
                         </TabsContent>
