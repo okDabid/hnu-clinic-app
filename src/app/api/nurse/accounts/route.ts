@@ -20,13 +20,13 @@ export async function POST(req: Request) {
         // Step 3: Create a system username based on role
         let username: string;
         if (payload.role === "NURSE" || payload.role === "DOCTOR") {
-            username = `emp_${payload.employee_id}`;
+            username = `${payload.employee_id}`;
         } else if (payload.role === "PATIENT" && payload.patientType === "student") {
-            username = `stud_${payload.student_id}`;
+            username = `${payload.student_id}`;
         } else if (payload.role === "PATIENT" && payload.patientType === "employee") {
-            username = `emp_${payload.employee_id}`;
+            username = `${payload.employee_id}`;
         } else if (payload.role === "SCHOLAR") {
-            username = `sch_${payload.school_id}`;
+            username = `${payload.school_id}`;
         } else {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
