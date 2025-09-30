@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
-// ✅ tell Prisma we’re including user relation
-const employeeWithUser = Prisma.validator<Prisma.EmployeeDefaultArgs>()({
-    include: { user: true },
-});
-const studentWithUser = Prisma.validator<Prisma.StudentDefaultArgs>()({
-    include: { user: true },
-});
+// ✅ define payload types with user relation included
+type EmployeeWithUser = Prisma.EmployeeGetPayload<{
+    include: { user: true };
+}>;
 
-type EmployeeWithUser = Prisma.EmployeeGetPayload<typeof employeeWithUser>;
-type StudentWithUser = Prisma.StudentGetPayload<typeof studentWithUser>;
+type StudentWithUser = Prisma.StudentGetPayload<{
+    include: { user: true };
+}>;
 
 export async function POST(req: Request) {
     try {
