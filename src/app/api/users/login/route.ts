@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { Employee, Student, Users } from "@prisma/client";
 
 export async function POST(req: Request) {
     try {
-        const { role, employee_id, school_id, patient_id, password } = await req.json();
+        const { role, employee_id, school_id, patient_id, password } =
+            await req.json();
 
-        let userRecord: any = null;
+        let userRecord:
+            | (Employee & { user: Users | null })
+            | (Student & { user: Users | null })
+            | null = null;
 
         if (role === "NURSE" || role === "DOCTOR") {
             userRecord = await prisma.employee.findUnique({

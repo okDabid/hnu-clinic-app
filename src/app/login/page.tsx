@@ -68,11 +68,14 @@ export default function LoginPage() {
                 else if (payload.role === "PATIENT") window.location.href = "/patient";
                 else window.location.href = "/login";
             }
-        } catch (err: any) {
-            toast.error(err.message || "Something went wrong", { position: "top-center" });
-        } finally {
-            setLoadingRole(null);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                toast.error(err.message, { position: "top-center" });
+            } else {
+                toast.error("Something went wrong", { position: "top-center" });
+            }
         }
+
     }
 
     return (

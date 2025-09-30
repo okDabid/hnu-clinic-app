@@ -3,6 +3,18 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 // --------------------
+// Error Handler Helper
+// --------------------
+function handleError(error: unknown, message = "Server error") {
+    if (error instanceof Error) {
+        console.error(error.message);
+    } else {
+        console.error("Unexpected error:", error);
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
+}
+
+// --------------------
 // Create User (POST)
 // --------------------
 export async function POST(req: Request) {
@@ -50,7 +62,7 @@ export async function POST(req: Request) {
             data: {
                 username: username!,
                 password: hashedPassword,
-                role: role as any,
+                role: role as any, // if "role" is enum in schema, change to correct type
             },
         });
 
@@ -114,17 +126,13 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: true,
-                id: finalId,          // ✅ Now returns the correct profile ID
-                password: rawPassword // ✅ Return plain password once
+                id: finalId,          // ✅ Returns the correct profile ID
+                password: rawPassword // ✅ Plain password returned once
             },
             { status: 201 }
         );
-    } catch (error: any) {
-        console.error(error);
-        return NextResponse.json(
-            { error: "Failed to create user" },
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleError(error, "Failed to create user");
     }
 }
 
@@ -154,12 +162,8 @@ export async function GET() {
         }));
 
         return NextResponse.json(formatted);
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            { error: "Failed to fetch users" },
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleError(error, "Failed to fetch users");
     }
 }
 
@@ -176,11 +180,7 @@ export async function PATCH(req: Request) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-            { error: "Failed to update status" },
-            { status: 500 }
-        );
+    } catch (error: unknown) {
+        return handleError(error, "Failed to update status");
     }
 }
