@@ -116,7 +116,12 @@ export async function GET() {
         });
 
         const formatted = users.map((u) => ({
-            user_id: u.user_id,
+            // ✅ show external ID instead of cuid
+            user_id:
+                u.student?.student_id ??
+                u.employee?.employee_id ??
+                u.username, // fallback only if no profile exists
+
             username: u.username,
             role: u.role,
             status: u.status,
