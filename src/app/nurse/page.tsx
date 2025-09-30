@@ -2,25 +2,26 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
     Menu,
     X,
     UserPlus,
-    UserCog,
-    Shield,
     CalendarDays,
     ClipboardList,
-    FileText,
     Pill,
     Package,
     BarChart3,
-    Activity
 } from "lucide-react";
 
-export default function NursePanel() {
+export default function NurseAccountsPage() {
     const [menuOpen, setMenuOpen] = useState(false);
+    const { data: session } = useSession();
+
+    // fallback if session.user.name isn’t available yet
+    const fullName = session?.user?.name || "Nurse";
 
     return (
         <div className="min-h-screen bg-green-50 flex flex-col">
@@ -36,19 +37,35 @@ export default function NursePanel() {
                         <Link href="/nurse" className="text-green-600 font-semibold">
                             Dashboard
                         </Link>
-                        <Link href="/nurse/accounts" className="text-gray-700 hover:text-green-600">
+                        <Link
+                            href="/nurse/accounts"
+                            className="text-gray-700 hover:text-green-600"
+                        >
                             Accounts
                         </Link>
-                        <Link href="/nurse/inventory" className="text-gray-700 hover:text-green-600">
+                        <Link
+                            href="/nurse/inventory"
+                            className="text-gray-700 hover:text-green-600"
+                        >
                             Inventory
                         </Link>
-                        <Link href="/">
-                            <Button className="bg-green-600 hover:bg-green-700">Logout</Button>
-                        </Link>
+                        <Button
+                            onClick={() =>
+                                signOut({
+                                    callbackUrl: `${window.location.origin}/login?logout=success`,
+                                })
+                            }
+                            className="bg-green-600 hover:bg-green-700"
+                        >
+                            Logout
+                        </Button>
                     </nav>
 
                     {/* Mobile Menu Button */}
-                    <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
+                    <button
+                        className="md:hidden p-2"
+                        onClick={() => setMenuOpen(!menuOpen)}
+                    >
                         {menuOpen ? (
                             <X className="w-6 h-6 text-green-600" />
                         ) : (
@@ -63,15 +80,24 @@ export default function NursePanel() {
                         <Link href="/nurse" className="text-green-600 font-semibold">
                             Dashboard
                         </Link>
-                        <Link href="/nurse/accounts" className="text-gray-700 hover:text-green-600">
+                        <Link
+                            href="/nurse/accounts"
+                            className="text-gray-700 hover:text-green-600"
+                        >
                             Accounts
                         </Link>
-                        <Link href="/nurse/inventory" className="text-gray-700 hover:text-green-600">
+                        <Link
+                            href="/nurse/inventory"
+                            className="text-gray-700 hover:text-green-600"
+                        >
                             Inventory
                         </Link>
-                        <Link href="/">
-                            <Button className="bg-green-600 hover:bg-green-700 w-full">Logout</Button>
-                        </Link>
+                        <Button
+                            onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                            className="bg-green-600 hover:bg-green-700 w-full"
+                        >
+                            Logout
+                        </Button>
                     </div>
                 )}
             </header>
@@ -80,10 +106,11 @@ export default function NursePanel() {
             <section className="px-6 md:px-12 py-12 bg-white shadow-sm">
                 <div className="max-w-4xl mx-auto text-center">
                     <h2 className="text-2xl md:text-4xl font-bold text-green-600 mb-4">
-                        Welcome, School Nurse
+                        Welcome, {fullName}
                     </h2>
                     <p className="text-gray-700">
-                        Manage clinic operations, user accounts, appointments, patient records, and medicine inventory.
+                        Manage clinic operations, user accounts, appointments, patient
+                        records, and medicine inventory.
                     </p>
                 </div>
             </section>
@@ -92,23 +119,29 @@ export default function NursePanel() {
             <section className="px-6 md:px-12 py-16 flex-1">
                 <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {/* Accounts Management */}
-                    <Card className="rounded-2xl shadow-lg">
-                        <CardContent className="p-6 text-center">
-                            <UserPlus className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Accounts Management</h3>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
-                                <li>Create accounts (Scholars, Doctors, Admins)</li>
-                                <li>Edit or update own account info</li>
-                                <li>Activate / deactivate user accounts</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
+                    <Link href="/nurse/accounts">
+                        <Card className="rounded-2xl shadow-lg cursor-pointer hover:shadow-xl transition">
+                            <CardContent className="p-6 text-center">
+                                <UserPlus className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                                <h3 className="font-semibold text-lg text-green-600 mb-2">
+                                    Accounts Management
+                                </h3>
+                                <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
+                                    <li>Create accounts (Scholars, Doctors, Admins)</li>
+                                    <li>Edit or update own account info</li>
+                                    <li>Activate / deactivate user accounts</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    </Link>
 
                     {/* Appointments */}
                     <Card className="rounded-2xl shadow-lg">
                         <CardContent className="p-6 text-center">
                             <CalendarDays className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Appointments</h3>
+                            <h3 className="font-semibold text-lg text-green-600 mb-2">
+                                Appointments
+                            </h3>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
                                 <li>View doctor availability</li>
                                 <li>Access all scheduled appointments</li>
@@ -120,7 +153,9 @@ export default function NursePanel() {
                     <Card className="rounded-2xl shadow-lg">
                         <CardContent className="p-6 text-center">
                             <ClipboardList className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Patient Records</h3>
+                            <h3 className="font-semibold text-lg text-green-600 mb-2">
+                                Patient Records
+                            </h3>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
                                 <li>Search and view records</li>
                                 <li>Update patient health data</li>
@@ -133,7 +168,9 @@ export default function NursePanel() {
                     <Card className="rounded-2xl shadow-lg">
                         <CardContent className="p-6 text-center">
                             <Pill className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Medicine Dispensing</h3>
+                            <h3 className="font-semibold text-lg text-green-600 mb-2">
+                                Medicine Dispensing
+                            </h3>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
                                 <li>Record medicines dispensed during consultation</li>
                                 <li>Maintain patient medicine history</li>
@@ -145,7 +182,9 @@ export default function NursePanel() {
                     <Card className="rounded-2xl shadow-lg">
                         <CardContent className="p-6 text-center">
                             <Package className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Inventory Management</h3>
+                            <h3 className="font-semibold text-lg text-green-600 mb-2">
+                                Inventory Management
+                            </h3>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
                                 <li>Add stocks & replenishments</li>
                                 <li>Expiry date monitoring (FIFO)</li>
@@ -158,23 +197,13 @@ export default function NursePanel() {
                     <Card className="rounded-2xl shadow-lg">
                         <CardContent className="p-6 text-center">
                             <BarChart3 className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Reports</h3>
+                            <h3 className="font-semibold text-lg text-green-600 mb-2">
+                                Reports
+                            </h3>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
                                 <li>Generate inventory reports</li>
                                 <li>Generate quarterly clinic reports</li>
                             </ul>
-                        </CardContent>
-                    </Card>
-
-                    {/* Oversight */}
-                    <Card className="rounded-2xl shadow-lg md:col-span-3">
-                        <CardContent className="p-6 text-center">
-                            <Activity className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Clinic Oversight</h3>
-                            <p className="text-gray-700 text-sm">
-                                Oversee all clinic operations within the system and ensure smooth workflows across accounts,
-                                appointments, and resources.
-                            </p>
                         </CardContent>
                     </Card>
                 </div>

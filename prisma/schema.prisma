@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "/app/generated/prisma-client"
 }
 
 datasource db {
@@ -23,6 +22,29 @@ enum MedcertStatus {
   Expired
 }
 
+enum Role {
+  NURSE
+  DOCTOR
+  SCHOLAR
+  PATIENT
+  ADMIN
+}
+
+enum AppointmentStatus {
+  Pending
+  Approved
+  Moved
+  Cancelled
+  Completed
+}
+
+enum ServiceType {
+  Consultation
+  Dental
+  Assessment
+  Other
+}
+
 model Clinic {
   clinic_id        String @id @default(cuid())
   clinic_name      String
@@ -38,11 +60,13 @@ model Clinic {
 }
 
 model Users {
-  user_id  String        @id @default(cuid())
-  username String        @unique
-  password String
-  role     String
-  status   AccountStatus @default(Active)
+  user_id   String        @id @default(cuid())
+  username  String        @unique
+  password  String
+  role      Role
+  status    AccountStatus @default(Active)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   student             Student?
   employee            Employee?
@@ -54,6 +78,9 @@ model Users {
   consultationsNurse  Consultation[]       @relation("ConsultationNurse")
   medcertIssued       MedCert[]            @relation("IssuedCertificates")
   medcertPatient      MedCert[]            @relation("PatientCertificates")
+
+  @@index([role, status])
+  @@index([username])
 }
 
 model Student {
@@ -79,7 +106,7 @@ model Student {
   emergencyco_relation String?
   status               AccountStatus @default(Active)
 
-  user Users @relation(fields: [user_id], references: [user_id])
+  user Users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model Employee {
@@ -101,7 +128,7 @@ model Employee {
   emergencyco_relation String?
   status               AccountStatus @default(Active)
 
-  user Users @relation(fields: [user_id], references: [user_id])
+  user Users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model MedInventory {
@@ -111,19 +138,24 @@ model MedInventory {
   item_name String
   item_type String?
 
-  clinic         Clinic          @relation(fields: [clinic_id], references: [clinic_id])
+  clinic         Clinic          @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
   replenishments Replenishment[]
   dispenses      MedDispense[]
+
+  @@index([clinic_id, item_name])
 }
 
 model Replenishment {
   replenishment_id String   @id @default(cuid())
   med_id           String
   quantity_added   Int
+  remaining_qty    Int      @default(0)
   date_received    DateTime
   expiry_date      DateTime
 
-  med MedInventory @relation(fields: [med_id], references: [med_id])
+  med MedInventory @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+
+  @@index([med_id, expiry_date])
 }
 
 model DoctorAvailability {
@@ -134,41 +166,52 @@ model DoctorAvailability {
   available_timestart DateTime
   available_timeend   DateTime
 
-  doctor Users  @relation(fields: [doctor_user_id], references: [user_id])
-  clinic Clinic @relation(fields: [clinic_id], references: [clinic_id])
+  doctor Users  @relation(fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+
+  @@index([doctor_user_id, available_date])
+  @@index([clinic_id, available_date])
 }
 
 model Appointment {
-  appointment_id        String   @id @default(cuid())
+  appointment_id        String            @id @default(cuid())
   patient_user_id       String
   clinic_id             String
   doctor_user_id        String
-  created_by_user_id    String
+  created_by_user_id    String?
   appointment_date      DateTime
   appointment_timestart DateTime
   appointment_timeend   DateTime
-  service_type          String?
-  status                String
+  service_type          ServiceType?
+  status                AppointmentStatus
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
 
-  patient      Users         @relation("PatientAppointments", fields: [patient_user_id], references: [user_id])
-  doctor       Users         @relation("DoctorAppointments", fields: [doctor_user_id], references: [user_id])
-  clinic       Clinic        @relation(fields: [clinic_id], references: [clinic_id])
-  createdBy    Users         @relation("CreatedAppointments", fields: [created_by_user_id], references: [user_id])
+  patient      Users         @relation("PatientAppointments", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
+  doctor       Users         @relation("DoctorAppointments", fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
+  clinic       Clinic        @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+  createdBy    Users?        @relation("CreatedAppointments", fields: [created_by_user_id], references: [user_id], onDelete: SetNull)
   consultation Consultation?
+
+  @@unique([doctor_user_id, appointment_timestart, appointment_timeend])
+  @@index([doctor_user_id, appointment_date, status])
+  @@index([patient_user_id, appointment_date, status])
 }
 
 model Consultation {
-  consultation_id String  @id @default(cuid())
-  appointment_id  String  @unique
-  doctor_user_id  String
+  consultation_id String   @id @default(cuid())
+  appointment_id  String   @unique
+  doctor_user_id  String?
   nurse_user_id   String?
   reason_of_visit String?
   findings        String?
   diagnosis       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  appointment Appointment   @relation(fields: [appointment_id], references: [appointment_id])
-  doctor      Users         @relation("ConsultationDoctor", fields: [doctor_user_id], references: [user_id])
-  nurse       Users?        @relation("ConsultationNurse", fields: [nurse_user_id], references: [user_id])
+  appointment Appointment   @relation(fields: [appointment_id], references: [appointment_id], onDelete: Cascade)
+  doctor      Users?        @relation("ConsultationDoctor", fields: [doctor_user_id], references: [user_id], onDelete: SetNull)
+  nurse       Users?        @relation("ConsultationNurse", fields: [nurse_user_id], references: [user_id], onDelete: SetNull)
   dispenses   MedDispense[]
   medcerts    MedCert[]
 }
@@ -179,20 +222,24 @@ model MedDispense {
   consultation_id String
   quantity        Int
 
-  med          MedInventory @relation(fields: [med_id], references: [med_id])
-  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id])
+  med          MedInventory @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+
+  @@index([consultation_id])
 }
 
 model MedCert {
   certificate_id    String        @id @default(cuid())
   consultation_id   String
   patient_user_id   String
-  issued_by_user_id String
+  issued_by_user_id String?
   issue_date        DateTime
   valid_until       DateTime
   status            MedcertStatus
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id])
-  patient      Users        @relation("PatientCertificates", fields: [patient_user_id], references: [user_id])
-  issuedBy     Users        @relation("IssuedCertificates", fields: [issued_by_user_id], references: [user_id])
+  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  patient      Users        @relation("PatientCertificates", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
+  issuedBy     Users?       @relation("IssuedCertificates", fields: [issued_by_user_id], references: [user_id], onDelete: SetNull)
 }
