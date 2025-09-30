@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Prisma, AccountStatus, Role } from "@prisma/client";
 
 // --------------------
 // Error Handler Helper
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const role = (body.role as string).toUpperCase() as Role;
+        const role = (body.role as string).toUpperCase();
         const fname = body.fname as string;
         const mname = (body.mname as string) || null;
         const lname = body.lname as string;
@@ -63,7 +62,7 @@ export async function POST(req: Request) {
             data: {
                 username: username!,
                 password: hashedPassword,
-                role, // ✅ properly typed
+                role: role as any, // 👈 allow enum mismatch
             },
         });
 
@@ -150,17 +149,12 @@ export async function GET() {
             orderBy: { createdAt: "desc" },
         });
 
-        const formatted = users.map((u): {
-            user_id: string;
-            username: string;
-            role: Role;
-            status: AccountStatus;
-            fullName: string;
-        } => ({
+        // 👇 explicitly type `u`
+        const formatted = users.map((u: typeof users[number]) => ({
             user_id: u.user_id,
             username: u.username,
-            role: u.role as Role,
-            status: u.status as AccountStatus,
+            role: u.role,
+            status: u.status,
             fullName: u.student
                 ? `${u.student.fname} ${u.student.lname}`
                 : u.employee
@@ -181,12 +175,12 @@ export async function PATCH(req: Request) {
     try {
         const { userId, status } = (await req.json()) as {
             userId: string;
-            status: AccountStatus;
+            status: string;
         };
 
         await prisma.users.update({
             where: { user_id: userId },
-            data: { status },
+            data: { status: status as any }, // 👈 cast string to enum
         });
 
         return NextResponse.json({ success: true });
