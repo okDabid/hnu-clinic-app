@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Role } from "@prisma/client"; // ✅ Prisma enum Role
+import { Role, AccountStatus } from "@prisma/client";
 
+// --------------------
+// Error Handler Helper
+// --------------------
 function handleError(error: unknown, message = "Server error") {
     if (error instanceof Error) {
         console.error(error.message);
@@ -11,6 +14,28 @@ function handleError(error: unknown, message = "Server error") {
     }
     return NextResponse.json({ error: message }, { status: 500 });
 }
+
+// --------------------
+// Types for relations
+// --------------------
+type UserRelation = {
+    user_id: string;
+    username: string;
+    role: Role;
+    status: AccountStatus;
+};
+
+type StudentWithUser = {
+    fname: string;
+    lname: string;
+    mname: string | null;
+} & { user: UserRelation };
+
+type EmployeeWithUser = {
+    fname: string;
+    lname: string;
+    mname: string | null;
+} & { user: UserRelation };
 
 // --------------------
 // Create User (POST)
@@ -38,6 +63,7 @@ export async function POST(req: Request) {
         let username: string | null = null;
         let createdId: string | null = null;
 
+        // Determine ID/username based on role
         if (role === "NURSE" || role === "DOCTOR") {
             username = employee_id || `EMP-${Date.now()}`;
             createdId = username;
@@ -59,7 +85,7 @@ export async function POST(req: Request) {
             data: {
                 username: username!,
                 password: hashedPassword,
-                role, // ✅ strongly typed
+                role,
             },
         });
 
@@ -123,8 +149,8 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: true,
-                id: finalId,
-                password: rawPassword,
+                id: finalId, // ✅ Returns the correct profile ID
+                password: rawPassword, // ✅ Plain password returned once
             },
             { status: 201 }
         );

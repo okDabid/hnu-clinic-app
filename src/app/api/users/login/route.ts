@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import type { Prisma } from "@prisma/client";
 
-// ✅ define payload types with user relation included
-type EmployeeWithUser = Prisma.EmployeeGetPayload<{
-    include: { user: true };
-}>;
+// ✅ define minimal relation types manually
+type UserRelation = {
+    user: {
+        user_id: string;
+        role: string;
+        password: string;
+    } | null;
+};
 
-type StudentWithUser = Prisma.StudentGetPayload<{
-    include: { user: true };
-}>;
+type EmployeeWithUser = {
+    fname: string;
+    lname: string;
+} & UserRelation;
+
+type StudentWithUser = {
+    fname: string;
+    lname: string;
+} & UserRelation;
 
 export async function POST(req: Request) {
     try {
@@ -20,27 +29,25 @@ export async function POST(req: Request) {
         let userRecord: EmployeeWithUser | StudentWithUser | null = null;
 
         if (role === "NURSE" || role === "DOCTOR") {
-            userRecord = await prisma.employee.findUnique({
+            userRecord = (await prisma.employee.findUnique({
                 where: { employee_id },
                 include: { user: true },
-            });
+            })) as EmployeeWithUser | null;
         } else if (role === "SCHOLAR") {
-            userRecord = await prisma.student.findUnique({
+            userRecord = (await prisma.student.findUnique({
                 where: { student_id: school_id },
                 include: { user: true },
-            });
+            })) as StudentWithUser | null;
         } else if (role === "PATIENT") {
-            // check student first
             userRecord =
-                (await prisma.student.findUnique({
+                ((await prisma.student.findUnique({
                     where: { student_id: patient_id },
                     include: { user: true },
-                })) ||
-                // then check employee
-                (await prisma.employee.findUnique({
+                })) as StudentWithUser | null) ||
+                ((await prisma.employee.findUnique({
                     where: { employee_id: patient_id },
                     include: { user: true },
-                }));
+                })) as EmployeeWithUser | null);
         }
 
         // not found
