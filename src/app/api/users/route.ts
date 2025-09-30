@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import type { Role, AccountStatus } from "@prisma/client";
 
 // --------------------
 // Error Handler Helper
@@ -13,12 +14,6 @@ function handleError(error: unknown, message = "Server error") {
     }
     return NextResponse.json({ error: message }, { status: 500 });
 }
-
-// --------------------
-// Local enums (instead of importing from Prisma)
-// --------------------
-type Role = "NURSE" | "DOCTOR" | "SCHOLAR" | "PATIENT" | "ADMIN";
-type AccountStatus = "Active" | "Inactive";
 
 // --------------------
 // Create User (POST)
@@ -62,16 +57,14 @@ export async function POST(req: Request) {
             createdId = username;
         }
 
-        // 1️⃣ Create User
         const user = await prisma.users.create({
             data: {
                 username: username!,
                 password: hashedPassword,
-                role, // string union type
+                role,
             },
         });
 
-        // 2️⃣ Attach profile & capture real ID
         let finalId = createdId;
 
         if (role === "NURSE" || role === "DOCTOR") {
@@ -154,7 +147,9 @@ export async function GET() {
             orderBy: { createdAt: "desc" },
         });
 
-        const formatted = users.map((u) => ({
+        type UserWithRelations = (typeof users)[number];
+
+        const formatted = users.map((u: UserWithRelations) => ({
             user_id: u.user_id,
             username: u.username,
             role: u.role as Role,
@@ -177,11 +172,14 @@ export async function GET() {
 // --------------------
 export async function PATCH(req: Request) {
     try {
-        const { userId, status } = await req.json();
+        const { userId, status } = (await req.json()) as {
+            userId: string;
+            status: AccountStatus;
+        };
 
         await prisma.users.update({
             where: { user_id: userId },
-            data: { status: status as AccountStatus },
+            data: { status },
         });
 
         return NextResponse.json({ success: true });
