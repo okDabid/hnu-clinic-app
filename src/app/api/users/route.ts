@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Role } from "@prisma/client"; // ✅ use Prisma enum
+import { Role } from "@prisma/client"; // ✅ Prisma enum Role
 
-// --------------------
-// Error Handler Helper
-// --------------------
 function handleError(error: unknown, message = "Server error") {
     if (error instanceof Error) {
         console.error(error.message);
@@ -22,7 +19,6 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        // ✅ parse as Role to avoid `any`
         const role = (body.role as string).toUpperCase() as Role;
         const fname = body.fname as string;
         const mname = (body.mname as string) || null;
@@ -42,7 +38,6 @@ export async function POST(req: Request) {
         let username: string | null = null;
         let createdId: string | null = null;
 
-        // Determine ID/username based on role
         if (role === "NURSE" || role === "DOCTOR") {
             username = employee_id || `EMP-${Date.now()}`;
             createdId = username;
@@ -64,7 +59,7 @@ export async function POST(req: Request) {
             data: {
                 username: username!,
                 password: hashedPassword,
-                role, // ✅ already typed as Role
+                role, // ✅ strongly typed
             },
         });
 
@@ -128,8 +123,8 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 success: true,
-                id: finalId, // ✅ Returns the correct profile ID
-                password: rawPassword, // ✅ Plain password returned once
+                id: finalId,
+                password: rawPassword,
             },
             { status: 201 }
         );
