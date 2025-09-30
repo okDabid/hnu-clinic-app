@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum AccountStatus {
+  Active
+  Inactive
+}
+
+enum MedcertStatus {
+  Valid
+  Expired
+}
+
+model Clinic {
+  clinic_id        String @id @default(cuid())
+  clinic_name      String
+  slug             String @unique
+  clinic_location  String
+  clinic_contactno String
+
+  medinventory MedInventory[]
+  doctorAvail  DoctorAvailability[]
+  appointments Appointment[]
+
+  @@index([slug])
+}
+
+model Users {
+  user_id  String        @id @default(cuid())
+  username String        @unique
+  password String
+  role     String
+  status   AccountStatus @default(Active)
+
+  student             Student?
+  employee            Employee?
+  doctorAvail         DoctorAvailability[]
+  appointmentsPatient Appointment[]        @relation("PatientAppointments")
+  appointmentsDoctor  Appointment[]        @relation("DoctorAppointments")
+  appointmentsCreated Appointment[]        @relation("CreatedAppointments")
+  consultationsDoctor Consultation[]       @relation("ConsultationDoctor")
+  consultationsNurse  Consultation[]       @relation("ConsultationNurse")
+  medcertIssued       MedCert[]            @relation("IssuedCertificates")
+  medcertPatient      MedCert[]            @relation("PatientCertificates")
+}
+
+model Student {
+  stud_user_id         String        @id @default(cuid())
+  user_id              String        @unique
+  student_id           String        @unique
+  fname                String
+  mname                String?
+  lname                String
+  date_of_birth        DateTime
+  gender               Gender
+  department           String?
+  program              String?
+  specialization       String?
+  year_level           String?
+  contactno            String?
+  address              String?
+  bloodtype            String?
+  allergies            String?
+  medical_cond         String?
+  emergencyco_name     String?
+  emergencyco_num      String?
+  emergencyco_relation String?
+  status               AccountStatus @default(Active)
+
+  user Users @relation(fields: [user_id], references: [user_id])
+}
+
+model Employee {
+  emp_id               String        @id @default(cuid())
+  user_id              String        @unique
+  employee_id          String        @unique
+  fname                String
+  mname                String?
+  lname                String
+  date_of_birth        DateTime
+  gender               Gender
+  contactno            String?
+  address              String?
+  bloodtype            String?
+  allergies            String?
+  medical_cond         String?
+  emergencyco_name     String?
+  emergencyco_num      String?
+  emergencyco_relation String?
+  status               AccountStatus @default(Active)
+
+  user Users @relation(fields: [user_id], references: [user_id])
+}
+
+model MedInventory {
+  med_id    String  @id @default(cuid())
+  clinic_id String
+  quantity  Int
+  item_name String
+  item_type String?
+
+  clinic         Clinic          @relation(fields: [clinic_id], references: [clinic_id])
+  replenishments Replenishment[]
+  dispenses      MedDispense[]
+}
+
+model Replenishment {
+  replenishment_id String   @id @default(cuid())
+  med_id           String
+  quantity_added   Int
+  date_received    DateTime
+  expiry_date      DateTime
+
+  med MedInventory @relation(fields: [med_id], references: [med_id])
+}
+
+model DoctorAvailability {
+  availability_id     String   @id @default(cuid())
+  doctor_user_id      String
+  clinic_id           String
+  available_date      DateTime
+  available_timestart DateTime
+  available_timeend   DateTime
+
+  doctor Users  @relation(fields: [doctor_user_id], references: [user_id])
+  clinic Clinic @relation(fields: [clinic_id], references: [clinic_id])
+}
+
+model Appointment {
+  appointment_id        String   @id @default(cuid())
+  patient_user_id       String
+  clinic_id             String
+  doctor_user_id        String
+  created_by_user_id    String
+  appointment_date      DateTime
+  appointment_timestart DateTime
+  appointment_timeend   DateTime
+  service_type          String?
+  status                String
+
+  patient      Users         @relation("PatientAppointments", fields: [patient_user_id], references: [user_id])
+  doctor       Users         @relation("DoctorAppointments", fields: [doctor_user_id], references: [user_id])
+  clinic       Clinic        @relation(fields: [clinic_id], references: [clinic_id])
+  createdBy    Users         @relation("CreatedAppointments", fields: [created_by_user_id], references: [user_id])
+  consultation Consultation?
+}
+
+model Consultation {
+  consultation_id String  @id @default(cuid())
+  appointment_id  String  @unique
+  doctor_user_id  String
+  nurse_user_id   String?
+  reason_of_visit String?
+  findings        String?
+  diagnosis       String?
+
+  appointment Appointment   @relation(fields: [appointment_id], references: [appointment_id])
+  doctor      Users         @relation("ConsultationDoctor", fields: [doctor_user_id], references: [user_id])
+  nurse       Users?        @relation("ConsultationNurse", fields: [nurse_user_id], references: [user_id])
+  dispenses   MedDispense[]
+  medcerts    MedCert[]
+}
+
+model MedDispense {
+  dispense_id     String @id @default(cuid())
+  med_id          String
+  consultation_id String
+  quantity        Int
+
+  med          MedInventory @relation(fields: [med_id], references: [med_id])
+  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id])
+}
+
+model MedCert {
+  certificate_id    String        @id @default(cuid())
+  consultation_id   String
+  patient_user_id   String
+  issued_by_user_id String
+  issue_date        DateTime
+  valid_until       DateTime
+  status            MedcertStatus
+
+  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id])
+  patient      Users        @relation("PatientCertificates", fields: [patient_user_id], references: [user_id])
+  issuedBy     Users        @relation("IssuedCertificates", fields: [issued_by_user_id], references: [user_id])
+}
