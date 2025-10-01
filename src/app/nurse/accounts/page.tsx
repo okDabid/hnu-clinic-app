@@ -368,7 +368,7 @@ export default function NurseAccountsPage() {
                     {/* My Account */}
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardHeader className="border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <CardHeader className="border-b flex sm:items-center sm:justify-between gap-3">
                                 <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                                     My Account
                                 </CardTitle>
@@ -499,6 +499,7 @@ export default function NurseAccountsPage() {
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
+
                                 </Dialog>
                             </CardHeader>
 
@@ -557,7 +558,6 @@ export default function NurseAccountsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Contact + Address */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label className="block mb-1 font-medium">Contact No</Label>
@@ -577,7 +577,6 @@ export default function NurseAccountsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Blood + Allergies */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label className="block mb-1 font-medium">Blood Type</Label>
@@ -597,7 +596,6 @@ export default function NurseAccountsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Medical Conditions */}
                                     <div>
                                         <Label className="block mb-1 font-medium">Medical Conditions</Label>
                                         <Input
@@ -607,7 +605,6 @@ export default function NurseAccountsPage() {
                                         />
                                     </div>
 
-                                    {/* Emergency Contact */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
                                             <Label className="block mb-1 font-medium">Emergency Contact Name</Label>
@@ -635,7 +632,6 @@ export default function NurseAccountsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Submit */}
                                     <Button
                                         type="submit"
                                         className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
@@ -650,22 +646,19 @@ export default function NurseAccountsPage() {
                     )}
 
 
+
                     {/* Create User */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardHeader className="border-b">
-                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
-                                Create New User
-                            </CardTitle>
+                            <CardTitle className="text-2xl font-bold text-green-600">Create New User</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Role */}
                                 <div className="space-y-2">
-                                    <Label className="block mb-1 font-medium">Role</Label>
+                                    <Label className="block mb-1">Role</Label>
                                     <Select value={role} onValueChange={setRole}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select role" />
-                                        </SelectTrigger>
+                                        <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
                                             <SelectItem value="NURSE">Nurse</SelectItem>
@@ -676,31 +669,14 @@ export default function NurseAccountsPage() {
                                 </div>
 
                                 {/* Conditional IDs */}
-                                {role === "SCHOLAR" && (
-                                    <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">School ID</Label>
-                                        <Input name="school_id" required />
-                                    </div>
-                                )}
-                                {(role === "NURSE" || role === "DOCTOR") && (
-                                    <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">Employee ID</Label>
-                                        <Input name="employee_id" required />
-                                    </div>
-                                )}
+                                {role === "SCHOLAR" && (<div className="space-y-2"><Label className="block mb-1">School ID</Label><Input name="school_id" required /></div>)}
+                                {(role === "NURSE" || role === "DOCTOR") && (<div className="space-y-2"><Label className="block mb-1">Employee ID</Label><Input name="employee_id" required /></div>)}
 
                                 {role === "PATIENT" && (
                                     <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">Patient Type</Label>
-                                        <Select
-                                            value={patientType}
-                                            onValueChange={(val: "student" | "employee") =>
-                                                setPatientType(val)
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select patient type" />
-                                            </SelectTrigger>
+                                        <Label className="block mb-1">Patient Type</Label>
+                                        <Select value={patientType} onValueChange={(val: "student" | "employee") => setPatientType(val)}>
+                                            <SelectTrigger><SelectValue placeholder="Select patient type" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="student">Student</SelectItem>
                                                 <SelectItem value="employee">Employee</SelectItem>
@@ -709,51 +685,24 @@ export default function NurseAccountsPage() {
                                     </div>
                                 )}
 
-                                {role === "PATIENT" && patientType === "student" && (
-                                    <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">Student ID</Label>
-                                        <Input name="student_id" required />
-                                    </div>
-                                )}
-                                {role === "PATIENT" && patientType === "employee" && (
-                                    <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">Employee ID</Label>
-                                        <Input name="employee_id" required />
-                                    </div>
-                                )}
+                                {role === "PATIENT" && patientType === "student" && (<div className="space-y-2"><Label>Student ID</Label><Input name="student_id" required /></div>)}
+                                {role === "PATIENT" && patientType === "employee" && (<div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>)}
 
                                 {/* Name Fields */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">First Name</Label>
-                                        <Input name="fname" required />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">Middle Name</Label>
-                                        <Input name="mname" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="block mb-1 font-medium">Last Name</Label>
-                                        <Input name="lname" required />
-                                    </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2"><Label className="block mb-1 font-medium">First Name</Label><Input name="fname" required /></div>
+                                    <div className="space-y-2"><Label className="block mb-1 font-medium">Middle Name</Label><Input name="mname" /></div>
+                                    <div className="space-y-2"><Label className="block mb-1 font-medium">Last Name</Label><Input name="lname" required /></div>
                                 </div>
 
                                 {/* DOB */}
-                                <div className="space-y-2">
-                                    <Label className="block mb-1 font-medium">Date of Birth</Label>
-                                    <Input type="date" name="date_of_birth" required />
-                                </div>
+                                <div className="space-y-2"><Label className="block mb-1">Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
 
                                 {/* Gender */}
                                 <div className="space-y-2">
-                                    <Label className="block mb-1 font-medium">Gender</Label>
-                                    <Select
-                                        value={gender}
-                                        onValueChange={(val) => setGender(val as "Male" | "Female")}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select gender" />
-                                        </SelectTrigger>
+                                    <Label className="block mb-1">Gender</Label>
+                                    <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
+                                        <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="Male">Male</SelectItem>
                                             <SelectItem value="Female">Female</SelectItem>
@@ -761,12 +710,7 @@ export default function NurseAccountsPage() {
                                     </Select>
                                 </div>
 
-                                {/* Submit */}
-                                <Button
-                                    type="submit"
-                                    className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                                    disabled={loading}
-                                >
+                                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2" disabled={loading}>
                                     {loading && <Loader2 className="h-5 w-5 animate-spin" />}
                                     {loading ? "Creating..." : "Create User"}
                                 </Button>
@@ -774,13 +718,10 @@ export default function NurseAccountsPage() {
                         </CardContent>
                     </Card>
 
-
                     {/* Manage Users */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
-                                Manage Existing Users
-                            </CardTitle>
+                            <CardTitle className="text-2xl font-bold text-green-600">Manage Existing Users</CardTitle>
                             <div className="relative w-full md:w-72">
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                                 <Input
@@ -796,9 +737,8 @@ export default function NurseAccountsPage() {
                         </CardHeader>
 
                         <CardContent className="flex-1 flex flex-col">
-                            {/* ✅ Scrollable Table on Mobile */}
-                            <div className="w-full overflow-x-auto flex-1">
-                                <Table className="min-w-[600px]">
+                            <div className="overflow-x-auto flex-1">
+                                <Table>
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>User ID</TableHead>
@@ -813,10 +753,7 @@ export default function NurseAccountsPage() {
                                             filteredUsers
                                                 .slice((currentPage - 1) * 8, currentPage * 8) // ✅ show 8 users per page
                                                 .map((user) => (
-                                                    <TableRow
-                                                        key={user.user_id}
-                                                        className="hover:bg-green-50 transition"
-                                                    >
+                                                    <TableRow key={user.user_id} className="hover:bg-green-50 transition">
                                                         <TableCell className="font-medium">{user.user_id}</TableCell>
                                                         <TableCell>{user.role}</TableCell>
                                                         <TableCell>{user.fullName}</TableCell>
@@ -837,11 +774,7 @@ export default function NurseAccountsPage() {
                                                                 <AlertDialogTrigger asChild>
                                                                     <Button
                                                                         size="sm"
-                                                                        variant={
-                                                                            user.status === "Active"
-                                                                                ? "destructive"
-                                                                                : "default"
-                                                                        }
+                                                                        variant={user.status === "Active" ? "destructive" : "default"}
                                                                         className="gap-2"
                                                                     >
                                                                         {user.status === "Active" ? (
@@ -858,9 +791,7 @@ export default function NurseAccountsPage() {
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>
-                                                                            {user.status === "Active"
-                                                                                ? "Deactivate user?"
-                                                                                : "Activate user?"}
+                                                                            {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
                                                                         </AlertDialogTitle>
                                                                         <AlertDialogDescription>
                                                                             {user.status === "Active"
@@ -876,13 +807,9 @@ export default function NurseAccountsPage() {
                                                                                     ? "bg-red-600 hover:bg-red-700"
                                                                                     : "bg-green-600 hover:bg-green-700"
                                                                             }
-                                                                            onClick={() =>
-                                                                                handleToggle(user.accountId, user.status)
-                                                                            }
+                                                                            onClick={() => handleToggle(user.accountId, user.status)}
                                                                         >
-                                                                            {user.status === "Active"
-                                                                                ? "Confirm Deactivate"
-                                                                                : "Confirm Activate"}
+                                                                            {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
@@ -892,10 +819,7 @@ export default function NurseAccountsPage() {
                                                 ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell
-                                                    colSpan={5}
-                                                    className="text-center text-gray-500 py-6"
-                                                >
+                                                <TableCell colSpan={5} className="text-center text-gray-500 py-6">
                                                     No users found
                                                 </TableCell>
                                             </TableRow>
@@ -905,7 +829,7 @@ export default function NurseAccountsPage() {
                             </div>
 
                             {/* ✅ Pagination Controls fixed at bottom */}
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t">
+                            <div className="flex justify-between items-center mt-4 pt-4 border-t">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -925,10 +849,7 @@ export default function NurseAccountsPage() {
                                             Math.min(prev + 1, Math.ceil(filteredUsers.length / 8))
                                         )
                                     }
-                                    disabled={
-                                        currentPage === Math.ceil(filteredUsers.length / 8) ||
-                                        filteredUsers.length === 0
-                                    }
+                                    disabled={currentPage === Math.ceil(filteredUsers.length / 8) || filteredUsers.length === 0}
                                 >
                                     Next
                                 </Button>
