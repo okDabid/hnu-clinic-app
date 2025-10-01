@@ -14,7 +14,7 @@ export default function AboutPage() {
         <div className="min-h-screen bg-green-50 flex flex-col">
             {/* Header / Navbar */}
             <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b">
-                <div className="flex justify-between items-center px-4 md:px-8 py-4">
+                <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-4">
                     {/* Logo + Title */}
                     <div className="flex items-center gap-3">
                         <Link href="/">
