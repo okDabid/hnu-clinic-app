@@ -11,8 +11,8 @@ export default function AboutPage() {
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-green-50 flex flex-col">
-            {/* Header / Navbar */}
+        <div className="flex flex-col min-h-screen bg-green-50">
+            {/* Header */}
             <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-4">
                     {/* Logo + Title */}
