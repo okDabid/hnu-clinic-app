@@ -33,7 +33,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,17 +81,21 @@ export default function NurseClinicPage() {
         if (res.ok) {
             toast.success("Clinic added!");
             loadClinics();
-        } else toast.error("Failed to add clinic");
+        } else if (res.status === 409) {
+            toast.error("Clinic with this name already exists");
+        } else {
+            toast.error("Failed to add clinic");
+        }
     }
 
-    // Update clinic (only location + contact)
+    // Update clinic
     async function handleUpdateClinic(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!selectedClinic) return;
 
         const formData = new FormData(e.currentTarget);
         const payload = {
-            clinic_name: selectedClinic.clinic_name, // keep original name fixed
+            clinic_name: selectedClinic.clinic_name, // keep original name unless allowed to change
             clinic_location: formData.get("clinic_location"),
             clinic_contactno: formData.get("clinic_contactno"),
         };
@@ -105,7 +109,11 @@ export default function NurseClinicPage() {
         if (res.ok) {
             toast.success("Clinic updated!");
             loadClinics();
-        } else toast.error("Failed to update clinic");
+        } else if (res.status === 409) {
+            toast.error("Another clinic with this name already exists");
+        } else {
+            toast.error("Failed to update clinic");
+        }
     }
 
     return (
@@ -225,7 +233,7 @@ export default function NurseClinicPage() {
                                                     <DialogContent>
                                                         <DialogHeader>
                                                             <DialogTitle>Update Clinic</DialogTitle>
-                                                            <DialogDescription>Only update location or contact number.</DialogDescription>
+                                                            <DialogDescription>Update location or contact number.</DialogDescription>
                                                         </DialogHeader>
                                                         <form onSubmit={handleUpdateClinic} className="space-y-4">
                                                             <div>

@@ -1,19 +1,20 @@
-// src/app/api/nurse/clinic/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// ✅ GET /api/nurse/clinic/[id]
+// GET /api/nurse/clinic/[id]
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        if (!params?.id) {
+        const { id } = await params; // ✅ must await
+
+        if (!id) {
             return NextResponse.json({ error: "Clinic ID is required" }, { status: 400 });
         }
 
         const clinic = await prisma.clinic.findUnique({
-            where: { clinic_id: params.id },
+            where: { clinic_id: id },
         });
 
         if (!clinic) {
@@ -27,26 +28,40 @@ export async function GET(
     }
 }
 
-// ✅ PUT /api/nurse/clinic/[id]
+// PUT /api/nurse/clinic/[id]
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        if (!params?.id) {
+        const { id } = await params;
+
+        if (!id) {
             return NextResponse.json({ error: "Clinic ID is required" }, { status: 400 });
         }
 
         const body = await req.json();
         const { clinic_name, clinic_location, clinic_contactno } = body;
 
-        // Guard against empty payload
         if (!clinic_name && !clinic_location && !clinic_contactno) {
             return NextResponse.json({ error: "No fields provided to update" }, { status: 400 });
         }
 
+        // ✅ Prevent renaming to an existing clinic
+        if (clinic_name) {
+            const duplicate = await prisma.clinic.findFirst({
+                where: { clinic_name, NOT: { clinic_id: id } },
+            });
+            if (duplicate) {
+                return NextResponse.json(
+                    { error: "Another clinic with this name already exists" },
+                    { status: 409 }
+                );
+            }
+        }
+
         const updatedClinic = await prisma.clinic.update({
-            where: { clinic_id: params.id },
+            where: { clinic_id: id },
             data: {
                 ...(clinic_name && { clinic_name }),
                 ...(clinic_location && { clinic_location }),
