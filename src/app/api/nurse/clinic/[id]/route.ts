@@ -5,11 +5,13 @@ import { prisma } from "@/lib/prisma";
 // GET /api/nurse/clinic/:id
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } }
 ) {
     try {
+        const { id } = context.params;
+
         const clinic = await prisma.clinic.findUnique({
-            where: { clinic_id: params.id },
+            where: { clinic_id: id },
         });
 
         if (!clinic) {
@@ -26,18 +28,19 @@ export async function GET(
 // PUT /api/nurse/clinic/:id
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } }
 ) {
     try {
+        const { id } = context.params;
         const { clinic_name, clinic_location, clinic_contactno } = await req.json();
 
         const updatedClinic = await prisma.clinic.update({
-            where: { clinic_id: params.id },
+            where: { clinic_id: id },
             data: {
                 clinic_name,
                 clinic_location,
                 clinic_contactno,
-                // keep if your schema still has slug; otherwise remove this line
+                // remove this line if your schema has no slug
                 slug: clinic_name ? clinic_name.toLowerCase().replace(/\s+/g, "-") : undefined,
             },
         });
