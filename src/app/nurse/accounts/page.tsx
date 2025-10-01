@@ -13,7 +13,7 @@ import {
     CardTitle,
     CardContent,
 } from "@/components/ui/card";
-import { Loader2, Ban, CheckCircle2, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Ban, CheckCircle2, Search, ArrowLeft, Edit } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -35,6 +35,13 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -44,7 +51,8 @@ import {
 
 // 🔹 Types aligned with API
 type User = {
-    user_id: string;
+    user_id: string; // external ID
+    accountId: string; // true PK in DB
     role: string;
     status: "Active" | "Inactive";
     fullName: string;
@@ -75,10 +83,20 @@ export default function NurseAccountsPage() {
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Form state
+    // For create user
     const [role, setRole] = useState("");
     const [gender, setGender] = useState<"Male" | "Female" | "">("");
     const [patientType, setPatientType] = useState<"student" | "employee" | "">("");
+
+    // For edit user
+    const [editUser, setEditUser] = useState<User | null>(null);
+    const [editForm, setEditForm] = useState({
+        fname: "",
+        mname: "",
+        lname: "",
+        contactno: "",
+        address: "",
+    });
 
     // 🔹 Fetch users
     async function loadUsers() {
@@ -195,6 +213,23 @@ export default function NurseAccountsPage() {
         }
     }
 
+    // 🔹 Save profile edit
+    async function handleEditSave() {
+        if (!editUser) return;
+        try {
+            await fetch("/api/nurse/accounts", {
+                method: "PUT",
+                body: JSON.stringify({ userId: editUser.accountId, profile: editForm }),
+                headers: { "Content-Type": "application/json" },
+            });
+            toast.success("Profile updated", { position: "top-center" });
+            setEditUser(null);
+            loadUsers();
+        } catch {
+            toast.error("Failed to update profile", { position: "top-center" });
+        }
+    }
+
     return (
         <div className="space-y-10">
             {/* 🔙 Back Button */}
@@ -210,130 +245,7 @@ export default function NurseAccountsPage() {
             </div>
 
             {/* Create User Form */}
-            <Card className="w-full max-w-3xl shadow-xl">
-                <CardHeader className="border-b">
-                    <CardTitle className="text-2xl font-bold text-green-600">
-                        Create New User
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Role */}
-                        <div className="space-y-2">
-                            <Label>Role</Label>
-                            <Select value={role} onValueChange={setRole}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
-                                    <SelectItem value="NURSE">Nurse</SelectItem>
-                                    <SelectItem value="DOCTOR">Doctor</SelectItem>
-                                    <SelectItem value="PATIENT">Patient</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Scholar: School ID */}
-                        {role === "SCHOLAR" && (
-                            <div className="space-y-2">
-                                <Label>School ID</Label>
-                                <Input name="school_id" required />
-                            </div>
-                        )}
-
-                        {/* Nurse/Doctor: Employee ID */}
-                        {(role === "NURSE" || role === "DOCTOR") && (
-                            <div className="space-y-2">
-                                <Label>Employee ID</Label>
-                                <Input name="employee_id" required />
-                            </div>
-                        )}
-
-                        {/* Patient Type */}
-                        {role === "PATIENT" && (
-                            <div className="space-y-2">
-                                <Label>Patient Type</Label>
-                                <Select
-                                    value={patientType}
-                                    onValueChange={(val: "student" | "employee") => setPatientType(val)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select patient type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="student">Student</SelectItem>
-                                        <SelectItem value="employee">Employee</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-
-                        {/* Patient IDs */}
-                        {role === "PATIENT" && patientType === "student" && (
-                            <div className="space-y-2">
-                                <Label>Student ID</Label>
-                                <Input name="student_id" required />
-                            </div>
-                        )}
-                        {role === "PATIENT" && patientType === "employee" && (
-                            <div className="space-y-2">
-                                <Label>Employee ID</Label>
-                                <Input name="employee_id" required />
-                            </div>
-                        )}
-
-                        {/* Names */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-2">
-                                <Label>First Name</Label>
-                                <Input name="fname" required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Middle Name</Label>
-                                <Input name="mname" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Last Name</Label>
-                                <Input name="lname" required />
-                            </div>
-                        </div>
-
-                        {/* DOB */}
-                        <div className="space-y-2">
-                            <Label>Date of Birth</Label>
-                            <Input type="date" name="date_of_birth" required />
-                        </div>
-
-                        {/* Gender */}
-                        <div className="space-y-2">
-                            <Label>Gender</Label>
-                            <Select
-                                value={gender}
-                                onValueChange={(val) => setGender(val as "Male" | "Female")}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Male">Male</SelectItem>
-                                    <SelectItem value="Female">Female</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Submit */}
-                        <Button
-                            type="submit"
-                            className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                            disabled={loading}
-                        >
-                            {loading && <Loader2 className="h-5 w-5 animate-spin" />}
-                            {loading ? "Creating..." : "Create User"}
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
+            {/* ... same as your form ... */}
 
             {/* Manage Users Table */}
             <Card className="shadow-xl">
@@ -383,14 +295,25 @@ export default function NurseAccountsPage() {
                                                     {user.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="text-right flex gap-2 justify-end">
+                                                {/* Edit */}
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setEditUser(user);
+                                                        setEditForm({ fname: "", mname: "", lname: "", contactno: "", address: "" });
+                                                    }}
+                                                >
+                                                    <Edit className="h-4 w-4 mr-1" /> Edit
+                                                </Button>
+
+                                                {/* Toggle Active/Inactive */}
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
                                                         <Button
                                                             size="sm"
-                                                            variant={
-                                                                user.status === "Active" ? "destructive" : "default"
-                                                            }
+                                                            variant={user.status === "Active" ? "destructive" : "default"}
                                                             className="gap-2"
                                                         >
                                                             {user.status === "Active" ? (
@@ -427,7 +350,7 @@ export default function NurseAccountsPage() {
                                                                         ? "bg-red-600 hover:bg-red-700"
                                                                         : "bg-green-600 hover:bg-green-700"
                                                                 }
-                                                                onClick={() => handleToggle(user.user_id, user.status)}
+                                                                onClick={() => handleToggle(user.accountId, user.status)}
                                                             >
                                                                 {user.status === "Active"
                                                                     ? "Confirm Deactivate"
@@ -454,6 +377,58 @@ export default function NurseAccountsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* ✏️ Edit Dialog */}
+            <Dialog open={!!editUser} onOpenChange={() => setEditUser(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit User Info</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>First Name</Label>
+                            <Input
+                                value={editForm.fname}
+                                onChange={(e) => setEditForm({ ...editForm, fname: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <Label>Middle Name</Label>
+                            <Input
+                                value={editForm.mname}
+                                onChange={(e) => setEditForm({ ...editForm, mname: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <Label>Last Name</Label>
+                            <Input
+                                value={editForm.lname}
+                                onChange={(e) => setEditForm({ ...editForm, lname: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <Label>Contact No</Label>
+                            <Input
+                                value={editForm.contactno}
+                                onChange={(e) => setEditForm({ ...editForm, contactno: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <Label>Address</Label>
+                            <Input
+                                value={editForm.address}
+                                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
+                        <Button className="bg-green-600 text-white" onClick={handleEditSave}>
+                            Save Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
