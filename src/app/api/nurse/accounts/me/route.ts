@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"; // if using next-auth
 import type { NextRequest } from "next/server";
 
 // ---------------- GET OWN PROFILE ----------------
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
         const session = await getServerSession(); // 🔐 get logged-in user
         if (!session?.user?.id) {
@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        let profile: any = null;
+        // ✅ Explicit type instead of any
+        let profile: Record<string, unknown> | null = null;
         if (user.student) profile = user.student;
         if (user.employee) profile = user.employee;
 
@@ -36,7 +37,10 @@ export async function GET(req: NextRequest) {
         });
     } catch (err) {
         console.error("[GET /api/nurse/accounts/me]", err);
-        return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Failed to fetch profile" },
+            { status: 500 }
+        );
     }
 }
 
@@ -49,7 +53,7 @@ export async function PUT(req: NextRequest) {
         }
 
         const payload = await req.json();
-        const { profile } = payload;
+        const { profile } = payload as { profile: Record<string, unknown> };
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
@@ -65,7 +69,12 @@ export async function PUT(req: NextRequest) {
                 where: { user_id: session.user.id },
                 data: profile,
             });
-        } else if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
+        } else if (
+            (user.role === "NURSE" ||
+                user.role === "DOCTOR" ||
+                user.role === "PATIENT") &&
+            user.employee
+        ) {
             await prisma.employee.update({
                 where: { user_id: session.user.id },
                 data: profile,
@@ -75,6 +84,9 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (err) {
         console.error("[PUT /api/nurse/accounts/me]", err);
-        return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Failed to update profile" },
+            { status: 500 }
+        );
     }
 }
