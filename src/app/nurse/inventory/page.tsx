@@ -52,6 +52,7 @@ import {
     DialogTrigger
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 type InventoryItem = {
     med_id: string;
@@ -60,23 +61,38 @@ type InventoryItem = {
     replenishments: { expiry_date: string }[];
 };
 
+type Clinic = {
+    clinic_id: string;
+    clinic_name: string;
+};
+
 export default function NurseInventoryPage() {
     const [menuOpen] = useState(false);
     const [items, setItems] = useState<InventoryItem[]>([]);
+    const [clinics, setClinics] = useState<Clinic[]>([]);
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(false);
 
     const pageSize = 6;
 
-    // Load from API
-    async function load() {
+    // Load inventory
+    async function loadInventory() {
         const res = await fetch("/api/nurse/inventory", { cache: "no-store" });
         const data = await res.json();
         setItems(data);
     }
 
+    // Load clinics
+    async function loadClinics() {
+        const res = await fetch("/api/nurse/clinic", { cache: "no-store" });
+        const data = await res.json();
+        setClinics(data);
+    }
+
     useEffect(() => {
-        load();
+        loadInventory();
+        loadClinics();
     }, []);
 
     const filteredItems = items.filter(
@@ -154,33 +170,6 @@ export default function NurseInventoryPage() {
                     </div>
                 </header>
 
-                {/* Quick Stats */}
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 py-8">
-                    <Card>
-                        <CardContent className="flex flex-col items-center p-6">
-                            <Package className="h-8 w-8 text-green-600 mb-2" />
-                            <h3 className="font-semibold">Total Items</h3>
-                            <p className="text-2xl font-bold">{items.length}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="flex flex-col items-center p-6">
-                            <AlertTriangle className="h-8 w-8 text-yellow-600 mb-2" />
-                            <h3 className="font-semibold">Low Stock</h3>
-                            <p className="text-2xl font-bold">{items.filter(i => i.quantity < 20).length}</p>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardContent className="flex flex-col items-center p-6">
-                            <Clock className="h-8 w-8 text-red-600 mb-2" />
-                            <h3 className="font-semibold">Expired</h3>
-                            <p className="text-2xl font-bold">
-                                {items.filter(i => i.replenishments[0] && new Date(i.replenishments[0].expiry_date) < new Date()).length}
-                            </p>
-                        </CardContent>
-                    </Card>
-                </section>
-
                 {/* Inventory Table */}
                 <section className="px-6 pb-12 flex-1 flex flex-col">
                     <Card className="flex-1 flex flex-col">
@@ -215,8 +204,10 @@ export default function NurseInventoryPage() {
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
                                                 const form = e.currentTarget as HTMLFormElement;
+                                                setLoading(true);
+
                                                 const body = {
-                                                    clinic_id: "your-clinic-id", // replace with actual clinic_id
+                                                    clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
                                                     name: (form.elements.namedItem("name") as HTMLInputElement).value,
                                                     quantity: (form.elements.namedItem("quantity") as HTMLInputElement).value,
                                                     expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
@@ -229,25 +220,47 @@ export default function NurseInventoryPage() {
                                                 });
 
                                                 if (res.ok) {
-                                                    await load();
+                                                    await loadInventory();
                                                     form.reset();
+                                                    toast.success("Stock added!");
+                                                } else {
+                                                    toast.error("Failed to add stock");
                                                 }
+
+                                                setLoading(false);
                                             }}
                                         >
                                             <div>
-                                                <Label>Name</Label>
+                                                <Label className="block mb-1">Clinic</Label>
+                                                <select name="clinic_id" required className="w-full border rounded p-2">
+                                                    <option value="">Select clinic</option>
+                                                    {clinics.map((clinic) => (
+                                                        <option key={clinic.clinic_id} value={clinic.clinic_id}>
+                                                            {clinic.clinic_name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <Label className="block mb-1">Name</Label>
                                                 <Input name="name" required />
                                             </div>
                                             <div>
-                                                <Label>Quantity</Label>
+                                                <Label className="block mb-1">Quantity</Label>
                                                 <Input type="number" name="quantity" required />
                                             </div>
                                             <div>
-                                                <Label>Expiry Date</Label>
+                                                <Label className="block mb-1">Expiry Date</Label>
                                                 <Input type="date" name="expiry" required />
                                             </div>
                                             <DialogFooter>
-                                                <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white">Save</Button>
+                                                <Button
+                                                    type="submit"
+                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? "Saving..." : "Save"}
+                                                </Button>
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
@@ -255,6 +268,7 @@ export default function NurseInventoryPage() {
                             </div>
                         </CardHeader>
 
+                        {/* Table content (unchanged) */}
                         <CardContent className="flex-1 flex flex-col">
                             <div className="overflow-x-auto flex-1">
                                 <Table>
@@ -295,33 +309,6 @@ export default function NurseInventoryPage() {
                                         )}
                                     </TableBody>
                                 </Table>
-                            </div>
-
-                            {/* Pagination */}
-                            <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    Previous
-                                </Button>
-                                <span className="text-sm text-gray-600">
-                                    Page {currentPage} of {Math.ceil(filteredItems.length / pageSize) || 1}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() =>
-                                        setCurrentPage((prev) =>
-                                            Math.min(prev + 1, Math.ceil(filteredItems.length / pageSize))
-                                        )
-                                    }
-                                    disabled={currentPage === Math.ceil(filteredItems.length / pageSize) || filteredItems.length === 0}
-                                >
-                                    Next
-                                </Button>
                             </div>
                         </CardContent>
                     </Card>
