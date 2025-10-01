@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { NextRequest } from "next/server";
-import { Role, Gender } from "@prisma/client";
+import { Role, Gender, Prisma } from "@prisma/client";
 
 // Allowed fields for Student
 const STUDENT_ALLOWED_FIELDS = [
@@ -50,10 +50,7 @@ export async function GET() {
         });
     } catch (err) {
         console.error("[GET /api/nurse/accounts/me]", err);
-        return NextResponse.json(
-            { error: "Failed to fetch profile" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
     }
 }
 
@@ -76,19 +73,21 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
+        // ---------------- STUDENT ----------------
         if ((user.role === Role.PATIENT || user.role === Role.SCHOLAR) && user.student) {
-            const safeProfile: Record<StudentField, any> = {} as any;
+            const safeProfile: Prisma.StudentUpdateInput = {};
 
             for (const key of STUDENT_ALLOWED_FIELDS) {
                 if (profile[key] !== undefined) {
                     if (key === "date_of_birth" && typeof profile[key] === "string") {
-                        safeProfile[key] = new Date(profile[key] as string);
+                        safeProfile.date_of_birth = new Date(profile[key] as string);
                     } else if (key === "gender" && typeof profile[key] === "string") {
                         if (profile[key] === "Male" || profile[key] === "Female") {
-                            safeProfile[key] = profile[key] as Gender;
+                            safeProfile.gender = profile[key] as Gender;
                         }
                     } else {
-                        safeProfile[key] = profile[key];
+                        // assign other string-like fields
+                        (safeProfile as any)[key] = profile[key];
                     }
                 }
             }
@@ -99,24 +98,20 @@ export async function PUT(req: NextRequest) {
             });
         }
 
-        if (
-            (user.role === Role.NURSE ||
-                user.role === Role.DOCTOR ||
-                user.role === Role.PATIENT) &&
-            user.employee
-        ) {
-            const safeProfile: Record<EmployeeField, any> = {} as any;
+        // ---------------- EMPLOYEE ----------------
+        if ((user.role === Role.NURSE || user.role === Role.DOCTOR || user.role === Role.PATIENT) && user.employee) {
+            const safeProfile: Prisma.EmployeeUpdateInput = {};
 
             for (const key of EMPLOYEE_ALLOWED_FIELDS) {
                 if (profile[key] !== undefined) {
                     if (key === "date_of_birth" && typeof profile[key] === "string") {
-                        safeProfile[key] = new Date(profile[key] as string);
+                        safeProfile.date_of_birth = new Date(profile[key] as string);
                     } else if (key === "gender" && typeof profile[key] === "string") {
                         if (profile[key] === "Male" || profile[key] === "Female") {
-                            safeProfile[key] = profile[key] as Gender;
+                            safeProfile.gender = profile[key] as Gender;
                         }
                     } else {
-                        safeProfile[key] = profile[key];
+                        (safeProfile as any)[key] = profile[key];
                     }
                 }
             }
@@ -130,9 +125,6 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ success: true });
     } catch (err) {
         console.error("[PUT /api/nurse/accounts/me]", err);
-        return NextResponse.json(
-            { error: "Failed to update profile" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 }
