@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+// src/app/api/nurse/clinic/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET: Fetch a single clinic by ID
+// GET /api/nurse/clinic/:id
 export async function GET(
-    req: Request,
+    _req: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
@@ -22,9 +23,9 @@ export async function GET(
     }
 }
 
-// PUT: Update a clinic by ID
+// PUT /api/nurse/clinic/:id
 export async function PUT(
-    req: Request,
+    req: NextRequest,
     { params }: { params: { id: string } }
 ) {
     try {
@@ -36,9 +37,8 @@ export async function PUT(
                 clinic_name,
                 clinic_location,
                 clinic_contactno,
-                slug: clinic_name
-                    ? clinic_name.toLowerCase().replace(/\s+/g, "-")
-                    : undefined,
+                // keep if your schema still has slug; otherwise remove this line
+                slug: clinic_name ? clinic_name.toLowerCase().replace(/\s+/g, "-") : undefined,
             },
         });
 
