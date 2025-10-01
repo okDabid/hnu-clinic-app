@@ -62,6 +62,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 
+import { Cog } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+
 // 🔹 Types aligned with API
 type User = {
     user_id: string;
@@ -349,46 +360,233 @@ export default function NurseAccountsPage() {
                     {/* My Account */}
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardHeader className="border-b">
-                                <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
+                            <CardHeader className="border-b flex items-center justify-between">
+                                <CardTitle className="text-2xl font-bold text-green-600">
+                                    My Account
+                                </CardTitle>
+
+                                {/* Password Update Dialog */}
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="icon" className="hover:bg-green-50">
+                                            <Cog className="h-5 w-5 text-green-600" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md">
+                                        <DialogHeader>
+                                            <DialogTitle>Update Password</DialogTitle>
+                                            <DialogDescription>
+                                                Change your account password securely. You will need to enter your current password before setting a new one.
+                                            </DialogDescription>
+                                        </DialogHeader>
+
+                                        <form
+                                            onSubmit={async (e) => {
+                                                e.preventDefault();
+                                                const form = e.currentTarget as HTMLFormElement;
+                                                const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
+                                                const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
+                                                const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
+
+                                                if (newPassword !== confirmPassword) {
+                                                    toast.error("New passwords do not match.");
+                                                    return;
+                                                }
+
+                                                try {
+                                                    const res = await fetch("/api/nurse/accounts/password", {
+                                                        method: "PUT",
+                                                        headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify({ oldPassword, newPassword }),
+                                                    });
+
+                                                    const data = await res.json();
+                                                    if (data.error) {
+                                                        toast.error(data.error);
+                                                    } else {
+                                                        toast.success("Password updated successfully!");
+                                                        form.reset();
+                                                    }
+                                                } catch {
+                                                    toast.error("Failed to update password. Please try again.");
+                                                }
+                                            }}
+                                            className="space-y-4"
+                                        >
+                                            <div>
+                                                <Label>Current Password</Label>
+                                                <Input type="password" name="oldPassword" required />
+                                            </div>
+                                            <div>
+                                                <Label>New Password</Label>
+                                                <Input type="password" name="newPassword" required />
+                                            </div>
+                                            <div>
+                                                <Label>Confirm New Password</Label>
+                                                <Input type="password" name="confirmPassword" required />
+                                            </div>
+
+                                            <DialogFooter>
+                                                <Button
+                                                    type="submit"
+                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                >
+                                                    Update Password
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
                             </CardHeader>
+
+                            {/* Profile Form */}
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-4">
                                     {/* System info (read-only) */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><Label>User ID</Label><Input value={profile.user_id} disabled /></div>
-                                        <div><Label>Username</Label><Input value={profile.username} disabled /></div>
-                                        <div><Label>Role</Label><Input value={profile.role} disabled /></div>
-                                        <div><Label>Status</Label><Input value={profile.status} disabled /></div>
-                                        <div><Label>Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
+                                        <div>
+                                            <Label>User ID</Label>
+                                            <Input value={profile.user_id} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Username</Label>
+                                            <Input value={profile.username} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Role</Label>
+                                            <Input value={profile.role} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Status</Label>
+                                            <Input value={profile.status} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Date of Birth</Label>
+                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled />
+                                        </div>
                                     </div>
 
                                     {/* Editable fields */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div><Label>First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
-                                        <div><Label>Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
-                                        <div><Label>Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
+                                        <div>
+                                            <Label>First Name</Label>
+                                            <Input
+                                                value={profile.fname}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, fname: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Middle Name</Label>
+                                            <Input
+                                                value={profile.mname || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, mname: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Last Name</Label>
+                                            <Input
+                                                value={profile.lname}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, lname: e.target.value })
+                                                }
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><Label>Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
-                                        <div><Label>Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
+                                        <div>
+                                            <Label>Contact No</Label>
+                                            <Input
+                                                value={profile.contactno || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, contactno: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Address</Label>
+                                            <Input
+                                                value={profile.address || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, address: e.target.value })
+                                                }
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div><Label>Blood Type</Label><Input value={profile.bloodtype || ""} onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })} /></div>
-                                        <div><Label>Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                                        <div>
+                                            <Label>Blood Type</Label>
+                                            <Input
+                                                value={profile.bloodtype || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, bloodtype: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Allergies</Label>
+                                            <Input
+                                                value={profile.allergies || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, allergies: e.target.value })
+                                                }
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div><Label>Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
+                                    <div>
+                                        <Label>Medical Conditions</Label>
+                                        <Input
+                                            value={profile.medical_cond || ""}
+                                            onChange={(e) =>
+                                                setProfile({ ...profile, medical_cond: e.target.value })
+                                            }
+                                        />
+                                    </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div><Label>Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
-                                        <div><Label>Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
-                                        <div><Label>Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                        <div>
+                                            <Label>Emergency Contact Name</Label>
+                                            <Input
+                                                value={profile.emergencyco_name || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, emergencyco_name: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Emergency Contact Number</Label>
+                                            <Input
+                                                value={profile.emergencyco_num || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, emergencyco_num: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Emergency Contact Relation</Label>
+                                            <Input
+                                                value={profile.emergencyco_relation || ""}
+                                                onChange={(e) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        emergencyco_relation: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                        </div>
                                     </div>
 
-                                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2" disabled={profileLoading}>
+                                    <Button
+                                        type="submit"
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                        disabled={profileLoading}
+                                    >
                                         {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
                                         {profileLoading ? "Saving..." : "Save Changes"}
                                     </Button>
@@ -396,6 +594,7 @@ export default function NurseAccountsPage() {
                             </CardContent>
                         </Card>
                     )}
+
 
                     {/* Create User */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
