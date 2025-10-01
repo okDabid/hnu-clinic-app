@@ -5,6 +5,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// Request validation schema
 const BodySchema = z.object({
     oldPassword: z.string().min(1, "Current password is required."),
     newPassword: z
@@ -17,6 +18,7 @@ const BodySchema = z.object({
         .refine((s) => /[^\w\s]/.test(s), "Must contain a symbol."),
 });
 
+// ✅ PUT handler
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -24,7 +26,6 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // ✅ Typed from your auth.ts + next-auth.d.ts
         const userId = session.user.id;
 
         const body = await req.json().catch(() => null);
@@ -45,7 +46,10 @@ export async function PUT(req: Request) {
 
         const ok = await bcrypt.compare(oldPassword, user.password);
         if (!ok) {
-            return NextResponse.json({ error: "Incorrect current password" }, { status: 400 });
+            return NextResponse.json(
+                { error: "Incorrect current password" },
+                { status: 400 }
+            );
         }
 
         const sameAsOld = await bcrypt.compare(newPassword, user.password);
@@ -57,6 +61,7 @@ export async function PUT(req: Request) {
         }
 
         const newHash = await bcrypt.hash(newPassword, 12);
+
         await prisma.users.update({
             where: { user_id: userId },
             data: { password: newHash },
@@ -65,8 +70,17 @@ export async function PUT(req: Request) {
         return NextResponse.json({ success: true });
     } catch (err) {
         console.error(err);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Internal server error" },
+            { status: 500 }
+        );
     }
 }
 
+// ✅ Add GET handler for debugging
+export async function GET() {
+    return NextResponse.json({ message: "Password route is live" });
+}
+
+// ✅ Ensure bcrypt runs on Node runtime (not edge)
 export const runtime = "nodejs";
