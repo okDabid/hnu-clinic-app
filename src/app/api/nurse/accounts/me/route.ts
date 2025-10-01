@@ -5,24 +5,71 @@ import { authOptions } from "@/lib/auth";
 import type { NextRequest } from "next/server";
 import { Role, Gender, Prisma } from "@prisma/client";
 
-// Allowed fields for Student
-const STUDENT_ALLOWED_FIELDS = [
-    "fname", "mname", "lname", "date_of_birth", "gender",
-    "department", "program", "specialization", "year_level",
-    "contactno", "address", "bloodtype", "allergies", "medical_cond",
-    "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-] as const;
+// Helpers
+function isGender(val: unknown): val is Gender {
+    return val === "Male" || val === "Female";
+}
 
-// Allowed fields for Employee
-const EMPLOYEE_ALLOWED_FIELDS = [
-    "fname", "mname", "lname", "date_of_birth", "gender",
-    "contactno", "address", "bloodtype", "allergies", "medical_cond",
-    "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-] as const;
+function toDate(val: unknown): Date | undefined {
+    if (val instanceof Date && !isNaN(val.getTime())) return val;
+    if (typeof val === "string") {
+        const d = new Date(val);
+        if (!isNaN(d.getTime())) return d;
+    }
+    return undefined;
+}
 
-type StudentField = (typeof STUDENT_ALLOWED_FIELDS)[number];
-type EmployeeField = (typeof EMPLOYEE_ALLOWED_FIELDS)[number];
+function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUpdateInput {
+    const data: Prisma.StudentUpdateInput = {};
+    if (typeof raw.fname === "string") data.fname = raw.fname;
+    if (typeof raw.mname === "string") data.mname = raw.mname;
+    if (typeof raw.lname === "string") data.lname = raw.lname;
 
+    const dob = toDate(raw.date_of_birth);
+    if (dob) data.date_of_birth = dob;
+
+    if (isGender(raw.gender)) data.gender = raw.gender;
+
+    if (typeof raw.department === "string") data.department = raw.department;
+    if (typeof raw.program === "string") data.program = raw.program;
+    if (typeof raw.specialization === "string") data.specialization = raw.specialization;
+    if (typeof raw.year_level === "string") data.year_level = raw.year_level;
+    if (typeof raw.contactno === "string") data.contactno = raw.contactno;
+    if (typeof raw.address === "string") data.address = raw.address;
+    if (typeof raw.bloodtype === "string") data.bloodtype = raw.bloodtype;
+    if (typeof raw.allergies === "string") data.allergies = raw.allergies;
+    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
+    if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
+    if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
+    if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
+
+    return data;
+}
+
+function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.EmployeeUpdateInput {
+    const data: Prisma.EmployeeUpdateInput = {};
+    if (typeof raw.fname === "string") data.fname = raw.fname;
+    if (typeof raw.mname === "string") data.mname = raw.mname;
+    if (typeof raw.lname === "string") data.lname = raw.lname;
+
+    const dob = toDate(raw.date_of_birth);
+    if (dob) data.date_of_birth = dob;
+
+    if (isGender(raw.gender)) data.gender = raw.gender;
+
+    if (typeof raw.contactno === "string") data.contactno = raw.contactno;
+    if (typeof raw.address === "string") data.address = raw.address;
+    if (typeof raw.bloodtype === "string") data.bloodtype = raw.bloodtype;
+    if (typeof raw.allergies === "string") data.allergies = raw.allergies;
+    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
+    if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
+    if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
+    if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
+
+    return data;
+}
+
+// ---------------- GET OWN PROFILE ----------------
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
@@ -54,6 +101,7 @@ export async function GET() {
     }
 }
 
+// ---------------- UPDATE OWN PROFILE ----------------
 export async function PUT(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
@@ -62,7 +110,7 @@ export async function PUT(req: NextRequest) {
         }
 
         const payload = await req.json();
-        const { profile } = payload as { profile: Record<string, unknown> };
+        const profile = (payload?.profile ?? {}) as Record<string, unknown>;
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
@@ -73,52 +121,21 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // ---------------- STUDENT ----------------
+        // PATIENT (student) or SCHOLAR -> update Student
         if ((user.role === Role.PATIENT || user.role === Role.SCHOLAR) && user.student) {
-            const safeProfile: Prisma.StudentUpdateInput = {};
-
-            for (const key of STUDENT_ALLOWED_FIELDS) {
-                if (profile[key] !== undefined) {
-                    if (key === "date_of_birth" && typeof profile[key] === "string") {
-                        safeProfile.date_of_birth = new Date(profile[key] as string);
-                    } else if (key === "gender" && typeof profile[key] === "string") {
-                        if (profile[key] === "Male" || profile[key] === "Female") {
-                            safeProfile.gender = profile[key] as Gender;
-                        }
-                    } else {
-                        // assign other string-like fields
-                        (safeProfile as any)[key] = profile[key];
-                    }
-                }
-            }
-
+            const data = buildStudentUpdateInput(profile);
             await prisma.student.update({
                 where: { user_id: session.user.id },
-                data: safeProfile,
+                data,
             });
         }
 
-        // ---------------- EMPLOYEE ----------------
+        // NURSE/DOCTOR or PATIENT (employee) -> update Employee
         if ((user.role === Role.NURSE || user.role === Role.DOCTOR || user.role === Role.PATIENT) && user.employee) {
-            const safeProfile: Prisma.EmployeeUpdateInput = {};
-
-            for (const key of EMPLOYEE_ALLOWED_FIELDS) {
-                if (profile[key] !== undefined) {
-                    if (key === "date_of_birth" && typeof profile[key] === "string") {
-                        safeProfile.date_of_birth = new Date(profile[key] as string);
-                    } else if (key === "gender" && typeof profile[key] === "string") {
-                        if (profile[key] === "Male" || profile[key] === "Female") {
-                            safeProfile.gender = profile[key] as Gender;
-                        }
-                    } else {
-                        (safeProfile as any)[key] = profile[key];
-                    }
-                }
-            }
-
+            const data = buildEmployeeUpdateInput(profile);
             await prisma.employee.update({
                 where: { user_id: session.user.id },
-                data: safeProfile,
+                data,
             });
         }
 
