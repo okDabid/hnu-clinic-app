@@ -12,7 +12,7 @@ export default function AboutPage() {
 
     return (
         <div className="min-h-screen bg-green-50 flex flex-col">
-            {/* Header / Navbar (same as landing) */}
+            {/* Header / Navbar */}
             <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-4">
                     {/* Logo + Title */}
@@ -24,29 +24,31 @@ export default function AboutPage() {
                                 width={48}
                                 height={48}
                                 priority
-                                className="md:w-14 md:h-14"
+                                className="md:w-16 md:h-16"
                             />
                         </Link>
-                        <h1 className="text-lg md:text-2xl font-bold text-green-600">HNU Clinic</h1>
+                        <h1 className="text-lg md:text-2xl font-bold text-green-600">
+                            HNU Clinic
+                        </h1>
                     </div>
 
                     {/* Desktop Nav */}
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-                        <a href="/#features" className="text-gray-700 hover:text-green-600 transition">
+                        <Link href="/#features" className="text-gray-700 hover:text-green-600 transition">
                             Features
-                        </a>
-                        <a href="/about" className="text-green-600 font-semibold">
+                        </Link>
+                        <Link href="/about" className="text-gray-700 hover:text-green-600 transition">
                             About
-                        </a>
-                        <a href="/#contact" className="text-gray-700 hover:text-green-600 transition">
+                        </Link>
+                        <Link href="/#contact" className="text-gray-700 hover:text-green-600 transition">
                             Contact
-                        </a>
+                        </Link>
                         <Link href="/login">
                             <Button className="bg-green-600 hover:bg-green-700">Login</Button>
                         </Link>
                     </nav>
 
-                    {/* Mobile Nav Toggle */}
+                    {/* Mobile Menu Button */}
                     <button
                         className="md:hidden p-2"
                         onClick={() => setMenuOpen(!menuOpen)}
@@ -59,14 +61,22 @@ export default function AboutPage() {
                     </button>
                 </div>
 
-                {/* Mobile Dropdown */}
+                {/* Mobile Dropdown Nav */}
                 {menuOpen && (
                     <div className="flex flex-col gap-3 px-4 pb-4 md:hidden">
-                        <a href="/#features" className="text-gray-700 hover:text-green-600">Features</a>
-                        <a href="/about" className="text-green-600 font-semibold">About</a>
-                        <a href="/#contact" className="text-gray-700 hover:text-green-600">Contact</a>
+                        <Link href="/#features" className="text-gray-700 hover:text-green-600 transition">
+                            Features
+                        </Link>
+                        <Link href="/about" className="text-gray-700 hover:text-green-600 transition">
+                            About
+                        </Link>
+                        <Link href="/#contact" className="text-gray-700 hover:text-green-600 transition">
+                            Contact
+                        </Link>
                         <Link href="/login">
-                            <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
+                            <Button className="bg-green-600 hover:bg-green-700">
+                                Login
+                            </Button>
                         </Link>
                     </div>
                 )}
@@ -93,7 +103,9 @@ export default function AboutPage() {
                 <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardContent className="p-8">
-                            <h2 className="text-2xl font-semibold text-green-600 mb-4">Our Mission</h2>
+                            <h2 className="text-2xl font-semibold text-green-600 mb-4">
+                                Our Mission
+                            </h2>
                             <p className="text-gray-700 leading-relaxed">
                                 To provide timely and reliable healthcare services through
                                 innovation, collaboration, and commitment to the well-being of
@@ -105,7 +117,9 @@ export default function AboutPage() {
 
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardContent className="p-8">
-                            <h2 className="text-2xl font-semibold text-green-600 mb-4">Our Vision</h2>
+                            <h2 className="text-2xl font-semibold text-green-600 mb-4">
+                                Our Vision
+                            </h2>
                             <p className="text-gray-700 leading-relaxed">
                                 To be a trusted healthcare partner, fostering a healthier HNU
                                 community with accessible, integrated, and innovative healthcare
@@ -119,14 +133,15 @@ export default function AboutPage() {
             {/* Team Section */}
             <section className="px-6 md:px-12 py-20 bg-green-50">
                 <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">Meet Our Team</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
+                        Meet Our Team
+                    </h2>
                     <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
                         Our dedicated team of doctors and nurses are here to
                         provide compassionate care and reliable health services.
                     </p>
 
                     <div className="space-y-16">
-                        {/* Pyramid Layout */}
                         {/* Head */}
                         <div className="flex justify-center">
                             <div className="flex flex-col items-center">
@@ -144,7 +159,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        {/* Physician */}
+                        {/* School Physician */}
                         <div className="flex justify-center">
                             <div className="flex flex-col items-center">
                                 <Image
@@ -154,7 +169,9 @@ export default function AboutPage() {
                                     height={120}
                                     className="rounded-full mb-4 shadow-md"
                                 />
-                                <h3 className="font-semibold text-lg text-green-600">Lovella I. Calvelo, MD</h3>
+                                <h3 className="font-semibold text-lg text-green-600">
+                                    Lovella I. Calvelo, MD
+                                </h3>
                                 <p className="text-sm text-gray-600">School Physician</p>
                             </div>
                         </div>
@@ -203,52 +220,57 @@ export default function AboutPage() {
                 </div>
             </section>
 
+
             {/* Services Section */}
             <section className="px-6 md:px-12 py-20 bg-white">
                 <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">Our Services</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
+                        Our Services
+                    </h2>
                     <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
                         Healthcare services at HNU Clinic are delivered through three core programs:
                     </p>
 
                     <div className="grid md:grid-cols-3 gap-8 text-left">
-                        {[
-                            {
-                                title: "Health Assessment Program",
-                                items: ["Physical examinations", "Consultations", "Medical certificate issuance"],
-                            },
-                            {
-                                title: "Dental Program",
-                                items: [
-                                    "Consultations and examinations",
-                                    "Oral prophylaxis",
-                                    "Tooth extractions",
-                                    "Dental certificate issuance",
-                                ],
-                            },
-                            {
-                                title: "Primary Care Program",
-                                items: [
-                                    "Support for urgent medical needs",
-                                    "Care for minor injuries",
-                                    "Assistance with sudden illnesses",
-                                ],
-                            },
-                        ].map((service) => (
-                            <Card
-                                key={service.title}
-                                className="rounded-2xl shadow-lg hover:shadow-xl transition"
-                            >
-                                <CardContent className="p-8">
-                                    <h3 className="text-xl font-semibold text-green-600 mb-4">{service.title}</h3>
-                                    <ul className="list-disc list-inside text-gray-700 space-y-2">
-                                        {service.items.map((item) => (
-                                            <li key={item}>{item}</li>
-                                        ))}
-                                    </ul>
-                                </CardContent>
-                            </Card>
-                        ))}
+                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
+                            <CardContent className="p-8">
+                                <h3 className="text-xl font-semibold text-green-600 mb-4">
+                                    Health Assessment Program
+                                </h3>
+                                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>Physical examinations</li>
+                                    <li>Consultations</li>
+                                    <li>Medical certificate issuance</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
+                            <CardContent className="p-8">
+                                <h3 className="text-xl font-semibold text-green-600 mb-4">
+                                    Dental Program
+                                </h3>
+                                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>Consultations and examinations</li>
+                                    <li>Oral prophylaxis</li>
+                                    <li>Tooth extractions</li>
+                                    <li>Dental certificate issuance</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
+                            <CardContent className="p-8">
+                                <h3 className="text-xl font-semibold text-green-600 mb-4">
+                                    Primary Care Program
+                                </h3>
+                                <ul className="list-disc list-inside text-gray-700 space-y-2">
+                                    <li>Support for urgent medical needs</li>
+                                    <li>Care for minor injuries</li>
+                                    <li>Assistance with sudden illnesses</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </section>
