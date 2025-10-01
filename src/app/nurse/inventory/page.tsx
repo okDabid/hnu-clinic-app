@@ -117,7 +117,7 @@ export default function NurseInventoryPage() {
                     <Link href="/nurse/inventory" className="flex items-center gap-2 text-green-600 font-semibold">
                         <Package className="h-5 w-5" /> Inventory
                     </Link>
-                    <Link href="/nurse/clinic" className="flex items-center gap-2 text-green-600 font-semibold">
+                    <Link href="/nurse/clinic" className="flex items-center gap-2 hover:text-green-600">
                         <ClipboardList className="h-5 w-5" /> Clinic
                     </Link>
                 </nav>
