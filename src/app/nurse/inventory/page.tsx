@@ -4,58 +4,34 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
-    Menu,
-    X,
-    Package,
-    Users,
-    Home,
-    Plus,
-    AlertTriangle,
-    Clock,
-    CheckCircle2,
-    Search,
+    Menu, X, Package, Users, Home, Plus,
+    AlertTriangle, Clock, Search
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
+    Card, CardContent, CardHeader, CardTitle
 } from "@/components/ui/card";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+    Dialog, DialogContent, DialogDescription, DialogFooter,
+    DialogHeader, DialogTitle, DialogTrigger
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
 type InventoryItem = {
-    id: string;
-    name: string;
+    med_id: string;
+    item_name: string;
     quantity: number;
-    expiry: string; // YYYY-MM-DD
+    replenishments: { expiry_date: string }[];
 };
 
 export default function NurseInventoryPage() {
@@ -64,31 +40,32 @@ export default function NurseInventoryPage() {
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
 
-    // Mock load
+    const pageSize = 6;
+
+    // Load from API
+    async function load() {
+        const res = await fetch("/api/nurse/inventory", { cache: "no-store" });
+        const data = await res.json();
+        setItems(data);
+    }
+
     useEffect(() => {
-        setItems([
-            { id: "1", name: "Paracetamol 500mg", quantity: 120, expiry: "2025-06-01" },
-            { id: "2", name: "Amoxicillin 250mg", quantity: 45, expiry: "2024-11-10" },
-            { id: "3", name: "Alcohol 70%", quantity: 10, expiry: "2024-09-01" },
-            { id: "4", name: "Bandages", quantity: 200, expiry: "2027-01-01" },
-        ]);
+        load();
     }, []);
 
     const filteredItems = items.filter(
         (i) =>
-            i.name.toLowerCase().includes(search.toLowerCase()) ||
-            i.id.includes(search)
+            i.item_name.toLowerCase().includes(search.toLowerCase()) ||
+            i.med_id.includes(search)
     );
 
-    // Pagination
-    const pageSize = 6;
     const paginated = filteredItems.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
 
-    // Expiry helper
-    const getStatus = (expiry: string) => {
+    const getStatus = (expiry: string | undefined) => {
+        if (!expiry) return { text: "No expiry", color: "bg-gray-100 text-gray-600 border-gray-200" };
         const today = new Date();
         const expDate = new Date(expiry);
         const diff = expDate.getTime() - today.getTime();
@@ -167,7 +144,9 @@ export default function NurseInventoryPage() {
                         <CardContent className="flex flex-col items-center p-6">
                             <Clock className="h-8 w-8 text-red-600 mb-2" />
                             <h3 className="font-semibold">Expired</h3>
-                            <p className="text-2xl font-bold">{items.filter(i => new Date(i.expiry) < new Date()).length}</p>
+                            <p className="text-2xl font-bold">
+                                {items.filter(i => i.replenishments[0] && new Date(i.replenishments[0].expiry_date) < new Date()).length}
+                            </p>
                         </CardContent>
                     </Card>
                 </section>
@@ -201,7 +180,30 @@ export default function NurseInventoryPage() {
                                             <DialogTitle>Add New Stock</DialogTitle>
                                             <DialogDescription>Fill in the details of the stock item.</DialogDescription>
                                         </DialogHeader>
-                                        <form className="space-y-4">
+                                        <form
+                                            className="space-y-4"
+                                            onSubmit={async (e) => {
+                                                e.preventDefault();
+                                                const form = e.currentTarget as HTMLFormElement;
+                                                const body = {
+                                                    clinic_id: "your-clinic-id", // replace with actual clinic_id
+                                                    name: (form.elements.namedItem("name") as HTMLInputElement).value,
+                                                    quantity: (form.elements.namedItem("quantity") as HTMLInputElement).value,
+                                                    expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
+                                                };
+
+                                                const res = await fetch("/api/nurse/inventory", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify(body),
+                                                });
+
+                                                if (res.ok) {
+                                                    await load();
+                                                    form.reset();
+                                                }
+                                            }}
+                                        >
                                             <div>
                                                 <Label>Name</Label>
                                                 <Input name="name" required />
@@ -238,13 +240,14 @@ export default function NurseInventoryPage() {
                                     <TableBody>
                                         {paginated.length > 0 ? (
                                             paginated.map((item) => {
-                                                const status = getStatus(item.expiry);
+                                                const expiry = item.replenishments[0]?.expiry_date;
+                                                const status = getStatus(expiry);
                                                 return (
-                                                    <TableRow key={item.id} className="hover:bg-green-50">
-                                                        <TableCell>{item.id}</TableCell>
-                                                        <TableCell>{item.name}</TableCell>
+                                                    <TableRow key={item.med_id} className="hover:bg-green-50">
+                                                        <TableCell>{item.med_id}</TableCell>
+                                                        <TableCell>{item.item_name}</TableCell>
                                                         <TableCell>{item.quantity}</TableCell>
-                                                        <TableCell>{item.expiry}</TableCell>
+                                                        <TableCell>{expiry ? new Date(expiry).toLocaleDateString() : "—"}</TableCell>
                                                         <TableCell>
                                                             <Badge variant="outline" className={status.color}>
                                                                 {status.text}
