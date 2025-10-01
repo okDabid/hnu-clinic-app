@@ -1,18 +1,37 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET all clinics
+// GET: Fetch all clinics
 export async function GET() {
-    const clinics = await prisma.clinic.findMany();
-    return NextResponse.json(clinics);
+    try {
+        const clinics = await prisma.clinic.findMany();
+        return NextResponse.json(clinics);
+    } catch (err) {
+        console.error(err);
+        return NextResponse.json({ error: "Failed to load clinics" }, { status: 500 });
+    }
 }
 
-// POST create new clinic
-{/*export async function POST(req: Request) {
-  const { clinic_name, clinic_location, clinic_contactno } = await req.json();
-  const newClinic = await prisma.clinic.create({
-    data: { clinic_name, clinic_location, clinic_contactno },
-  });
-  return NextResponse.json(newClinic);
+// POST: Create new clinic
+export async function POST(req: Request) {
+    try {
+        const { clinic_name, clinic_location, clinic_contactno } = await req.json();
+
+        if (!clinic_name || !clinic_location || !clinic_contactno) {
+            return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+        }
+
+        const newClinic = await prisma.clinic.create({
+            data: {
+                clinic_name,
+                clinic_location,
+                clinic_contactno,
+            },
+        });
+
+        return NextResponse.json(newClinic);
+    } catch (err) {
+        console.error(err);
+        return NextResponse.json({ error: "Failed to create clinic" }, { status: 500 });
+    }
 }
-*/}

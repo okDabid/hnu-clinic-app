@@ -71,24 +71,27 @@ export default function NurseClinicPage() {
             clinic_location: formData.get("clinic_location"),
             clinic_contactno: formData.get("clinic_contactno"),
         };
+
         const res = await fetch("/api/nurse/clinic", {
             method: "POST",
             body: JSON.stringify(payload),
             headers: { "Content-Type": "application/json" },
         });
+
         if (res.ok) {
             toast.success("Clinic added!");
             loadClinics();
         } else toast.error("Failed to add clinic");
     }
 
-    // Update clinic
+    // Update clinic (only location + contact)
     async function handleUpdateClinic(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!selectedClinic) return;
+
         const formData = new FormData(e.currentTarget);
         const payload = {
-            clinic_name: selectedClinic.clinic_name, // keep original name
+            clinic_name: selectedClinic.clinic_name, // keep original name fixed
             clinic_location: formData.get("clinic_location"),
             clinic_contactno: formData.get("clinic_contactno"),
         };
@@ -222,7 +225,7 @@ export default function NurseClinicPage() {
                                                     <DialogContent>
                                                         <DialogHeader>
                                                             <DialogTitle>Update Clinic</DialogTitle>
-                                                            <DialogDescription>Update location or contact number.</DialogDescription>
+                                                            <DialogDescription>Only update location or contact number.</DialogDescription>
                                                         </DialogHeader>
                                                         <form onSubmit={handleUpdateClinic} className="space-y-4">
                                                             <div>
