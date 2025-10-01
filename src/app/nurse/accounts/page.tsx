@@ -360,7 +360,7 @@ export default function NurseAccountsPage() {
                     {/* My Account */}
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardHeader className="border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <CardHeader className="border-b flex sm:items-center sm:justify-between gap-3">
                                 <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                                     My Account
                                 </CardTitle>
@@ -371,7 +371,7 @@ export default function NurseAccountsPage() {
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="hover:bg-green-50 w-full sm:w-auto"
+                                            className="hover:bg-green-50"
                                         >
                                             <Cog className="h-5 w-5 text-green-600" />
                                         </Button>
