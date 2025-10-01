@@ -9,6 +9,8 @@ import {
     Users,
     Home,
     Plus,
+    AlertTriangle,
+    Clock,
     Search,
     ClipboardList
 } from "lucide-react";
@@ -56,6 +58,7 @@ type InventoryItem = {
     med_id: string;
     item_name: string;
     quantity: number;
+    clinic: { clinic_location: string };   // 👈 clinic info comes from API now
     replenishments: { expiry_date: string }[];
 };
 
@@ -96,7 +99,7 @@ export default function NurseInventoryPage() {
     const filteredItems = items.filter(
         (i) =>
             i.item_name.toLowerCase().includes(search.toLowerCase()) ||
-            i.med_id.includes(search)
+            i.clinic.clinic_location.toLowerCase().includes(search.toLowerCase())
     );
 
     const paginated = filteredItems.slice(
@@ -169,7 +172,7 @@ export default function NurseInventoryPage() {
                 </header>
 
                 {/* Inventory Table */}
-                <section className="px-6 pb-12 flex-1 flex flex-col mt-4"> {/* 👈 added mt-4 for spacing */}
+                <section className="px-6 pt-4 pb-12 flex-1 flex flex-col"> {/* 👈 Added pt-4 for spacing */}
                     <Card className="flex-1 flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <CardTitle className="text-2xl font-bold text-green-600">Stock List</CardTitle>
@@ -229,12 +232,12 @@ export default function NurseInventoryPage() {
                                             }}
                                         >
                                             <div>
-                                                <Label className="block mb-1">Clinic</Label>
+                                                <Label className="block mb-1">Clinic Location</Label>
                                                 <select name="clinic_id" required className="w-full border rounded p-2">
                                                     <option value="">Select clinic</option>
                                                     {clinics.map((clinic) => (
                                                         <option key={clinic.clinic_id} value={clinic.clinic_id}>
-                                                            {clinic.clinic_location} {/* 👈 show location not ID */}
+                                                            {clinic.clinic_location}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -266,13 +269,13 @@ export default function NurseInventoryPage() {
                             </div>
                         </CardHeader>
 
-                        {/* Table content (unchanged) */}
+                        {/* Table content */}
                         <CardContent className="flex-1 flex flex-col">
                             <div className="overflow-x-auto flex-1">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>ID</TableHead>
+                                            <TableHead>Clinic</TableHead> {/* 👈 replaced ID with Clinic */}
                                             <TableHead>Name</TableHead>
                                             <TableHead>Quantity</TableHead>
                                             <TableHead>Expiry</TableHead>
@@ -286,7 +289,7 @@ export default function NurseInventoryPage() {
                                                 const status = getStatus(expiry);
                                                 return (
                                                     <TableRow key={item.med_id} className="hover:bg-green-50">
-                                                        <TableCell>{item.med_id}</TableCell>
+                                                        <TableCell>{item.clinic.clinic_location}</TableCell>
                                                         <TableCell>{item.item_name}</TableCell>
                                                         <TableCell>{item.quantity}</TableCell>
                                                         <TableCell>{expiry ? new Date(expiry).toLocaleDateString() : "—"}</TableCell>

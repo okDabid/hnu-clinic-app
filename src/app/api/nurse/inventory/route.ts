@@ -28,9 +28,12 @@ export async function GET() {
             ]);
         }
 
-        // ✅ Now fetch updated inventory
+        // ✅ Now fetch updated inventory (with clinic info)
         const inventory = await prisma.medInventory.findMany({
             include: {
+                clinic: {   // 👈 include clinic location for frontend display
+                    select: { clinic_location: true },
+                },
                 replenishments: {
                     orderBy: { expiry_date: "asc" },
                     take: 1, // nearest expiry
@@ -98,7 +101,10 @@ export async function POST(req: Request) {
                         },
                     },
                 },
-                include: { replenishments: true },
+                include: {
+                    clinic: { select: { clinic_location: true } }, // 👈 include clinic info too
+                    replenishments: true,
+                },
             });
 
             return NextResponse.json(updatedItem);
@@ -119,7 +125,10 @@ export async function POST(req: Request) {
                     },
                 },
             },
-            include: { replenishments: true },
+            include: {
+                clinic: { select: { clinic_location: true } }, // 👈 include clinic info
+                replenishments: true,
+            },
         });
 
         return NextResponse.json(newItem);
