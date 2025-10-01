@@ -32,7 +32,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function NurseDashboardPage() {
     const { data: session } = useSession();
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [menuOpen] = useState(false);
 
     const fullName = session?.user?.name || "Nurse";
 

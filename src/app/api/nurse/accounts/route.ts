@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
+import { Prisma, Gender } from "@prisma/client";
 
 // Password generator (8 chars, alphanumeric)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -12,13 +13,9 @@ export async function POST(req: Request) {
     try {
         const payload = await req.json();
 
-        // Step 1: Generate random password
         const plainPassword = generatePassword();
-
-        // Step 2: Hash password
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-        // Step 3: Create username based on role
         let username: string;
         if (payload.role === "NURSE" || payload.role === "DOCTOR") {
             username = `${payload.employee_id}`;
@@ -32,7 +29,6 @@ export async function POST(req: Request) {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
 
-        // Step 4: Create user
         const newUser = await prisma.users.create({
             data: {
                 username,
@@ -42,7 +38,6 @@ export async function POST(req: Request) {
             },
         });
 
-        // Step 5: Create linked profile
         if (payload.role === "PATIENT" && payload.patientType === "student") {
             await prisma.student.create({
                 data: {
@@ -99,7 +94,6 @@ export async function POST(req: Request) {
             });
         }
 
-        // Step 6: Return ID + plain password once
         return NextResponse.json({
             id:
                 payload.role === "PATIENT" && payload.patientType === "student"
@@ -113,7 +107,7 @@ export async function POST(req: Request) {
                             : newUser.username,
             password: plainPassword,
         });
-    } catch (err) {
+    } catch (err: unknown) {
         console.error("[POST /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
     }
@@ -123,10 +117,7 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         const users = await prisma.users.findMany({
-            include: {
-                student: true,
-                employee: true,
-            },
+            include: { student: true, employee: true },
         });
 
         const formatted = users.map((u) => {
@@ -145,7 +136,7 @@ export async function GET() {
 
             return {
                 user_id: displayId,
-                accountId: u.user_id, // ✅ true PK
+                accountId: u.user_id,
                 role: u.role,
                 status: u.status,
                 fullName:
@@ -158,7 +149,7 @@ export async function GET() {
         });
 
         return NextResponse.json(formatted);
-    } catch (err) {
+    } catch (err: unknown) {
         console.error("[GET /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
@@ -169,18 +160,16 @@ export async function PUT(req: Request) {
     try {
         const { userId, newStatus, profile } = await req.json();
 
-        // ✅ Toggle status safely
         if (newStatus) {
             if (newStatus !== "Active" && newStatus !== "Inactive") {
                 return NextResponse.json({ error: "Invalid status" }, { status: 400 });
             }
             await prisma.users.update({
                 where: { user_id: userId },
-                data: { status: newStatus as "Active" | "Inactive" },
+                data: { status: newStatus },
             });
         }
 
-        // ✅ Update profile safely
         if (profile) {
             const user = await prisma.users.findUnique({
                 where: { user_id: userId },
@@ -191,7 +180,6 @@ export async function PUT(req: Request) {
                 return NextResponse.json({ error: "User not found" }, { status: 404 });
             }
 
-            // Whitelist allowed fields
             const allowedStudentFields = [
                 "fname", "mname", "lname", "contactno", "address",
                 "bloodtype", "allergies", "medical_cond",
@@ -206,49 +194,40 @@ export async function PUT(req: Request) {
                 "date_of_birth", "gender",
             ];
 
-            // 🔹 Normalization helper
-            const normalizeProfile = (raw: Record<string, unknown>, allowed: string[]) => {
-                const safe: Record<string, any> = {};
+            const normalizeProfile = <T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput>(
+                raw: Record<string, unknown>,
+                allowed: readonly string[],
+            ): T => {
+                const safe: Partial<T> = {};
                 for (const [key, value] of Object.entries(raw)) {
                     if (!allowed.includes(key)) continue;
 
                     if (key === "date_of_birth" && typeof value === "string") {
-                        safe.date_of_birth = new Date(value);
+                        (safe as any).date_of_birth = new Date(value);
                     } else if (key === "gender" && (value === "Male" || value === "Female")) {
-                        safe.gender = value;
+                        (safe as any).gender = value as Gender;
                     } else {
-                        safe[key] = value;
+                        (safe as any)[key] = value;
                     }
                 }
-                return safe;
+                return safe as T;
             };
 
-            // Student update
             if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
-                const safeProfile = normalizeProfile(profile, allowedStudentFields);
-                await prisma.student.update({
-                    where: { user_id: userId },
-                    data: safeProfile,
-                });
+                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(profile, allowedStudentFields);
+                await prisma.student.update({ where: { user_id: userId }, data: safeProfile });
             }
 
-            // Employee update
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = normalizeProfile(profile, allowedEmployeeFields);
-                await prisma.employee.update({
-                    where: { user_id: userId },
-                    data: safeProfile,
-                });
+                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(profile, allowedEmployeeFields);
+                await prisma.employee.update({ where: { user_id: userId }, data: safeProfile });
             }
         }
 
         return NextResponse.json({ success: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error("[PUT /api/nurse/accounts] ERROR:", err);
-        return NextResponse.json(
-            { error: "Failed to update user", details: err.message ?? String(err) },
-            { status: 500 }
-        );
+        const message = err instanceof Error ? err.message : "Unknown error";
+        return NextResponse.json({ error: "Failed to update user", details: message }, { status: 500 });
     }
 }
-

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import orderBy from "lodash/orderBy";
-import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -110,7 +109,6 @@ type Profile = {
 };
 
 export default function NurseAccountsPage() {
-    const router = useRouter();
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
@@ -122,7 +120,7 @@ export default function NurseAccountsPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
 
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [menuOpen] = useState(false);
 
     // 🔹 Fetch users
     async function loadUsers() {
