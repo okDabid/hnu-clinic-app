@@ -54,17 +54,18 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+// ✅ InventoryItem now uses clinic_name instead of clinic_location
 type InventoryItem = {
     med_id: string;
     item_name: string;
     quantity: number;
-    clinic: { clinic_location: string };   // 👈 clinic info comes from API now
+    clinic: { clinic_name: string };
     replenishments: { expiry_date: string }[];
 };
 
 type Clinic = {
     clinic_id: string;
-    clinic_location: string;
+    clinic_name: string;
 };
 
 export default function NurseInventoryPage() {
@@ -99,7 +100,7 @@ export default function NurseInventoryPage() {
     const filteredItems = items.filter(
         (i) =>
             i.item_name.toLowerCase().includes(search.toLowerCase()) ||
-            i.clinic.clinic_location.toLowerCase().includes(search.toLowerCase())
+            i.clinic.clinic_name.toLowerCase().includes(search.toLowerCase())
     );
 
     const paginated = filteredItems.slice(
@@ -172,7 +173,7 @@ export default function NurseInventoryPage() {
                 </header>
 
                 {/* Inventory Table */}
-                <section className="px-6 pt-4 pb-12 flex-1 flex flex-col"> {/* 👈 Added pt-4 for spacing */}
+                <section className="px-6 pt-4 pb-12 flex-1 flex flex-col">
                     <Card className="flex-1 flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <CardTitle className="text-2xl font-bold text-green-600">Stock List</CardTitle>
@@ -232,12 +233,12 @@ export default function NurseInventoryPage() {
                                             }}
                                         >
                                             <div>
-                                                <Label className="block mb-1">Clinic Location</Label>
+                                                <Label className="block mb-1">Clinic</Label>
                                                 <select name="clinic_id" required className="w-full border rounded p-2">
                                                     <option value="">Select clinic</option>
                                                     {clinics.map((clinic) => (
                                                         <option key={clinic.clinic_id} value={clinic.clinic_id}>
-                                                            {clinic.clinic_location}
+                                                            {clinic.clinic_name}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -275,7 +276,7 @@ export default function NurseInventoryPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Clinic</TableHead> {/* 👈 replaced ID with Clinic */}
+                                            <TableHead>Clinic</TableHead>
                                             <TableHead>Name</TableHead>
                                             <TableHead>Quantity</TableHead>
                                             <TableHead>Expiry</TableHead>
@@ -289,7 +290,7 @@ export default function NurseInventoryPage() {
                                                 const status = getStatus(expiry);
                                                 return (
                                                     <TableRow key={item.med_id} className="hover:bg-green-50">
-                                                        <TableCell>{item.clinic.clinic_location}</TableCell>
+                                                        <TableCell>{item.clinic.clinic_name}</TableCell>
                                                         <TableCell>{item.item_name}</TableCell>
                                                         <TableCell>{item.quantity}</TableCell>
                                                         <TableCell>{expiry ? new Date(expiry).toLocaleDateString() : "—"}</TableCell>

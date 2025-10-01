@@ -28,11 +28,11 @@ export async function GET() {
             ]);
         }
 
-        // ✅ Now fetch updated inventory (with clinic info)
+        // ✅ Now fetch updated inventory (with clinic name)
         const inventory = await prisma.medInventory.findMany({
             include: {
-                clinic: {   // 👈 include clinic location for frontend display
-                    select: { clinic_location: true },
+                clinic: {   // 👈 include clinic name for frontend display
+                    select: { clinic_name: true },
                 },
                 replenishments: {
                     orderBy: { expiry_date: "asc" },
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
                     },
                 },
                 include: {
-                    clinic: { select: { clinic_location: true } }, // 👈 include clinic info too
+                    clinic: { select: { clinic_name: true } }, // 👈 include clinic name too
                     replenishments: true,
                 },
             });
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
                 },
             },
             include: {
-                clinic: { select: { clinic_location: true } }, // 👈 include clinic info
+                clinic: { select: { clinic_name: true } }, // 👈 include clinic name
                 replenishments: true,
             },
         });
