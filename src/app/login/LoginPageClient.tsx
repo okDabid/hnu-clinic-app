@@ -40,7 +40,15 @@ export default function LoginPageClient() {
             });
 
             if (result?.error) {
-                toast.error(result.error, { position: "top-center" });
+                // 🎯 Show custom message if inactive
+                if (result.error.includes("inactive")) {
+                    toast.error(
+                        "Your account is inactive. Please contact the administrator.",
+                        { position: "top-center" }
+                    );
+                } else {
+                    toast.error(result.error, { position: "top-center" });
+                }
             } else {
                 toast.success(`Welcome!`, { position: "top-center" });
 

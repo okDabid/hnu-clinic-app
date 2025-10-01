@@ -4,22 +4,19 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@prisma/client";
+import { Role, AccountStatus } from "@prisma/client";
 
-// Extend NextAuth's types
 interface AppUser {
     id: string;
     name?: string | null;
     role: Role;
 }
 
-// Extend JWT type
 interface AppJWT extends JWT {
     id?: string;
     role?: Role;
 }
 
-// Extend Session type
 interface AppSession extends Session {
     user: {
         id: string;
@@ -60,6 +57,11 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("No account found with these credentials.");
                 }
 
+                // 🔐 Block inactive accounts at login
+                if (user.status === AccountStatus.Inactive) {
+                    throw new Error("This account is inactive. Please contact the administrator.");
+                }
+
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) {
                     throw new Error("Invalid password.");
@@ -93,9 +95,22 @@ export const authOptions: NextAuthOptions = {
 
         async session({ session, token }): Promise<AppSession> {
             const t = token as AppJWT;
+
+            if (t.id) {
+                // 🔄 Re-check status every time session is created
+                const dbUser = await prisma.users.findUnique({
+                    where: { user_id: t.id },
+                    select: { status: true },
+                });
+
+                if (!dbUser || dbUser.status === AccountStatus.Inactive) {
+                    throw new Error("Account inactive. Please contact administrator.");
+                }
+            }
+
             if (session.user) {
                 session.user.id = t.id ?? token.sub ?? "";
-                session.user.role = t.role ?? Role.PATIENT; // fallback role
+                session.user.role = t.role ?? Role.PATIENT;
                 session.user.name = t.name ?? session.user.name;
             }
             return session as AppSession;

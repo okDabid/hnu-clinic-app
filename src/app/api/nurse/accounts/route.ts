@@ -156,23 +156,45 @@ export async function GET() {
 }
 
 // ---------------- UPDATE USER ----------------
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
 export async function PUT(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Only NURSE or ADMIN can update accounts
+        if (session.user.role !== "NURSE" && session.user.role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const { user_id, newStatus, profile } = await req.json();
+
+        // ✅ Prevent self-deactivation
+        if (newStatus && session.user.id === user_id) {
+            return NextResponse.json(
+                { error: "You cannot deactivate your own account." },
+                { status: 400 }
+            );
+        }
 
         if (newStatus) {
             if (newStatus !== "Active" && newStatus !== "Inactive") {
                 return NextResponse.json({ error: "Invalid status" }, { status: 400 });
             }
+
             await prisma.users.update({
-                where: { user_id: user_id },
+                where: { user_id },
                 data: { status: newStatus },
             });
         }
 
         if (profile) {
             const user = await prisma.users.findUnique({
-                where: { user_id: user_id },
+                where: { user_id },
                 include: { student: true, employee: true },
             });
 
@@ -194,7 +216,6 @@ export async function PUT(req: Request) {
                 "date_of_birth", "gender",
             ] as const;
 
-            // 🔹 Strongly typed normalize
             const normalizeProfile = <
                 T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput,
                 K extends keyof T
@@ -218,20 +239,25 @@ export async function PUT(req: Request) {
             };
 
             if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
-                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput, keyof Prisma.StudentUpdateInput>(profile, allowedStudentFields);
-                await prisma.student.update({ where: { user_id: user_id }, data: safeProfile });
+                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput, keyof Prisma.StudentUpdateInput>(
+                    profile,
+                    allowedStudentFields
+                );
+                await prisma.student.update({ where: { user_id }, data: safeProfile });
             }
 
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput, keyof Prisma.EmployeeUpdateInput>(profile, allowedEmployeeFields);
-                await prisma.employee.update({ where: { user_id: user_id }, data: safeProfile });
+                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput, keyof Prisma.EmployeeUpdateInput>(
+                    profile,
+                    allowedEmployeeFields
+                );
+                await prisma.employee.update({ where: { user_id }, data: safeProfile });
             }
         }
 
         return NextResponse.json({ success: true });
     } catch (err: unknown) {
         console.error("[PUT /api/nurse/accounts] ERROR:", err);
-        const message = err instanceof Error ? err.message : "Unknown error";
-        return NextResponse.json({ error: "Failed to update user", details: message }, { status: 500 });
+        return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 }
