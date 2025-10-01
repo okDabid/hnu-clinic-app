@@ -142,7 +142,6 @@ export default function NurseAccountsPage() {
     const [currentPage, setCurrentPage] = useState(1);
 
 
-
     // 🔹 Fetch users
     async function loadUsers() {
         try {
