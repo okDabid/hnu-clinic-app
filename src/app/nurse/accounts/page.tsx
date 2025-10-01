@@ -65,6 +65,7 @@ import { Separator } from "@/components/ui/separator";
 // 🔹 Types aligned with API
 type User = {
     user_id: string;
+    accountId: string;
     role: string;
     status: "Active" | "Inactive";
     fullName: string;
@@ -546,7 +547,7 @@ export default function NurseAccountsPage() {
                                                                                 ? "bg-red-600 hover:bg-red-700"
                                                                                 : "bg-green-600 hover:bg-green-700"
                                                                         }
-                                                                        onClick={() => handleToggle(user.user_id, user.status)}
+                                                                        onClick={() => handleToggle(user.accountId, user.status)}
                                                                     >
                                                                         {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
                                                                     </AlertDialogAction>
