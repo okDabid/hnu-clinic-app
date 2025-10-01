@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import orderBy from "lodash/orderBy";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
@@ -18,7 +13,13 @@ import {
     CardTitle,
     CardContent,
 } from "@/components/ui/card";
-import { Loader2, Ban, CheckCircle2 } from "lucide-react";
+import {
+    Loader2,
+    Ban,
+    CheckCircle2,
+    Search,
+    ArrowLeft,
+} from "lucide-react";
 import {
     Table,
     TableBody,
@@ -39,11 +40,17 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
-// Types for consistency with API
+// 🔹 Types aligned with API
 type User = {
     user_id: string;
-    username: string;
     role: string;
     status: "Active" | "Inactive";
     fullName: string;
@@ -68,29 +75,86 @@ type CreateUserResponse = {
     error?: string;
 };
 
+type Profile = {
+    fname: string;
+    mname?: string | null;
+    lname: string;
+    contactno?: string | null;
+    address?: string | null;
+};
+
 export default function NurseAccountsPage() {
-    const [role, setRole] = useState<string>("");
-    const [gender, setGender] = useState<"Male" | "Female" | "">("");
-    const [loading, setLoading] = useState(false);
+    const router = useRouter();
     const [users, setUsers] = useState<User[]>([]);
-    const [patientType, setPatientType] = useState<"student" | "employee" | "">(
-        ""
-    );
+    const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    // Form state
+    const [role, setRole] = useState("");
+    const [gender, setGender] = useState<"Male" | "Female" | "">("");
+    const [patientType, setPatientType] = useState<"student" | "employee" | "">("");
+
+    // Own profile state
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [profileLoading, setProfileLoading] = useState(false);
 
     // 🔹 Fetch users
     async function loadUsers() {
         try {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
             const data = await res.json();
-            setUsers(data);
+
+            const sorted = orderBy(
+                data,
+                [
+                    (u) => u.role,
+                    (u) => {
+                        const n = parseInt(u.user_id, 10);
+                        return isNaN(n) ? u.user_id : n;
+                    },
+                ],
+                ["asc", "asc"]
+            );
+
+            setUsers(sorted);
         } catch {
             toast.error("Failed to load users", { position: "top-center" });
         }
     }
 
+    // 🔹 Fetch own profile
+    async function loadProfile() {
+        try {
+            const res = await fetch("/api/nurse/accounts/me", { cache: "no-store" });
+            const data = await res.json();
+            if (data.error) {
+                toast.error(data.error);
+            } else {
+                setProfile({
+                    fname: data.student?.fname || data.employee?.fname || "",
+                    mname: data.student?.mname || data.employee?.mname || "",
+                    lname: data.student?.lname || data.employee?.lname || "",
+                    contactno: data.student?.contactno || data.employee?.contactno || "",
+                    address: data.student?.address || data.employee?.address || "",
+                });
+            }
+        } catch {
+            toast.error("Failed to load profile");
+        }
+    }
+
     useEffect(() => {
         loadUsers();
+        loadProfile();
     }, []);
+
+    // 🔎 Filtered + sorted users
+    const filteredUsers = users.filter(
+        (u) =>
+            u.user_id.toLowerCase().includes(search.toLowerCase()) ||
+            u.role.toLowerCase().includes(search.toLowerCase()) ||
+            u.fullName.toLowerCase().includes(search.toLowerCase())
+    );
 
     // 🔹 Create user
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -114,8 +178,7 @@ export default function NurseAccountsPage() {
                 role === "PATIENT" && patientType === "student"
                     ? (formData.get("student_id") as string)
                     : null,
-            school_id:
-                role === "SCHOLAR" ? (formData.get("school_id") as string) : null,
+            school_id: role === "SCHOLAR" ? (formData.get("school_id") as string) : null,
             patientType: patientType || null,
         };
 
@@ -156,6 +219,30 @@ export default function NurseAccountsPage() {
         }
     }
 
+    // 🔹 Update own profile
+    async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        try {
+            setProfileLoading(true);
+            const res = await fetch("/api/nurse/accounts/me", {
+                method: "PUT",
+                body: JSON.stringify({ profile }),
+                headers: { "Content-Type": "application/json" },
+            });
+            const data = await res.json();
+            if (data.error) {
+                toast.error(data.error);
+            } else {
+                toast.success("Profile updated!");
+                loadProfile();
+            }
+        } catch {
+            toast.error("Failed to update profile");
+        } finally {
+            setProfileLoading(false);
+        }
+    }
+
     // 🔹 Toggle status
     async function handleToggle(userId: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
@@ -174,6 +261,81 @@ export default function NurseAccountsPage() {
 
     return (
         <div className="space-y-10">
+            {/* 🔙 Back Button */}
+            <div>
+                <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 text-green-600 hover:text-green-800"
+                    onClick={() => router.push("/nurse")}
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                </Button>
+            </div>
+
+            {/* My Account (logged-in user) */}
+            {profile && (
+                <Card className="w-full max-w-3xl shadow-xl">
+                    <CardHeader className="border-b">
+                        <CardTitle className="text-2xl font-bold text-green-600">
+                            My Account
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <form onSubmit={handleProfileUpdate} className="space-y-4">
+                            <div>
+                                <Label>First Name</Label>
+                                <Input
+                                    value={profile.fname}
+                                    onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Middle Name</Label>
+                                <Input
+                                    value={profile.mname || ""}
+                                    onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Last Name</Label>
+                                <Input
+                                    value={profile.lname}
+                                    onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Contact No</Label>
+                                <Input
+                                    value={profile.contactno || ""}
+                                    onChange={(e) =>
+                                        setProfile({ ...profile, contactno: e.target.value })
+                                    }
+                                />
+                            </div>
+                            <div>
+                                <Label>Address</Label>
+                                <Input
+                                    value={profile.address || ""}
+                                    onChange={(e) =>
+                                        setProfile({ ...profile, address: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                disabled={profileLoading}
+                            >
+                                {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
+                                {profileLoading ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Create User Form */}
             <Card className="w-full max-w-3xl shadow-xl">
                 <CardHeader className="border-b">
@@ -181,7 +343,6 @@ export default function NurseAccountsPage() {
                         Create New User
                     </CardTitle>
                 </CardHeader>
-
                 <CardContent className="pt-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Role */}
@@ -222,9 +383,7 @@ export default function NurseAccountsPage() {
                                 <Label>Patient Type</Label>
                                 <Select
                                     value={patientType}
-                                    onValueChange={(val: "student" | "employee") =>
-                                        setPatientType(val)
-                                    }
+                                    onValueChange={(val: "student" | "employee") => setPatientType(val)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select patient type" />
@@ -303,102 +462,123 @@ export default function NurseAccountsPage() {
                 </CardContent>
             </Card>
 
-            {/* Users Table */}
+            {/* Manage Users Table */}
             <Card className="shadow-xl">
-                <CardHeader>
+                <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <CardTitle className="text-2xl font-bold text-green-600">
                         Manage Existing Users
                     </CardTitle>
+                    <div className="relative w-full md:w-72">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                        <Input
+                            placeholder="Search by ID, role, or name..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-8"
+                        />
+                    </div>
                 </CardHeader>
+
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>User ID</TableHead>
-                                <TableHead>Role</TableHead>
-                                <TableHead>Full Name</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {users.map((user) => (
-                                <TableRow key={user.user_id}>
-                                    <TableCell>{user.user_id}</TableCell>
-                                    <TableCell>{user.role}</TableCell>
-                                    <TableCell>{user.fullName}</TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant="outline"
-                                            className={
-                                                user.status === "Active"
-                                                    ? "bg-green-100 text-green-700 border-green-200 px-4 py-1"
-                                                    : "bg-red-100 text-red-700 border-red-200 px-4 py-1"
-                                            }
-                                        >
-                                            {user.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button
-                                                    size="sm"
-                                                    variant={
-                                                        user.status === "Active" ? "destructive" : "default"
-                                                    }
-                                                    className="gap-2"
-                                                >
-                                                    {user.status === "Active" ? (
-                                                        <>
-                                                            <Ban className="h-4 w-4" />
-                                                            Deactivate
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <CheckCircle2 className="h-4 w-4" />
-                                                            Activate
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>
-                                                        {user.status === "Active"
-                                                            ? "Deactivate user?"
-                                                            : "Activate user?"}
-                                                    </AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        {user.status === "Active"
-                                                            ? "This will prevent the user from signing in until reactivated."
-                                                            : "This will allow the user to sign in and use the system."}
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction
-                                                        className={
-                                                            user.status === "Active"
-                                                                ? "bg-red-600 hover:bg-red-700"
-                                                                : "bg-green-600 hover:bg-green-700"
-                                                        }
-                                                        onClick={() =>
-                                                            handleToggle(user.user_id, user.status)
-                                                        }
-                                                    >
-                                                        {user.status === "Active"
-                                                            ? "Confirm Deactivate"
-                                                            : "Confirm Activate"}
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </TableCell>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>User ID</TableHead>
+                                    <TableHead>Role</TableHead>
+                                    <TableHead>Full Name</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredUsers.length > 0 ? (
+                                    filteredUsers.map((user) => (
+                                        <TableRow key={user.user_id}>
+                                            <TableCell className="font-medium">{user.user_id}</TableCell>
+                                            <TableCell>{user.role}</TableCell>
+                                            <TableCell>{user.fullName}</TableCell>
+                                            <TableCell>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={
+                                                        user.status === "Active"
+                                                            ? "bg-green-100 text-green-700 border-green-200 px-4 py-1"
+                                                            : "bg-red-100 text-red-700 border-red-200 px-4 py-1"
+                                                    }
+                                                >
+                                                    {user.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            size="sm"
+                                                            variant={
+                                                                user.status === "Active" ? "destructive" : "default"
+                                                            }
+                                                            className="gap-2"
+                                                        >
+                                                            {user.status === "Active" ? (
+                                                                <>
+                                                                    <Ban className="h-4 w-4" />
+                                                                    Deactivate
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <CheckCircle2 className="h-4 w-4" />
+                                                                    Activate
+                                                                </>
+                                                            )}
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>
+                                                                {user.status === "Active"
+                                                                    ? "Deactivate user?"
+                                                                    : "Activate user?"}
+                                                            </AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                {user.status === "Active"
+                                                                    ? "This will prevent the user from signing in until reactivated."
+                                                                    : "This will allow the user to sign in and use the system."}
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                className={
+                                                                    user.status === "Active"
+                                                                        ? "bg-red-600 hover:bg-red-700"
+                                                                        : "bg-green-600 hover:bg-green-700"
+                                                                }
+                                                                onClick={() => handleToggle(user.user_id, user.status)}
+                                                            >
+                                                                {user.status === "Active"
+                                                                    ? "Confirm Deactivate"
+                                                                    : "Confirm Activate"}
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={5}
+                                            className="text-center text-gray-500 py-6"
+                                        >
+                                            No users found
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>
