@@ -13,8 +13,8 @@ export default function AboutPage() {
     return (
         <div className="min-h-screen bg-green-50 flex flex-col">
             {/* Header / Navbar */}
-            <header className="w-full bg-white shadow px-4 md:px-8 py-4 sticky top-0 z-50">
-                <div className="flex justify-between items-center">
+            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b">
+                <div className="flex justify-between items-center px-4 md:px-8 py-4">
                     {/* Logo + Title */}
                     <div className="flex items-center gap-3">
                         <Link href="/">
@@ -63,7 +63,7 @@ export default function AboutPage() {
 
                 {/* Mobile Dropdown Nav */}
                 {menuOpen && (
-                    <div className="flex flex-col gap-4 mt-4 md:hidden">
+                    <div className="flex flex-col gap-4 mt-4 px-4 md:hidden">
                         <Link href="/#features" className="text-gray-700 hover:text-green-600">
                             Features
                         </Link>
@@ -83,12 +83,12 @@ export default function AboutPage() {
             </header>
 
             {/* Hero Section */}
-            <section className="px-6 md:px-12 py-16 md:py-24 bg-white shadow-sm">
-                <div className="max-w-4xl mx-auto text-center">
+            <section className="px-6 md:px-12 py-20 bg-gradient-to-br from-green-50 to-white text-center shadow-sm">
+                <div className="max-w-4xl mx-auto">
                     <h1 className="text-3xl md:text-5xl font-bold text-green-600 mb-6">
                         About HNU Clinic
                     </h1>
-                    <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                    <p className="text-gray-700 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
                         HNU Clinic is committed to providing high-quality healthcare
                         services for students, employees, and the wider community
                         of Holy Name University. Our mission is to make healthcare
@@ -99,9 +99,9 @@ export default function AboutPage() {
             </section>
 
             {/* Mission & Vision */}
-            <section className="px-6 md:px-12 py-16 flex-1">
-                <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                    <Card className="rounded-2xl shadow-lg">
+            <section className="px-6 md:px-12 py-20 bg-white">
+                <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardContent className="p-8">
                             <h2 className="text-2xl font-semibold text-green-600 mb-4">
                                 Our Mission
@@ -115,7 +115,7 @@ export default function AboutPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-2xl shadow-lg">
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardContent className="p-8">
                             <h2 className="text-2xl font-semibold text-green-600 mb-4">
                                 Our Vision
@@ -131,120 +131,55 @@ export default function AboutPage() {
             </section>
 
             {/* Team Section */}
-            <section className="px-6 md:px-12 py-16 bg-white">
-                <div className="max-w-5xl mx-auto text-center">
+            <section className="px-6 md:px-12 py-20 bg-green-50">
+                <div className="max-w-6xl mx-auto text-center">
                     <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
                         Meet Our Team
                     </h2>
-                    <p className="text-gray-700 mb-12">
+                    <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
                         Our dedicated team of doctors and nurses are here to
                         provide compassionate care and reliable health services.
                     </p>
 
-                    <div className="flex flex-col items-center gap-12">
-                        {/* Head */}
-                        <div className="flex flex-col items-center">
-                            <Image
-                                src="/head-illustration.png"
-                                alt="Head"
-                                width={120}
-                                height={120}
-                                className="rounded-full mb-4"
-                            />
-                            <h3 className="font-semibold text-lg text-green-600">Shanna Kathleen M. Escalona, MD</h3>
-                            <p className="text-sm text-gray-600">Head, Health Services Department</p>
-                        </div>
-
-                        {/* Physician + Dentists */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                            <div className="flex flex-col items-center">
+                    {/* Team Grid */}
+                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-12">
+                        {[
+                            { name: "Shanna Kathleen M. Escalona, MD", role: "Head, Health Services Department", img: "/head-illustration.png" },
+                            { name: "Lovella I. Calvelo, MD", role: "School Physician", img: "/physician-illustration.png" },
+                            { name: "Minette B. Barrete", role: "School Dentist", img: "/dentist1-illustration.png" },
+                            { name: "Roche T. Pamaran", role: "School Dentist", img: "/dentist2-illustration.png" },
+                            { name: "Cherly Marie B. Lagura, RN", role: "School Nurse", img: "/nurse1-illustration.png" },
+                            { name: "Evangeline Y. Guieb, RN", role: "School Nurse", img: "/nurse2-illustration.png" },
+                            { name: "Rhiza Rosario G. Magallones, RN", role: "School Nurse", img: "/nurse3-illustration.png" },
+                        ].map((member) => (
+                            <div key={member.name} className="flex flex-col items-center">
                                 <Image
-                                    src="/physician-illustration.png"
-                                    alt="Physician"
+                                    src={member.img}
+                                    alt={member.name}
                                     width={120}
                                     height={120}
-                                    className="rounded-full mb-4"
+                                    className="rounded-full mb-4 shadow-md"
                                 />
-                                <h3 className="font-semibold text-lg text-green-600">Lovella I. Calvelo, MD</h3>
-                                <p className="text-sm text-gray-600">School Physician</p>
+                                <h3 className="font-semibold text-lg text-green-600">{member.name}</h3>
+                                <p className="text-sm text-gray-600">{member.role}</p>
                             </div>
-                            <div className="flex flex-col items-center">
-                                <Image
-                                    src="/dentist1-illustration.png"
-                                    alt="Dentist"
-                                    width={120}
-                                    height={120}
-                                    className="rounded-full mb-4"
-                                />
-                                <h3 className="font-semibold text-lg text-green-600">Minette B. Barrete</h3>
-                                <p className="text-sm text-gray-600">School Dentist</p>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <Image
-                                    src="/dentist2-illustration.png"
-                                    alt="Dentist"
-                                    width={120}
-                                    height={120}
-                                    className="rounded-full mb-4"
-                                />
-                                <h3 className="font-semibold text-lg text-green-600">Roche T. Pamaran</h3>
-                                <p className="text-sm text-gray-600">School Dentist</p>
-                            </div>
-                        </div>
-
-                        {/* Nurses */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-                            <div className="flex flex-col items-center">
-                                <Image
-                                    src="/nurse1-illustration.png"
-                                    alt="Nurse"
-                                    width={120}
-                                    height={120}
-                                    className="rounded-full mb-4"
-                                />
-                                <h3 className="font-semibold text-lg text-green-600">Cherly Marie B. Lagura, RN</h3>
-                                <p className="text-sm text-gray-600">School Nurse</p>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <Image
-                                    src="/nurse2-illustration.png"
-                                    alt="Nurse"
-                                    width={120}
-                                    height={120}
-                                    className="rounded-full mb-4"
-                                />
-                                <h3 className="font-semibold text-lg text-green-600">Evangeline Y. Guieb, RN</h3>
-                                <p className="text-sm text-gray-600">School Nurse</p>
-                            </div>
-                            <div className="flex flex-col items-center">
-                                <Image
-                                    src="/nurse3-illustration.png"
-                                    alt="Nurse"
-                                    width={120}
-                                    height={120}
-                                    className="rounded-full mb-4"
-                                />
-                                <h3 className="font-semibold text-lg text-green-600">Rhiza Rosario G. Magallones, RN</h3>
-                                <p className="text-sm text-gray-600">School Nurse</p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* Services Section */}
-            <section className="px-6 md:px-12 py-16 bg-green-50">
-                <div className="max-w-5xl mx-auto text-center">
+            <section className="px-6 md:px-12 py-20 bg-white">
+                <div className="max-w-6xl mx-auto text-center">
                     <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
                         Our Services
                     </h2>
-                    <p className="text-gray-700 mb-12">
+                    <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
                         Healthcare services at HNU Clinic are delivered through three core programs:
                     </p>
 
                     <div className="grid md:grid-cols-3 gap-8 text-left">
-                        {/* Health Assessment */}
-                        <Card className="rounded-2xl shadow-lg">
+                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                             <CardContent className="p-8">
                                 <h3 className="text-xl font-semibold text-green-600 mb-4">
                                     Health Assessment Program
@@ -257,8 +192,7 @@ export default function AboutPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Dental Program */}
-                        <Card className="rounded-2xl shadow-lg">
+                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                             <CardContent className="p-8">
                                 <h3 className="text-xl font-semibold text-green-600 mb-4">
                                     Dental Program
@@ -272,8 +206,7 @@ export default function AboutPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Primary Care */}
-                        <Card className="rounded-2xl shadow-lg">
+                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                             <CardContent className="p-8">
                                 <h3 className="text-xl font-semibold text-green-600 mb-4">
                                     Primary Care Program
@@ -290,7 +223,7 @@ export default function AboutPage() {
             </section>
 
             {/* Footer */}
-            <footer className="bg-white py-6 text-center text-gray-600">
+            <footer className="bg-green-600 text-white py-6 text-center text-sm md:text-base">
                 © {new Date().getFullYear()} HNU Clinic Capstone Project
             </footer>
         </div>
