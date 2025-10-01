@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// ✅ GET: Fetch inventory with nearest expiry & auto-mark expired
+// ✅ GET: Fetch inventory with ALL expiry batches & auto-mark expired
 export async function GET() {
     try {
         // 🔄 Find all expired replenishments that still have stock
@@ -28,15 +28,17 @@ export async function GET() {
             ]);
         }
 
-        // ✅ Now fetch updated inventory (with clinic name)
+        // ✅ Fetch inventory with ALL replenishments and clinic info
         const inventory = await prisma.medInventory.findMany({
             include: {
-                clinic: {   // 👈 include clinic name for frontend display
-                    select: { clinic_name: true },
+                clinic: {
+                    select: {
+                        clinic_name: true,      // 👈 show friendly name
+                        clinic_location: true,  // 👈 also include location if needed
+                    },
                 },
                 replenishments: {
-                    orderBy: { expiry_date: "asc" },
-                    take: 1, // nearest expiry
+                    orderBy: { expiry_date: "asc" }, // 👈 sorted, but NO take:1 (show all)
                 },
             },
         });
@@ -63,6 +65,21 @@ export async function POST(req: Request) {
         if (!clinic_id || !name || !quantity || !expiry) {
             return NextResponse.json(
                 { error: "All fields (clinic_id, name, quantity, expiry) are required" },
+                { status: 400 }
+            );
+        }
+
+        if (Number(quantity) <= 0) {
+            return NextResponse.json(
+                { error: "Quantity must be greater than 0" },
+                { status: 400 }
+            );
+        }
+
+        const expiryDate = new Date(expiry);
+        if (isNaN(expiryDate.getTime()) || expiryDate < new Date()) {
+            return NextResponse.json(
+                { error: "Expiry date must be valid and in the future" },
                 { status: 400 }
             );
         }
@@ -97,13 +114,13 @@ export async function POST(req: Request) {
                             quantity_added: Number(quantity),
                             remaining_qty: Number(quantity),
                             date_received: new Date(),
-                            expiry_date: new Date(expiry),
+                            expiry_date: expiryDate,
                         },
                     },
                 },
                 include: {
-                    clinic: { select: { clinic_name: true } }, // 👈 include clinic name too
-                    replenishments: true,
+                    clinic: { select: { clinic_name: true, clinic_location: true } },
+                    replenishments: { orderBy: { expiry_date: "asc" } },
                 },
             });
 
@@ -121,13 +138,13 @@ export async function POST(req: Request) {
                         quantity_added: Number(quantity),
                         remaining_qty: Number(quantity),
                         date_received: new Date(),
-                        expiry_date: new Date(expiry),
+                        expiry_date: expiryDate,
                     },
                 },
             },
             include: {
-                clinic: { select: { clinic_name: true } }, // 👈 include clinic name
-                replenishments: true,
+                clinic: { select: { clinic_name: true, clinic_location: true } },
+                replenishments: { orderBy: { expiry_date: "asc" } },
             },
         });
 

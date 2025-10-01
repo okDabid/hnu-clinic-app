@@ -54,7 +54,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-// ✅ InventoryItem now uses clinic_name instead of clinic_location
+// ✅ InventoryItem now uses clinic_name
 type InventoryItem = {
     med_id: string;
     item_name: string;
