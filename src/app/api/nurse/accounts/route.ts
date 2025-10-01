@@ -158,21 +158,21 @@ export async function GET() {
 // ---------------- UPDATE USER ----------------
 export async function PUT(req: Request) {
     try {
-        const { userId, newStatus, profile } = await req.json();
+        const { user_id, newStatus, profile } = await req.json();
 
         if (newStatus) {
             if (newStatus !== "Active" && newStatus !== "Inactive") {
                 return NextResponse.json({ error: "Invalid status" }, { status: 400 });
             }
             await prisma.users.update({
-                where: { user_id: userId },
+                where: { user_id: user_id },
                 data: { status: newStatus },
             });
         }
 
         if (profile) {
             const user = await prisma.users.findUnique({
-                where: { user_id: userId },
+                where: { user_id: user_id },
                 include: { student: true, employee: true },
             });
 
@@ -219,12 +219,12 @@ export async function PUT(req: Request) {
 
             if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
                 const safeProfile = normalizeProfile<Prisma.StudentUpdateInput, keyof Prisma.StudentUpdateInput>(profile, allowedStudentFields);
-                await prisma.student.update({ where: { user_id: userId }, data: safeProfile });
+                await prisma.student.update({ where: { user_id: user_id }, data: safeProfile });
             }
 
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
                 const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput, keyof Prisma.EmployeeUpdateInput>(profile, allowedEmployeeFields);
-                await prisma.employee.update({ where: { user_id: userId }, data: safeProfile });
+                await prisma.employee.update({ where: { user_id: user_id }, data: safeProfile });
             }
         }
 

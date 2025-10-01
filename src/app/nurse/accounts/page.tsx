@@ -278,12 +278,12 @@ export default function NurseAccountsPage() {
     }
 
     // 🔹 Toggle status
-    async function handleToggle(userId: string, current: "Active" | "Inactive") {
+    async function handleToggle(user_id: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
         try {
             await fetch("/api/nurse/accounts", {
                 method: "PUT",
-                body: JSON.stringify({ userId, newStatus }),
+                body: JSON.stringify({ user_id, newStatus }),
                 headers: { "Content-Type": "application/json" },
             });
             toast.success(`User ${newStatus}`, { position: "top-center" });
