@@ -185,41 +185,45 @@ export async function PUT(req: Request) {
                 "bloodtype", "allergies", "medical_cond",
                 "emergencyco_name", "emergencyco_num", "emergencyco_relation",
                 "date_of_birth", "gender",
-            ];
+            ] as const;
 
             const allowedEmployeeFields = [
                 "fname", "mname", "lname", "contactno", "address",
                 "bloodtype", "allergies", "medical_cond",
                 "emergencyco_name", "emergencyco_num", "emergencyco_relation",
                 "date_of_birth", "gender",
-            ];
+            ] as const;
 
-            const normalizeProfile = <T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput>(
+            // 🔹 Strongly typed normalize
+            const normalizeProfile = <
+                T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput,
+                K extends keyof T
+            >(
                 raw: Record<string, unknown>,
                 allowed: readonly string[],
-            ): T => {
+            ): Partial<T> => {
                 const safe: Partial<T> = {};
                 for (const [key, value] of Object.entries(raw)) {
                     if (!allowed.includes(key)) continue;
 
                     if (key === "date_of_birth" && typeof value === "string") {
-                        (safe as any).date_of_birth = new Date(value);
+                        (safe as Record<string, unknown>)[key] = new Date(value);
                     } else if (key === "gender" && (value === "Male" || value === "Female")) {
-                        (safe as any).gender = value as Gender;
+                        (safe as Record<string, unknown>)[key] = value as Gender;
                     } else {
-                        (safe as any)[key] = value;
+                        (safe as Record<string, unknown>)[key] = value;
                     }
                 }
-                return safe as T;
+                return safe;
             };
 
             if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
-                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(profile, allowedStudentFields);
+                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput, keyof Prisma.StudentUpdateInput>(profile, allowedStudentFields);
                 await prisma.student.update({ where: { user_id: userId }, data: safeProfile });
             }
 
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(profile, allowedEmployeeFields);
+                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput, keyof Prisma.EmployeeUpdateInput>(profile, allowedEmployeeFields);
                 await prisma.employee.update({ where: { user_id: userId }, data: safeProfile });
             }
         }
