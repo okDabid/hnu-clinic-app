@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// ✅ GET all clinics
+// GET /api/nurse/clinic
 export async function GET() {
     try {
         const clinics = await prisma.clinic.findMany();
@@ -12,7 +12,7 @@ export async function GET() {
     }
 }
 
-// ✅ POST create new clinic (safe for prod)
+// POST /api/nurse/clinic
 export async function POST(req: NextRequest) {
     try {
         const { clinic_name, clinic_location, clinic_contactno } = await req.json();
@@ -21,23 +21,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "All fields are required" }, { status: 400 });
         }
 
-        // check if slug column exists (prod might still have it)
-        let hasSlug = false;
-        try {
-            await prisma.$queryRaw`SELECT slug FROM "Clinic" LIMIT 1`;
-            hasSlug = true;
-        } catch {
-            hasSlug = false; // column doesn't exist
-        }
-
         const newClinic = await prisma.clinic.create({
             data: {
                 clinic_name,
                 clinic_location,
-                clinic_contactno,
-                ...(hasSlug && {
-                    slug: clinic_name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now(),
-                }),
+                clinic_contactno
             },
         });
 
