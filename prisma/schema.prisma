@@ -48,15 +48,12 @@ enum ServiceType {
 model Clinic {
   clinic_id        String @id @default(cuid())
   clinic_name      String
-  slug             String @unique
   clinic_location  String
   clinic_contactno String
 
   medinventory MedInventory[]
   doctorAvail  DoctorAvailability[]
   appointments Appointment[]
-
-  @@index([slug])
 }
 
 model Users {
