@@ -181,7 +181,7 @@ export async function PUT(req: Request) {
         const { userId, newStatus } = await req.json();
 
         await prisma.users.update({
-            where: { user_id: userId },
+            where: { username: userId }, // ✅ use username (unique)
             data: { status: newStatus },
         });
 
