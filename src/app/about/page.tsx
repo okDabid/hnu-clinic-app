@@ -34,17 +34,17 @@ export default function AboutPage() {
 
                     {/* Desktop Nav */}
                     <nav className="hidden md:flex items-center gap-6">
-                        <Link href="/#features" className="text-gray-700 hover:text-green-600">
+                        <Link href="/#features" className="text-gray-700 hover:text-green-600 transition">
                             Features
                         </Link>
-                        <Link href="/about" className="text-green-600 font-semibold">
+                        <Link href="/about" className="text-gray-700 hover:text-green-600 transition">
                             About
                         </Link>
-                        <Link href="/#contact" className="text-gray-700 hover:text-green-600">
+                        <Link href="/#contact" className="text-gray-700 hover:text-green-600 transition">
                             Contact
                         </Link>
                         <Link href="/login">
-                            <Button className="bg-green-600 hover:bg-green-700">Login</Button>
+                            <Button className="text-gray-700 hover:text-green-600 transition">Login</Button>
                         </Link>
                     </nav>
 
@@ -64,17 +64,17 @@ export default function AboutPage() {
                 {/* Mobile Dropdown Nav */}
                 {menuOpen && (
                     <div className="flex flex-col gap-4 mt-4 px-4 md:hidden">
-                        <Link href="/#features" className="text-gray-700 hover:text-green-600">
+                        <Link href="/#features" className="text-gray-700 hover:text-green-600 transition">
                             Features
                         </Link>
-                        <Link href="/about" className="text-green-600 font-semibold">
+                        <Link href="/about" className="text-gray-700 hover:text-green-600 transition">
                             About
                         </Link>
-                        <Link href="/#contact" className="text-gray-700 hover:text-green-600">
+                        <Link href="/#contact" className="text-gray-700 hover:text-green-600 transition">
                             Contact
                         </Link>
                         <Link href="/login">
-                            <Button className="bg-green-600 hover:bg-green-700 w-full">
+                            <Button className="text-gray-700 hover:text-green-600 transition">
                                 Login
                             </Button>
                         </Link>
