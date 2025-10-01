@@ -360,23 +360,27 @@ export default function NurseAccountsPage() {
                     {/* My Account */}
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardHeader className="border-b flex items-center justify-between">
-                                <CardTitle className="text-2xl font-bold text-green-600">
+                            <CardHeader className="border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                                     My Account
                                 </CardTitle>
 
                                 {/* Password Update Dialog */}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon" className="hover:bg-green-50">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="hover:bg-green-50 w-full sm:w-auto"
+                                        >
                                             <Cog className="h-5 w-5 text-green-600" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-md">
+                                    <DialogContent className="w-[95%] max-w-sm sm:max-w-md lg:max-w-lg rounded-xl">
                                         <DialogHeader>
-                                            <DialogTitle>Update Password</DialogTitle>
-                                            <DialogDescription>
-                                                Change your account password securely. You will need to enter your current password before setting a new one.
+                                            <DialogTitle className="text-lg sm:text-xl">Update Password</DialogTitle>
+                                            <DialogDescription className="text-sm sm:text-base">
+                                                Change your account password securely. Enter your current password and set a new one.
                                             </DialogDescription>
                                         </DialogHeader>
 
@@ -413,23 +417,23 @@ export default function NurseAccountsPage() {
                                             }}
                                             className="space-y-4"
                                         >
-                                            <div>
+                                            <div className="flex flex-col space-y-2">
                                                 <Label>Current Password</Label>
-                                                <Input type="password" name="oldPassword" required />
+                                                <Input type="password" name="oldPassword" required className="w-full" />
                                             </div>
-                                            <div>
+                                            <div className="flex flex-col space-y-2">
                                                 <Label>New Password</Label>
-                                                <Input type="password" name="newPassword" required />
+                                                <Input type="password" name="newPassword" required className="w-full" />
                                             </div>
-                                            <div>
+                                            <div className="flex flex-col space-y-2">
                                                 <Label>Confirm New Password</Label>
-                                                <Input type="password" name="confirmPassword" required />
+                                                <Input type="password" name="confirmPassword" required className="w-full" />
                                             </div>
 
-                                            <DialogFooter>
+                                            <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
                                                 >
                                                     Update Password
                                                 </Button>
@@ -441,100 +445,93 @@ export default function NurseAccountsPage() {
 
                             {/* Profile Form */}
                             <CardContent className="pt-6">
-                                <form onSubmit={handleProfileUpdate} className="space-y-4">
+                                <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     {/* System info (read-only) */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label>User ID</Label>
-                                            <Input value={profile.user_id} disabled />
+                                            <Label>User Name</Label>
+                                            <Input value={profile.user_id} disabled className="w-full" />
                                         </div>
                                         <div>
-                                            <Label>Username</Label>
-                                            <Input value={profile.username} disabled />
+                                            <Label>User Id</Label>
+                                            <Input value={profile.username} disabled className="w-full" />
                                         </div>
                                         <div>
                                             <Label>Role</Label>
-                                            <Input value={profile.role} disabled />
+                                            <Input value={profile.role} disabled className="w-full" />
                                         </div>
                                         <div>
                                             <Label>Status</Label>
-                                            <Input value={profile.status} disabled />
+                                            <Input value={profile.status} disabled className="w-full" />
                                         </div>
                                         <div>
                                             <Label>Date of Birth</Label>
-                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled />
+                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled className="w-full" />
                                         </div>
                                     </div>
 
                                     {/* Editable fields */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
                                             <Label>First Name</Label>
                                             <Input
                                                 value={profile.fname}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, fname: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                         <div>
                                             <Label>Middle Name</Label>
                                             <Input
                                                 value={profile.mname || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, mname: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                         <div>
                                             <Label>Last Name</Label>
                                             <Input
                                                 value={profile.lname}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, lname: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label>Contact No</Label>
                                             <Input
                                                 value={profile.contactno || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, contactno: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                         <div>
                                             <Label>Address</Label>
                                             <Input
                                                 value={profile.address || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, address: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label>Blood Type</Label>
                                             <Input
                                                 value={profile.bloodtype || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, bloodtype: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                         <div>
                                             <Label>Allergies</Label>
                                             <Input
                                                 value={profile.allergies || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, allergies: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                     </div>
@@ -543,41 +540,34 @@ export default function NurseAccountsPage() {
                                         <Label>Medical Conditions</Label>
                                         <Input
                                             value={profile.medical_cond || ""}
-                                            onChange={(e) =>
-                                                setProfile({ ...profile, medical_cond: e.target.value })
-                                            }
+                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
+                                            className="w-full"
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
                                             <Label>Emergency Contact Name</Label>
                                             <Input
                                                 value={profile.emergencyco_name || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, emergencyco_name: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                         <div>
                                             <Label>Emergency Contact Number</Label>
                                             <Input
                                                 value={profile.emergencyco_num || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, emergencyco_num: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                         <div>
                                             <Label>Emergency Contact Relation</Label>
                                             <Input
                                                 value={profile.emergencyco_relation || ""}
-                                                onChange={(e) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        emergencyco_relation: e.target.value,
-                                                    })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
+                                                className="w-full"
                                             />
                                         </div>
                                     </div>
@@ -594,6 +584,7 @@ export default function NurseAccountsPage() {
                             </CardContent>
                         </Card>
                     )}
+
 
 
                     {/* Create User */}
