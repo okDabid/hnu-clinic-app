@@ -32,7 +32,7 @@ import { Separator } from "@/components/ui/separator";
 
 export default function NurseDashboardPage() {
     const { data: session } = useSession();
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [menuOpen] = useState(false);
 
     const fullName = session?.user?.name || "Nurse";
 
@@ -55,6 +55,9 @@ export default function NurseDashboardPage() {
                     <Link href="/nurse/inventory" className="flex items-center gap-2 hover:text-green-600">
                         <Package className="h-5 w-5" />
                         Inventory
+                    </Link>
+                    <Link href="/nurse/clinic" className="flex items-center gap-2 hover:text-green-600">
+                        <ClipboardList className="h-5 w-5" /> Clinic
                     </Link>
                 </nav>
                 <Separator className="my-6" />
@@ -92,6 +95,9 @@ export default function NurseDashboardPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/nurse/inventory">Inventory</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/nurse/clinic">Clinic</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
