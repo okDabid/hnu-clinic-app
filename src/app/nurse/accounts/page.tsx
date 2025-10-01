@@ -139,6 +139,9 @@ export default function NurseAccountsPage() {
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
+    const [currentPage, setCurrentPage] = useState(1);
+
+
 
     // 🔹 Fetch users
     async function loadUsers() {
@@ -717,17 +720,25 @@ export default function NurseAccountsPage() {
                     </Card>
 
                     {/* Manage Users */}
-                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <CardTitle className="text-2xl font-bold text-green-600">Manage Existing Users</CardTitle>
                             <div className="relative w-full md:w-72">
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                                <Input placeholder="Search by ID, role, or name..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
+                                <Input
+                                    placeholder="Search by ID, role, or name..."
+                                    value={search}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                        setCurrentPage(1); // reset to page 1 when searching
+                                    }}
+                                    className="pl-8"
+                                />
                             </div>
                         </CardHeader>
 
-                        <CardContent>
-                            <div className="overflow-x-auto">
+                        <CardContent className="flex-1 flex flex-col">
+                            <div className="overflow-x-auto flex-1">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -740,71 +751,73 @@ export default function NurseAccountsPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {filteredUsers.length > 0 ? (
-                                            filteredUsers.map((user) => (
-                                                <TableRow key={user.user_id} className="hover:bg-green-50 transition">
-                                                    <TableCell className="font-medium">{user.user_id}</TableCell>
-                                                    <TableCell>{user.role}</TableCell>
-                                                    <TableCell>{user.fullName}</TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={
-                                                                user.status === "Active"
-                                                                    ? "bg-green-100 text-green-700 border-green-200 px-4 py-1"
-                                                                    : "bg-red-100 text-red-700 border-red-200 px-4 py-1"
-                                                            }
-                                                        >
-                                                            {user.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant={user.status === "Active" ? "destructive" : "default"}
-                                                                    className="gap-2"
-                                                                >
-                                                                    {user.status === "Active" ? (
-                                                                        <>
-                                                                            <Ban className="h-4 w-4" /> Deactivate
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <CheckCircle2 className="h-4 w-4" /> Activate
-                                                                        </>
-                                                                    )}
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>
-                                                                        {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
-                                                                    </AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        {user.status === "Active"
-                                                                            ? "This will prevent the user from signing in until reactivated."
-                                                                            : "This will allow the user to sign in and use the system."}
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        className={
-                                                                            user.status === "Active"
-                                                                                ? "bg-red-600 hover:bg-red-700"
-                                                                                : "bg-green-600 hover:bg-green-700"
-                                                                        }
-                                                                        onClick={() => handleToggle(user.accountId, user.status)}
+                                            filteredUsers
+                                                .slice((currentPage - 1) * 8, currentPage * 8) // ✅ show 8 users per page
+                                                .map((user) => (
+                                                    <TableRow key={user.user_id} className="hover:bg-green-50 transition">
+                                                        <TableCell className="font-medium">{user.user_id}</TableCell>
+                                                        <TableCell>{user.role}</TableCell>
+                                                        <TableCell>{user.fullName}</TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={
+                                                                    user.status === "Active"
+                                                                        ? "bg-green-100 text-green-700 border-green-200 px-4 py-1"
+                                                                        : "bg-red-100 text-red-700 border-red-200 px-4 py-1"
+                                                                }
+                                                            >
+                                                                {user.status}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant={user.status === "Active" ? "destructive" : "default"}
+                                                                        className="gap-2"
                                                                     >
-                                                                        {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
+                                                                        {user.status === "Active" ? (
+                                                                            <>
+                                                                                <Ban className="h-4 w-4" /> Deactivate
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <CheckCircle2 className="h-4 w-4" /> Activate
+                                                                            </>
+                                                                        )}
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>
+                                                                            {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
+                                                                        </AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            {user.status === "Active"
+                                                                                ? "This will prevent the user from signing in until reactivated."
+                                                                                : "This will allow the user to sign in and use the system."}
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            className={
+                                                                                user.status === "Active"
+                                                                                    ? "bg-red-600 hover:bg-red-700"
+                                                                                    : "bg-green-600 hover:bg-green-700"
+                                                                            }
+                                                                            onClick={() => handleToggle(user.accountId, user.status)}
+                                                                        >
+                                                                            {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
                                         ) : (
                                             <TableRow>
                                                 <TableCell colSpan={5} className="text-center text-gray-500 py-6">
@@ -815,8 +828,36 @@ export default function NurseAccountsPage() {
                                     </TableBody>
                                 </Table>
                             </div>
+
+                            {/* ✅ Pagination Controls fixed at bottom */}
+                            <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </Button>
+                                <span className="text-sm text-gray-600">
+                                    Page {currentPage} of {Math.ceil(filteredUsers.length / 8) || 1}
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setCurrentPage((prev) =>
+                                            Math.min(prev + 1, Math.ceil(filteredUsers.length / 8))
+                                        )
+                                    }
+                                    disabled={currentPage === Math.ceil(filteredUsers.length / 8) || filteredUsers.length === 0}
+                                >
+                                    Next
+                                </Button>
+                            </div>
                         </CardContent>
                     </Card>
+
                 </section>
 
                 {/* Footer */}
