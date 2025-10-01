@@ -17,7 +17,7 @@ export async function middleware(req: NextRequest) {
         const role = token.role as string;
         const status = token.status as AccountStatus | undefined;
 
-        // 🚨 Block inactive accounts
+        // Block inactive accounts
         if (status === "Inactive") {
             return NextResponse.redirect(new URL("/login?error=inactive", req.url));
         }
