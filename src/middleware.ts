@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { AccountStatus } from "@prisma/client";
 
 export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -14,28 +15,30 @@ export async function middleware(req: NextRequest) {
     // ✅ If user IS logged in
     if (token) {
         const role = token.role as string;
+        const status = token.status as AccountStatus | undefined;
 
-        // Guard nurse pages
+        // 🚨 Block inactive accounts
+        if (status === "Inactive") {
+            return NextResponse.redirect(new URL("/login?error=inactive", req.url));
+        }
+
+        // Role-based guards
         if (pathname.startsWith("/nurse") && role !== "NURSE") {
             return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
         }
 
-        // Guard doctor pages
         if (pathname.startsWith("/doctor") && role !== "DOCTOR") {
             return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
         }
 
-        // Guard scholar pages
         if (pathname.startsWith("/scholar") && role !== "SCHOLAR") {
             return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
         }
 
-        // Guard patient pages
         if (pathname.startsWith("/patient") && role !== "PATIENT") {
             return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
         }
 
-        // Guard admin pages
         if (pathname.startsWith("/admin") && role !== "ADMIN") {
             return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
         }

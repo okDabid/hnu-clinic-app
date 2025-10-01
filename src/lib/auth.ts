@@ -6,15 +6,34 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
 
+// Extend next-auth types
+declare module "next-auth" {
+    interface User {
+        status?: AccountStatus;
+    }
+    interface Session {
+        user: {
+            id: string;
+            role: Role;
+            name?: string | null;
+            status?: AccountStatus;
+            email?: string | null;
+            image?: string | null;
+        };
+    }
+}
+
 interface AppUser {
     id: string;
     name?: string | null;
     role: Role;
+    status: AccountStatus;
 }
 
 interface AppJWT extends JWT {
     id?: string;
     role?: Role;
+    status?: AccountStatus;
 }
 
 interface AppSession extends Session {
@@ -22,6 +41,7 @@ interface AppSession extends Session {
         id: string;
         role: Role;
         name?: string | null;
+        status?: AccountStatus;
     };
 }
 
@@ -35,9 +55,7 @@ export const authOptions: NextAuthOptions = {
                 role: { label: "Role", type: "text" },
             },
             async authorize(credentials): Promise<AppUser | null> {
-                if (!credentials) {
-                    throw new Error("Missing credentials.");
-                }
+                if (!credentials) throw new Error("Missing credentials.");
 
                 const id = String(credentials.id || "").trim();
                 const password = String(credentials.password || "");
@@ -53,19 +71,15 @@ export const authOptions: NextAuthOptions = {
                     include: { student: true, employee: true },
                 });
 
-                if (!user) {
-                    throw new Error("No account found with these credentials.");
-                }
+                if (!user) throw new Error("No account found with these credentials.");
 
-                // 🔐 Block inactive accounts at login
+                // 🔐 Block inactive accounts
                 if (user.status === AccountStatus.Inactive) {
                     throw new Error("This account is inactive. Please contact the administrator.");
                 }
 
                 const ok = await bcrypt.compare(password, user.password);
-                if (!ok) {
-                    throw new Error("Invalid password.");
-                }
+                if (!ok) throw new Error("Invalid password.");
 
                 return {
                     id: user.user_id,
@@ -75,6 +89,7 @@ export const authOptions: NextAuthOptions = {
                             ? `${user.employee.fname} ${user.employee.lname}`
                             : "User",
                     role: user.role,
+                    status: user.status, // ✅ include status here
                 };
             },
         }),
@@ -83,36 +98,34 @@ export const authOptions: NextAuthOptions = {
     session: { strategy: "jwt" },
 
     callbacks: {
+        // Store extra fields in JWT
         async jwt({ token, user }): Promise<AppJWT> {
             if (user) {
                 const u = user as AppUser;
                 token.id = u.id;
                 token.role = u.role;
                 token.name = u.name ?? token.name;
+                token.status = u.status;
+            } else if (token.id) {
+                // 🔹 Refresh status every time from DB
+                const dbUser = await prisma.users.findUnique({
+                    where: { user_id: token.id },
+                });
+                token.status = dbUser?.status ?? AccountStatus.Inactive;
             }
             return token as AppJWT;
         },
 
+        // Expose status in session
         async session({ session, token }): Promise<AppSession> {
             const t = token as AppJWT;
-
-            if (t.id) {
-                // 🔄 Re-check status every time session is created
-                const dbUser = await prisma.users.findUnique({
-                    where: { user_id: t.id },
-                    select: { status: true },
-                });
-
-                if (!dbUser || dbUser.status === AccountStatus.Inactive) {
-                    throw new Error("Account inactive. Please contact administrator.");
-                }
-            }
-
             if (session.user) {
-                session.user.id = t.id ?? token.sub ?? "";
+                session.user.id = t.id ?? "";
                 session.user.role = t.role ?? Role.PATIENT;
                 session.user.name = t.name ?? session.user.name;
+                session.user.status = t.status ?? AccountStatus.Inactive;
             }
+
             return session as AppSession;
         },
     },

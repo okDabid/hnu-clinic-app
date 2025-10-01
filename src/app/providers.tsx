@@ -1,8 +1,22 @@
 "use client";
 
 import { ReactNode, useEffect } from "react";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { Toaster, toast } from "sonner";
+
+// 🔹 SessionWatcher: watches session status
+function SessionWatcher() {
+    const { data: session } = useSession();
+
+    useEffect(() => {
+        if (session?.user?.status === "Inactive") {
+            toast.error("Your account has been deactivated. Logging out...");
+            signOut({ callbackUrl: "/login" });
+        }
+    }, [session]);
+
+    return null;
+}
 
 export default function Providers({ children }: { children: ReactNode }) {
     useEffect(() => {
@@ -32,6 +46,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         <SessionProvider>
             {children}
             <Toaster richColors position="top-center" />
+            <SessionWatcher /> {/* ✅ runs globally */}
         </SessionProvider>
     );
 }
