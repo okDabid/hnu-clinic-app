@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     async function handleLogin(e: React.FormEvent<HTMLFormElement>, role: string) {
         e.preventDefault();
@@ -55,17 +57,45 @@ export default function LoginPageClient() {
             } else {
                 toast.error("Something went wrong", { position: "top-center" });
             }
+        } finally {
+            setLoadingRole(null);
         }
     }
 
     const renderForm = (role: string, label: string, fieldName: string, placeholder: string) => (
         <form className="space-y-4" onSubmit={(e) => handleLogin(e, role)}>
+            {/* ID Field */}
             <Input name={fieldName} placeholder={placeholder} required />
-            <Input name="password" type="password" placeholder="Password" required />
+
+            {/* Password Field with Toggle */}
+            <div className="relative">
+                <Input
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    required
+                    className="pr-10"
+                />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                >
+                    {showPassword ? (
+                        <EyeOff className="h-5 w-5 text-gray-500" />
+                    ) : (
+                        <Eye className="h-5 w-5 text-gray-500" />
+                    )}
+                </Button>
+            </div>
+
+            {/* Submit */}
             <Button
                 type="submit"
                 disabled={loadingRole === role}
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
             >
                 {loadingRole === role ? `Logging in...` : `Login as ${label}`}
             </Button>
@@ -77,7 +107,9 @@ export default function LoginPageClient() {
             {/* Logo + Title */}
             <div className="flex items-center gap-3 mb-8">
                 <Image src="/clinic-illustration.svg" alt="logo" width={50} height={50} />
-                <h1 className="text-2xl md:text-3xl font-bold text-green-600">HNU Clinic Login</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-green-600">
+                    HNU Clinic Login
+                </h1>
             </div>
 
             {/* Login Card */}
@@ -107,7 +139,7 @@ export default function LoginPageClient() {
                 </CardContent>
             </Card>
 
-            <p className="text-gray-600 text-sm mt-6">
+            <p className="text-gray-600 text-sm mt-6 text-center">
                 © {new Date().getFullYear()} HNU Clinic Capstone Project
             </p>
         </div>

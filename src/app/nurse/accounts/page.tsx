@@ -5,6 +5,7 @@ import orderBy from "lodash/orderBy";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 
 import {
     Menu,
@@ -133,6 +134,11 @@ export default function NurseAccountsPage() {
     const [profileLoading, setProfileLoading] = useState(false);
 
     const [menuOpen] = useState(false);
+
+    const [showCurrent, setShowCurrent] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+
 
     // 🔹 Fetch users
     async function loadUsers() {
@@ -376,6 +382,7 @@ export default function NurseAccountsPage() {
                                             <Cog className="h-5 w-5 text-green-600" />
                                         </Button>
                                     </DialogTrigger>
+
                                     <DialogContent className="w-[95%] max-w-sm sm:max-w-md lg:max-w-lg rounded-xl">
                                         <DialogHeader>
                                             <DialogTitle className="text-lg sm:text-xl">Update Password</DialogTitle>
@@ -417,17 +424,67 @@ export default function NurseAccountsPage() {
                                             }}
                                             className="space-y-4"
                                         >
+                                            {/* Current Password */}
                                             <div className="flex flex-col space-y-2">
                                                 <Label>Current Password</Label>
-                                                <Input type="password" name="oldPassword" required className="w-full" />
+                                                <div className="relative">
+                                                    <Input type={showCurrent ? "text" : "password"} name="oldPassword" required className="pr-10" />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setShowCurrent(!showCurrent)}
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                                    >
+                                                        {showCurrent ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </div>
+
+                                            {/* New Password */}
                                             <div className="flex flex-col space-y-2">
                                                 <Label>New Password</Label>
-                                                <Input type="password" name="newPassword" required className="w-full" />
+                                                <div className="relative">
+                                                    <Input type={showNew ? "text" : "password"} name="newPassword" required className="pr-10" />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setShowNew(!showNew)}
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                                    >
+                                                        {showNew ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </div>
+
+                                            {/* Confirm Password */}
                                             <div className="flex flex-col space-y-2">
                                                 <Label>Confirm New Password</Label>
-                                                <Input type="password" name="confirmPassword" required className="w-full" />
+                                                <div className="relative">
+                                                    <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required className="pr-10" />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setShowConfirm(!showConfirm)}
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                                    >
+                                                        {showConfirm ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </div>
 
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
@@ -440,6 +497,7 @@ export default function NurseAccountsPage() {
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
+
                                 </Dialog>
                             </CardHeader>
 
@@ -449,11 +507,11 @@ export default function NurseAccountsPage() {
                                     {/* System info (read-only) */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label>User Name</Label>
+                                            <Label>Username</Label>
                                             <Input value={profile.user_id} disabled className="w-full" />
                                         </div>
                                         <div>
-                                            <Label>User Id</Label>
+                                            <Label>User ID</Label>
                                             <Input value={profile.username} disabled className="w-full" />
                                         </div>
                                         <div>
