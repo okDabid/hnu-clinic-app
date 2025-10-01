@@ -141,32 +141,85 @@ export default function AboutPage() {
                         provide compassionate care and reliable health services.
                     </p>
 
-                    {/* Team Grid */}
-                    <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-12">
-                        {[
-                            { name: "Shanna Kathleen M. Escalona, MD", role: "Head, Health Services Department", img: "/head-illustration.png" },
-                            { name: "Lovella I. Calvelo, MD", role: "School Physician", img: "/physician-illustration.png" },
-                            { name: "Minette B. Barrete", role: "School Dentist", img: "/dentist1-illustration.png" },
-                            { name: "Roche T. Pamaran", role: "School Dentist", img: "/dentist2-illustration.png" },
-                            { name: "Cherly Marie B. Lagura, RN", role: "School Nurse", img: "/nurse1-illustration.png" },
-                            { name: "Evangeline Y. Guieb, RN", role: "School Nurse", img: "/nurse2-illustration.png" },
-                            { name: "Rhiza Rosario G. Magallones, RN", role: "School Nurse", img: "/nurse3-illustration.png" },
-                        ].map((member) => (
-                            <div key={member.name} className="flex flex-col items-center">
+                    <div className="space-y-16">
+                        {/* Head */}
+                        <div className="flex justify-center">
+                            <div className="flex flex-col items-center">
                                 <Image
-                                    src={member.img}
-                                    alt={member.name}
+                                    src="/head-illustration.png"
+                                    alt="Head"
+                                    width={140}
+                                    height={140}
+                                    className="rounded-full mb-4 shadow-md"
+                                />
+                                <h3 className="font-semibold text-lg text-green-600">
+                                    Shanna Kathleen M. Escalona, MD
+                                </h3>
+                                <p className="text-sm text-gray-600">Head, Health Services Department</p>
+                            </div>
+                        </div>
+
+                        {/* School Physician */}
+                        <div className="flex justify-center">
+                            <div className="flex flex-col items-center">
+                                <Image
+                                    src="/physician-illustration.png"
+                                    alt="Physician"
                                     width={120}
                                     height={120}
                                     className="rounded-full mb-4 shadow-md"
                                 />
-                                <h3 className="font-semibold text-lg text-green-600">{member.name}</h3>
-                                <p className="text-sm text-gray-600">{member.role}</p>
+                                <h3 className="font-semibold text-lg text-green-600">
+                                    Lovella I. Calvelo, MD
+                                </h3>
+                                <p className="text-sm text-gray-600">School Physician</p>
                             </div>
-                        ))}
+                        </div>
+
+                        {/* Dentists */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 justify-center max-w-3xl mx-auto">
+                            {[
+                                { name: "Minette B. Barrete", role: "School Dentist", img: "/dentist1-illustration.png" },
+                                { name: "Roche T. Pamaran", role: "School Dentist", img: "/dentist2-illustration.png" },
+                            ].map((member) => (
+                                <div key={member.name} className="flex flex-col items-center">
+                                    <Image
+                                        src={member.img}
+                                        alt={member.name}
+                                        width={120}
+                                        height={120}
+                                        className="rounded-full mb-4 shadow-md"
+                                    />
+                                    <h3 className="font-semibold text-lg text-green-600">{member.name}</h3>
+                                    <p className="text-sm text-gray-600">{member.role}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Nurses */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 justify-center max-w-5xl mx-auto">
+                            {[
+                                { name: "Cherly Marie B. Lagura, RN", role: "School Nurse", img: "/nurse1-illustration.png" },
+                                { name: "Evangeline Y. Guieb, RN", role: "School Nurse", img: "/nurse2-illustration.png" },
+                                { name: "Rhiza Rosario G. Magallones, RN", role: "School Nurse", img: "/nurse3-illustration.png" },
+                            ].map((member) => (
+                                <div key={member.name} className="flex flex-col items-center">
+                                    <Image
+                                        src={member.img}
+                                        alt={member.name}
+                                        width={120}
+                                        height={120}
+                                        className="rounded-full mb-4 shadow-md"
+                                    />
+                                    <h3 className="font-semibold text-lg text-green-600">{member.name}</h3>
+                                    <p className="text-sm text-gray-600">{member.role}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
+
 
             {/* Services Section */}
             <section className="px-6 md:px-12 py-20 bg-white">
@@ -223,7 +276,7 @@ export default function AboutPage() {
             </section>
 
             {/* Footer */}
-            <footer className="bg-green-600 text-white py-6 text-center text-sm md:text-base">
+            <footer className="bg-white py-6 text-center text-gray-600 text-sm md:text-base border-t">
                 © {new Date().getFullYear()} HNU Clinic Capstone Project
             </footer>
         </div>
