@@ -9,8 +9,6 @@ import {
     Users,
     Home,
     Plus,
-    AlertTriangle,
-    Clock,
     Search,
     ClipboardList
 } from "lucide-react";
@@ -63,7 +61,7 @@ type InventoryItem = {
 
 type Clinic = {
     clinic_id: string;
-    clinic_name: string;
+    clinic_location: string;
 };
 
 export default function NurseInventoryPage() {
@@ -171,7 +169,7 @@ export default function NurseInventoryPage() {
                 </header>
 
                 {/* Inventory Table */}
-                <section className="px-6 pb-12 flex-1 flex flex-col">
+                <section className="px-6 pb-12 flex-1 flex flex-col mt-4"> {/* 👈 added mt-4 for spacing */}
                     <Card className="flex-1 flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <CardTitle className="text-2xl font-bold text-green-600">Stock List</CardTitle>
@@ -236,7 +234,7 @@ export default function NurseInventoryPage() {
                                                     <option value="">Select clinic</option>
                                                     {clinics.map((clinic) => (
                                                         <option key={clinic.clinic_id} value={clinic.clinic_id}>
-                                                            {clinic.clinic_name}
+                                                            {clinic.clinic_location} {/* 👈 show location not ID */}
                                                         </option>
                                                     ))}
                                                 </select>
