@@ -76,11 +76,28 @@ type CreateUserResponse = {
 };
 
 type Profile = {
+    // From Users table
+    user_id: string;
+    username: string;
+    role: string;
+    status: "Active" | "Inactive";
+
+    // Common personal info
     fname: string;
     mname?: string | null;
     lname: string;
+    date_of_birth?: string; // ISO string for binding <input type="date" />
+
     contactno?: string | null;
     address?: string | null;
+    bloodtype?: string | null;
+    allergies?: string | null;
+    medical_cond?: string | null;
+
+    // Emergency contact
+    emergencyco_name?: string | null;
+    emergencyco_num?: string | null;
+    emergencyco_relation?: string | null;
 };
 
 export default function NurseAccountsPage() {
@@ -131,11 +148,26 @@ export default function NurseAccountsPage() {
                 toast.error(data.error);
             } else {
                 setProfile({
-                    fname: data.student?.fname || data.employee?.fname || "",
-                    mname: data.student?.mname || data.employee?.mname || "",
-                    lname: data.student?.lname || data.employee?.lname || "",
-                    contactno: data.student?.contactno || data.employee?.contactno || "",
-                    address: data.student?.address || data.employee?.address || "",
+                    user_id: data.accountId,
+                    username: data.username,
+                    role: data.role,
+                    status: data.status,
+
+                    // Profile fields (student or employee)
+                    fname: data.profile?.fname || "",
+                    mname: data.profile?.mname || "",
+                    lname: data.profile?.lname || "",
+                    date_of_birth: data.profile?.date_of_birth || "",
+
+                    contactno: data.profile?.contactno || "",
+                    address: data.profile?.address || "",
+                    bloodtype: data.profile?.bloodtype || "",
+                    allergies: data.profile?.allergies || "",
+                    medical_cond: data.profile?.medical_cond || "",
+
+                    emergencyco_name: data.profile?.emergencyco_name || "",
+                    emergencyco_num: data.profile?.emergencyco_num || "",
+                    emergencyco_relation: data.profile?.emergencyco_relation || "",
                 });
             }
         } catch {
@@ -283,44 +315,119 @@ export default function NurseAccountsPage() {
                     </CardHeader>
                     <CardContent className="pt-6">
                         <form onSubmit={handleProfileUpdate} className="space-y-4">
+                            {/* System info (read-only) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Label>User ID</Label>
+                                    <Input value={profile.user_id} disabled />
+                                </div>
+                                <div>
+                                    <Label>Username</Label>
+                                    <Input value={profile.username} disabled />
+                                </div>
+                                <div>
+                                    <Label>Role</Label>
+                                    <Input value={profile.role} disabled />
+                                </div>
+                                <div>
+                                    <Label>Status</Label>
+                                    <Input value={profile.status} disabled />
+                                </div>
+                                <div>
+                                    <Label>Date of Birth</Label>
+                                    <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled />
+                                </div>
+                            </div>
+
+                            {/* Editable fields */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <Label>First Name</Label>
+                                    <Input
+                                        value={profile.fname}
+                                        onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Middle Name</Label>
+                                    <Input
+                                        value={profile.mname || ""}
+                                        onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Last Name</Label>
+                                    <Input
+                                        value={profile.lname}
+                                        onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Label>Contact No</Label>
+                                    <Input
+                                        value={profile.contactno || ""}
+                                        onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Address</Label>
+                                    <Input
+                                        value={profile.address || ""}
+                                        onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <Label>Blood Type</Label>
+                                    <Input
+                                        value={profile.bloodtype || ""}
+                                        onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Allergies</Label>
+                                    <Input
+                                        value={profile.allergies || ""}
+                                        onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
                             <div>
-                                <Label>First Name</Label>
+                                <Label>Medical Conditions</Label>
                                 <Input
-                                    value={profile.fname}
-                                    onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
+                                    value={profile.medical_cond || ""}
+                                    onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
                                 />
                             </div>
-                            <div>
-                                <Label>Middle Name</Label>
-                                <Input
-                                    value={profile.mname || ""}
-                                    onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label>Last Name</Label>
-                                <Input
-                                    value={profile.lname}
-                                    onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label>Contact No</Label>
-                                <Input
-                                    value={profile.contactno || ""}
-                                    onChange={(e) =>
-                                        setProfile({ ...profile, contactno: e.target.value })
-                                    }
-                                />
-                            </div>
-                            <div>
-                                <Label>Address</Label>
-                                <Input
-                                    value={profile.address || ""}
-                                    onChange={(e) =>
-                                        setProfile({ ...profile, address: e.target.value })
-                                    }
-                                />
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <Label>Emergency Contact Name</Label>
+                                    <Input
+                                        value={profile.emergencyco_name || ""}
+                                        onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Emergency Contact Number</Label>
+                                    <Input
+                                        value={profile.emergencyco_num || ""}
+                                        onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Emergency Contact Relation</Label>
+                                    <Input
+                                        value={profile.emergencyco_relation || ""}
+                                        onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
+                                    />
+                                </div>
                             </div>
 
                             <Button
@@ -335,6 +442,7 @@ export default function NurseAccountsPage() {
                     </CardContent>
                 </Card>
             )}
+
 
             {/* Create User Form */}
             <Card className="w-full max-w-3xl shadow-xl">
