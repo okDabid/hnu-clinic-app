@@ -26,7 +26,15 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -34,7 +42,6 @@ import { toast } from "sonner";
 type Clinic = {
     clinic_id: string;
     clinic_name: string;
-    slug: string;
     clinic_location: string;
     clinic_contactno: string;
 };
@@ -61,7 +68,6 @@ export default function NurseClinicPage() {
         const formData = new FormData(e.currentTarget);
         const payload = {
             clinic_name: formData.get("clinic_name"),
-            slug: formData.get("slug"),
             clinic_location: formData.get("clinic_location"),
             clinic_contactno: formData.get("clinic_contactno"),
         };
@@ -82,15 +88,17 @@ export default function NurseClinicPage() {
         if (!selectedClinic) return;
         const formData = new FormData(e.currentTarget);
         const payload = {
-            clinic_id: selectedClinic.clinic_id,
+            clinic_name: selectedClinic.clinic_name, // keep original name
             clinic_location: formData.get("clinic_location"),
             clinic_contactno: formData.get("clinic_contactno"),
         };
-        const res = await fetch("/api/nurse/clinic", {
+
+        const res = await fetch(`/api/nurse/clinic/${selectedClinic.clinic_id}`, {
             method: "PUT",
             body: JSON.stringify(payload),
             headers: { "Content-Type": "application/json" },
         });
+
         if (res.ok) {
             toast.success("Clinic updated!");
             loadClinics();
@@ -169,10 +177,6 @@ export default function NurseClinicPage() {
                                             <Input name="clinic_name" required />
                                         </div>
                                         <div>
-                                            <Label>Slug</Label>
-                                            <Input name="slug" required />
-                                        </div>
-                                        <div>
                                             <Label>Location</Label>
                                             <Input name="clinic_location" required />
                                         </div>
@@ -193,7 +197,6 @@ export default function NurseClinicPage() {
                                 <thead className="bg-green-50">
                                     <tr>
                                         <th className="border p-2">Name</th>
-                                        <th className="border p-2">Slug</th>
                                         <th className="border p-2">Location</th>
                                         <th className="border p-2">Contact</th>
                                         <th className="border p-2">Actions</th>
@@ -203,7 +206,6 @@ export default function NurseClinicPage() {
                                     {clinics.map((clinic) => (
                                         <tr key={clinic.clinic_id} className="hover:bg-green-50">
                                             <td className="border p-2">{clinic.clinic_name}</td>
-                                            <td className="border p-2">{clinic.slug}</td>
                                             <td className="border p-2">{clinic.clinic_location}</td>
                                             <td className="border p-2">{clinic.clinic_contactno}</td>
                                             <td className="border p-2">

@@ -4,26 +4,52 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
-    Menu, X, Package, Users, Home, Plus,
-    AlertTriangle, Clock, Search
+    Menu, X,
+    Package,
+    Users,
+    Home,
+    Plus,
+    AlertTriangle,
+    Clock,
+    Search,
+    ClipboardList
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
-    Card, CardContent, CardHeader, CardTitle
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle
 } from "@/components/ui/card";
+
 import {
-    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+
 import { Input } from "@/components/ui/input";
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
 } from "@/components/ui/table";
+
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
-    Dialog, DialogContent, DialogDescription, DialogFooter,
-    DialogHeader, DialogTitle, DialogTrigger
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
@@ -91,6 +117,9 @@ export default function NurseInventoryPage() {
                     <Link href="/nurse/inventory" className="flex items-center gap-2 text-green-600 font-semibold">
                         <Package className="h-5 w-5" /> Inventory
                     </Link>
+                    <Link href="/nurse/clinic" className="flex items-center gap-2 text-green-600 font-semibold">
+                        <ClipboardList className="h-5 w-5" /> Clinic
+                    </Link>
                 </nav>
                 <Separator className="my-6" />
                 <Button
@@ -118,6 +147,7 @@ export default function NurseInventoryPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse">Dashboard</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
