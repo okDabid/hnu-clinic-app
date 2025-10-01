@@ -28,6 +28,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 
 export default function NurseDashboardPage() {
     const { data: session } = useSession();
@@ -36,49 +37,41 @@ export default function NurseDashboardPage() {
     const fullName = session?.user?.name || "Nurse";
 
     return (
-        <div className="flex min-h-screen bg-neutral-950 text-gray-100">
+        <div className="flex min-h-screen bg-green-50">
             {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-neutral-900 border-r border-neutral-800 p-6">
-                <h1 className="text-2xl font-bold text-green-500 mb-8">HNU Clinic</h1>
-                <nav className="flex flex-col gap-4 text-gray-300">
-                    <Link
-                        href="/nurse"
-                        className="flex items-center gap-2 text-green-500 font-semibold"
-                    >
+            <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
+                <h1 className="text-2xl font-bold text-green-600 mb-8">
+                    HNU Clinic
+                </h1>
+                <nav className="flex flex-col gap-4 text-gray-700">
+                    <Link href="/nurse" className="flex items-center gap-2 text-green-600 font-semibold">
                         <Home className="h-5 w-5" />
                         Dashboard
                     </Link>
-                    <Link
-                        href="/nurse/accounts"
-                        className="flex items-center gap-2 hover:text-green-500"
-                    >
+                    <Link href="/nurse/accounts" className="flex items-center gap-2 hover:text-green-600">
                         <Users className="h-5 w-5" />
                         Accounts
                     </Link>
-                    <Link
-                        href="/nurse/inventory"
-                        className="flex items-center gap-2 hover:text-green-500"
-                    >
+                    <Link href="/nurse/inventory" className="flex items-center gap-2 hover:text-green-600">
                         <Package className="h-5 w-5" />
                         Inventory
                     </Link>
                 </nav>
-                <div className="mt-auto">
-                    <Button
-                        variant="default"
-                        className="w-full bg-green-600 hover:bg-green-700"
-                        onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
-                    >
-                        Logout
-                    </Button>
-                </div>
+                <Separator className="my-6" />
+                <Button
+                    variant="default"
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                >
+                    Logout
+                </Button>
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col">
                 {/* Header */}
-                <header className="w-full bg-neutral-900 border-b border-neutral-800 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-500">
+                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-xl font-bold text-green-600">
                         Nurse Panel Dashboard
                     </h2>
 
@@ -86,18 +79,11 @@ export default function NurseDashboardPage() {
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-gray-200">
-                                    {menuOpen ? (
-                                        <X className="w-5 h-5" />
-                                    ) : (
-                                        <Menu className="w-5 h-5" />
-                                    )}
+                                <Button variant="outline" size="sm">
+                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                align="end"
-                                className="bg-neutral-800 text-gray-100"
-                            >
+                            <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
                                     <Link href="/nurse">Dashboard</Link>
                                 </DropdownMenuItem>
@@ -108,9 +94,7 @@ export default function NurseDashboardPage() {
                                     <Link href="/nurse/inventory">Inventory</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() =>
-                                        signOut({ callbackUrl: "/login?logout=success" })
-                                    }
+                                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
                                 >
                                     Logout
                                 </DropdownMenuItem>
@@ -120,112 +104,122 @@ export default function NurseDashboardPage() {
                 </header>
 
                 {/* Welcome + KPI Section */}
-                <section className="px-6 py-8">
+                <section className="px-6 py-8 bg-white shadow-sm">
                     <div className="text-center">
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-500">
+                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">
                             Welcome, {fullName}
                         </h2>
-                        <p className="text-gray-400 mt-2">
-                            Manage clinic operations, accounts, appointments, records, and
-                            inventory.
+                        <p className="text-gray-700 mt-2">
+                            Manage clinic operations, accounts, appointments, records, and inventory.
                         </p>
                     </div>
 
                     {/* KPI Metric Blocks */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8 max-w-6xl mx-auto">
-                        <Card className="bg-neutral-900 border border-neutral-800 shadow-md">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 max-w-5xl mx-auto">
+                        <Card className="shadow rounded-xl border border-green-100">
                             <CardContent className="flex flex-col items-center p-6">
-                                <Users className="w-8 h-8 text-green-500 mb-2" />
-                                <p className="text-sm text-gray-400">Accounts</p>
-                                <p className="text-2xl font-bold text-green-400">245</p>
+                                <Users className="w-8 h-8 text-green-600 mb-2" />
+                                <h3 className="text-lg font-semibold text-green-600">Accounts</h3>
+                                <p className="text-sm text-gray-600">Manage user accounts</p>
                             </CardContent>
                         </Card>
 
-                        <Card className="bg-neutral-900 border border-neutral-800 shadow-md">
+                        <Card className="shadow rounded-xl border border-green-100">
                             <CardContent className="flex flex-col items-center p-6">
-                                <CalendarDays className="w-8 h-8 text-green-500 mb-2" />
-                                <p className="text-sm text-gray-400">Appointments</p>
-                                <p className="text-2xl font-bold text-green-400">89</p>
+                                <CalendarDays className="w-8 h-8 text-green-600 mb-2" />
+                                <h3 className="text-lg font-semibold text-green-600">Appointments</h3>
+                                <p className="text-sm text-gray-600">Track schedules</p>
                             </CardContent>
                         </Card>
 
-                        <Card className="bg-neutral-900 border border-neutral-800 shadow-md">
+                        <Card className="shadow rounded-xl border border-green-100">
                             <CardContent className="flex flex-col items-center p-6">
-                                <Package className="w-8 h-8 text-green-500 mb-2" />
-                                <p className="text-sm text-gray-400">Inventory Items</p>
-                                <p className="text-2xl font-bold text-green-400">530</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-neutral-900 border border-neutral-800 shadow-md">
-                            <CardContent className="flex flex-col items-center p-6">
-                                <BarChart3 className="w-8 h-8 text-green-500 mb-2" />
-                                <p className="text-sm text-gray-400">Reports Generated</p>
-                                <p className="text-2xl font-bold text-green-400">12</p>
+                                <Package className="w-8 h-8 text-green-600 mb-2" />
+                                <h3 className="text-lg font-semibold text-green-600">Inventory</h3>
+                                <p className="text-sm text-gray-600">Monitor stock levels</p>
                             </CardContent>
                         </Card>
                     </div>
                 </section>
 
-                {/* Chart Section (Placeholder) */}
-                <section className="px-6 py-8 max-w-6xl mx-auto">
-                    <Card className="bg-neutral-900 border border-neutral-800">
+                {/* Functionality Cards */}
+                <section className="px-6 py-12 grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
-                            <CardTitle className="text-green-500">Total Visitors</CardTitle>
-                            <p className="text-gray-400 text-sm">
-                                Visitors trend for the last 7 days
-                            </p>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="h-48 flex items-center justify-center text-gray-500">
-                                {/* Replace with chart.js or custom SVG */}
-                                Chart Placeholder
-                            </div>
-                        </CardContent>
-                    </Card>
-                </section>
-
-                {/* Table Section (Placeholder) */}
-                <section className="px-6 py-8 max-w-6xl mx-auto">
-                    <Card className="bg-neutral-900 border border-neutral-800">
-                        <CardHeader>
-                            <CardTitle className="text-green-500">
-                                Recent Activities
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <Users className="w-6 h-6" /> Accounts Management
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-neutral-800 text-gray-400">
-                                            <th className="p-3">User</th>
-                                            <th className="p-3">Action</th>
-                                            <th className="p-3">Status</th>
-                                            <th className="p-3">Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                                            <td className="p-3">John Doe</td>
-                                            <td className="p-3">Created Account</td>
-                                            <td className="p-3 text-green-400">Success</td>
-                                            <td className="p-3">2025-09-25</td>
-                                        </tr>
-                                        <tr className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                                            <td className="p-3">Jane Smith</td>
-                                            <td className="p-3">Updated Record</td>
-                                            <td className="p-3 text-yellow-400">Pending</td>
-                                            <td className="p-3">2025-09-26</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Create Scholar/Doctor/Admin accounts</li>
+                                <li>Edit/update account info</li>
+                                <li>Activate/deactivate accounts</li>
+                            </ul>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <ClipboardList className="w-6 h-6" /> Patient Records
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Search and view patient records</li>
+                                <li>Update health data</li>
+                                <li>Record consultation notes</li>
+                            </ul>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <Pill className="w-6 h-6" /> Medicine Dispensing
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Record medicines dispensed</li>
+                                <li>Maintain medicine history</li>
+                            </ul>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <Package className="w-6 h-6" /> Inventory Management
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Add stocks & replenishments</li>
+                                <li>Expiry date monitoring (FIFO)</li>
+                                <li>Track stock levels</li>
+                            </ul>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <BarChart3 className="w-6 h-6" /> Reports
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Generate inventory reports</li>
+                                <li>Generate quarterly clinic reports</li>
+                            </ul>
                         </CardContent>
                     </Card>
                 </section>
 
                 {/* Footer */}
-                <footer className="bg-neutral-900 border-t border-neutral-800 py-6 text-center text-gray-500 mt-auto">
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
                     © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
             </main>
