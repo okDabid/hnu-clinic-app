@@ -18,7 +18,6 @@ import {
     Ban,
     CheckCircle2,
     Search,
-    ArrowLeft,
 } from "lucide-react";
 import {
     Table,
@@ -300,7 +299,7 @@ export default function NurseAccountsPage() {
                     className="flex items-center gap-2 text-green-600 hover:text-green-800"
                     onClick={() => router.push("/nurse")}
                 >
-                    <ArrowLeft className="h-4 w-4" />
+
                     Back
                 </Button>
             </div>
