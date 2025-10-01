@@ -24,7 +24,7 @@ export default function AboutPage() {
                                 width={48}
                                 height={48}
                                 priority
-                                className="md:w-16 md:h-16"
+                                className="md:w-14 md:h-14"
                             />
                         </Link>
                         <h1 className="text-lg md:text-2xl font-bold text-green-600">
