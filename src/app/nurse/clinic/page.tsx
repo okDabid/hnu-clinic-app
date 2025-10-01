@@ -10,6 +10,7 @@ import {
     Package,
     Home,
     ClipboardList,
+    Loader2, // ✅ spinner
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,7 @@ export default function NurseClinicPage() {
     const [menuOpen] = useState(false);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+    const [loading, setLoading] = useState(false); // ✅ global loading state
 
     // Load clinics
     async function loadClinics() {
@@ -65,30 +67,40 @@ export default function NurseClinicPage() {
     // Add new clinic
     async function handleAddClinic(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        setLoading(true);
         const formData = new FormData(e.currentTarget);
         const payload = {
             clinic_name: formData.get("clinic_name"),
             clinic_location: formData.get("clinic_location"),
             clinic_contactno: formData.get("clinic_contactno"),
         };
+
         const res = await fetch("/api/nurse/clinic", {
             method: "POST",
             body: JSON.stringify(payload),
             headers: { "Content-Type": "application/json" },
         });
+
+        setLoading(false);
         if (res.ok) {
             toast.success("Clinic added!");
             loadClinics();
-        } else toast.error("Failed to add clinic");
+        } else if (res.status === 409) {
+            toast.error("Clinic with this name already exists");
+        } else {
+            toast.error("Failed to add clinic");
+        }
     }
 
     // Update clinic
     async function handleUpdateClinic(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!selectedClinic) return;
+
+        setLoading(true);
         const formData = new FormData(e.currentTarget);
         const payload = {
-            clinic_name: selectedClinic.clinic_name, // keep original name
+            clinic_name: selectedClinic.clinic_name,
             clinic_location: formData.get("clinic_location"),
             clinic_contactno: formData.get("clinic_contactno"),
         };
@@ -99,10 +111,15 @@ export default function NurseClinicPage() {
             headers: { "Content-Type": "application/json" },
         });
 
+        setLoading(false);
         if (res.ok) {
             toast.success("Clinic updated!");
             loadClinics();
-        } else toast.error("Failed to update clinic");
+        } else if (res.status === 409) {
+            toast.error("Another clinic with this name already exists");
+        } else {
+            toast.error("Failed to update clinic");
+        }
     }
 
     return (
@@ -173,19 +190,21 @@ export default function NurseClinicPage() {
                                     </DialogHeader>
                                     <form onSubmit={handleAddClinic} className="space-y-4">
                                         <div>
-                                            <Label>Clinic Name</Label>
+                                            <Label className="block mb-1">Clinic Name</Label>
                                             <Input name="clinic_name" required />
                                         </div>
                                         <div>
-                                            <Label>Location</Label>
+                                            <Label className="block mb-1">Location</Label>
                                             <Input name="clinic_location" required />
                                         </div>
                                         <div>
-                                            <Label>Contact No</Label>
+                                            <Label className="block mb-1">Contact No</Label>
                                             <Input name="clinic_contactno" required />
                                         </div>
                                         <DialogFooter>
-                                            <Button type="submit" className="bg-green-600 hover:bg-green-700">Save</Button>
+                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">
+                                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save"}
+                                            </Button>
                                         </DialogFooter>
                                     </form>
                                 </DialogContent>
@@ -226,7 +245,7 @@ export default function NurseClinicPage() {
                                                         </DialogHeader>
                                                         <form onSubmit={handleUpdateClinic} className="space-y-4">
                                                             <div>
-                                                                <Label>Location</Label>
+                                                                <Label className="block mb-1">Location</Label>
                                                                 <Input
                                                                     name="clinic_location"
                                                                     defaultValue={clinic.clinic_location}
@@ -234,7 +253,7 @@ export default function NurseClinicPage() {
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <Label>Contact No</Label>
+                                                                <Label className="block mb-1">Contact No</Label>
                                                                 <Input
                                                                     name="clinic_contactno"
                                                                     defaultValue={clinic.clinic_contactno}
@@ -242,7 +261,9 @@ export default function NurseClinicPage() {
                                                                 />
                                                             </div>
                                                             <DialogFooter>
-                                                                <Button type="submit" className="bg-green-600 hover:bg-green-700">Save Changes</Button>
+                                                                <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">
+                                                                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save Changes"}
+                                                                </Button>
                                                             </DialogFooter>
                                                         </form>
                                                     </DialogContent>
