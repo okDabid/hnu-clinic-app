@@ -13,7 +13,13 @@ import {
     CardTitle,
     CardContent,
 } from "@/components/ui/card";
-import { Loader2, Ban, CheckCircle2, Search, ArrowLeft, Edit } from "lucide-react";
+import {
+    Loader2,
+    Ban,
+    CheckCircle2,
+    Search,
+    ArrowLeft,
+} from "lucide-react";
 import {
     Table,
     TableBody,
@@ -35,13 +41,6 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import {
     Select,
     SelectContent,
     SelectItem,
@@ -51,8 +50,7 @@ import {
 
 // 🔹 Types aligned with API
 type User = {
-    user_id: string; // external ID
-    accountId: string; // true PK in DB
+    user_id: string;
     role: string;
     status: "Active" | "Inactive";
     fullName: string;
@@ -77,26 +75,28 @@ type CreateUserResponse = {
     error?: string;
 };
 
+type Profile = {
+    fname: string;
+    mname?: string | null;
+    lname: string;
+    contactno?: string | null;
+    address?: string | null;
+};
+
 export default function NurseAccountsPage() {
     const router = useRouter();
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // For create user
+    // Form state
     const [role, setRole] = useState("");
     const [gender, setGender] = useState<"Male" | "Female" | "">("");
     const [patientType, setPatientType] = useState<"student" | "employee" | "">("");
 
-    // For edit user
-    const [editUser, setEditUser] = useState<User | null>(null);
-    const [editForm, setEditForm] = useState({
-        fname: "",
-        mname: "",
-        lname: "",
-        contactno: "",
-        address: "",
-    });
+    // Own profile state
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [profileLoading, setProfileLoading] = useState(false);
 
     // 🔹 Fetch users
     async function loadUsers() {
@@ -122,8 +122,30 @@ export default function NurseAccountsPage() {
         }
     }
 
+    // 🔹 Fetch own profile
+    async function loadProfile() {
+        try {
+            const res = await fetch("/api/nurse/accounts/me", { cache: "no-store" });
+            const data = await res.json();
+            if (data.error) {
+                toast.error(data.error);
+            } else {
+                setProfile({
+                    fname: data.student?.fname || data.employee?.fname || "",
+                    mname: data.student?.mname || data.employee?.mname || "",
+                    lname: data.student?.lname || data.employee?.lname || "",
+                    contactno: data.student?.contactno || data.employee?.contactno || "",
+                    address: data.student?.address || data.employee?.address || "",
+                });
+            }
+        } catch {
+            toast.error("Failed to load profile");
+        }
+    }
+
     useEffect(() => {
         loadUsers();
+        loadProfile();
     }, []);
 
     // 🔎 Filtered + sorted users
@@ -197,6 +219,30 @@ export default function NurseAccountsPage() {
         }
     }
 
+    // 🔹 Update own profile
+    async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        try {
+            setProfileLoading(true);
+            const res = await fetch("/api/nurse/accounts/me", {
+                method: "PUT",
+                body: JSON.stringify({ profile }),
+                headers: { "Content-Type": "application/json" },
+            });
+            const data = await res.json();
+            if (data.error) {
+                toast.error(data.error);
+            } else {
+                toast.success("Profile updated!");
+                loadProfile();
+            }
+        } catch {
+            toast.error("Failed to update profile");
+        } finally {
+            setProfileLoading(false);
+        }
+    }
+
     // 🔹 Toggle status
     async function handleToggle(userId: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
@@ -210,23 +256,6 @@ export default function NurseAccountsPage() {
             loadUsers();
         } catch {
             toast.error("Failed to update user status", { position: "top-center" });
-        }
-    }
-
-    // 🔹 Save profile edit
-    async function handleEditSave() {
-        if (!editUser) return;
-        try {
-            await fetch("/api/nurse/accounts", {
-                method: "PUT",
-                body: JSON.stringify({ userId: editUser.accountId, profile: editForm }),
-                headers: { "Content-Type": "application/json" },
-            });
-            toast.success("Profile updated", { position: "top-center" });
-            setEditUser(null);
-            loadUsers();
-        } catch {
-            toast.error("Failed to update profile", { position: "top-center" });
         }
     }
 
@@ -244,8 +273,194 @@ export default function NurseAccountsPage() {
                 </Button>
             </div>
 
+            {/* My Account (logged-in user) */}
+            {profile && (
+                <Card className="w-full max-w-3xl shadow-xl">
+                    <CardHeader className="border-b">
+                        <CardTitle className="text-2xl font-bold text-green-600">
+                            My Account
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <form onSubmit={handleProfileUpdate} className="space-y-4">
+                            <div>
+                                <Label>First Name</Label>
+                                <Input
+                                    value={profile.fname}
+                                    onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Middle Name</Label>
+                                <Input
+                                    value={profile.mname || ""}
+                                    onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Last Name</Label>
+                                <Input
+                                    value={profile.lname}
+                                    onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Contact No</Label>
+                                <Input
+                                    value={profile.contactno || ""}
+                                    onChange={(e) =>
+                                        setProfile({ ...profile, contactno: e.target.value })
+                                    }
+                                />
+                            </div>
+                            <div>
+                                <Label>Address</Label>
+                                <Input
+                                    value={profile.address || ""}
+                                    onChange={(e) =>
+                                        setProfile({ ...profile, address: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                disabled={profileLoading}
+                            >
+                                {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
+                                {profileLoading ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Create User Form */}
-            {/* ... same as your form ... */}
+            <Card className="w-full max-w-3xl shadow-xl">
+                <CardHeader className="border-b">
+                    <CardTitle className="text-2xl font-bold text-green-600">
+                        Create New User
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Role */}
+                        <div className="space-y-2">
+                            <Label>Role</Label>
+                            <Select value={role} onValueChange={setRole}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
+                                    <SelectItem value="NURSE">Nurse</SelectItem>
+                                    <SelectItem value="DOCTOR">Doctor</SelectItem>
+                                    <SelectItem value="PATIENT">Patient</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Scholar: School ID */}
+                        {role === "SCHOLAR" && (
+                            <div className="space-y-2">
+                                <Label>School ID</Label>
+                                <Input name="school_id" required />
+                            </div>
+                        )}
+
+                        {/* Nurse/Doctor: Employee ID */}
+                        {(role === "NURSE" || role === "DOCTOR") && (
+                            <div className="space-y-2">
+                                <Label>Employee ID</Label>
+                                <Input name="employee_id" required />
+                            </div>
+                        )}
+
+                        {/* Patient Type */}
+                        {role === "PATIENT" && (
+                            <div className="space-y-2">
+                                <Label>Patient Type</Label>
+                                <Select
+                                    value={patientType}
+                                    onValueChange={(val: "student" | "employee") => setPatientType(val)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select patient type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="student">Student</SelectItem>
+                                        <SelectItem value="employee">Employee</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* Patient IDs */}
+                        {role === "PATIENT" && patientType === "student" && (
+                            <div className="space-y-2">
+                                <Label>Student ID</Label>
+                                <Input name="student_id" required />
+                            </div>
+                        )}
+                        {role === "PATIENT" && patientType === "employee" && (
+                            <div className="space-y-2">
+                                <Label>Employee ID</Label>
+                                <Input name="employee_id" required />
+                            </div>
+                        )}
+
+                        {/* Names */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label>First Name</Label>
+                                <Input name="fname" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Middle Name</Label>
+                                <Input name="mname" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Last Name</Label>
+                                <Input name="lname" required />
+                            </div>
+                        </div>
+
+                        {/* DOB */}
+                        <div className="space-y-2">
+                            <Label>Date of Birth</Label>
+                            <Input type="date" name="date_of_birth" required />
+                        </div>
+
+                        {/* Gender */}
+                        <div className="space-y-2">
+                            <Label>Gender</Label>
+                            <Select
+                                value={gender}
+                                onValueChange={(val) => setGender(val as "Male" | "Female")}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Male">Male</SelectItem>
+                                    <SelectItem value="Female">Female</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Submit */}
+                        <Button
+                            type="submit"
+                            className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                            disabled={loading}
+                        >
+                            {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+                            {loading ? "Creating..." : "Create User"}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
 
             {/* Manage Users Table */}
             <Card className="shadow-xl">
@@ -295,25 +510,14 @@ export default function NurseAccountsPage() {
                                                     {user.status}
                                                 </Badge>
                                             </TableCell>
-                                            <TableCell className="text-right flex gap-2 justify-end">
-                                                {/* Edit */}
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        setEditUser(user);
-                                                        setEditForm({ fname: "", mname: "", lname: "", contactno: "", address: "" });
-                                                    }}
-                                                >
-                                                    <Edit className="h-4 w-4 mr-1" /> Edit
-                                                </Button>
-
-                                                {/* Toggle Active/Inactive */}
+                                            <TableCell className="text-right">
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
                                                         <Button
                                                             size="sm"
-                                                            variant={user.status === "Active" ? "destructive" : "default"}
+                                                            variant={
+                                                                user.status === "Active" ? "destructive" : "default"
+                                                            }
                                                             className="gap-2"
                                                         >
                                                             {user.status === "Active" ? (
@@ -350,7 +554,7 @@ export default function NurseAccountsPage() {
                                                                         ? "bg-red-600 hover:bg-red-700"
                                                                         : "bg-green-600 hover:bg-green-700"
                                                                 }
-                                                                onClick={() => handleToggle(user.accountId, user.status)}
+                                                                onClick={() => handleToggle(user.user_id, user.status)}
                                                             >
                                                                 {user.status === "Active"
                                                                     ? "Confirm Deactivate"
@@ -377,58 +581,6 @@ export default function NurseAccountsPage() {
                     </div>
                 </CardContent>
             </Card>
-
-            {/* ✏️ Edit Dialog */}
-            <Dialog open={!!editUser} onOpenChange={() => setEditUser(null)}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit User Info</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label>First Name</Label>
-                            <Input
-                                value={editForm.fname}
-                                onChange={(e) => setEditForm({ ...editForm, fname: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <Label>Middle Name</Label>
-                            <Input
-                                value={editForm.mname}
-                                onChange={(e) => setEditForm({ ...editForm, mname: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <Label>Last Name</Label>
-                            <Input
-                                value={editForm.lname}
-                                onChange={(e) => setEditForm({ ...editForm, lname: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <Label>Contact No</Label>
-                            <Input
-                                value={editForm.contactno}
-                                onChange={(e) => setEditForm({ ...editForm, contactno: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <Label>Address</Label>
-                            <Input
-                                value={editForm.address}
-                                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
-                        <Button className="bg-green-600 text-white" onClick={handleEditSave}>
-                            Save Changes
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }
