@@ -206,31 +206,36 @@ export async function PUT(req: Request) {
                 "date_of_birth", "gender",
             ];
 
-            if (user.role === "PATIENT" && user.student) {
-                const safeProfile = Object.fromEntries(
-                    Object.entries(profile).filter(([k]) => allowedStudentFields.includes(k))
-                );
+            // 🔹 Normalization helper
+            const normalizeProfile = (raw: Record<string, unknown>, allowed: string[]) => {
+                const safe: Record<string, any> = {};
+                for (const [key, value] of Object.entries(raw)) {
+                    if (!allowed.includes(key)) continue;
+
+                    if (key === "date_of_birth" && typeof value === "string") {
+                        safe.date_of_birth = new Date(value);
+                    } else if (key === "gender" && (value === "Male" || value === "Female")) {
+                        safe.gender = value;
+                    } else {
+                        safe[key] = value;
+                    }
+                }
+                return safe;
+            };
+
+            // Student update
+            if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
+                const safeProfile = normalizeProfile(profile, allowedStudentFields);
                 await prisma.student.update({
                     where: { user_id: userId },
                     data: safeProfile,
                 });
             }
 
+            // Employee update
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = Object.fromEntries(
-                    Object.entries(profile).filter(([k]) => allowedEmployeeFields.includes(k))
-                );
+                const safeProfile = normalizeProfile(profile, allowedEmployeeFields);
                 await prisma.employee.update({
-                    where: { user_id: userId },
-                    data: safeProfile,
-                });
-            }
-
-            if (user.role === "SCHOLAR" && user.student) {
-                const safeProfile = Object.fromEntries(
-                    Object.entries(profile).filter(([k]) => allowedStudentFields.includes(k))
-                );
-                await prisma.student.update({
                     where: { user_id: userId },
                     data: safeProfile,
                 });
@@ -238,8 +243,12 @@ export async function PUT(req: Request) {
         }
 
         return NextResponse.json({ success: true });
-    } catch (err) {
-        console.error("[PUT /api/nurse/accounts]", JSON.stringify(err, null, 2));
-        return NextResponse.json({ error: "Failed to update user", details: String(err) }, { status: 500 });
+    } catch (err: any) {
+        console.error("[PUT /api/nurse/accounts] ERROR:", err);
+        return NextResponse.json(
+            { error: "Failed to update user", details: err.message ?? String(err) },
+            { status: 500 }
+        );
     }
 }
+
