@@ -10,7 +10,8 @@ import {
     Package,
     Home,
     ClipboardList,
-    Loader2, // ✅ spinner
+    Loader2,
+    Pill,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,9 @@ export default function NurseClinicPage() {
                     <Link href="/nurse/clinic" className="flex items-center gap-2 text-green-600 font-semibold">
                         <ClipboardList className="h-5 w-5" /> Clinic
                     </Link>
+                    <Link href="/nurse/dispense" className="flex items-center gap-2 hover:text-green-600">
+                        <Pill className="h-5 w-5" /> Dispense
+                    </Link>
                 </nav>
                 <Separator className="my-6" />
                 <Button
@@ -168,6 +172,7 @@ export default function NurseClinicPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
