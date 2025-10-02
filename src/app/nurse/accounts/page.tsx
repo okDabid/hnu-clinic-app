@@ -18,6 +18,7 @@ import {
     CheckCircle2,
     Search,
     ClipboardList,
+    Pill,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -332,6 +333,9 @@ export default function NurseAccountsPage() {
                     <Link href="/nurse/clinic" className="flex items-center gap-2 hover:text-green-600">
                         <ClipboardList className="h-5 w-5" /> Clinic
                     </Link>
+                    <Link href="/nurse/dispense" className="flex items-center gap-2 hover:text-green-600">
+                        <Pill className="h-5 w-5" /> Dispense
+                    </Link>
                 </nav>
                 <Separator className="my-6" />
                 <Button
@@ -362,6 +366,7 @@ export default function NurseAccountsPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
