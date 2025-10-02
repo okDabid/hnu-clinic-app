@@ -65,9 +65,6 @@ export default function NurseDashboardPage() {
                     <Link href="/nurse/records" className="flex items-center gap-2 hover:text-green-600">
                         <ClipboardList className="h-5 w-5" /> Records
                     </Link>
-                    <Link href="/nurse/records" className="flex items-center gap-2 hover:text-green-600">
-                        <ClipboardList className="h-5 w-5" /> Records
-                    </Link>
                 </nav>
                 <Separator className="my-6" />
                 <Button
