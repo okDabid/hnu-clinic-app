@@ -147,17 +147,6 @@ export default function NurseAccountsPage() {
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
-    const validatePassword = (password: string): string[] => {
-        const errors: string[] = [];
-        if (password.length < 8) errors.push("Must be at least 8 characters.");
-        if (password.length > 128) errors.push("Must be less than 128 characters.");
-        if (!/[a-z]/.test(password)) errors.push("Must contain a lowercase letter.");
-        if (!/[A-Z]/.test(password)) errors.push("Must contain an uppercase letter.");
-        if (!/\d/.test(password)) errors.push("Must contain a number.");
-        if (!/[^\w\s]/.test(password)) errors.push("Must contain a symbol.");
-        return errors;
-    };
-
     // 🔹 Fetch users
     async function loadUsers() {
         try {
@@ -350,6 +339,9 @@ export default function NurseAccountsPage() {
                     <Link href="/nurse/dispense" className="flex items-center gap-2 hover:text-green-600">
                         <Pill className="h-5 w-5" /> Dispense
                     </Link>
+                    <Link href="/nurse/records" className="flex items-center gap-2 hover:text-green-600">
+                        <ClipboardList className="h-5 w-5" /> Records
+                    </Link>
                 </nav>
                 <Separator className="my-6" />
                 <Button
@@ -381,6 +373,7 @@ export default function NurseAccountsPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

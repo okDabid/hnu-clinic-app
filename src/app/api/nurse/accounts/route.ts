@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
 import { Prisma, Gender } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 // Password generator (8 chars, alphanumeric)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -38,6 +40,7 @@ export async function POST(req: Request) {
             },
         });
 
+        // Role-specific profile creation
         if (payload.role === "PATIENT" && payload.patientType === "student") {
             await prisma.student.create({
                 data: {
@@ -156,9 +159,6 @@ export async function GET() {
 }
 
 // ---------------- UPDATE USER ----------------
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -216,10 +216,8 @@ export async function PUT(req: Request) {
                 "date_of_birth", "gender",
             ] as const;
 
-            const normalizeProfile = <
-                T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput,
-                K extends keyof T
-            >(
+            // ✅ simplified normalizeProfile (removed unused `K`)
+            const normalizeProfile = <T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput>(
                 raw: Record<string, unknown>,
                 allowed: readonly string[],
             ): Partial<T> => {
@@ -239,7 +237,7 @@ export async function PUT(req: Request) {
             };
 
             if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
-                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput, keyof Prisma.StudentUpdateInput>(
+                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(
                     profile,
                     allowedStudentFields
                 );
@@ -247,7 +245,7 @@ export async function PUT(req: Request) {
             }
 
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput, keyof Prisma.EmployeeUpdateInput>(
+                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(
                     profile,
                     allowedEmployeeFields
                 );
