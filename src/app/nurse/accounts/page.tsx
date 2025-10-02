@@ -303,15 +303,27 @@ export default function NurseAccountsPage() {
     async function handleToggle(user_id: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
         try {
-            await fetch("/api/nurse/accounts", {
+            const res = await fetch("/api/nurse/accounts", {
                 method: "PUT",
                 body: JSON.stringify({ user_id, newStatus }),
                 headers: { "Content-Type": "application/json" },
             });
+
+            if (!res.ok) {
+                const error = await res.json();
+                // Show the exact message returned by the API (self-deactivation, invalid status, etc.)
+                toast.error(error.error || "Failed to update user status", {
+                    position: "top-center",
+                });
+                return;
+            }
+
             toast.success(`User ${newStatus}`, { position: "top-center" });
             loadUsers();
         } catch {
-            toast.error("Failed to update user status", { position: "top-center" });
+            toast.error("Network error while updating user status", {
+                position: "top-center",
+            });
         }
     }
 
