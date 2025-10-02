@@ -4,10 +4,12 @@ import { prisma } from "@/lib/prisma";
 // ✅ GET: Fetch inventory with ALL expiry batches & auto-mark expired
 export async function GET() {
     try {
+        const now = new Date();
+
         // 🔎 Find all expired replenishments that still have stock
         const expiredReplenishments = await prisma.replenishment.findMany({
             where: {
-                expiry_date: { lt: new Date() },
+                expiry_date: { lt: now },
                 remaining_qty: { gt: 0 },
             },
         });
@@ -48,7 +50,26 @@ export async function GET() {
             },
         });
 
-        return NextResponse.json({ inventory, expiredDeducted: totalExpiredDeducted });
+        // 👇 Transform response: tag replenishments with status
+        const result = inventory.map((item) => ({
+            ...item,
+            replenishments: item.replenishments.map((r) => {
+                const isExpired = r.expiry_date < now;
+                const daysLeft = Math.ceil((r.expiry_date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+                return {
+                    ...r,
+                    status: isExpired
+                        ? "Expired"
+                        : daysLeft <= 30
+                            ? "Expiring Soon"
+                            : "Valid",
+                    daysLeft,
+                };
+            }),
+        }));
+
+        return NextResponse.json({ inventory: result, expiredDeducted: totalExpiredDeducted });
     } catch (err) {
         console.error("GET /api/nurse/inventory error:", err);
         return NextResponse.json({ error: "Failed to load inventory" }, { status: 500 });
