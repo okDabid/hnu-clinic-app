@@ -362,6 +362,9 @@ export default function NurseInventoryPage() {
                                                                             <Badge variant="outline" className={`px-3 py-1 text-xs font-medium rounded-md ${status.color}`}>
                                                                                 {status.text}
                                                                             </Badge>
+                                                                            <span className="text-sm text-gray-600">
+                                                                                ({daysLeft} days left)
+                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 );
