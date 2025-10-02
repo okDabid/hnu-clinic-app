@@ -138,7 +138,7 @@ export default function LoginPageClient() {
                             {renderForm("nurse", "Nurse", "employee_id", "Employee ID")}
                         </TabsContent>
                         <TabsContent value="scholar">
-                            {renderForm("scholar", "Scholar", "school_id", "School ID")}
+                            {renderForm("scholar", "Scholar", "school_id", "Student ID")}
                         </TabsContent>
                         <TabsContent value="patient">
                             {renderForm("patient", "Patient", "patient_id", "Student ID or Employee ID")}
