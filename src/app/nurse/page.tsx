@@ -62,6 +62,12 @@ export default function NurseDashboardPage() {
                     <Link href="/nurse/dispense" className="flex items-center gap-2 hover:text-green-600">
                         <Pill className="h-5 w-5" /> Dispense
                     </Link>
+                    <Link href="/nurse/records" className="flex items-center gap-2 hover:text-green-600">
+                        <ClipboardList className="h-5 w-5" /> Records
+                    </Link>
+                    <Link href="/nurse/records" className="flex items-center gap-2 hover:text-green-600">
+                        <ClipboardList className="h-5 w-5" /> Records
+                    </Link>
                 </nav>
                 <Separator className="my-6" />
                 <Button
@@ -104,6 +110,12 @@ export default function NurseDashboardPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/nurse/dispense">Dispense</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/nurse/records">Records</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/nurse/records">Records</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
