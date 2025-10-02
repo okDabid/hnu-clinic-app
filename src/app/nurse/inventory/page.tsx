@@ -77,14 +77,26 @@ export default function NurseInventoryPage() {
 
     const pageSize = 6;
 
-    // Load inventory
+    // 🔹 Load inventory
     async function loadInventory() {
         const res = await fetch("/api/nurse/inventory", { cache: "no-store" });
         const data = await res.json();
-        setItems(data);
+
+        if (data.error) {
+            toast.error(data.error);
+            return;
+        }
+
+        setItems(data.inventory);
+
+        if (data.expiredDeducted > 0) {
+            toast.warning(`Auto-deducted ${data.expiredDeducted} expired units from stock.`, {
+                duration: 5000,
+            });
+        }
     }
 
-    // Load clinics
+    // 🔹 Load clinics
     async function loadClinics() {
         const res = await fetch("/api/nurse/clinic", { cache: "no-store" });
         const data = await res.json();
@@ -213,7 +225,7 @@ export default function NurseInventoryPage() {
 
                                                 const body = {
                                                     clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
-                                                    name: (form.elements.namedItem("name") as HTMLInputElement).value,
+                                                    item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value, // ✅ fixed
                                                     quantity: (form.elements.namedItem("quantity") as HTMLInputElement).value,
                                                     expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
                                                 };
@@ -248,7 +260,7 @@ export default function NurseInventoryPage() {
                                             </div>
                                             <div>
                                                 <Label className="block mb-1">Name</Label>
-                                                <Input name="name" required />
+                                                <Input name="item_name" required /> {/* ✅ fixed */}
                                             </div>
                                             <div>
                                                 <Label className="block mb-1">Quantity</Label>
