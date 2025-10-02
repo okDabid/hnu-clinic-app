@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 // ✅ GET: Fetch inventory with ALL expiry batches & auto-mark expired
 export async function GET() {
     try {
-        // 🔄 Find all expired replenishments that still have stock
+        // 🔎 Find all expired replenishments that still have stock
         const expiredReplenishments = await prisma.replenishment.findMany({
             where: {
                 expiry_date: { lt: new Date() },
@@ -12,20 +12,25 @@ export async function GET() {
             },
         });
 
-        // 🔄 Deduct expired quantities from medInventory
-        for (const rep of expiredReplenishments) {
-            await prisma.$transaction([
-                prisma.medInventory.update({
-                    where: { med_id: rep.med_id },
-                    data: {
-                        quantity: { decrement: rep.remaining_qty },
-                    },
-                }),
-                prisma.replenishment.update({
-                    where: { replenishment_id: rep.replenishment_id },
-                    data: { remaining_qty: 0 },
-                }),
-            ]);
+        let totalExpiredDeducted = 0;
+
+        if (expiredReplenishments.length > 0) {
+            // ✅ Run all expiry updates in one transaction
+            const ops = expiredReplenishments.flatMap((rep) => {
+                totalExpiredDeducted += rep.remaining_qty;
+                return [
+                    prisma.medInventory.update({
+                        where: { med_id: rep.med_id },
+                        data: { quantity: { decrement: rep.remaining_qty } },
+                    }),
+                    prisma.replenishment.update({
+                        where: { replenishment_id: rep.replenishment_id },
+                        data: { remaining_qty: 0 },
+                    }),
+                ];
+            });
+
+            await prisma.$transaction(ops);
         }
 
         // ✅ Fetch inventory with ALL replenishments and clinic info
@@ -33,17 +38,17 @@ export async function GET() {
             include: {
                 clinic: {
                     select: {
-                        clinic_name: true,      // 👈 show friendly name
-                        clinic_location: true,  // 👈 also include location if needed
+                        clinic_name: true,
+                        clinic_location: true,
                     },
                 },
                 replenishments: {
-                    orderBy: { expiry_date: "asc" }, // 👈 sorted, but NO take:1 (show all)
+                    orderBy: { expiry_date: "asc" },
                 },
             },
         });
 
-        return NextResponse.json(inventory);
+        return NextResponse.json({ inventory, expiredDeducted: totalExpiredDeducted });
     } catch (err) {
         console.error("GET /api/nurse/inventory error:", err);
         return NextResponse.json({ error: "Failed to load inventory" }, { status: 500 });
@@ -54,26 +59,23 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { clinic_id, name, quantity, expiry } = body as {
+        const { clinic_id, item_name, quantity, expiry } = body as {
             clinic_id: string;
-            name: string;
+            item_name: string;
             quantity: number | string;
             expiry: string;
         };
 
         // 🔒 Validate required fields
-        if (!clinic_id || !name || !quantity || !expiry) {
+        if (!clinic_id || !item_name || !quantity || !expiry) {
             return NextResponse.json(
-                { error: "All fields (clinic_id, name, quantity, expiry) are required" },
+                { error: "All fields (clinic_id, item_name, quantity, expiry) are required" },
                 { status: 400 }
             );
         }
 
         if (Number(quantity) <= 0) {
-            return NextResponse.json(
-                { error: "Quantity must be greater than 0" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Quantity must be greater than 0" }, { status: 400 });
         }
 
         const expiryDate = new Date(expiry);
@@ -89,26 +91,20 @@ export async function POST(req: Request) {
             where: { clinic_id },
         });
         if (!clinicExists) {
-            return NextResponse.json(
-                { error: "Clinic does not exist" },
-                { status: 404 }
-            );
+            return NextResponse.json({ error: "Clinic does not exist" }, { status: 404 });
         }
 
         // 🔎 Check if item already exists in this clinic
         const existingItem = await prisma.medInventory.findFirst({
-            where: {
-                clinic_id,
-                item_name: name,
-            },
+            where: { clinic_id, item_name },
         });
 
         if (existingItem) {
-            // ✅ Auto-replenishment logic
+            // ✅ Auto-replenishment
             const updatedItem = await prisma.medInventory.update({
                 where: { med_id: existingItem.med_id },
                 data: {
-                    quantity: existingItem.quantity + Number(quantity),
+                    quantity: { increment: Number(quantity) },
                     replenishments: {
                         create: {
                             quantity_added: Number(quantity),
@@ -131,7 +127,7 @@ export async function POST(req: Request) {
         const newItem = await prisma.medInventory.create({
             data: {
                 clinic_id,
-                item_name: name,
+                item_name,
                 quantity: Number(quantity),
                 replenishments: {
                     create: {
