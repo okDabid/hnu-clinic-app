@@ -33,10 +33,11 @@ import {
 
 import { Separator } from "@/components/ui/separator";
 
+// ✅ Type with batch tracking
 type Dispense = {
     dispense_id: string;
     quantity: number;
-    createdAt: string; // 👈 added createdAt for tracking dispense date
+    createdAt: string;
     med: {
         item_name: string;
         clinic: { clinic_name: string };
@@ -49,6 +50,13 @@ type Dispense = {
         doctor: { username: string } | null;
         nurse: { username: string } | null;
     };
+    DispenseBatch: {
+        replenishment: {
+            expiry_date: string;
+            date_received: string;
+        };
+        quantity_used: number;
+    }[];
 };
 
 export default function NurseDispensePage() {
@@ -138,9 +146,10 @@ export default function NurseDispensePage() {
                                             <TableHead>Patient</TableHead>
                                             <TableHead>Medicine</TableHead>
                                             <TableHead>Quantity</TableHead>
+                                            <TableHead>Batches Used</TableHead> {/* 👈 NEW */}
                                             <TableHead>Doctor</TableHead>
                                             <TableHead>Nurse</TableHead>
-                                            <TableHead>Dispensed At</TableHead> {/* 👈 new column */}
+                                            <TableHead>Dispensed At</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -151,6 +160,14 @@ export default function NurseDispensePage() {
                                                     <TableCell>{d.consultation.appointment.patient.username}</TableCell>
                                                     <TableCell>{d.med.item_name}</TableCell>
                                                     <TableCell>{d.quantity}</TableCell>
+                                                    <TableCell>
+                                                        {d.DispenseBatch.map((b, i) => (
+                                                            <div key={i} className="text-sm text-gray-700">
+                                                                {b.quantity_used} pcs
+                                                                (exp {new Date(b.replenishment.expiry_date).toLocaleDateString()})
+                                                            </div>
+                                                        ))}
+                                                    </TableCell>
                                                     <TableCell>{d.consultation.doctor?.username || "—"}</TableCell>
                                                     <TableCell>{d.consultation.nurse?.username || "—"}</TableCell>
                                                     <TableCell>{new Date(d.createdAt).toLocaleString()}</TableCell>
@@ -158,7 +175,7 @@ export default function NurseDispensePage() {
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={7} className="text-center text-gray-500 py-6">
+                                                <TableCell colSpan={8} className="text-center text-gray-500 py-6">
                                                     No dispense records found
                                                 </TableCell>
                                             </TableRow>
