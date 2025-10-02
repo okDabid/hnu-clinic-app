@@ -51,7 +51,7 @@ export async function middleware(req: NextRequest) {
 // ✅ Apply middleware only to protected routes
 export const config = {
     matcher: [
-        /*"/nurse/:path*",*/
+        "/nurse/:path*",
         "/doctor/:path*",
         "/scholar/:path*",
         "/patient/:path*",
