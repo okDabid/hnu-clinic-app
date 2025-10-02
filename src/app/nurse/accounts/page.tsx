@@ -147,6 +147,17 @@ export default function NurseAccountsPage() {
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
+    const validatePassword = (password: string): string[] => {
+        const errors: string[] = [];
+        if (password.length < 8) errors.push("Must be at least 8 characters.");
+        if (password.length > 128) errors.push("Must be less than 128 characters.");
+        if (!/[a-z]/.test(password)) errors.push("Must contain a lowercase letter.");
+        if (!/[A-Z]/.test(password)) errors.push("Must contain an uppercase letter.");
+        if (!/\d/.test(password)) errors.push("Must contain a number.");
+        if (!/[^\w\s]/.test(password)) errors.push("Must contain a symbol.");
+        return errors;
+    };
+
     // 🔹 Fetch users
     async function loadUsers() {
         try {
@@ -409,20 +420,24 @@ export default function NurseAccountsPage() {
                                         <form
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
-                                                setPasswordLoading(true);
-
                                                 const form = e.currentTarget as HTMLFormElement;
                                                 const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
                                                 const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
                                                 if (newPassword !== confirmPassword) {
-                                                    toast.error("New passwords do not match.", { duration: 3000 });
-                                                    setPasswordLoading(false);
+                                                    toast.error("New passwords do not match.");
+                                                    return;
+                                                }
+
+                                                // prevent submit if validation failed
+                                                if (passwordErrors.length > 0) {
+                                                    toast.error("Please fix password errors before submitting.");
                                                     return;
                                                 }
 
                                                 try {
+                                                    setPasswordLoading(true);
                                                     const res = await fetch("/api/nurse/accounts/password", {
                                                         method: "PUT",
                                                         headers: { "Content-Type": "application/json" },
@@ -431,13 +446,15 @@ export default function NurseAccountsPage() {
 
                                                     const data = await res.json();
                                                     if (data.error) {
-                                                        toast.error(data.error, { duration: 3000 });
+                                                        toast.error(data.error);
                                                     } else {
-                                                        toast.success("Password updated successfully!", { duration: 3000 });
+                                                        toast.success("Password updated successfully!");
                                                         form.reset();
+                                                        setPasswordErrors([]);
+                                                        setPasswordMessage(null);
                                                     }
                                                 } catch {
-                                                    toast.error("Failed to update password. Please try again.", { duration: 3000 });
+                                                    toast.error("Failed to update password. Please try again.");
                                                 } finally {
                                                     setPasswordLoading(false);
                                                 }
@@ -461,7 +478,11 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowCurrent(!showCurrent)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showCurrent ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -477,14 +498,13 @@ export default function NurseAccountsPage() {
                                                         className="pr-10"
                                                         onChange={(e) => {
                                                             const value = e.target.value;
-                                                            const errors: string[] = [];
-                                                            if (value.length < 8) errors.push("At least 8 characters");
-                                                            if (!/[a-z]/.test(value)) errors.push("Must contain lowercase");
-                                                            if (!/[A-Z]/.test(value)) errors.push("Must contain uppercase");
-                                                            if (!/\d/.test(value)) errors.push("Must contain a number");
-                                                            if (!/[^\w\s]/.test(value)) errors.push("Must contain a symbol");
+                                                            const errors = validatePassword(value);
                                                             setPasswordErrors(errors);
-                                                            setPasswordMessage(errors.length === 0 ? "Strong password ✅" : null);
+                                                            if (errors.length === 0 && value.length > 0) {
+                                                                setPasswordMessage("Strong password ✅");
+                                                            } else {
+                                                                setPasswordMessage(null);
+                                                            }
                                                         }}
                                                     />
                                                     <Button
@@ -502,15 +522,18 @@ export default function NurseAccountsPage() {
                                                     </Button>
                                                 </div>
 
-                                                {/* Show validation feedback */}
-                                                <div className="text-xs text-red-600 space-y-1">
-                                                    {passwordErrors.map((err, i) => (
-                                                        <p key={i}>• {err}</p>
-                                                    ))}
-                                                </div>
-                                                {passwordMessage && <p className="text-xs text-green-600">{passwordMessage}</p>}
+                                                {/* Real-time errors */}
+                                                {passwordErrors.length > 0 && (
+                                                    <ul className="text-red-500 text-sm mt-1 space-y-1">
+                                                        {passwordErrors.map((err, i) => (
+                                                            <li key={i}>• {err}</li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                                {passwordMessage && (
+                                                    <p className="text-green-600 text-sm mt-1">{passwordMessage}</p>
+                                                )}
                                             </div>
-
 
                                             {/* Confirm Password */}
                                             <div className="flex flex-col space-y-2">
@@ -529,7 +552,11 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowConfirm(!showConfirm)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showConfirm ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -537,16 +564,17 @@ export default function NurseAccountsPage() {
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    disabled={passwordLoading}
                                                     className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                                                    disabled={passwordLoading}
                                                 >
                                                     {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                    {passwordLoading ? "Updating..." : "Update Password"}
+                                                    Update Password
                                                 </Button>
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
                                 </Dialog>
+
 
                             </CardHeader>
 
