@@ -475,6 +475,17 @@ export default function NurseAccountsPage() {
                                                         name="newPassword"
                                                         required
                                                         className="pr-10"
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            const errors: string[] = [];
+                                                            if (value.length < 8) errors.push("At least 8 characters");
+                                                            if (!/[a-z]/.test(value)) errors.push("Must contain lowercase");
+                                                            if (!/[A-Z]/.test(value)) errors.push("Must contain uppercase");
+                                                            if (!/\d/.test(value)) errors.push("Must contain a number");
+                                                            if (!/[^\w\s]/.test(value)) errors.push("Must contain a symbol");
+                                                            setPasswordErrors(errors);
+                                                            setPasswordMessage(errors.length === 0 ? "Strong password ✅" : null);
+                                                        }}
                                                     />
                                                     <Button
                                                         type="button"
@@ -483,10 +494,23 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowNew(!showNew)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showNew ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
+
+                                                {/* Show validation feedback */}
+                                                <div className="text-xs text-red-600 space-y-1">
+                                                    {passwordErrors.map((err, i) => (
+                                                        <p key={i}>• {err}</p>
+                                                    ))}
+                                                </div>
+                                                {passwordMessage && <p className="text-xs text-green-600">{passwordMessage}</p>}
                                             </div>
+
 
                                             {/* Confirm Password */}
                                             <div className="flex flex-col space-y-2">
