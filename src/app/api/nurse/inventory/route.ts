@@ -4,10 +4,12 @@ import { prisma } from "@/lib/prisma";
 // ✅ GET: Fetch inventory with ALL expiry batches & auto-mark expired
 export async function GET() {
     try {
+        const now = new Date();
+
         // 🔄 Find all expired replenishments that still have stock
         const expiredReplenishments = await prisma.replenishment.findMany({
             where: {
-                expiry_date: { lt: new Date() },
+                expiry_date: { lt: now },
                 remaining_qty: { gt: 0 },
             },
         });
@@ -28,18 +30,39 @@ export async function GET() {
             ]);
         }
 
-        // ✅ Fetch inventory with ALL replenishments and clinic info
+        // 🔄 Sync medInventory.quantity with sum of replenishments (safety check)
+        const meds = await prisma.medInventory.findMany({
+            include: {
+                clinic: {
+                    select: { clinic_name: true, clinic_location: true },
+                },
+                replenishments: {
+                    orderBy: { expiry_date: "asc" },
+                },
+            },
+        });
+
+        for (const med of meds) {
+            const totalFromBatches = med.replenishments.reduce(
+                (sum, r) => sum + r.remaining_qty,
+                0
+            );
+
+            if (totalFromBatches !== med.quantity) {
+                await prisma.medInventory.update({
+                    where: { med_id: med.med_id },
+                    data: { quantity: totalFromBatches },
+                });
+            }
+        }
+
+        // ✅ Re-fetch inventory after adjustments
         const inventory = await prisma.medInventory.findMany({
             include: {
                 clinic: {
-                    select: {
-                        clinic_name: true,      // 👈 show friendly name
-                        clinic_location: true,  // 👈 also include location if needed
-                    },
+                    select: { clinic_name: true, clinic_location: true },
                 },
-                replenishments: {
-                    orderBy: { expiry_date: "asc" }, // 👈 sorted, but NO take:1 (show all)
-                },
+                replenishments: { orderBy: { expiry_date: "asc" } },
             },
         });
 
