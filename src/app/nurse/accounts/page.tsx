@@ -398,7 +398,22 @@ export default function NurseAccountsPage() {
                                 </CardTitle>
 
                                 {/* Password Update Dialog */}
-                                <Dialog>
+                                <Dialog
+                                    onOpenChange={(open) => {
+                                        if (!open) {
+                                            // Clear state when dialog closes
+                                            setPasswordErrors([]);
+                                            setPasswordMessage(null);
+                                            setPasswordLoading(false);
+
+                                            // Clear password fields
+                                            const inputs = document.querySelectorAll<HTMLInputElement>(
+                                                'input[name="oldPassword"], input[name="newPassword"], input[name="confirmPassword"]'
+                                            );
+                                            inputs.forEach((input) => (input.value = ""));
+                                        }
+                                    }}
+                                >
                                     <DialogTrigger asChild>
                                         <Button
                                             variant="outline"
@@ -425,14 +440,17 @@ export default function NurseAccountsPage() {
                                                 const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
-                                                if (newPassword !== confirmPassword) {
-                                                    toast.error("New passwords do not match.");
-                                                    return;
-                                                }
+                                                // ✅ Client-side real-time validation
+                                                const errors: string[] = [];
+                                                if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
+                                                if (!/[a-z]/.test(newPassword)) errors.push("Must contain a lowercase letter.");
+                                                if (!/[A-Z]/.test(newPassword)) errors.push("Must contain an uppercase letter.");
+                                                if (!/\d/.test(newPassword)) errors.push("Must contain a number.");
+                                                if (!/[^\w\s]/.test(newPassword)) errors.push("Must contain a symbol.");
+                                                if (newPassword !== confirmPassword) errors.push("Passwords do not match.");
 
-                                                // prevent submit if validation failed
-                                                if (passwordErrors.length > 0) {
-                                                    toast.error("Please fix password errors before submitting.");
+                                                if (errors.length > 0) {
+                                                    setPasswordErrors(errors);
                                                     return;
                                                 }
 
@@ -446,15 +464,14 @@ export default function NurseAccountsPage() {
 
                                                     const data = await res.json();
                                                     if (data.error) {
-                                                        toast.error(data.error);
+                                                        setPasswordErrors([data.error]);
                                                     } else {
+                                                        setPasswordMessage("Password updated successfully!");
                                                         toast.success("Password updated successfully!");
                                                         form.reset();
-                                                        setPasswordErrors([]);
-                                                        setPasswordMessage(null);
                                                     }
                                                 } catch {
-                                                    toast.error("Failed to update password. Please try again.");
+                                                    setPasswordErrors(["Failed to update password. Please try again."]);
                                                 } finally {
                                                     setPasswordLoading(false);
                                                 }
@@ -465,12 +482,7 @@ export default function NurseAccountsPage() {
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">Current Password</Label>
                                                 <div className="relative">
-                                                    <Input
-                                                        type={showCurrent ? "text" : "password"}
-                                                        name="oldPassword"
-                                                        required
-                                                        className="pr-10"
-                                                    />
+                                                    <Input type={showCurrent ? "text" : "password"} name="oldPassword" required className="pr-10" />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -478,11 +490,7 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowCurrent(!showCurrent)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showCurrent ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -497,14 +505,14 @@ export default function NurseAccountsPage() {
                                                         required
                                                         className="pr-10"
                                                         onChange={(e) => {
-                                                            const value = e.target.value;
-                                                            const errors = validatePassword(value);
+                                                            const val = e.target.value;
+                                                            const errors: string[] = [];
+                                                            if (val.length < 8) errors.push("Password must be at least 8 characters.");
+                                                            if (!/[a-z]/.test(val)) errors.push("Must contain a lowercase letter.");
+                                                            if (!/[A-Z]/.test(val)) errors.push("Must contain an uppercase letter.");
+                                                            if (!/\d/.test(val)) errors.push("Must contain a number.");
+                                                            if (!/[^\w\s]/.test(val)) errors.push("Must contain a symbol.");
                                                             setPasswordErrors(errors);
-                                                            if (errors.length === 0 && value.length > 0) {
-                                                                setPasswordMessage("Strong password ✅");
-                                                            } else {
-                                                                setPasswordMessage(null);
-                                                            }
                                                         }}
                                                     />
                                                     <Button
@@ -514,37 +522,16 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowNew(!showNew)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showNew ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
-
-                                                {/* Real-time errors */}
-                                                {passwordErrors.length > 0 && (
-                                                    <ul className="text-red-500 text-sm mt-1 space-y-1">
-                                                        {passwordErrors.map((err, i) => (
-                                                            <li key={i}>• {err}</li>
-                                                        ))}
-                                                    </ul>
-                                                )}
-                                                {passwordMessage && (
-                                                    <p className="text-green-600 text-sm mt-1">{passwordMessage}</p>
-                                                )}
                                             </div>
 
                                             {/* Confirm Password */}
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">Confirm New Password</Label>
                                                 <div className="relative">
-                                                    <Input
-                                                        type={showConfirm ? "text" : "password"}
-                                                        name="confirmPassword"
-                                                        required
-                                                        className="pr-10"
-                                                    />
+                                                    <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required className="pr-10" />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -552,14 +539,24 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowConfirm(!showConfirm)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showConfirm ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
+
+                                            {/* Validation Errors */}
+                                            {passwordErrors.length > 0 && (
+                                                <ul className="text-sm text-red-600 space-y-1">
+                                                    {passwordErrors.map((err, idx) => (
+                                                        <li key={idx}>• {err}</li>
+                                                    ))}
+                                                </ul>
+                                            )}
+
+                                            {/* Success Message */}
+                                            {passwordMessage && (
+                                                <p className="text-sm text-green-600">{passwordMessage}</p>
+                                            )}
 
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
@@ -568,14 +565,12 @@ export default function NurseAccountsPage() {
                                                     disabled={passwordLoading}
                                                 >
                                                     {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                    Update Password
+                                                    {passwordLoading ? "Updating..." : "Update Password"}
                                                 </Button>
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
                                 </Dialog>
-
-
                             </CardHeader>
 
                             {/* Profile Form */}
