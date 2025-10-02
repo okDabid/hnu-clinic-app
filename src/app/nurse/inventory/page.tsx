@@ -116,6 +116,7 @@ export default function NurseInventoryPage() {
         const daysLeft = diff / (1000 * 60 * 60 * 24);
 
         if (daysLeft < 0) return { text: "Expired", color: "bg-red-100 text-red-700 border-red-200" };
+        if (daysLeft <= 7) return { text: "Expiring Very Soon", color: "bg-orange-100 text-orange-700 border-orange-200" };
         if (daysLeft < 30) return { text: "Expiring Soon", color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
         return { text: "Valid", color: "bg-green-100 text-green-700 border-green-200" };
     };
