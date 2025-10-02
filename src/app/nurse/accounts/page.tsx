@@ -380,7 +380,11 @@ export default function NurseAccountsPage() {
                                 {/* Password Update Dialog */}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon" className="hover:bg-green-50">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="hover:bg-green-50"
+                                        >
                                             <Cog className="h-5 w-5 text-green-600" />
                                         </Button>
                                     </DialogTrigger>
@@ -402,16 +406,11 @@ export default function NurseAccountsPage() {
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
                                                 if (newPassword !== confirmPassword) {
-                                                    toast.error("New passwords do not match.");
+                                                    toast.error("New passwords do not match.", { duration: 3000 });
                                                     return;
                                                 }
 
-                                                const errors = validatePassword(newPassword);
-                                                setPasswordErrors(errors);
-                                                if (errors.length > 0) return;
-
                                                 try {
-                                                    setPasswordLoading(true);
                                                     const res = await fetch("/api/nurse/accounts/password", {
                                                         method: "PUT",
                                                         headers: { "Content-Type": "application/json" },
@@ -420,20 +419,13 @@ export default function NurseAccountsPage() {
 
                                                     const data = await res.json();
                                                     if (data.error) {
-                                                        toast.error(data.error);
+                                                        toast.error(data.error, { duration: 3000 });
                                                     } else {
-                                                        setPasswordMessage("Password updated successfully!");
-                                                        toast.success("Password updated!");
+                                                        toast.success("Password updated successfully!", { duration: 3000 });
                                                         form.reset();
-                                                        setShowCurrent(false);
-                                                        setShowNew(false);
-                                                        setShowConfirm(false);
-                                                        setTimeout(() => setPasswordMessage(null), 3000);
                                                     }
                                                 } catch {
-                                                    toast.error("Failed to update password. Please try again.");
-                                                } finally {
-                                                    setPasswordLoading(false);
+                                                    toast.error("Failed to update password. Please try again.", { duration: 3000 });
                                                 }
                                             }}
                                             className="space-y-4"
@@ -450,7 +442,11 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowCurrent(!showCurrent)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showCurrent ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -459,13 +455,7 @@ export default function NurseAccountsPage() {
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">New Password</Label>
                                                 <div className="relative">
-                                                    <Input
-                                                        type={showNew ? "text" : "password"}
-                                                        name="newPassword"
-                                                        required
-                                                        className="pr-10"
-                                                        onChange={(e) => setPasswordErrors(validatePassword(e.target.value))}
-                                                    />
+                                                    <Input type={showNew ? "text" : "password"} name="newPassword" required className="pr-10" />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -473,14 +463,13 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowNew(!showNew)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showNew ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
-                                                {passwordErrors.length > 0 && (
-                                                    <ul className="text-sm text-red-600 list-disc ml-5">
-                                                        {passwordErrors.map((err, i) => <li key={i}>{err}</li>)}
-                                                    </ul>
-                                                )}
                                             </div>
 
                                             {/* Confirm Password */}
@@ -495,21 +484,22 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowConfirm(!showConfirm)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showConfirm ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
 
-                                            {passwordMessage && <p className="text-green-600 text-sm">{passwordMessage}</p>}
-
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                                                    disabled={passwordLoading}
+                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
                                                 >
-                                                    {passwordLoading && <Loader2 className="h-5 w-5 animate-spin" />}
-                                                    {passwordLoading ? "Updating..." : "Update Password"}
+                                                    <Loader2 className="h-4 w-4 animate-spin hidden group-disabled:inline" />
+                                                    Update Password
                                                 </Button>
                                             </DialogFooter>
                                         </form>
@@ -519,7 +509,142 @@ export default function NurseAccountsPage() {
 
                             {/* Profile Form */}
                             <CardContent className="pt-6">
-                                {/* ... existing profile form code stays unchanged ... */}
+                                <form onSubmit={handleProfileUpdate} className="space-y-6">
+                                    {/* System info (read-only) */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Username</Label>
+                                            <Input value={profile.username} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">User ID</Label>
+                                            <Input value={profile.user_id} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Role</Label>
+                                            <Input value={profile.role} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Status</Label>
+                                            <Input value={profile.status} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Date of Birth</Label>
+                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled className="w-full" />
+                                        </div>
+                                    </div>
+
+                                    {/* Editable fields */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div>
+                                            <Label className="block mb-1 font-medium">First Name</Label>
+                                            <Input
+                                                value={profile.fname}
+                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Middle Name</Label>
+                                            <Input
+                                                value={profile.mname || ""}
+                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Last Name</Label>
+                                            <Input
+                                                value={profile.lname}
+                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Contact No</Label>
+                                            <Input
+                                                value={profile.contactno || ""}
+                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Address</Label>
+                                            <Input
+                                                value={profile.address || ""}
+                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Blood Type</Label>
+                                            <Input
+                                                value={profile.bloodtype || ""}
+                                                onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Allergies</Label>
+                                            <Input
+                                                value={profile.allergies || ""}
+                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Medical Conditions</Label>
+                                        <Input
+                                            value={profile.medical_cond || ""}
+                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
+                                            className="w-full"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Emergency Contact Name</Label>
+                                            <Input
+                                                value={profile.emergencyco_name || ""}
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Emergency Contact Number</Label>
+                                            <Input
+                                                value={profile.emergencyco_num || ""}
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Emergency Contact Relation</Label>
+                                            <Input
+                                                value={profile.emergencyco_relation || ""}
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        type="submit"
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                        disabled={profileLoading}
+                                    >
+                                        {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
+                                        {profileLoading ? "Saving..." : "Save Changes"}
+                                    </Button>
+                                </form>
                             </CardContent>
                         </Card>
                     )}
