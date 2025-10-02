@@ -53,13 +53,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-// ✅ InventoryItem now uses all replenishments
+// ✅ InventoryItem now includes replenishments
 type InventoryItem = {
     med_id: string;
     item_name: string;
     quantity: number;
     clinic: { clinic_name: string };
-    replenishments: { expiry_date: string }[];
+    replenishments: { expiry_date: string; remaining_qty: number }[];
 };
 
 type Clinic = {
@@ -107,7 +107,7 @@ export default function NurseInventoryPage() {
         currentPage * pageSize
     );
 
-    // ✅ Status is based on SOONEST expiry only
+    // ✅ Status = based on soonest expiry only
     const getStatus = (expiry: string | undefined) => {
         if (!expiry) return { text: "No expiry", color: "bg-gray-100 text-gray-600 border-gray-200" };
         const today = new Date();
@@ -194,11 +194,88 @@ export default function NurseInventoryPage() {
                                         className="pl-8"
                                     />
                                 </div>
-                                {/* Add stock dialog left unchanged */}
+                                {/* Add Stock Modal */}
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                            <Plus className="h-4 w-4 mr-1" /> Add Stock
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New Stock</DialogTitle>
+                                            <DialogDescription>Fill in the details of the stock item.</DialogDescription>
+                                        </DialogHeader>
+                                        <form
+                                            className="space-y-4"
+                                            onSubmit={async (e) => {
+                                                e.preventDefault();
+                                                const form = e.currentTarget as HTMLFormElement;
+                                                setLoading(true);
+
+                                                const body = {
+                                                    clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
+                                                    name: (form.elements.namedItem("name") as HTMLInputElement).value,
+                                                    quantity: (form.elements.namedItem("quantity") as HTMLInputElement).value,
+                                                    expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
+                                                };
+
+                                                const res = await fetch("/api/nurse/inventory", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify(body),
+                                                });
+
+                                                if (res.ok) {
+                                                    await loadInventory();
+                                                    form.reset();
+                                                    toast.success("Stock added!");
+                                                } else {
+                                                    toast.error("Failed to add stock");
+                                                }
+
+                                                setLoading(false);
+                                            }}
+                                        >
+                                            <div>
+                                                <Label className="block mb-1">Clinic</Label>
+                                                <select name="clinic_id" required className="w-full border rounded p-2">
+                                                    <option value="">Select clinic</option>
+                                                    {clinics.map((clinic) => (
+                                                        <option key={clinic.clinic_id} value={clinic.clinic_id}>
+                                                            {clinic.clinic_name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <Label className="block mb-1">Name</Label>
+                                                <Input name="name" required />
+                                            </div>
+                                            <div>
+                                                <Label className="block mb-1">Quantity</Label>
+                                                <Input type="number" name="quantity" required />
+                                            </div>
+                                            <div>
+                                                <Label className="block mb-1">Expiry Date</Label>
+                                                <Input type="date" name="expiry" required />
+                                            </div>
+                                            <DialogFooter>
+                                                <Button
+                                                    type="submit"
+                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                    disabled={loading}
+                                                >
+                                                    {loading ? "Saving..." : "Save"}
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </CardHeader>
 
-                        {/* Table content */}
+                        {/* Table */}
                         <CardContent className="flex-1 flex flex-col">
                             <div className="overflow-x-auto flex-1">
                                 <Table>
@@ -206,8 +283,8 @@ export default function NurseInventoryPage() {
                                         <TableRow>
                                             <TableHead>Clinic</TableHead>
                                             <TableHead>Name</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Expiries</TableHead>
+                                            <TableHead>Total Quantity</TableHead>
+                                            <TableHead>Batch Expiries</TableHead>
                                             <TableHead>Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -224,7 +301,7 @@ export default function NurseInventoryPage() {
                                                         <TableCell>
                                                             {item.replenishments.map((r, i) => (
                                                                 <div key={i} className="text-sm text-gray-700">
-                                                                    {new Date(r.expiry_date).toLocaleDateString()}
+                                                                    {r.remaining_qty} pcs – exp {new Date(r.expiry_date).toLocaleDateString()}
                                                                 </div>
                                                             ))}
                                                         </TableCell>
