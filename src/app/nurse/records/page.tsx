@@ -82,6 +82,7 @@ export default function NurseRecordsPage() {
     const [records, setRecords] = useState<PatientRecord[]>([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+    const [typeFilter, setTypeFilter] = useState("All"); // 🔹 new filter
 
     async function loadRecords() {
         const res = await fetch("/api/nurse/records", { cache: "no-store" });
@@ -103,7 +104,10 @@ export default function NurseRecordsPage() {
         const matchesStatus =
             statusFilter === "All" || r.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
+        const matchesType =
+            typeFilter === "All" || r.patientType === typeFilter;
+
+        return matchesSearch && matchesStatus && matchesType;
     });
 
     return (
@@ -191,6 +195,17 @@ export default function NurseRecordsPage() {
                                         <SelectItem value="All">All</SelectItem>
                                         <SelectItem value="Active">Active</SelectItem>
                                         <SelectItem value="Inactive">Inactive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {/* Patient Type Filter */}
+                                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                    <SelectTrigger className="w-full md:w-40">
+                                        <SelectValue placeholder="Filter by type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All</SelectItem>
+                                        <SelectItem value="Student">Student</SelectItem>
+                                        <SelectItem value="Employee">Employee</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
