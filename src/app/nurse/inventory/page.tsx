@@ -115,10 +115,10 @@ export default function NurseInventoryPage() {
         const diff = expDate.getTime() - today.getTime();
         const daysLeft = diff / (1000 * 60 * 60 * 24);
 
-        if (daysLeft < 0) return { text: "Expired", color: "bg-red-100 text-red-700 border-red-200" };
-        if (daysLeft <= 7) return { text: "Expiring Very Soon", color: "bg-orange-100 text-orange-700 border-orange-200" };
-        if (daysLeft < 30) return { text: "Expiring Soon", color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
-        return { text: "Valid", color: "bg-green-100 text-green-700 border-green-200" };
+        if (daysLeft < 0) return { text: `Expired (Past due)`, color: "bg-red-100 text-red-700 border-red-200" };
+        if (daysLeft <= 7) return { text: `Expiring Very Soon (${daysLeft} days left)`, color: "bg-orange-100 text-orange-700 border-orange-200" };
+        if (daysLeft <= 30) return { text: `Expiring Soon (${daysLeft} days left)`, color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
+        return { text: `Valid (${daysLeft} days left)`, color: "bg-green-100 text-green-700 border-green-200" };
     };
 
     // ✅ Apply filters
@@ -359,12 +359,9 @@ export default function NurseInventoryPage() {
 
                                                                         {/* Status + Days Left */}
                                                                         <div className="flex items-center gap-2">
-                                                                            <Badge variant="outline" className={status.color}>
+                                                                            <Badge variant="outline" className={`px-3 py-1 text-xs font-medium rounded-md ${status.color}`}>
                                                                                 {status.text}
                                                                             </Badge>
-                                                                            <span className="text-sm text-gray-600">
-                                                                                ({daysLeft} days left)
-                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 );
