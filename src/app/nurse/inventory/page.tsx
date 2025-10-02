@@ -250,7 +250,84 @@ export default function NurseInventoryPage() {
                                             <DialogTitle>Add New Stock</DialogTitle>
                                             <DialogDescription>Fill in the details of the stock item.</DialogDescription>
                                         </DialogHeader>
-                                        {/* Form ... (same as before) */}
+                                        {/* Add Stock */}
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                                    <Plus className="h-4 w-4 mr-1" /> Add Stock
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Add New Stock</DialogTitle>
+                                                    <DialogDescription>Fill in the details of the stock item.</DialogDescription>
+                                                </DialogHeader>
+                                                <form
+                                                    className="space-y-4"
+                                                    onSubmit={async (e) => {
+                                                        e.preventDefault();
+                                                        const form = e.currentTarget as HTMLFormElement;
+                                                        setLoading(true);
+
+                                                        const body = {
+                                                            clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
+                                                            item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value,
+                                                            quantity: (form.elements.namedItem("quantity") as HTMLInputElement).value,
+                                                            expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
+                                                        };
+
+                                                        const res = await fetch("/api/nurse/inventory", {
+                                                            method: "POST",
+                                                            headers: { "Content-Type": "application/json" },
+                                                            body: JSON.stringify(body),
+                                                        });
+
+                                                        if (res.ok) {
+                                                            await loadInventory();
+                                                            form.reset();
+                                                            toast.success("Stock added!");
+                                                        } else {
+                                                            toast.error("Failed to add stock");
+                                                        }
+
+                                                        setLoading(false);
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <Label className="block mb-1">Clinic</Label>
+                                                        <select name="clinic_id" required className="w-full border rounded p-2">
+                                                            <option value="">Select clinic</option>
+                                                            {clinics.map((clinic) => (
+                                                                <option key={clinic.clinic_id} value={clinic.clinic_id}>
+                                                                    {clinic.clinic_name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <Label className="block mb-1">Name</Label>
+                                                        <Input name="item_name" required />
+                                                    </div>
+                                                    <div>
+                                                        <Label className="block mb-1">Quantity</Label>
+                                                        <Input type="number" name="quantity" required />
+                                                    </div>
+                                                    <div>
+                                                        <Label className="block mb-1">Expiry Date</Label>
+                                                        <Input type="date" name="expiry" required />
+                                                    </div>
+                                                    <DialogFooter>
+                                                        <Button
+                                                            type="submit"
+                                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                                            disabled={loading}
+                                                        >
+                                                            {loading ? "Saving..." : "Save"}
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
                                     </DialogContent>
                                 </Dialog>
                             </div>
