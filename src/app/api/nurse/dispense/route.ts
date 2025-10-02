@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";        // ✅ your Prisma client instance
+import { Prisma } from "@prisma/client";      // ✅ Prisma types namespace
 
 // ✅ GET: Fetch all dispenses with consultation + patient + clinic info + batch usage
 export async function GET() {
@@ -8,22 +9,22 @@ export async function GET() {
             include: {
                 med: {
                     include: {
-                        clinic: { select: { clinic_name: true } }, // ✅ show clinic
+                        clinic: { select: { clinic_name: true } },
                     },
                 },
                 consultation: {
                     include: {
                         appointment: {
                             include: {
-                                patient: { select: { username: true } }, // ✅ patient
-                                clinic: { select: { clinic_name: true } }, // ✅ appointment clinic
+                                patient: { select: { username: true } },
+                                clinic: { select: { clinic_name: true } },
                             },
                         },
                         doctor: { select: { username: true } },
                         nurse: { select: { username: true } },
                     },
                 },
-                DispenseBatch: {   // 👈 must match your schema field name
+                DispenseBatch: {
                     include: {
                         replenishment: {
                             select: {
@@ -50,9 +51,11 @@ export async function GET() {
 // ✅ POST: Record a new dispense with FIFO (earliest expiry first) + batch logging
 export async function POST(req: Request) {
     try {
-        const { med_id, consultation_id, quantity } = await req.json();
+        const body = await req.json();
+        const { med_id, consultation_id, quantity } = body;
 
-        if (!med_id || !consultation_id || !quantity) {
+        // 🔒 Validate inputs
+        if (!med_id || !consultation_id || quantity === undefined) {
             return NextResponse.json(
                 { error: "med_id, consultation_id, and quantity are required" },
                 { status: 400 }
@@ -60,14 +63,14 @@ export async function POST(req: Request) {
         }
 
         const qtyNeeded = Number(quantity);
-        if (qtyNeeded <= 0) {
+        if (!Number.isInteger(qtyNeeded) || qtyNeeded <= 0) {
             return NextResponse.json(
-                { error: "Quantity must be greater than 0" },
+                { error: "Quantity must be a positive integer" },
                 { status: 400 }
             );
         }
 
-        // 🔎 Get medicine and batches
+        // 🔎 Get medicine and replenishment batches
         const med = await prisma.medInventory.findUnique({
             where: { med_id },
             include: {
@@ -78,7 +81,14 @@ export async function POST(req: Request) {
             },
         });
 
-        if (!med || med.quantity < qtyNeeded) {
+        if (!med) {
+            return NextResponse.json(
+                { error: "Medicine not found" },
+                { status: 404 }
+            );
+        }
+
+        if (med.quantity < qtyNeeded) {
             return NextResponse.json(
                 { error: "Not enough stock available" },
                 { status: 400 }
@@ -86,7 +96,7 @@ export async function POST(req: Request) {
         }
 
         let qtyToDeduct = qtyNeeded;
-        const updates: any[] = [];
+        const updates: Prisma.PrismaPromise<unknown>[] = []; // ✅ typed, no any
         const batchRecords: { replenishment_id: string; quantity_used: number }[] = [];
 
         // ✅ FIFO: Deduct from earliest expiry replenishments first
@@ -110,6 +120,14 @@ export async function POST(req: Request) {
             qtyToDeduct -= deduct;
         }
 
+        // 🚨 Safety check: if not fully deducted, fail
+        if (qtyToDeduct > 0) {
+            return NextResponse.json(
+                { error: "Stock deduction failed — not enough batch stock" },
+                { status: 500 }
+            );
+        }
+
         // ✅ Transaction: update inventory total, update batches, record dispense + batch records
         const [newDispense] = await prisma.$transaction([
             prisma.medInventory.update({
@@ -122,7 +140,7 @@ export async function POST(req: Request) {
                     med_id,
                     consultation_id,
                     quantity: qtyNeeded,
-                    DispenseBatch: { create: batchRecords }, // 👈 use schema field name
+                    DispenseBatch: { create: batchRecords }, // 👈 logs which batches were used
                 },
                 include: {
                     med: { include: { clinic: { select: { clinic_name: true } } } },
@@ -138,7 +156,7 @@ export async function POST(req: Request) {
                             nurse: { select: { username: true } },
                         },
                     },
-                    DispenseBatch: {   // 👈 use schema field name
+                    DispenseBatch: {
                         include: {
                             replenishment: {
                                 select: { expiry_date: true, date_received: true },
