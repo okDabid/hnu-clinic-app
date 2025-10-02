@@ -53,13 +53,18 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-// ✅ InventoryItem now uses clinic_name
+type Replenishment = {
+    expiry_date: string;
+    status: "Expired" | "Expiring Soon" | "Valid";
+    daysLeft: number;
+};
+
 type InventoryItem = {
     med_id: string;
     item_name: string;
     quantity: number;
     clinic: { clinic_name: string };
-    replenishments: { expiry_date: string }[];
+    replenishments: Replenishment[];
 };
 
 type Clinic = {
@@ -72,12 +77,12 @@ export default function NurseInventoryPage() {
     const [items, setItems] = useState<InventoryItem[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<"All" | "Valid" | "Expiring Soon" | "Expired">("All");
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
 
     const pageSize = 6;
 
-    // 🔹 Load inventory
     async function loadInventory() {
         const res = await fetch("/api/nurse/inventory", { cache: "no-store" });
         const data = await res.json();
@@ -96,7 +101,6 @@ export default function NurseInventoryPage() {
         }
     }
 
-    // 🔹 Load clinics
     async function loadClinics() {
         const res = await fetch("/api/nurse/clinic", { cache: "no-store" });
         const data = await res.json();
@@ -108,28 +112,29 @@ export default function NurseInventoryPage() {
         loadClinics();
     }, []);
 
-    const filteredItems = items.filter(
-        (i) =>
+    const statusColor = {
+        Expired: "bg-red-100 text-red-700 border-red-200",
+        "Expiring Soon": "bg-yellow-100 text-yellow-700 border-yellow-200",
+        Valid: "bg-green-100 text-green-700 border-green-200",
+    };
+
+    // 🔎 Filtering logic
+    const filteredItems = items.filter((i) => {
+        const matchesSearch =
             i.item_name.toLowerCase().includes(search.toLowerCase()) ||
-            i.clinic.clinic_name.toLowerCase().includes(search.toLowerCase())
-    );
+            i.clinic.clinic_name.toLowerCase().includes(search.toLowerCase());
+
+        const matchesStatus =
+            statusFilter === "All" ||
+            i.replenishments.some((r) => r.status === statusFilter);
+
+        return matchesSearch && matchesStatus;
+    });
 
     const paginated = filteredItems.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize
     );
-
-    const getStatus = (expiry: string | undefined) => {
-        if (!expiry) return { text: "No expiry", color: "bg-gray-100 text-gray-600 border-gray-200" };
-        const today = new Date();
-        const expDate = new Date(expiry);
-        const diff = expDate.getTime() - today.getTime();
-        const daysLeft = diff / (1000 * 60 * 60 * 24);
-
-        if (daysLeft < 0) return { text: "Expired", color: "bg-red-100 text-red-700 border-red-200" };
-        if (daysLeft < 30) return { text: "Expiring Soon", color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
-        return { text: "Valid", color: "bg-green-100 text-green-700 border-green-200" };
-    };
 
     return (
         <div className="flex min-h-screen bg-green-50">
@@ -184,7 +189,6 @@ export default function NurseInventoryPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
-
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -197,6 +201,7 @@ export default function NurseInventoryPage() {
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <CardTitle className="text-2xl font-bold text-green-600">Stock List</CardTitle>
                             <div className="flex items-center gap-2 w-full md:w-auto">
+                                {/* Search */}
                                 <div className="relative flex-1 md:flex-initial">
                                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                                     <Input
@@ -209,6 +214,20 @@ export default function NurseInventoryPage() {
                                         className="pl-8"
                                     />
                                 </div>
+
+                                {/* Filter */}
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                                    className="border rounded p-2"
+                                >
+                                    <option value="All">All</option>
+                                    <option value="Valid">Valid</option>
+                                    <option value="Expiring Soon">Expiring Soon</option>
+                                    <option value="Expired">Expired</option>
+                                </select>
+
+                                {/* Add Stock */}
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button className="bg-green-600 hover:bg-green-700 text-white">
@@ -229,7 +248,7 @@ export default function NurseInventoryPage() {
 
                                                 const body = {
                                                     clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
-                                                    item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value, // ✅ fixed
+                                                    item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value,
                                                     quantity: (form.elements.namedItem("quantity") as HTMLInputElement).value,
                                                     expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
                                                 };
@@ -264,7 +283,7 @@ export default function NurseInventoryPage() {
                                             </div>
                                             <div>
                                                 <Label className="block mb-1">Name</Label>
-                                                <Input name="item_name" required /> {/* ✅ fixed */}
+                                                <Input name="item_name" required />
                                             </div>
                                             <div>
                                                 <Label className="block mb-1">Quantity</Label>
@@ -297,33 +316,35 @@ export default function NurseInventoryPage() {
                                         <TableRow>
                                             <TableHead>Clinic</TableHead>
                                             <TableHead>Name</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Expiry</TableHead>
-                                            <TableHead>Status</TableHead>
+                                            <TableHead>Total Quantity</TableHead>
+                                            <TableHead>Expiry Batches</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {paginated.length > 0 ? (
-                                            paginated.map((item) => {
-                                                const expiry = item.replenishments[0]?.expiry_date;
-                                                const status = getStatus(expiry);
-                                                return (
-                                                    <TableRow key={item.med_id} className="hover:bg-green-50">
-                                                        <TableCell>{item.clinic.clinic_name}</TableCell>
-                                                        <TableCell>{item.item_name}</TableCell>
-                                                        <TableCell>{item.quantity}</TableCell>
-                                                        <TableCell>{expiry ? new Date(expiry).toLocaleDateString() : "—"}</TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="outline" className={status.color}>
-                                                                {status.text}
-                                                            </Badge>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })
+                                            paginated.map((item) => (
+                                                <TableRow key={item.med_id} className="hover:bg-green-50">
+                                                    <TableCell>{item.clinic.clinic_name}</TableCell>
+                                                    <TableCell>{item.item_name}</TableCell>
+                                                    <TableCell>{item.quantity}</TableCell>
+                                                    <TableCell>
+                                                        {item.replenishments.map((rep, idx) => (
+                                                            <div key={idx} className="flex items-center gap-2 mb-1">
+                                                                <span>{new Date(rep.expiry_date).toLocaleDateString()}</span>
+                                                                <Badge variant="outline" className={statusColor[rep.status]}>
+                                                                    {rep.status}
+                                                                </Badge>
+                                                                <span className="text-xs text-gray-500">
+                                                                    ({rep.daysLeft} days left)
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="text-center text-gray-500 py-6">
+                                                <TableCell colSpan={4} className="text-center text-gray-500 py-6">
                                                     No items found
                                                 </TableCell>
                                             </TableRow>
