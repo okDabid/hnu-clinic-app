@@ -53,13 +53,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-// ✅ InventoryItem now uses clinic_name
+// ✅ InventoryItem now includes replenishments
 type InventoryItem = {
     med_id: string;
     item_name: string;
     quantity: number;
     clinic: { clinic_name: string };
-    replenishments: { expiry_date: string }[];
+    replenishments: { expiry_date: string; remaining_qty: number }[];
 };
 
 type Clinic = {
@@ -107,6 +107,7 @@ export default function NurseInventoryPage() {
         currentPage * pageSize
     );
 
+    // ✅ Status = based on soonest expiry only
     const getStatus = (expiry: string | undefined) => {
         if (!expiry) return { text: "No expiry", color: "bg-gray-100 text-gray-600 border-gray-200" };
         const today = new Date();
@@ -193,6 +194,7 @@ export default function NurseInventoryPage() {
                                         className="pl-8"
                                     />
                                 </div>
+                                {/* Add Stock Modal */}
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button className="bg-green-600 hover:bg-green-700 text-white">
@@ -273,7 +275,7 @@ export default function NurseInventoryPage() {
                             </div>
                         </CardHeader>
 
-                        {/* Table content */}
+                        {/* Table */}
                         <CardContent className="flex-1 flex flex-col">
                             <div className="overflow-x-auto flex-1">
                                 <Table>
@@ -281,22 +283,28 @@ export default function NurseInventoryPage() {
                                         <TableRow>
                                             <TableHead>Clinic</TableHead>
                                             <TableHead>Name</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Expiry</TableHead>
+                                            <TableHead>Total Quantity</TableHead>
+                                            <TableHead>Batch Expiries</TableHead>
                                             <TableHead>Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {paginated.length > 0 ? (
                                             paginated.map((item) => {
-                                                const expiry = item.replenishments[0]?.expiry_date;
-                                                const status = getStatus(expiry);
+                                                const soonestExpiry = item.replenishments[0]?.expiry_date;
+                                                const status = getStatus(soonestExpiry);
                                                 return (
                                                     <TableRow key={item.med_id} className="hover:bg-green-50">
                                                         <TableCell>{item.clinic.clinic_name}</TableCell>
                                                         <TableCell>{item.item_name}</TableCell>
                                                         <TableCell>{item.quantity}</TableCell>
-                                                        <TableCell>{expiry ? new Date(expiry).toLocaleDateString() : "—"}</TableCell>
+                                                        <TableCell>
+                                                            {item.replenishments.map((r, i) => (
+                                                                <div key={i} className="text-sm text-gray-700">
+                                                                    {r.remaining_qty} pcs – exp {new Date(r.expiry_date).toLocaleDateString()}
+                                                                </div>
+                                                            ))}
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Badge variant="outline" className={status.color}>
                                                                 {status.text}

@@ -5,9 +5,9 @@ import orderBy from "lodash/orderBy";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
-
 import {
+    Eye,
+    EyeOff,
     Menu,
     X,
     Users,
@@ -19,6 +19,7 @@ import {
     Search,
     ClipboardList,
     Pill,
+    Cog,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -64,8 +65,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-
-import { Cog } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -76,7 +75,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 
-// 🔹 Types aligned with API
+// 🔹 Types
 type User = {
     user_id: string;
     accountId: string;
@@ -137,12 +136,12 @@ export default function NurseAccountsPage() {
 
     const [menuOpen] = useState(false);
 
+    // Password dialog state
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
-
 
     // 🔹 Fetch users
     async function loadUsers() {
@@ -152,19 +151,12 @@ export default function NurseAccountsPage() {
 
             const sorted = orderBy(
                 data,
-                [
-                    (u) => u.role,
-                    (u) => {
-                        const n = parseInt(u.user_id, 10);
-                        return isNaN(n) ? u.user_id : n;
-                    },
-                ],
+                [(u) => u.role, (u) => parseInt(u.user_id, 10) || u.user_id],
                 ["asc", "asc"]
             );
-
             setUsers(sorted);
         } catch {
-            toast.error("Failed to load users", { position: "top-center" });
+            toast.error("Failed to load users");
         }
     }
 
@@ -173,9 +165,7 @@ export default function NurseAccountsPage() {
         try {
             const res = await fetch("/api/nurse/accounts/me", { cache: "no-store" });
             const data = await res.json();
-            if (data.error) {
-                toast.error(data.error);
-            } else {
+            if (!data.error) {
                 setProfile({
                     user_id: data.accountId,
                     username: data.username,
@@ -246,30 +236,20 @@ export default function NurseAccountsPage() {
                 headers: { "Content-Type": "application/json" },
             });
             const data: CreateUserResponse = await res.json();
-
-            if (data.error) {
-                toast.error(data.error, { position: "top-center" });
-            } else {
+            if (data.error) toast.error(data.error);
+            else {
                 toast.success(
-                    <div className="text-left space-y-1">
+                    <div>
                         <p className="font-semibold text-green-700">Account Created!</p>
-                        <p>
-                            <span className="font-medium">ID:</span>{" "}
-                            <span className="text-green-800">{data.id}</span>
-                        </p>
-                        <p>
-                            <span className="font-medium">Password:</span>{" "}
-                            <span className="text-green-800">{data.password}</span>
-                        </p>
+                        <p>ID: {data.id}</p>
+                        <p>Password: {data.password}</p>
                     </div>,
-                    { position: "top-center", duration: 6000 }
+                    { duration: 6000 }
                 );
                 loadUsers();
             }
         } catch {
-            toast.error("Something went wrong. Please try again.", {
-                position: "top-center",
-            });
+            toast.error("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -280,18 +260,13 @@ export default function NurseAccountsPage() {
         e.preventDefault();
         try {
             setProfileLoading(true);
-            const res = await fetch("/api/nurse/accounts/me", {
+            await fetch("/api/nurse/accounts/me", {
                 method: "PUT",
                 body: JSON.stringify({ profile }),
                 headers: { "Content-Type": "application/json" },
             });
-            const data = await res.json();
-            if (data.error) {
-                toast.error(data.error);
-            } else {
-                toast.success("Profile updated!");
-                loadProfile();
-            }
+            toast.success("Profile updated!");
+            loadProfile();
         } catch {
             toast.error("Failed to update profile");
         } finally {
@@ -299,7 +274,7 @@ export default function NurseAccountsPage() {
         }
     }
 
-    // 🔹 Toggle status
+    // 🔹 Toggle user status
     async function handleToggle(user_id: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
         try {
@@ -308,10 +283,10 @@ export default function NurseAccountsPage() {
                 body: JSON.stringify({ user_id, newStatus }),
                 headers: { "Content-Type": "application/json" },
             });
-            toast.success(`User ${newStatus}`, { position: "top-center" });
+            toast.success(`User ${newStatus}`);
             loadUsers();
         } catch {
-            toast.error("Failed to update user status", { position: "top-center" });
+            toast.error("Failed to update user status");
         }
     }
 
@@ -324,7 +299,10 @@ export default function NurseAccountsPage() {
                     <Link href="/nurse" className="flex items-center gap-2 hover:text-green-600">
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
-                    <Link href="/nurse/accounts" className="flex items-center gap-2 text-green-600 font-semibold">
+                    <Link
+                        href="/nurse/accounts"
+                        className="flex items-center gap-2 text-green-600 font-semibold"
+                    >
                         <Users className="h-5 w-5" /> Accounts
                     </Link>
                     <Link href="/nurse/inventory" className="flex items-center gap-2 hover:text-green-600">
@@ -367,7 +345,9 @@ export default function NurseAccountsPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
+                                    Logout
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -412,7 +392,7 @@ export default function NurseAccountsPage() {
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
                                                 if (newPassword !== confirmPassword) {
-                                                    toast.error("New passwords do not match.");
+                                                    toast.error("New passwords do not match.", { duration: 3000 });
                                                     return;
                                                 }
 
@@ -425,13 +405,13 @@ export default function NurseAccountsPage() {
 
                                                     const data = await res.json();
                                                     if (data.error) {
-                                                        toast.error(data.error);
+                                                        toast.error(data.error, { duration: 3000 });
                                                     } else {
-                                                        toast.success("Password updated successfully!");
+                                                        toast.success("Password updated successfully!", { duration: 3000 });
                                                         form.reset();
                                                     }
                                                 } catch {
-                                                    toast.error("Failed to update password. Please try again.");
+                                                    toast.error("Failed to update password. Please try again.", { duration: 3000 });
                                                 }
                                             }}
                                             className="space-y-4"
@@ -502,14 +482,14 @@ export default function NurseAccountsPage() {
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
+                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
                                                 >
+                                                    <Loader2 className="h-4 w-4 animate-spin hidden group-disabled:inline" />
                                                     Update Password
                                                 </Button>
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
-
                                 </Dialog>
                             </CardHeader>
 
@@ -520,11 +500,11 @@ export default function NurseAccountsPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label className="block mb-1 font-medium">Username</Label>
-                                            <Input value={profile.user_id} disabled className="w-full" />
+                                            <Input value={profile.username} disabled className="w-full" />
                                         </div>
                                         <div>
                                             <Label className="block mb-1 font-medium">User ID</Label>
-                                            <Input value={profile.username} disabled className="w-full" />
+                                            <Input value={profile.user_id} disabled className="w-full" />
                                         </div>
                                         <div>
                                             <Label className="block mb-1 font-medium">Role</Label>
@@ -654,8 +634,6 @@ export default function NurseAccountsPage() {
                             </CardContent>
                         </Card>
                     )}
-
-
 
                     {/* Create User */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
