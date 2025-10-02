@@ -9,8 +9,6 @@ import {
     Users,
     Home,
     Plus,
-    AlertTriangle,
-    Clock,
     Search,
     ClipboardList,
     Pill,

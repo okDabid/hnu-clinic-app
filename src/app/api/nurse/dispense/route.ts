@@ -57,12 +57,13 @@ export async function POST(req: Request) {
         if (!med || med.quantity < Number(quantity)) {
             return NextResponse.json(
                 { error: "Not enough stock available" },
+
                 { status: 400 }
             );
         }
 
         // ✅ Transaction: deduct stock + create dispense record
-        const [_, newDispense] = await prisma.$transaction([
+        const [newDispense] = await prisma.$transaction([
             prisma.medInventory.update({
                 where: { med_id },
                 data: { quantity: { decrement: Number(quantity) } },
