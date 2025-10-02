@@ -143,6 +143,9 @@ export default function NurseAccountsPage() {
 
     const [currentPage, setCurrentPage] = useState(1);
 
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+    const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
     // 🔹 Fetch users
     async function loadUsers() {
@@ -406,13 +409,16 @@ export default function NurseAccountsPage() {
                                         <form
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
+                                                setPasswordLoading(true);
+
                                                 const form = e.currentTarget as HTMLFormElement;
                                                 const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
                                                 const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
                                                 if (newPassword !== confirmPassword) {
-                                                    toast.error("New passwords do not match.");
+                                                    toast.error("New passwords do not match.", { duration: 3000 });
+                                                    setPasswordLoading(false);
                                                     return;
                                                 }
 
@@ -425,13 +431,15 @@ export default function NurseAccountsPage() {
 
                                                     const data = await res.json();
                                                     if (data.error) {
-                                                        toast.error(data.error);
+                                                        toast.error(data.error, { duration: 3000 });
                                                     } else {
-                                                        toast.success("Password updated successfully!");
+                                                        toast.success("Password updated successfully!", { duration: 3000 });
                                                         form.reset();
                                                     }
                                                 } catch {
-                                                    toast.error("Failed to update password. Please try again.");
+                                                    toast.error("Failed to update password. Please try again.", { duration: 3000 });
+                                                } finally {
+                                                    setPasswordLoading(false);
                                                 }
                                             }}
                                             className="space-y-4"
@@ -440,7 +448,12 @@ export default function NurseAccountsPage() {
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">Current Password</Label>
                                                 <div className="relative">
-                                                    <Input type={showCurrent ? "text" : "password"} name="oldPassword" required className="pr-10" />
+                                                    <Input
+                                                        type={showCurrent ? "text" : "password"}
+                                                        name="oldPassword"
+                                                        required
+                                                        className="pr-10"
+                                                    />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -448,11 +461,7 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowCurrent(!showCurrent)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showCurrent ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -461,7 +470,12 @@ export default function NurseAccountsPage() {
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">New Password</Label>
                                                 <div className="relative">
-                                                    <Input type={showNew ? "text" : "password"} name="newPassword" required className="pr-10" />
+                                                    <Input
+                                                        type={showNew ? "text" : "password"}
+                                                        name="newPassword"
+                                                        required
+                                                        className="pr-10"
+                                                    />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -469,11 +483,7 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowNew(!showNew)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showNew ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -482,7 +492,12 @@ export default function NurseAccountsPage() {
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">Confirm New Password</Label>
                                                 <div className="relative">
-                                                    <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required className="pr-10" />
+                                                    <Input
+                                                        type={showConfirm ? "text" : "password"}
+                                                        name="confirmPassword"
+                                                        required
+                                                        className="pr-10"
+                                                    />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -490,11 +505,7 @@ export default function NurseAccountsPage() {
                                                         onClick={() => setShowConfirm(!showConfirm)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showConfirm ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -502,15 +513,17 @@ export default function NurseAccountsPage() {
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
+                                                    disabled={passwordLoading}
+                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
                                                 >
-                                                    Update Password
+                                                    {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                    {passwordLoading ? "Updating..." : "Update Password"}
                                                 </Button>
                                             </DialogFooter>
                                         </form>
                                     </DialogContent>
-
                                 </Dialog>
+
                             </CardHeader>
 
                             {/* Profile Form */}

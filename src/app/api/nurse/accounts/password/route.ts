@@ -5,7 +5,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Request validation schema
+// ✅ Request validation schema
 const BodySchema = z.object({
     oldPassword: z.string().min(1, "Current password is required."),
     newPassword: z
@@ -39,29 +39,32 @@ export async function PUT(req: Request) {
 
         const { oldPassword, newPassword } = parsed.data;
 
+        // 🔎 Fetch user
         const user = await prisma.users.findUnique({ where: { user_id: userId } });
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const ok = await bcrypt.compare(oldPassword, user.password);
-        if (!ok) {
+        // ✅ Verify old password
+        const oldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+        if (!oldPasswordValid) {
             return NextResponse.json(
                 { error: "Incorrect current password" },
                 { status: 400 }
             );
         }
 
-        const sameAsOld = await bcrypt.compare(newPassword, user.password);
-        if (sameAsOld) {
+        // ❌ Prevent reusing the same password
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) {
             return NextResponse.json(
                 { error: "New password must be different from the old one" },
                 { status: 400 }
             );
         }
 
+        // ✅ Hash and update password
         const newHash = await bcrypt.hash(newPassword, 12);
-
         await prisma.users.update({
             where: { user_id: userId },
             data: { password: newHash },
@@ -69,7 +72,7 @@ export async function PUT(req: Request) {
 
         return NextResponse.json({ success: true });
     } catch (err) {
-        console.error(err);
+        console.error("PUT /api/nurse/accounts/password error:", err);
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }
