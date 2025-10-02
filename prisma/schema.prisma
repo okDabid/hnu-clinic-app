@@ -150,7 +150,8 @@ model Replenishment {
   date_received    DateTime
   expiry_date      DateTime
 
-  med MedInventory @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  med           MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  DispenseBatch DispenseBatch[]
 
   @@index([med_id, expiry_date])
 }
@@ -219,10 +220,21 @@ model MedDispense {
   consultation_id String
   quantity        Int
 
-  med          MedInventory @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
-  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  med             MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  consultation    Consultation    @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  dispenseBatches DispenseBatch[]
 
   @@index([consultation_id])
+}
+
+model DispenseBatch {
+  id               String @id @default(cuid())
+  dispense_id      String
+  replenishment_id String
+  quantity_used    Int
+
+  dispense      MedDispense   @relation(fields: [dispense_id], references: [dispense_id], onDelete: Cascade)
+  replenishment Replenishment @relation(fields: [replenishment_id], references: [replenishment_id], onDelete: Cascade)
 }
 
 model MedCert {
