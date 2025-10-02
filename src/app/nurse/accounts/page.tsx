@@ -147,17 +147,6 @@ export default function NurseAccountsPage() {
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
-    const validatePassword = (password: string): string[] => {
-        const errors: string[] = [];
-        if (password.length < 8) errors.push("Must be at least 8 characters.");
-        if (password.length > 128) errors.push("Must be less than 128 characters.");
-        if (!/[a-z]/.test(password)) errors.push("Must contain a lowercase letter.");
-        if (!/[A-Z]/.test(password)) errors.push("Must contain an uppercase letter.");
-        if (!/\d/.test(password)) errors.push("Must contain a number.");
-        if (!/[^\w\s]/.test(password)) errors.push("Must contain a symbol.");
-        return errors;
-    };
-
     // 🔹 Fetch users
     async function loadUsers() {
         try {
