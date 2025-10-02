@@ -140,22 +140,8 @@ export default function NurseAccountsPage() {
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
-    const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-    const [passwordLoading, setPasswordLoading] = useState(false);
-    const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
     const [currentPage, setCurrentPage] = useState(1);
-
-    // ✅ Password validation rules
-    function validatePassword(password: string): string[] {
-        const errors: string[] = [];
-        if (password.length < 8) errors.push("At least 8 characters");
-        if (!/[a-z]/.test(password)) errors.push("One lowercase letter");
-        if (!/[A-Z]/.test(password)) errors.push("One uppercase letter");
-        if (!/\d/.test(password)) errors.push("One number");
-        if (!/[^\w\s]/.test(password)) errors.push("One special character");
-        return errors;
-    }
 
     // 🔹 Fetch users
     async function loadUsers() {
@@ -400,26 +386,13 @@ export default function NurseAccountsPage() {
                                         <form
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
-                                                setPasswordLoading(true);
-                                                setPasswordErrors([]);
-                                                setPasswordMessage(null);
-
                                                 const form = e.currentTarget as HTMLFormElement;
                                                 const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
                                                 const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
-                                                // Validation
-                                                const errors = validatePassword(newPassword);
-                                                if (errors.length > 0) {
-                                                    setPasswordErrors(errors);
-                                                    setPasswordLoading(false);
-                                                    return;
-                                                }
-
                                                 if (newPassword !== confirmPassword) {
                                                     toast.error("New passwords do not match.", { duration: 3000 });
-                                                    setPasswordLoading(false);
                                                     return;
                                                 }
 
@@ -433,33 +406,16 @@ export default function NurseAccountsPage() {
                                                     const data = await res.json();
                                                     if (data.error) {
                                                         toast.error(data.error, { duration: 3000 });
-                                                        setPasswordMessage(data.error);
                                                     } else {
                                                         toast.success("Password updated successfully!", { duration: 3000 });
-                                                        setPasswordMessage("Password updated successfully!");
                                                         form.reset();
                                                     }
                                                 } catch {
                                                     toast.error("Failed to update password. Please try again.", { duration: 3000 });
-                                                    setPasswordMessage("Failed to update password.");
-                                                } finally {
-                                                    setPasswordLoading(false);
                                                 }
                                             }}
                                             className="space-y-4"
                                         >
-                                            {/* Show validation errors */}
-                                            {passwordErrors.length > 0 && (
-                                                <ul className="text-sm text-red-600 space-y-1">
-                                                    {passwordErrors.map((err, idx) => (
-                                                        <li key={idx}>• {err}</li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                            {passwordMessage && (
-                                                <p className="text-sm text-green-600">{passwordMessage}</p>
-                                            )}
-
                                             {/* Current Password */}
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">Current Password</Label>
@@ -485,15 +441,7 @@ export default function NurseAccountsPage() {
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">New Password</Label>
                                                 <div className="relative">
-                                                    <Input
-                                                        type={showNew ? "text" : "password"}
-                                                        name="newPassword"
-                                                        required
-                                                        className="pr-10"
-                                                        onChange={(e) => {
-                                                            setPasswordErrors(validatePassword(e.target.value));
-                                                        }}
-                                                    />
+                                                    <Input type={showNew ? "text" : "password"} name="newPassword" required className="pr-10" />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -534,11 +482,10 @@ export default function NurseAccountsPage() {
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    disabled={passwordLoading}
                                                     className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
                                                 >
-                                                    {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                    {passwordLoading ? "Updating..." : "Update Password"}
+                                                    <Loader2 className="h-4 w-4 animate-spin hidden group-disabled:inline" />
+                                                    Update Password
                                                 </Button>
                                             </DialogFooter>
                                         </form>
