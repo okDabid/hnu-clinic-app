@@ -45,6 +45,38 @@ enum ServiceType {
   Other
 }
 
+enum MedCategory {
+  Analgesic
+  Antibiotic
+  Antiviral
+  Antifungal
+  Antiparasitic
+  Antihistamine
+  Antacid
+  Antidiabetic
+  Cardiovascular
+  Psychiatric
+  Supplement
+  Other
+}
+
+enum DosageUnit {
+  mg
+  mcg
+  g
+  ml
+  IU
+}
+
+enum MedType {
+  Tablet
+  Capsule
+  Caplet
+  Syrup
+  Suspension
+  Solution
+}
+
 model Clinic {
   clinic_id        String @id @default(cuid())
   clinic_name      String
@@ -129,11 +161,14 @@ model Employee {
 }
 
 model MedInventory {
-  med_id    String  @id @default(cuid())
+  med_id    String      @id @default(cuid())
   clinic_id String
   quantity  Int
   item_name String
-  item_type String?
+  category  MedCategory @default(Analgesic)
+  item_type MedType     @default(Tablet)
+  strength  Float?
+  unit      DosageUnit?
 
   clinic         Clinic          @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
   replenishments Replenishment[]
