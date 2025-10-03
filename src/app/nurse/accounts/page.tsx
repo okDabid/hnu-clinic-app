@@ -147,6 +147,17 @@ export default function NurseAccountsPage() {
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    async function handleLogout() {
+        try {
+            setIsLoggingOut(true);
+            await signOut({ callbackUrl: "/login?logout=success" });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    }
+
     // 🔹 Fetch users
     async function loadUsers() {
         try {
@@ -346,10 +357,18 @@ export default function NurseAccountsPage() {
                 <Separator className="my-6" />
                 <Button
                     variant="default"
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
                 >
-                    Logout
+                    {isLoggingOut ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Logging out...
+                        </>
+                    ) : (
+                        "Logout"
+                    )}
                 </Button>
             </aside>
 

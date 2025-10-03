@@ -13,6 +13,7 @@ import {
     Package,
     BarChart3,
     Home,
+    Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,17 @@ export default function NurseDashboardPage() {
     const [menuOpen] = useState(false);
 
     const fullName = session?.user?.name || "Nurse";
+
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    async function handleLogout() {
+        try {
+            setIsLoggingOut(true);
+            await signOut({ callbackUrl: "/login?logout=success" });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    }
 
     return (
         <div className="flex min-h-screen bg-green-50">
@@ -69,10 +81,18 @@ export default function NurseDashboardPage() {
                 <Separator className="my-6" />
                 <Button
                     variant="default"
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
                 >
-                    Logout
+                    {isLoggingOut ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Logging out...
+                        </>
+                    ) : (
+                        "Logout"
+                    )}
                 </Button>
             </aside>
 

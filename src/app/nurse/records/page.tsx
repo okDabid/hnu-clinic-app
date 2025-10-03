@@ -11,7 +11,8 @@ import {
     ClipboardList,
     Pill,
     FileText,
-    Search
+    Search,
+    Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,18 @@ export default function NurseRecordsPage() {
     const [records, setRecords] = useState<PatientRecord[]>([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
-    const [typeFilter, setTypeFilter] = useState("All"); // 🔹 new filter
+    const [typeFilter, setTypeFilter] = useState("All");
+
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    async function handleLogout() {
+        try {
+            setIsLoggingOut(true);
+            await signOut({ callbackUrl: "/login?logout=success" });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    }
 
     async function loadRecords() {
         const res = await fetch("/api/nurse/records", { cache: "no-store" });
@@ -137,10 +149,18 @@ export default function NurseRecordsPage() {
                 <Separator className="my-6" />
                 <Button
                     variant="default"
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
                 >
-                    Logout
+                    {isLoggingOut ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Logging out...
+                        </>
+                    ) : (
+                        "Logout"
+                    )}
                 </Button>
             </aside>
 

@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
-    Menu, X, Users, Package, Home, ClipboardList, Pill
+    Menu,
+    X,
+    Users,
+    Package,
+    Home,
+    ClipboardList,
+    Pill,
+    Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -61,6 +68,17 @@ export default function NurseDispensePage() {
     const [menuOpen] = useState(false);
     const [dispenses, setDispenses] = useState<Dispense[]>([]);
 
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    async function handleLogout() {
+        try {
+            setIsLoggingOut(true);
+            await signOut({ callbackUrl: "/login?logout=success" });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    }
+
     // Load dispenses
     async function loadDispenses() {
         const res = await fetch("/api/nurse/dispense", { cache: "no-store" });
@@ -100,10 +118,18 @@ export default function NurseDispensePage() {
                 <Separator className="my-6" />
                 <Button
                     variant="default"
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
                 >
-                    Logout
+                    {isLoggingOut ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Logging out...
+                        </>
+                    ) : (
+                        "Logout"
+                    )}
                 </Button>
             </aside>
 
