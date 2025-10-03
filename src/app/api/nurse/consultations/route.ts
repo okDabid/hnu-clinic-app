@@ -31,8 +31,14 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json(consultation);
-    } catch (err: any) {
-        console.error("POST /api/nurse/consultations error:", err);
+    } catch (err: unknown) {
+        // Narrow the type safely
+        if (err instanceof Error) {
+            console.error("POST /api/nurse/consultations error:", err.message);
+        } else {
+            console.error("POST /api/nurse/consultations error: Unknown error", err);
+        }
+
         return NextResponse.json(
             { error: "Failed to save consultation notes" },
             { status: 500 }

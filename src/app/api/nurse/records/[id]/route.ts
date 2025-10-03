@@ -58,8 +58,18 @@ export async function PATCH(
             });
             return NextResponse.json(employee);
         }
-    } catch (err: any) {
-        console.error("PATCH /api/nurse/records/[id] error:", err);
+
+        return NextResponse.json(
+            { error: "Unhandled patient type" },
+            { status: 400 }
+        );
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.error("PATCH /api/nurse/records/[id] error:", err.message);
+        } else {
+            console.error("PATCH /api/nurse/records/[id] error: Unknown error", err);
+        }
+
         return NextResponse.json(
             { error: "Failed to update health data" },
             { status: 500 }
