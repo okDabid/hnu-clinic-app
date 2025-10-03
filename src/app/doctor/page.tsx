@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { signOut, useSession } from "next-auth/react";
 import {
     Menu,
     X,
@@ -12,97 +11,162 @@ import {
     ClipboardList,
     FileText,
     Stethoscope,
+    Home,
+    Loader2,
 } from "lucide-react";
 
-export default function DoctorPanel() {
-    const [menuOpen, setMenuOpen] = useState(false);
+import { Button } from "@/components/ui/button";
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardContent,
+} from "@/components/ui/card";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+
+export default function DoctorDashboardPage() {
+    const { data: session } = useSession();
+    const [menuOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const fullName = session?.user?.name || "School Doctor";
+
+    async function handleLogout() {
+        try {
+            setIsLoggingOut(true);
+            await signOut({ callbackUrl: "/login?logout=success" });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    }
 
     return (
-        <div className="min-h-screen bg-green-50 flex flex-col">
-            {/* Header */}
-            <header className="w-full bg-white shadow px-4 md:px-8 py-4 sticky top-0 z-50">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-lg md:text-2xl font-bold text-green-600">
-                        HNU Clinic – Doctor Panel
-                    </h1>
+        <div className="flex min-h-screen bg-green-50">
+            {/* Sidebar */}
+            <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
+                <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
+                <nav className="flex flex-col gap-4 text-gray-700">
+                    <Link
+                        href="/doctor"
+                        className="flex items-center gap-2 text-green-600 font-semibold"
+                    >
+                        <Home className="h-5 w-5" /> Dashboard
+                    </Link>
+                    <Link
+                        href="/doctor/appointments"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <CalendarDays className="h-5 w-5" /> Appointments
+                    </Link>
+                    <Link
+                        href="/doctor/patients"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <ClipboardList className="h-5 w-5" /> Patients
+                    </Link>
+                </nav>
+                <Separator className="my-6" />
+                <Button
+                    variant="default"
+                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                >
+                    {isLoggingOut ? (
+                        <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Logging out...
+                        </>
+                    ) : (
+                        "Logout"
+                    )}
+                </Button>
+            </aside>
 
-                    {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-6">
-                        <Link href="/doctor" className="text-green-600 font-semibold">
-                            Dashboard
-                        </Link>
-                        <Link href="/doctor/appointments" className="text-gray-700 hover:text-green-600">
-                            Appointments
-                        </Link>
-                        <Link href="/doctor/patients" className="text-gray-700 hover:text-green-600">
-                            Patients
-                        </Link>
-                        <Link href="/">
-                            <Button className="bg-green-600 hover:bg-green-700">Logout</Button>
-                        </Link>
-                    </nav>
-
-                    {/* Mobile Menu Button */}
-                    <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
-                        {menuOpen ? (
-                            <X className="w-6 h-6 text-green-600" />
-                        ) : (
-                            <Menu className="w-6 h-6 text-green-600" />
-                        )}
-                    </button>
-                </div>
-
-                {/* Mobile Dropdown */}
-                {menuOpen && (
-                    <div className="flex flex-col gap-4 mt-4 md:hidden">
-                        <Link href="/doctor" className="text-green-600 font-semibold">
-                            Dashboard
-                        </Link>
-                        <Link href="/doctor/appointments" className="text-gray-700 hover:text-green-600">
-                            Appointments
-                        </Link>
-                        <Link href="/doctor/patients" className="text-gray-700 hover:text-green-600">
-                            Patients
-                        </Link>
-                        <Link href="/">
-                            <Button className="bg-green-600 hover:bg-green-700 w-full">Logout</Button>
-                        </Link>
-                    </div>
-                )}
-            </header>
-
-            {/* Hero Section */}
-            <section className="px-6 md:px-12 py-12 bg-white shadow-sm">
-                <div className="max-w-4xl mx-auto text-center">
-                    <h2 className="text-2xl md:text-4xl font-bold text-green-600 mb-4">
-                        Welcome, School Doctor
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col">
+                {/* Header */}
+                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-xl font-bold text-green-600">
+                        Doctor Panel Dashboard
                     </h2>
-                    <p className="text-gray-700">
-                        Manage your account, consultation slots, appointments, and patient records.
-                    </p>
-                </div>
-            </section>
 
-            {/* Doctor Functionalities */}
-            <section className="px-6 md:px-12 py-16 flex-1">
-                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    {/* Mobile Menu */}
+                    <div className="md:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                    {menuOpen ? (
+                                        <X className="w-5 h-5" />
+                                    ) : (
+                                        <Menu className="w-5 h-5" />
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                    <Link href="/doctor">Dashboard</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/doctor/appointments">Appointments</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/doctor/patients">Patients</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                                >
+                                    Logout
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </header>
+
+                {/* Welcome */}
+                <section className="px-6 py-8 bg-white shadow-sm">
+                    <div className="text-center">
+                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">
+                            Welcome, {fullName}
+                        </h2>
+                        <p className="text-gray-700 mt-2">
+                            Manage your account, consultation slots, appointments, and patient
+                            records.
+                        </p>
+                    </div>
+                </section>
+
+                {/* Functionality Cards */}
+                <section className="px-6 py-12 grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">
                     {/* Account Management */}
-                    <Card className="rounded-2xl shadow-lg">
-                        <CardContent className="p-6 text-center">
-                            <UserCog className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Account Management</h3>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <UserCog className="w-6 h-6" /> Account Management
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
                                 <li>Edit or update own account</li>
                             </ul>
                         </CardContent>
                     </Card>
 
-                    {/* Duty Hours & Consultation Slots */}
-                    <Card className="rounded-2xl shadow-lg">
-                        <CardContent className="p-6 text-center">
-                            <CalendarDays className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Consultation Slots</h3>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
+                    {/* Consultation Slots */}
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <CalendarDays className="w-6 h-6" /> Consultation Slots
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
                                 <li>Input duty hours</li>
                                 <li>Generate consultation slots</li>
                                 <li>Approve or modify schedules</li>
@@ -111,11 +175,14 @@ export default function DoctorPanel() {
                     </Card>
 
                     {/* Appointments */}
-                    <Card className="rounded-2xl shadow-lg">
-                        <CardContent className="p-6 text-center">
-                            <ClipboardList className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Appointments</h3>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <ClipboardList className="w-6 h-6" /> Appointments
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
                                 <li>Approve, move, or cancel requests</li>
                                 <li>View all scheduled appointments</li>
                             </ul>
@@ -123,11 +190,14 @@ export default function DoctorPanel() {
                     </Card>
 
                     {/* Patient Records */}
-                    <Card className="rounded-2xl shadow-lg">
-                        <CardContent className="p-6 text-center">
-                            <Stethoscope className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Patient Records</h3>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1 text-left">
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <Stethoscope className="w-6 h-6" /> Patient Records
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
                                 <li>Search and view health records</li>
                                 <li>Update patient information</li>
                                 <li>Add consultation records</li>
@@ -136,22 +206,26 @@ export default function DoctorPanel() {
                     </Card>
 
                     {/* Medical Certificates */}
-                    <Card className="rounded-2xl shadow-lg md:col-span-3">
-                        <CardContent className="p-6 text-center">
-                            <FileText className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                            <h3 className="font-semibold text-lg text-green-600 mb-2">Medical Certificates</h3>
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition md:col-span-3">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <FileText className="w-6 h-6" /> Medical Certificates
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
                             <p className="text-gray-700 text-sm">
-                                Generate medical certificates based on patient consultation and health records.
+                                Generate medical certificates based on patient consultation and
+                                health records.
                             </p>
                         </CardContent>
                     </Card>
-                </div>
-            </section>
+                </section>
 
-            {/* Footer */}
-            <footer className="bg-white py-6 text-center text-gray-600">
-                © {new Date().getFullYear()} HNU Clinic – Doctor Panel
-            </footer>
+                {/* Footer */}
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                    © {new Date().getFullYear()} HNU Clinic – Doctor Panel
+                </footer>
+            </main>
         </div>
     );
 }
