@@ -2,71 +2,116 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Role, Prisma } from "@prisma/client";
+import { Role, Gender, Prisma } from "@prisma/client";
 
-export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await prisma.users.findUnique({
-        where: { user_id: session.user.id },
-        include: { employee: true }, // doctor is stored in Employee table
-    });
-
-    if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({
-        accountId: user.user_id,
-        username: user.username,
-        role: user.role,
-        status: user.status,
-        profile: user.employee ?? null,
-    });
+// 🔹 Helpers
+function isGender(val: unknown): val is Gender {
+    return val === "Male" || val === "Female";
 }
 
-export async function PUT(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+function toDate(val: unknown): Date | undefined {
+    if (val instanceof Date && !isNaN(val.getTime())) return val;
+    if (typeof val === "string") {
+        const d = new Date(val);
+        if (!isNaN(d.getTime())) return d;
     }
+    return undefined;
+}
 
-    const payload = await req.json();
-    const profile = payload?.profile ?? {};
+function buildEmployeeUpdateInput(
+    raw: Record<string, unknown>
+): Prisma.EmployeeUpdateInput {
+    const data: Prisma.EmployeeUpdateInput = {};
 
-    const user = await prisma.users.findUnique({
-        where: { user_id: session.user.id },
-        include: { employee: true },
-    });
+    if (typeof raw.fname === "string") data.fname = raw.fname;
+    if (typeof raw.mname === "string") data.mname = raw.mname;
+    if (typeof raw.lname === "string") data.lname = raw.lname;
 
-    if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const dob = toDate(raw.date_of_birth);
+    if (dob) data.date_of_birth = dob;
 
-    if (user.role !== Role.DOCTOR || !user.employee) {
-        return NextResponse.json({ error: "Not a doctor" }, { status: 403 });
-    }
+    if (isGender(raw.gender)) data.gender = raw.gender;
 
-    const allowedFields = [
-        "fname", "mname", "lname", "contactno", "address",
-        "bloodtype", "allergies", "medical_cond",
-        "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-    ] as const;
+    if (typeof raw.contactno === "string") data.contactno = raw.contactno;
+    if (typeof raw.address === "string") data.address = raw.address;
+    if (typeof raw.bloodtype === "string") data.bloodtype = raw.bloodtype;
+    if (typeof raw.allergies === "string") data.allergies = raw.allergies;
+    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
+    if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
+    if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
+    if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
 
-    const updateData: Prisma.EmployeeUpdateInput = {};
-    for (const field of allowedFields) {
-        if (field in profile) {
-            (updateData as any)[field] = profile[field];
+    return data;
+}
+
+// ---------------- GET OWN PROFILE ----------------
+export async function GET() {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const user = await prisma.users.findUnique({
+            where: { user_id: session.user.id },
+            include: { employee: true }, // Doctor profiles stored in Employee
+        });
+
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        if (user.role !== Role.DOCTOR) {
+            return NextResponse.json({ error: "Not a doctor" }, { status: 403 });
+        }
+
+        return NextResponse.json({
+            accountId: user.user_id,
+            username: user.username,
+            role: user.role,
+            status: user.status,
+            profile: user.employee ?? null,
+        });
+    } catch (err) {
+        console.error("[GET /api/doctor/account/me]", err);
+        return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
     }
+}
 
-    await prisma.employee.update({
-        where: { user_id: session.user.id },
-        data: updateData,
-    });
+// ---------------- UPDATE OWN PROFILE ----------------
+export async function PUT(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
-    return NextResponse.json({ success: true });
+        const payload = await req.json();
+        const profile = (payload?.profile ?? {}) as Record<string, unknown>;
+
+        const user = await prisma.users.findUnique({
+            where: { user_id: session.user.id },
+            include: { employee: true },
+        });
+
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        if (user.role !== Role.DOCTOR || !user.employee) {
+            return NextResponse.json({ error: "Not a doctor" }, { status: 403 });
+        }
+
+        const data = buildEmployeeUpdateInput(profile);
+
+        await prisma.employee.update({
+            where: { user_id: session.user.id },
+            data,
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        console.error("[PUT /api/doctor/account/me]", err);
+        return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    }
 }

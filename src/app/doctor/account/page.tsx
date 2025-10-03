@@ -69,13 +69,13 @@ export default function DoctorAccountPage() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    // password update
+    // Password states
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
-    const [passwordLoading, setPasswordLoading] = useState(false);
 
     // Load profile
     async function loadProfile() {
@@ -175,12 +175,13 @@ export default function DoctorAccountPage() {
                 </header>
 
                 {/* Content */}
-                <section className="px-6 py-8 max-w-4xl mx-auto w-full">
+                <section className="px-6 py-8 max-w-4xl mx-auto w-full space-y-10">
+                    {/* Profile */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                        <CardHeader className="flex items-center justify-between">
+                        <CardHeader className="flex justify-between items-center">
                             <CardTitle className="text-2xl font-bold text-green-600">Edit Profile</CardTitle>
 
-                            {/* Password Update Dialog Trigger */}
+                            {/* Password update dialog */}
                             <Dialog
                                 onOpenChange={(open) => {
                                     if (!open) {
@@ -195,12 +196,11 @@ export default function DoctorAccountPage() {
                                         <Cog className="h-5 w-5 text-green-600" />
                                     </Button>
                                 </DialogTrigger>
-
                                 <DialogContent className="w-[95%] max-w-md rounded-xl">
                                     <DialogHeader>
-                                        <DialogTitle className="text-lg sm:text-xl">Update Password</DialogTitle>
+                                        <DialogTitle>Update Password</DialogTitle>
                                         <DialogDescription>
-                                            Enter your current password and set a new one.
+                                            Change your account password securely.
                                         </DialogDescription>
                                     </DialogHeader>
 
@@ -232,7 +232,6 @@ export default function DoctorAccountPage() {
                                                     headers: { "Content-Type": "application/json" },
                                                     body: JSON.stringify({ oldPassword, newPassword }),
                                                 });
-
                                                 const data = await res.json();
                                                 if (data.error) {
                                                     setPasswordErrors([data.error]);
@@ -249,66 +248,52 @@ export default function DoctorAccountPage() {
                                         }}
                                         className="space-y-4"
                                     >
-                                        {/* Current Password */}
-                                        <div>
+                                        {/* Current password */}
+                                        <div className="relative">
                                             <Label>Current Password</Label>
-                                            <Input type={showCurrent ? "text" : "password"} name="oldPassword" required />
+                                            <Input type={showCurrent ? "text" : "password"} name="oldPassword" required className="pr-10" />
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => setShowCurrent(!showCurrent)}
-                                                className="absolute right-3 top-8"
+                                                className="absolute right-1 top-7 hover:bg-transparent"
                                             >
                                                 {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                             </Button>
                                         </div>
 
-                                        {/* New Password */}
-                                        <div>
+                                        {/* New password */}
+                                        <div className="relative">
                                             <Label>New Password</Label>
-                                            <Input
-                                                type={showNew ? "text" : "password"}
-                                                name="newPassword"
-                                                required
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    const errors: string[] = [];
-                                                    if (val.length < 8) errors.push("Password must be at least 8 characters.");
-                                                    if (!/[a-z]/.test(val)) errors.push("Must contain a lowercase letter.");
-                                                    if (!/[A-Z]/.test(val)) errors.push("Must contain an uppercase letter.");
-                                                    if (!/\d/.test(val)) errors.push("Must contain a number.");
-                                                    if (!/[^\w\s]/.test(val)) errors.push("Must contain a symbol.");
-                                                    setPasswordErrors(errors);
-                                                }}
-                                            />
+                                            <Input type={showNew ? "text" : "password"} name="newPassword" required className="pr-10" />
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => setShowNew(!showNew)}
-                                                className="absolute right-3 top-8"
+                                                className="absolute right-1 top-7 hover:bg-transparent"
                                             >
                                                 {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                             </Button>
                                         </div>
 
-                                        {/* Confirm Password */}
-                                        <div>
+                                        {/* Confirm password */}
+                                        <div className="relative">
                                             <Label>Confirm Password</Label>
-                                            <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required />
+                                            <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required className="pr-10" />
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => setShowConfirm(!showConfirm)}
-                                                className="absolute right-3 top-8"
+                                                className="absolute right-1 top-7 hover:bg-transparent"
                                             >
                                                 {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                             </Button>
                                         </div>
 
-                                        {/* Errors */}
+                                        {/* Validation errors */}
                                         {passwordErrors.length > 0 && (
                                             <ul className="text-sm text-red-600 space-y-1">
                                                 {passwordErrors.map((err, idx) => (
@@ -321,11 +306,7 @@ export default function DoctorAccountPage() {
                                         {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
 
                                         <DialogFooter>
-                                            <Button
-                                                type="submit"
-                                                className="bg-green-600 hover:bg-green-700 text-white"
-                                                disabled={passwordLoading}
-                                            >
+                                            <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white flex gap-2" disabled={passwordLoading}>
                                                 {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                                                 {passwordLoading ? "Updating..." : "Update Password"}
                                             </Button>
@@ -335,12 +316,12 @@ export default function DoctorAccountPage() {
                             </Dialog>
                         </CardHeader>
 
-                        <CardContent>
+                        {/* Profile form */}
+                        <CardContent className="pt-6">
                             {loading ? (
                                 <p className="text-gray-500">Loading profile...</p>
                             ) : profile ? (
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
-                                    {/* Read-only */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label>User ID</Label>
@@ -352,45 +333,29 @@ export default function DoctorAccountPage() {
                                         </div>
                                     </div>
 
-                                    {/* Editable fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
                                             <Label>First Name</Label>
-                                            <Input
-                                                value={profile.fname}
-                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
-                                            />
+                                            <Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} />
                                         </div>
                                         <div>
                                             <Label>Middle Name</Label>
-                                            <Input
-                                                value={profile.mname || ""}
-                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
-                                            />
+                                            <Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} />
                                         </div>
                                         <div>
                                             <Label>Last Name</Label>
-                                            <Input
-                                                value={profile.lname}
-                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
-                                            />
+                                            <Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label>Contact No</Label>
-                                            <Input
-                                                value={profile.contactno || ""}
-                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
-                                            />
+                                            <Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} />
                                         </div>
                                         <div>
                                             <Label>Address</Label>
-                                            <Input
-                                                value={profile.address || ""}
-                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                                            />
+                                            <Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} />
                                         </div>
                                     </div>
 
