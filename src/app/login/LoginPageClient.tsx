@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // ⚡️ use router instead of window.location
+import { useRouter } from "next/navigation"; // ⚡ router instead of window.location
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,9 +50,9 @@ export default function LoginPageClient() {
                     toast.error(result.error, { position: "top-center" });
                 }
             } else {
-                toast(`Login successful.`, { position: "top-center", className: "bg-green-600 text-white" });
+                toast.success(`Welcome!`, { position: "top-center" });
 
-                // ⚡️ Faster redirect using router.push instead of window.location.href
+                // ⚡ Faster redirect with router.push
                 if (payload.role === "NURSE") router.push("/nurse");
                 else if (payload.role === "DOCTOR") router.push("/doctor/dashboard");
                 else if (payload.role === "SCHOLAR") router.push("/scholar/dashboard");
@@ -72,7 +72,7 @@ export default function LoginPageClient() {
 
     const renderForm = (role: string, label: string, fieldName: string, placeholder: string) => (
         <form className="space-y-4" onSubmit={(e) => handleLogin(e, role)}>
-            <Input name={fieldName} placeholder={placeholder} required />
+            <Input name={fieldName} placeholder={placeholder} required disabled={!!loadingRole} />
 
             <div className="relative">
                 <Input
@@ -81,12 +81,14 @@ export default function LoginPageClient() {
                     placeholder="Password"
                     required
                     className="pr-10"
+                    disabled={!!loadingRole}
                 />
                 <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={!!loadingRole}
                     className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                 >
                     {showPassword ? (
@@ -100,7 +102,7 @@ export default function LoginPageClient() {
             <Button
                 type="submit"
                 disabled={loadingRole === role}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
             >
                 {loadingRole === role ? (
                     <>
@@ -120,7 +122,11 @@ export default function LoginPageClient() {
                 <h1 className="text-2xl md:text-3xl font-bold text-green-600">HNU Clinic Login</h1>
             </div>
 
-            <Card className="w-full max-w-md shadow-lg rounded-2xl">
+            {/* ✅ Card becomes semi-transparent & locked while logging in */}
+            <Card
+                className={`w-full max-w-md shadow-lg rounded-2xl transition-opacity ${loadingRole ? "opacity-50 pointer-events-none" : ""
+                    }`}
+            >
                 <CardContent className="p-6">
                     <Tabs defaultValue="doctor" className="w-full">
                         <TabsList className="flex flex-wrap w-full mb-6 bg-muted p-1 rounded-lg gap-2">
