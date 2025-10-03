@@ -210,7 +210,7 @@ export default function NurseRecordsPage() {
                                         <SelectValue placeholder="Filter by status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="All">All</SelectItem>
+                                        <SelectItem value="All">All Status</SelectItem>
                                         <SelectItem value="Active">Active</SelectItem>
                                         <SelectItem value="Inactive">Inactive</SelectItem>
                                     </SelectContent>
@@ -221,7 +221,7 @@ export default function NurseRecordsPage() {
                                         <SelectValue placeholder="Filter by type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="All">All</SelectItem>
+                                        <SelectItem value="All">All Patient</SelectItem>
                                         <SelectItem value="Student">Student</SelectItem>
                                         <SelectItem value="Employee">Employee</SelectItem>
                                     </SelectContent>
