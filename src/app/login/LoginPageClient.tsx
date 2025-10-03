@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // ⚡ router instead of window.location
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,7 +50,7 @@ export default function LoginPageClient() {
                     toast.error(result.error, { position: "top-center" });
                 }
             } else {
-                toast.success(`Welcome!`, { position: "top-center" });
+                toast.success(`Successful login!`, { position: "top-center" });
 
                 // ⚡ Faster redirect with router.push
                 if (payload.role === "NURSE") router.push("/nurse");
