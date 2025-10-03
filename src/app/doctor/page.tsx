@@ -60,6 +60,12 @@ export default function DoctorDashboardPage() {
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
                     <Link
+                        href="/doctor/account"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <User className="h-5 w-5" /> Account
+                    </Link>
+                    <Link
                         href="/doctor/appointments"
                         className="flex items-center gap-2 hover:text-green-600"
                     >
