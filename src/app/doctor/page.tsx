@@ -13,6 +13,7 @@ import {
     Stethoscope,
     Home,
     Loader2,
+    User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -148,7 +149,7 @@ export default function DoctorDashboardPage() {
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <UserCog className="w-6 h-6" /> Account Management
+                                <User className="w-6 h-6" /> Account Management
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -205,21 +206,25 @@ export default function DoctorDashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Medical Certificates */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition md:col-span-3">
+                    {/* Medical Certificates - now beside Patient Records */}
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
                                 <FileText className="w-6 h-6" /> Medical Certificates
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-gray-700 text-sm">
-                                Generate medical certificates based on patient consultation and
-                                health records.
-                            </p>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Generate medical certificates</li>
+                                <li>Based on consultation and health records</li>
+                            </ul>
                         </CardContent>
                     </Card>
+
+                    {/* Optional Empty Placeholder for balance */}
+                    <div />
                 </section>
+
 
                 {/* Footer */}
                 <footer className="bg-white py-6 text-center text-gray-600 mt-auto">

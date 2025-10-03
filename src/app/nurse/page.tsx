@@ -7,7 +7,6 @@ import {
     Menu,
     X,
     Users,
-    CalendarDays,
     ClipboardList,
     Pill,
     Package,
@@ -150,33 +149,6 @@ export default function NurseDashboardPage() {
                         <p className="text-gray-700 mt-2">
                             Manage clinic operations, accounts, appointments, records, and inventory.
                         </p>
-                    </div>
-
-                    {/* KPI Metric Blocks */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 max-w-5xl mx-auto">
-                        <Card className="shadow rounded-xl border border-green-100">
-                            <CardContent className="flex flex-col items-center p-6">
-                                <Users className="w-8 h-8 text-green-600 mb-2" />
-                                <h3 className="text-lg font-semibold text-green-600">Accounts</h3>
-                                <p className="text-sm text-gray-600">Manage user accounts</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="shadow rounded-xl border border-green-100">
-                            <CardContent className="flex flex-col items-center p-6">
-                                <CalendarDays className="w-8 h-8 text-green-600 mb-2" />
-                                <h3 className="text-lg font-semibold text-green-600">Appointments</h3>
-                                <p className="text-sm text-gray-600">Track schedules</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="shadow rounded-xl border border-green-100">
-                            <CardContent className="flex flex-col items-center p-6">
-                                <Package className="w-8 h-8 text-green-600 mb-2" />
-                                <h3 className="text-lg font-semibold text-green-600">Inventory</h3>
-                                <p className="text-sm text-gray-600">Monitor stock levels</p>
-                            </CardContent>
-                        </Card>
                     </div>
                 </section>
 
