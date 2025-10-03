@@ -6,23 +6,17 @@ import { signOut, useSession } from "next-auth/react";
 import {
     Menu,
     X,
-    UserCog,
+    User,
     CalendarDays,
     ClipboardList,
     FileText,
     Stethoscope,
     Home,
     Loader2,
-    User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardHeader,
-    CardTitle,
-    CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -121,13 +115,18 @@ export default function DoctorDashboardPage() {
                                     <Link href="/doctor">Dashboard</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
+                                    <Link href="/doctor/account">Account</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
                                     <Link href="/doctor/appointments">Appointments</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/doctor/patients">Patients</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                                    onClick={() =>
+                                        signOut({ callbackUrl: "/login?logout=success" })
+                                    }
                                 >
                                     Logout
                                 </DropdownMenuItem>
@@ -212,7 +211,7 @@ export default function DoctorDashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Medical Certificates - now beside Patient Records */}
+                    {/* Medical Certificates */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
@@ -226,11 +225,7 @@ export default function DoctorDashboardPage() {
                             </ul>
                         </CardContent>
                     </Card>
-
-                    {/* Optional Empty Placeholder for balance */}
-                    <div />
                 </section>
-
 
                 {/* Footer */}
                 <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
