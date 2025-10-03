@@ -174,11 +174,10 @@ export default function NurseRecordsPage() {
                 <section className="px-6 pt-6 pb-12 flex-1 flex flex-col">
                     <Card className="flex-1 flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <CardTitle className="text-2xl font-bold text-green-600">Patient Records</CardTitle>
                             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
                                 {/* Search Bar */}
                                 <div className="relative w-full md:w-64">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                                    <Search className="absolute right-2 top-2.5 h-4 w-4 text-gray-400" />
                                     <Input
                                         placeholder="Search patients..."
                                         value={search}
