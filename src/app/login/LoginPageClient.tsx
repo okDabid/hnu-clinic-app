@@ -54,8 +54,8 @@ export default function LoginPageClient() {
 
                 // ⚡ Faster redirect with router.push
                 if (payload.role === "NURSE") router.push("/nurse");
-                else if (payload.role === "DOCTOR") router.push("/doctor/dashboard");
-                else if (payload.role === "SCHOLAR") router.push("/scholar/dashboard");
+                else if (payload.role === "DOCTOR") router.push("/doctor");
+                else if (payload.role === "SCHOLAR") router.push("/scholar");
                 else if (payload.role === "PATIENT") router.push("/patient");
                 else router.push("/login");
             }
