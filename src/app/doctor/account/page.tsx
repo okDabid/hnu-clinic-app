@@ -12,6 +12,7 @@ import {
     Loader2,
     Eye,
     EyeOff,
+    Cog,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -68,9 +69,13 @@ export default function DoctorAccountPage() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
+    // password update
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+    const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+    const [passwordLoading, setPasswordLoading] = useState(false);
 
     // Load profile
     async function loadProfile() {
@@ -172,9 +177,164 @@ export default function DoctorAccountPage() {
                 {/* Content */}
                 <section className="px-6 py-8 max-w-4xl mx-auto w-full">
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                        <CardHeader>
+                        <CardHeader className="flex items-center justify-between">
                             <CardTitle className="text-2xl font-bold text-green-600">Edit Profile</CardTitle>
+
+                            {/* Password Update Dialog Trigger */}
+                            <Dialog
+                                onOpenChange={(open) => {
+                                    if (!open) {
+                                        setPasswordErrors([]);
+                                        setPasswordMessage(null);
+                                        setPasswordLoading(false);
+                                    }
+                                }}
+                            >
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" size="icon" className="hover:bg-green-50">
+                                        <Cog className="h-5 w-5 text-green-600" />
+                                    </Button>
+                                </DialogTrigger>
+
+                                <DialogContent className="w-[95%] max-w-md rounded-xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-lg sm:text-xl">Update Password</DialogTitle>
+                                        <DialogDescription>
+                                            Enter your current password and set a new one.
+                                        </DialogDescription>
+                                    </DialogHeader>
+
+                                    <form
+                                        onSubmit={async (e) => {
+                                            e.preventDefault();
+                                            const form = e.currentTarget as HTMLFormElement;
+                                            const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
+                                            const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
+                                            const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
+
+                                            const errors: string[] = [];
+                                            if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
+                                            if (!/[a-z]/.test(newPassword)) errors.push("Must contain a lowercase letter.");
+                                            if (!/[A-Z]/.test(newPassword)) errors.push("Must contain an uppercase letter.");
+                                            if (!/\d/.test(newPassword)) errors.push("Must contain a number.");
+                                            if (!/[^\w\s]/.test(newPassword)) errors.push("Must contain a symbol.");
+                                            if (newPassword !== confirmPassword) errors.push("Passwords do not match.");
+
+                                            if (errors.length > 0) {
+                                                setPasswordErrors(errors);
+                                                return;
+                                            }
+
+                                            try {
+                                                setPasswordLoading(true);
+                                                const res = await fetch("/api/doctor/account/password", {
+                                                    method: "PUT",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ oldPassword, newPassword }),
+                                                });
+
+                                                const data = await res.json();
+                                                if (data.error) {
+                                                    setPasswordErrors([data.error]);
+                                                } else {
+                                                    setPasswordMessage("Password updated successfully!");
+                                                    toast.success("Password updated successfully!");
+                                                    form.reset();
+                                                }
+                                            } catch {
+                                                setPasswordErrors(["Failed to update password. Please try again."]);
+                                            } finally {
+                                                setPasswordLoading(false);
+                                            }
+                                        }}
+                                        className="space-y-4"
+                                    >
+                                        {/* Current Password */}
+                                        <div>
+                                            <Label>Current Password</Label>
+                                            <Input type={showCurrent ? "text" : "password"} name="oldPassword" required />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => setShowCurrent(!showCurrent)}
+                                                className="absolute right-3 top-8"
+                                            >
+                                                {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                            </Button>
+                                        </div>
+
+                                        {/* New Password */}
+                                        <div>
+                                            <Label>New Password</Label>
+                                            <Input
+                                                type={showNew ? "text" : "password"}
+                                                name="newPassword"
+                                                required
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const errors: string[] = [];
+                                                    if (val.length < 8) errors.push("Password must be at least 8 characters.");
+                                                    if (!/[a-z]/.test(val)) errors.push("Must contain a lowercase letter.");
+                                                    if (!/[A-Z]/.test(val)) errors.push("Must contain an uppercase letter.");
+                                                    if (!/\d/.test(val)) errors.push("Must contain a number.");
+                                                    if (!/[^\w\s]/.test(val)) errors.push("Must contain a symbol.");
+                                                    setPasswordErrors(errors);
+                                                }}
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => setShowNew(!showNew)}
+                                                className="absolute right-3 top-8"
+                                            >
+                                                {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                            </Button>
+                                        </div>
+
+                                        {/* Confirm Password */}
+                                        <div>
+                                            <Label>Confirm Password</Label>
+                                            <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => setShowConfirm(!showConfirm)}
+                                                className="absolute right-3 top-8"
+                                            >
+                                                {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                            </Button>
+                                        </div>
+
+                                        {/* Errors */}
+                                        {passwordErrors.length > 0 && (
+                                            <ul className="text-sm text-red-600 space-y-1">
+                                                {passwordErrors.map((err, idx) => (
+                                                    <li key={idx}>• {err}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+
+                                        {/* Success */}
+                                        {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
+
+                                        <DialogFooter>
+                                            <Button
+                                                type="submit"
+                                                className="bg-green-600 hover:bg-green-700 text-white"
+                                                disabled={passwordLoading}
+                                            >
+                                                {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                {passwordLoading ? "Updating..." : "Update Password"}
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
                         </CardHeader>
+
                         <CardContent>
                             {loading ? (
                                 <p className="text-gray-500">Loading profile...</p>
@@ -249,6 +409,11 @@ export default function DoctorAccountPage() {
                         </CardContent>
                     </Card>
                 </section>
+
+                {/* Footer */}
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                    © {new Date().getFullYear()} HNU Clinic – Doctor Panel
+                </footer>
             </main>
         </div>
     );
