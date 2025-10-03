@@ -60,20 +60,7 @@ type PatientRecord = {
     gender: string;
     date_of_birth: string;
     status: string;
-    department?: string | null;
-    program?: string | null;
-    specialization?: string | null;
-    year_level?: string | null;
-    contactno?: string | null;
-    address?: string | null;
-    bloodtype?: string | null;
-    allergies?: string | null;
     medical_cond?: string | null;
-    emergency?: {
-        name?: string | null;
-        num?: string | null;
-        relation?: string | null;
-    };
 };
 
 export default function NurseRecordsPage() {
@@ -165,7 +152,6 @@ export default function NurseRecordsPage() {
                 {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Patient Records</h2>
-                    {/* Mobile Dropdown */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -257,7 +243,7 @@ export default function NurseRecordsPage() {
                                                                     Manage
                                                                 </Button>
                                                             </DialogTrigger>
-                                                            <DialogContent className="max-w-2xl">
+                                                            <DialogContent className="max-w-lg">
                                                                 <DialogHeader>
                                                                     <DialogTitle>{r.fullName}</DialogTitle>
                                                                     <DialogDescription>
@@ -266,34 +252,20 @@ export default function NurseRecordsPage() {
                                                                 </DialogHeader>
 
                                                                 <Tabs defaultValue="details">
-                                                                    <TabsList className="grid grid-cols-3 gap-2">
+                                                                    <TabsList className="grid grid-cols-2 gap-2">
                                                                         <TabsTrigger value="details">Details</TabsTrigger>
-                                                                        <TabsTrigger value="update">Update Health Data</TabsTrigger>
-                                                                        <TabsTrigger value="consult">Consultation Notes</TabsTrigger>
+                                                                        <TabsTrigger value="update">Update & Notes</TabsTrigger>
                                                                     </TabsList>
 
-                                                                    {/* Details Tab */}
+                                                                    {/* Details */}
                                                                     <TabsContent value="details" className="space-y-2">
                                                                         <p><strong>Patient ID:</strong> {r.patientId}</p>
                                                                         <p><strong>Gender:</strong> {r.gender}</p>
                                                                         <p><strong>DOB:</strong> {new Date(r.date_of_birth).toLocaleDateString()}</p>
-                                                                        <p><strong>Contact:</strong> {r.contactno || "—"}</p>
-                                                                        <p><strong>Address:</strong> {r.address || "—"}</p>
-                                                                        <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
-                                                                        <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
                                                                         <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
-                                                                        <p><strong>Emergency:</strong> {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) - {r.emergency?.num || "—"}</p>
-                                                                        {r.patientType === "Student" && (
-                                                                            <>
-                                                                                <p><strong>Department:</strong> {r.department || "—"}</p>
-                                                                                <p><strong>Program:</strong> {r.program || "—"}</p>
-                                                                                <p><strong>Specialization:</strong> {r.specialization || "—"}</p>
-                                                                                <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
-                                                                            </>
-                                                                        )}
                                                                     </TabsContent>
 
-                                                                    {/* Update Tab */}
+                                                                    {/* Update & Consultation Notes */}
                                                                     <TabsContent value="update">
                                                                         <form
                                                                             className="space-y-3"
@@ -301,103 +273,54 @@ export default function NurseRecordsPage() {
                                                                                 e.preventDefault();
                                                                                 setLoading(true);
                                                                                 const form = e.currentTarget as HTMLFormElement;
-                                                                                const body = {
+
+                                                                                // PATCH health data
+                                                                                const healthBody = {
                                                                                     type: r.patientType,
-                                                                                    contactno: (form.elements.namedItem("contactno") as HTMLInputElement).value,
-                                                                                    address: (form.elements.namedItem("address") as HTMLInputElement).value,
-                                                                                    bloodtype: (form.elements.namedItem("bloodtype") as HTMLInputElement).value,
-                                                                                    allergies: (form.elements.namedItem("allergies") as HTMLInputElement).value,
                                                                                     medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement).value,
-                                                                                    emergency: {
-                                                                                        name: (form.elements.namedItem("emergency_name") as HTMLInputElement).value,
-                                                                                        num: (form.elements.namedItem("emergency_num") as HTMLInputElement).value,
-                                                                                        relation: (form.elements.namedItem("emergency_relation") as HTMLInputElement).value,
-                                                                                    },
                                                                                 };
 
-                                                                                const res = await fetch(`/api/nurse/records/${r.id}`, {
+                                                                                const res1 = await fetch(`/api/nurse/records/${r.id}`, {
                                                                                     method: "PATCH",
                                                                                     headers: { "Content-Type": "application/json" },
-                                                                                    body: JSON.stringify(body),
+                                                                                    body: JSON.stringify(healthBody),
                                                                                 });
 
-                                                                                if (res.ok) {
-                                                                                    toast.success("Health data updated");
+                                                                                if (res1.ok) {
+                                                                                    toast.success("Medical condition updated");
                                                                                     await loadRecords();
                                                                                 } else {
-                                                                                    toast.error("Failed to update");
+                                                                                    toast.error("Failed to update health data");
                                                                                 }
-                                                                                setLoading(false);
-                                                                            }}
-                                                                        >
-                                                                            <div>
-                                                                                <Label>Contact No</Label>
-                                                                                <Input name="contactno" defaultValue={r.contactno || ""} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Address</Label>
-                                                                                <Input name="address" defaultValue={r.address || ""} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Blood Type</Label>
-                                                                                <Input name="bloodtype" defaultValue={r.bloodtype || ""} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Allergies</Label>
-                                                                                <Input name="allergies" defaultValue={r.allergies || ""} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Medical Conditions</Label>
-                                                                                <Input name="medical_cond" defaultValue={r.medical_cond || ""} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Emergency Contact Name</Label>
-                                                                                <Input name="emergency_name" defaultValue={r.emergency?.name || ""} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Emergency Contact No</Label>
-                                                                                <Input name="emergency_num" defaultValue={r.emergency?.num || ""} />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Emergency Contact Relation</Label>
-                                                                                <Input name="emergency_relation" defaultValue={r.emergency?.relation || ""} />
-                                                                            </div>
-                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
-                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
-                                                                            </Button>
-                                                                        </form>
-                                                                    </TabsContent>
 
-                                                                    {/* Consultation Tab */}
-                                                                    <TabsContent value="consult">
-                                                                        <form
-                                                                            className="space-y-3"
-                                                                            onSubmit={async (e) => {
-                                                                                e.preventDefault();
-                                                                                setLoading(true);
-                                                                                const form = e.currentTarget as HTMLFormElement;
-                                                                                const body = {
-                                                                                    appointment_id: "TODO_APPOINTMENT_ID", // ⚠️ replace with real appointment id
-                                                                                    nurse_user_id: session?.user?.id, // nurse from session
+                                                                                // POST consultation notes
+                                                                                const notesBody = {
+                                                                                    appointment_id: "TODO_APPOINTMENT_ID", // ⚠️ Replace later
+                                                                                    nurse_user_id: session?.user?.id,
                                                                                     reason_of_visit: (form.elements.namedItem("reason_of_visit") as HTMLInputElement).value,
                                                                                     findings: (form.elements.namedItem("findings") as HTMLInputElement).value,
                                                                                     diagnosis: (form.elements.namedItem("diagnosis") as HTMLInputElement).value,
                                                                                 };
 
-                                                                                const res = await fetch(`/api/nurse/consultations`, {
+                                                                                const res2 = await fetch("/api/nurse/consultations", {
                                                                                     method: "POST",
                                                                                     headers: { "Content-Type": "application/json" },
-                                                                                    body: JSON.stringify(body),
+                                                                                    body: JSON.stringify(notesBody),
                                                                                 });
 
-                                                                                if (res.ok) {
+                                                                                if (res2.ok) {
                                                                                     toast.success("Consultation notes saved");
                                                                                 } else {
-                                                                                    toast.error("Failed to save consultation");
+                                                                                    toast.error("Failed to save consultation notes");
                                                                                 }
+
                                                                                 setLoading(false);
                                                                             }}
                                                                         >
+                                                                            <div>
+                                                                                <Label>Medical Conditions</Label>
+                                                                                <Input name="medical_cond" defaultValue={r.medical_cond || ""} />
+                                                                            </div>
                                                                             <div>
                                                                                 <Label>Reason of Visit</Label>
                                                                                 <Input name="reason_of_visit" />
@@ -410,8 +333,12 @@ export default function NurseRecordsPage() {
                                                                                 <Label>Diagnosis</Label>
                                                                                 <Input name="diagnosis" />
                                                                             </div>
-                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
-                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Notes"}
+                                                                            <Button
+                                                                                type="submit"
+                                                                                disabled={loading}
+                                                                                className="bg-green-600 hover:bg-green-700 text-white"
+                                                                            >
+                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
                                                                             </Button>
                                                                         </form>
                                                                     </TabsContent>
