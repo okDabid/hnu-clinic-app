@@ -144,8 +144,8 @@ export default function NurseInventoryPage() {
         const daysLeft = diff / (1000 * 60 * 60 * 24);
 
         if (daysLeft < 0) return { text: "Expired", color: "bg-red-100 text-red-700 border-red-200" };
-        if (daysLeft < 30) return { text: "Expiring Soon", color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
         if (daysLeft < 9) return { text: "Expiring Very Soon", color: "bg-orange-100 text-orange-700 border-orange-200" };
+        if (daysLeft < 30) return { text: "Expiring Soon", color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
         return { text: "Valid", color: "bg-green-100 text-green-700 border-green-200" };
     };
 
@@ -162,6 +162,8 @@ export default function NurseInventoryPage() {
             statusFilter === "All" ||
             (statusFilter === "Expired" &&
                 i.replenishments.some((r) => getStatus(r.expiry_date).text === "Expired")) ||
+            (statusFilter === "Expiring Very Soon" &&
+                i.replenishments.some((r) => getStatus(r.expiry_date).text === "Expiring Very Soon")) ||
             (statusFilter === "Expiring Soon" &&
                 i.replenishments.some((r) => getStatus(r.expiry_date).text === "Expiring Soon")) ||
             (statusFilter === "Valid" &&
@@ -263,6 +265,7 @@ export default function NurseInventoryPage() {
                                     <option value="All">All</option>
                                     <option value="Valid">Valid</option>
                                     <option value="Expiring Soon">Expiring Soon</option>
+                                    <option value="Expiring Very Soon">Expiring Very Soon</option>
                                     <option value="Expired">Expired</option>
                                 </select>
                                 {/* Clinic Filter */}
