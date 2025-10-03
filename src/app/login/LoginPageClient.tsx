@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // ⚡️ use router instead of window.location
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Eye, EyeOff } from "lucide-react";
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
+    const router = useRouter();
 
     async function handleLogin(e: React.FormEvent<HTMLFormElement>, role: string) {
         e.preventDefault();
@@ -40,24 +42,22 @@ export default function LoginPageClient() {
             });
 
             if (result?.error) {
-                // 🎯 Show custom message if inactive
                 if (result.error.includes("inactive")) {
-                    toast.error(
-                        "Your account is inactive. Please contact the administrator.",
-                        { position: "top-center" }
-                    );
+                    toast.error("Your account is inactive. Please contact the administrator.", {
+                        position: "top-center",
+                    });
                 } else {
                     toast.error(result.error, { position: "top-center" });
                 }
             } else {
                 toast.success(`Welcome!`, { position: "top-center" });
 
-                // Redirect based on role
-                if (payload.role === "NURSE") window.location.href = "/nurse";
-                else if (payload.role === "DOCTOR") window.location.href = "/doctor/dashboard";
-                else if (payload.role === "SCHOLAR") window.location.href = "/scholar/dashboard";
-                else if (payload.role === "PATIENT") window.location.href = "/patient";
-                else window.location.href = "/login";
+                // ⚡️ Faster redirect using router.push instead of window.location.href
+                if (payload.role === "NURSE") router.push("/nurse");
+                else if (payload.role === "DOCTOR") router.push("/doctor/dashboard");
+                else if (payload.role === "SCHOLAR") router.push("/scholar/dashboard");
+                else if (payload.role === "PATIENT") router.push("/patient");
+                else router.push("/login");
             }
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -72,10 +72,8 @@ export default function LoginPageClient() {
 
     const renderForm = (role: string, label: string, fieldName: string, placeholder: string) => (
         <form className="space-y-4" onSubmit={(e) => handleLogin(e, role)}>
-            {/* ID Field */}
             <Input name={fieldName} placeholder={placeholder} required />
 
-            {/* Password Field with Toggle */}
             <div className="relative">
                 <Input
                     name="password"
@@ -99,7 +97,6 @@ export default function LoginPageClient() {
                 </Button>
             </div>
 
-            {/* Submit */}
             <Button
                 type="submit"
                 disabled={loadingRole === role}
@@ -112,15 +109,11 @@ export default function LoginPageClient() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-green-50 p-6">
-            {/* Logo + Title */}
             <div className="flex items-center gap-3 mb-8">
                 <Image src="/clinic-illustration.svg" alt="logo" width={50} height={50} />
-                <h1 className="text-2xl md:text-3xl font-bold text-green-600">
-                    HNU Clinic Login
-                </h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-green-600">HNU Clinic Login</h1>
             </div>
 
-            {/* Login Card */}
             <Card className="w-full max-w-md shadow-lg rounded-2xl">
                 <CardContent className="p-6">
                     <Tabs defaultValue="doctor" className="w-full">

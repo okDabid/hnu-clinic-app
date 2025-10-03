@@ -23,6 +23,7 @@ declare module "next-auth" {
     }
 }
 
+// Custom app types
 interface AppUser {
     id: string;
     name?: string | null;
@@ -34,6 +35,7 @@ interface AppJWT extends JWT {
     id?: string;
     role?: Role;
     status?: AccountStatus;
+    lastChecked?: number; // ⏳ used to throttle DB refresh
 }
 
 interface AppSession extends Session {
@@ -66,9 +68,17 @@ export const authOptions: NextAuthOptions = {
                 }
                 const role = roleStr as Role;
 
+                // ⚡ Only select fields you need
                 const user = await prisma.users.findFirst({
                     where: { username: id, role },
-                    include: { student: true, employee: true },
+                    select: {
+                        user_id: true,
+                        password: true,
+                        role: true,
+                        status: true,
+                        student: { select: { fname: true, lname: true } },
+                        employee: { select: { fname: true, lname: true } },
+                    },
                 });
 
                 if (!user) throw new Error("No account found with these credentials.");
@@ -78,6 +88,7 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("This account is inactive. Please contact the administrator.");
                 }
 
+                // ⚡ bcrypt compare
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) throw new Error("Invalid password.");
 
@@ -89,7 +100,7 @@ export const authOptions: NextAuthOptions = {
                             ? `${user.employee.fname} ${user.employee.lname}`
                             : "User",
                     role: user.role,
-                    status: user.status, // ✅ include status here
+                    status: user.status,
                 };
             },
         }),
@@ -106,17 +117,25 @@ export const authOptions: NextAuthOptions = {
                 token.role = u.role;
                 token.name = u.name ?? token.name;
                 token.status = u.status;
+                token.lastChecked = Date.now(); // ✅ initialize timestamp
             } else if (token.id) {
-                // 🔹 Refresh status every time from DB
-                const dbUser = await prisma.users.findUnique({
-                    where: { user_id: token.id },
-                });
-                token.status = dbUser?.status ?? AccountStatus.Inactive;
+                const now = Date.now();
+                const lastChecked = (token as AppJWT).lastChecked ?? 0; // ✅ safe default
+
+                // Refresh DB status only every 5 minutes
+                if (now - lastChecked > 5 * 60 * 1000) {
+                    const dbUser = await prisma.users.findUnique({
+                        where: { user_id: token.id },
+                        select: { status: true },
+                    });
+                    token.status = dbUser?.status ?? AccountStatus.Inactive;
+                    (token as AppJWT).lastChecked = now; // ✅ always set
+                }
             }
             return token as AppJWT;
         },
 
-        // Expose status in session
+        // Expose fields in session
         async session({ session, token }): Promise<AppSession> {
             const t = token as AppJWT;
             if (session.user) {
@@ -125,7 +144,6 @@ export const authOptions: NextAuthOptions = {
                 session.user.name = t.name ?? session.user.name;
                 session.user.status = t.status ?? AccountStatus.Inactive;
             }
-
             return session as AppSession;
         },
     },
