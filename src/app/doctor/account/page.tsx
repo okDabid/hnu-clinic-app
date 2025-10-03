@@ -388,41 +388,133 @@ export default function DoctorAccountPage() {
                                 </Dialog>
                             </CardHeader>
 
-                            {/* Profile */}
+                            {/* Profile Form */}
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
-                                    {/* Read-only */}
+                                    {/* System info (read-only) */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Username</Label><Input value={profile.user_id} disabled /></div>
-                                        <div><Label>User ID</Label><Input value={profile.username} disabled /></div>
-                                        <div><Label>Role</Label><Input value={profile.role} disabled /></div>
-                                        <div><Label>Status</Label><Input value={profile.status} disabled /></div>
-                                        <div><Label>Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Username</Label>
+                                            <Input value={profile.user_id} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">User ID</Label>
+                                            <Input value={profile.username} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Role</Label>
+                                            <Input value={profile.role} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Status</Label>
+                                            <Input value={profile.status} disabled className="w-full" />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Date of Birth</Label>
+                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled className="w-full" />
+                                        </div>
                                     </div>
 
-                                    {/* Editable */}
+                                    {/* Editable fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label>First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
-                                        <div><Label>Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
-                                        <div><Label>Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">First Name</Label>
+                                            <Input
+                                                value={profile.fname}
+                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Middle Name</Label>
+                                            <Input
+                                                value={profile.mname || ""}
+                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Last Name</Label>
+                                            <Input
+                                                value={profile.lname}
+                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
-                                        <div><Label>Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Contact No</Label>
+                                            <Input
+                                                value={profile.contactno || ""}
+                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Address</Label>
+                                            <Input
+                                                value={profile.address || ""}
+                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Blood Type</Label><Input value={profile.bloodtype || ""} onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })} /></div>
-                                        <div><Label>Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Blood Type</Label>
+                                            <Input
+                                                value={profile.bloodtype || ""}
+                                                onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Allergies</Label>
+                                            <Input
+                                                value={profile.allergies || ""}
+                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div><Label>Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Medical Conditions</Label>
+                                        <Input
+                                            value={profile.medical_cond || ""}
+                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
+                                            className="w-full"
+                                        />
+                                    </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label>Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
-                                        <div><Label>Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
-                                        <div><Label>Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Emergency Contact Name</Label>
+                                            <Input
+                                                value={profile.emergencyco_name || ""}
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Emergency Contact Number</Label>
+                                            <Input
+                                                value={profile.emergencyco_num || ""}
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Emergency Contact Relation</Label>
+                                            <Input
+                                                value={profile.emergencyco_relation || ""}
+                                                onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
 
                                     <Button
@@ -430,7 +522,7 @@ export default function DoctorAccountPage() {
                                         className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
                                         disabled={profileLoading}
                                     >
-                                        {profileLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                                        {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
                                         {profileLoading ? "Saving..." : "Save Changes"}
                                     </Button>
                                 </form>
