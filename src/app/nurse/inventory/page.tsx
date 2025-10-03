@@ -78,6 +78,7 @@ export default function NurseInventoryPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [units, setUnits] = useState<string[]>([]);
+    const [medTypes, setMedTypes] = useState<string[]>([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [clinicFilter, setClinicFilter] = useState("All");
@@ -125,6 +126,7 @@ export default function NurseInventoryPage() {
         const data = await res.json();
         setCategories(data.categories);
         setUnits(data.units);
+        setMedTypes(data.medTypes);
     }
 
     useEffect(() => {
@@ -356,7 +358,12 @@ export default function NurseInventoryPage() {
 
                                             <div>
                                                 <Label className="block mb-1">Item Type</Label>
-                                                <Input name="item_type" placeholder="e.g., Tablet, Syrup" />
+                                                <select name="item_type" required className="w-full border rounded p-2">
+                                                    <option value="">Select type</option>
+                                                    {medTypes.map((t) => (
+                                                        <option key={t} value={t}>{t}</option>
+                                                    ))}
+                                                </select>
                                             </div>
 
                                             <div>

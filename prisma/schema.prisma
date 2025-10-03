@@ -52,13 +52,10 @@ enum MedCategory {
   Antifungal
   Antiparasitic
   Antihistamine
-  AntiInflammatory
   Antacid
-  Cardiovascular
   Antidiabetic
-  Respiratory
+  Cardiovascular
   Psychiatric
-  Oncology
   Supplement
   Other
 }
@@ -69,6 +66,15 @@ enum DosageUnit {
   g
   ml
   IU
+}
+
+enum MedType {
+  Tablet
+  Capsule
+  Caplet
+  Syrup
+  Suspension
+  Solution
 }
 
 model Clinic {
@@ -159,8 +165,8 @@ model MedInventory {
   clinic_id String
   quantity  Int
   item_name String
-  category  MedCategory @default(Other)
-  item_type String?
+  category  MedCategory @default(Analgesic)
+  item_type MedType     @default(Tablet)
   strength  Float?
   unit      DosageUnit?
 
