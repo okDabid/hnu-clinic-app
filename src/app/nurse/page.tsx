@@ -111,9 +111,6 @@ export default function NurseDashboardPage() {
                                 <DropdownMenuItem asChild>
                                     <Link href="/nurse/records">Records</Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/nurse/records">Records</Link>
-                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
                                 >
