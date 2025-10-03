@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
 import { MedCategory, DosageUnit } from "@prisma/client";
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-    res.status(200).json({
+export async function GET() {
+    return NextResponse.json({
         categories: Object.values(MedCategory),
         units: Object.values(DosageUnit),
     });
