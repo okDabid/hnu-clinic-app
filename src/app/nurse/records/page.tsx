@@ -62,7 +62,6 @@ type PatientRecord = {
     status: string;
     department?: string | null;
     program?: string | null;
-    specialization?: string | null;
     year_level?: string | null;
     contactno?: string | null;
     address?: string | null;
@@ -289,7 +288,6 @@ export default function NurseRecordsPage() {
                                                                             <>
                                                                                 <p><strong>Department:</strong> {r.department || "—"}</p>
                                                                                 <p><strong>Program:</strong> {r.program || "—"}</p>
-                                                                                <p><strong>Specialization:</strong> {r.specialization || "—"}</p>
                                                                                 <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
                                                                             </>
                                                                         )}
