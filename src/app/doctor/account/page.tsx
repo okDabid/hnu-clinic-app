@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Menu, X, Home, User, Loader2, Cog, Eye, EyeOff } from "lucide-react";
+import { Menu, X, Home, User, Loader2, Cog, Eye, EyeOff, CalendarDays, ClipboardList } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,6 +150,18 @@ export default function DoctorAccountPage() {
                     >
                         <User className="h-5 w-5" /> Account
                     </Link>
+                    <Link
+                        href="/doctor/appointments"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <CalendarDays className="h-5 w-5" /> Appointments
+                    </Link>
+                    <Link
+                        href="/doctor/patients"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <ClipboardList className="h-5 w-5" /> Patients
+                    </Link>
                 </nav>
                 <Separator className="my-6" />
                 <Button
@@ -188,6 +200,12 @@ export default function DoctorAccountPage() {
                                 <DropdownMenuItem asChild>
                                     <Link href="/doctor/account">Account</Link>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/doctor/appointments">Appointments</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/doctor/patients">Patients</Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
                                 >
@@ -225,7 +243,7 @@ export default function DoctorAccountPage() {
                                         <DialogHeader>
                                             <DialogTitle>Update Password</DialogTitle>
                                             <DialogDescription>
-                                                Change your account password securely.
+                                                Change your account password securely. Enter your current password and set a new one.
                                             </DialogDescription>
                                         </DialogHeader>
 
@@ -275,8 +293,8 @@ export default function DoctorAccountPage() {
                                             className="space-y-4"
                                         >
                                             {/* Current Password */}
-                                            <div>
-                                                <Label>Current Password</Label>
+                                            <div className="flex flex-col space-y-2">
+                                                <Label className="block mb-1 font-medium">Current Password</Label>
                                                 <div className="relative">
                                                     <Input type={showCurrent ? "text" : "password"} name="oldPassword" required className="pr-10" />
                                                     <Button
@@ -284,7 +302,7 @@ export default function DoctorAccountPage() {
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => setShowCurrent(!showCurrent)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
                                                         {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
@@ -292,16 +310,31 @@ export default function DoctorAccountPage() {
                                             </div>
 
                                             {/* New Password */}
-                                            <div>
-                                                <Label>New Password</Label>
+                                            <div className="flex flex-col space-y-2">
+                                                <Label className="block mb-1 font-medium">New Password</Label>
                                                 <div className="relative">
-                                                    <Input type={showNew ? "text" : "password"} name="newPassword" required className="pr-10" />
+                                                    <Input
+                                                        type={showNew ? "text" : "password"}
+                                                        name="newPassword"
+                                                        required
+                                                        className="pr-10"
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            const errors: string[] = [];
+                                                            if (val.length < 8) errors.push("Password must be at least 8 characters.");
+                                                            if (!/[a-z]/.test(val)) errors.push("Must contain a lowercase letter.");
+                                                            if (!/[A-Z]/.test(val)) errors.push("Must contain an uppercase letter.");
+                                                            if (!/\d/.test(val)) errors.push("Must contain a number.");
+                                                            if (!/[^\w\s]/.test(val)) errors.push("Must contain a symbol.");
+                                                            setPasswordErrors(errors);
+                                                        }}
+                                                    />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => setShowNew(!showNew)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
                                                         {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
@@ -309,8 +342,9 @@ export default function DoctorAccountPage() {
                                             </div>
 
                                             {/* Confirm Password */}
-                                            <div>
-                                                <Label>Confirm Password</Label>
+                                            {/* Confirm Password */}
+                                            <div className="flex flex-col space-y-2">
+                                                <Label className="block mb-1 font-medium">Confirm New Password</Label>
                                                 <div className="relative">
                                                     <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required className="pr-10" />
                                                     <Button
@@ -318,13 +352,14 @@ export default function DoctorAccountPage() {
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={() => setShowConfirm(!showConfirm)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
                                                         {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
+                                            {/* Validation Errors */}
                                             {passwordErrors.length > 0 && (
                                                 <ul className="text-sm text-red-600 space-y-1">
                                                     {passwordErrors.map((err, idx) => (
@@ -332,12 +367,16 @@ export default function DoctorAccountPage() {
                                                     ))}
                                                 </ul>
                                             )}
-                                            {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
 
-                                            <DialogFooter>
+                                            {/* Success Message */}
+                                            {passwordMessage && (
+                                                <p className="text-sm text-green-600">{passwordMessage}</p>
+                                            )}
+
+                                            <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
                                                     disabled={passwordLoading}
                                                 >
                                                     {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -354,8 +393,8 @@ export default function DoctorAccountPage() {
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     {/* Read-only */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Username</Label><Input value={profile.username} disabled /></div>
-                                        <div><Label>User ID</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label>Username</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label>User ID</Label><Input value={profile.username} disabled /></div>
                                         <div><Label>Role</Label><Input value={profile.role} disabled /></div>
                                         <div><Label>Status</Label><Input value={profile.status} disabled /></div>
                                         <div><Label>Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
