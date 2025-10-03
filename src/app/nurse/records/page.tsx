@@ -4,25 +4,54 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import {
-    Menu, X, Users, Package, Home,
-    ClipboardList, Pill, FileText,
-    Search, Loader2,
+    Menu, X,
+    Users,
+    Package,
+    Home,
+    ClipboardList,
+    Pill,
+    FileText,
+    Search,
+    Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle,
-    DialogDescription, DialogTrigger, DialogFooter,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-// ✅ Patient type
 type PatientRecord = {
     id: string;
     patientId: string;
@@ -48,15 +77,14 @@ type PatientRecord = {
 };
 
 export default function NurseRecordsPage() {
-    const [menuOpen] = useState(false);
+    const { data: session } = useSession();
+    const [menuOpen, setMenuOpen] = useState(false);
     const [records, setRecords] = useState<PatientRecord[]>([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-    const { data: session } = useSession();
-    const nurseId = session?.user?.id; // nurse_user_id for consultation
+    const [loading, setLoading] = useState(false);
 
     async function handleLogout() {
         try {
@@ -77,54 +105,17 @@ export default function NurseRecordsPage() {
         loadRecords();
     }, []);
 
-    // 🔍 Filtering logic
     const filtered = records.filter((r) => {
         const matchesSearch =
             r.fullName.toLowerCase().includes(search.toLowerCase()) ||
             r.patientId.toLowerCase().includes(search.toLowerCase()) ||
             r.patientType.toLowerCase().includes(search.toLowerCase());
 
-        const matchesStatus =
-            statusFilter === "All" || r.status === statusFilter;
-
-        const matchesType =
-            typeFilter === "All" || r.patientType === typeFilter;
+        const matchesStatus = statusFilter === "All" || r.status === statusFilter;
+        const matchesType = typeFilter === "All" || r.patientType === typeFilter;
 
         return matchesSearch && matchesStatus && matchesType;
     });
-
-    // ✅ Update health data API call
-    async function updateHealthData(id: string, type: string, payload: any) {
-        const res = await fetch(`/api/nurse/records/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type, ...payload }),
-        });
-
-        if (res.ok) {
-            toast.success("Health data updated!");
-            await loadRecords();
-        } else {
-            const err = await res.json();
-            toast.error(err.error || "Failed to update health data");
-        }
-    }
-
-    // ✅ Add consultation notes API call
-    async function addConsultation(appointmentId: string, payload: any) {
-        const res = await fetch(`/api/nurse/consultations`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ appointment_id: appointmentId, nurse_user_id: nurseId, ...payload }),
-        });
-
-        if (res.ok) {
-            toast.success("Consultation notes saved!");
-        } else {
-            const err = await res.json();
-            toast.error(err.error || "Failed to save consultation");
-        }
-    }
 
     return (
         <div className="flex min-h-screen bg-green-50">
@@ -169,19 +160,38 @@ export default function NurseRecordsPage() {
                 </Button>
             </aside>
 
-            {/* Main Content */}
+            {/* Main */}
             <main className="flex-1 flex flex-col">
                 {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Patient Records</h2>
+                    {/* Mobile Dropdown */}
+                    <div className="md:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
+                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5" />}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild><Link href="/nurse">Dashboard</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispense</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </header>
 
-                {/* Records Table */}
+                {/* Table */}
                 <section className="px-6 pt-6 pb-12 flex-1 flex flex-col">
                     <Card className="flex-1 flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                                {/* Search Bar */}
+                                {/* Search */}
                                 <div className="relative w-full md:w-64">
                                     <Search className="absolute right-2 top-2.5 h-4 w-4 text-gray-400" />
                                     <Input
@@ -191,7 +201,7 @@ export default function NurseRecordsPage() {
                                         className="pl-8"
                                     />
                                 </div>
-                                {/* Status Filter */}
+                                {/* Status */}
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                                     <SelectTrigger className="w-full md:w-40">
                                         <SelectValue placeholder="Filter by status" />
@@ -202,7 +212,7 @@ export default function NurseRecordsPage() {
                                         <SelectItem value="Inactive">Inactive</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {/* Patient Type Filter */}
+                                {/* Type */}
                                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                                     <SelectTrigger className="w-full md:w-40">
                                         <SelectValue placeholder="Filter by type" />
@@ -225,7 +235,7 @@ export default function NurseRecordsPage() {
                                             <TableHead>Full Name</TableHead>
                                             <TableHead>Type</TableHead>
                                             <TableHead>Gender</TableHead>
-                                            <TableHead>Date of Birth</TableHead>
+                                            <TableHead>DOB</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Action</TableHead>
                                         </TableRow>
@@ -240,102 +250,172 @@ export default function NurseRecordsPage() {
                                                     <TableCell>{r.gender}</TableCell>
                                                     <TableCell>{new Date(r.date_of_birth).toLocaleDateString()}</TableCell>
                                                     <TableCell>{r.status}</TableCell>
-                                                    <TableCell className="space-x-2">
-                                                        {/* View details */}
+                                                    <TableCell>
                                                         <Dialog>
                                                             <DialogTrigger asChild>
                                                                 <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                                                                    View
+                                                                    Manage
                                                                 </Button>
                                                             </DialogTrigger>
-                                                            <DialogContent className="max-w-lg">
+                                                            <DialogContent className="max-w-2xl">
                                                                 <DialogHeader>
                                                                     <DialogTitle>{r.fullName}</DialogTitle>
-                                                                    <DialogDescription>{r.patientType} Patient Record</DialogDescription>
+                                                                    <DialogDescription>
+                                                                        {r.patientType} Patient Record
+                                                                    </DialogDescription>
                                                                 </DialogHeader>
-                                                                <div className="space-y-2">
-                                                                    <p><strong>Contact No:</strong> {r.contactno || "—"}</p>
-                                                                    <p><strong>Address:</strong> {r.address || "—"}</p>
-                                                                    <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
-                                                                    <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
-                                                                    <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
-                                                                </div>
-                                                            </DialogContent>
-                                                        </Dialog>
 
-                                                        {/* Update health data */}
-                                                        <Dialog>
-                                                            <DialogTrigger asChild>
-                                                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                                                                    Update
-                                                                </Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent>
-                                                                <DialogHeader>
-                                                                    <DialogTitle>Update Health Data</DialogTitle>
-                                                                </DialogHeader>
-                                                                <form
-                                                                    className="space-y-3"
-                                                                    onSubmit={async (e) => {
-                                                                        e.preventDefault();
-                                                                        const form = e.currentTarget as HTMLFormElement;
-                                                                        const payload = {
-                                                                            contactno: (form.elements.namedItem("contactno") as HTMLInputElement).value,
-                                                                            address: (form.elements.namedItem("address") as HTMLInputElement).value,
-                                                                            bloodtype: (form.elements.namedItem("bloodtype") as HTMLInputElement).value,
-                                                                            allergies: (form.elements.namedItem("allergies") as HTMLInputElement).value,
-                                                                            medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement).value,
-                                                                        };
-                                                                        await updateHealthData(r.id, r.patientType, payload);
-                                                                    }}
-                                                                >
-                                                                    <Input name="contactno" placeholder="Contact No" defaultValue={r.contactno || ""} />
-                                                                    <Input name="address" placeholder="Address" defaultValue={r.address || ""} />
-                                                                    <Input name="bloodtype" placeholder="Blood Type" defaultValue={r.bloodtype || ""} />
-                                                                    <Input name="allergies" placeholder="Allergies" defaultValue={r.allergies || ""} />
-                                                                    <Input name="medical_cond" placeholder="Medical Conditions" defaultValue={r.medical_cond || ""} />
-                                                                    <DialogFooter>
-                                                                        <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
-                                                                            Save
-                                                                        </Button>
-                                                                    </DialogFooter>
-                                                                </form>
-                                                            </DialogContent>
-                                                        </Dialog>
+                                                                <Tabs defaultValue="details">
+                                                                    <TabsList className="grid grid-cols-3 gap-2">
+                                                                        <TabsTrigger value="details">Details</TabsTrigger>
+                                                                        <TabsTrigger value="update">Update Health Data</TabsTrigger>
+                                                                        <TabsTrigger value="consult">Consultation Notes</TabsTrigger>
+                                                                    </TabsList>
 
-                                                        {/* Consultation notes */}
-                                                        <Dialog>
-                                                            <DialogTrigger asChild>
-                                                                <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                                                                    Notes
-                                                                </Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent>
-                                                                <DialogHeader>
-                                                                    <DialogTitle>Add Consultation Notes</DialogTitle>
-                                                                </DialogHeader>
-                                                                <form
-                                                                    className="space-y-3"
-                                                                    onSubmit={async (e) => {
-                                                                        e.preventDefault();
-                                                                        const form = e.currentTarget as HTMLFormElement;
-                                                                        const payload = {
-                                                                            reason_of_visit: (form.elements.namedItem("reason") as HTMLInputElement).value,
-                                                                            findings: (form.elements.namedItem("findings") as HTMLInputElement).value,
-                                                                            diagnosis: (form.elements.namedItem("diagnosis") as HTMLInputElement).value,
-                                                                        };
-                                                                        await addConsultation(r.id, payload); // ⚠️ r.id must map to appointment_id
-                                                                    }}
-                                                                >
-                                                                    <Input name="reason" placeholder="Reason of Visit" />
-                                                                    <Input name="findings" placeholder="Findings" />
-                                                                    <Input name="diagnosis" placeholder="Diagnosis" />
-                                                                    <DialogFooter>
-                                                                        <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
-                                                                            Save
-                                                                        </Button>
-                                                                    </DialogFooter>
-                                                                </form>
+                                                                    {/* Details Tab */}
+                                                                    <TabsContent value="details" className="space-y-2">
+                                                                        <p><strong>Patient ID:</strong> {r.patientId}</p>
+                                                                        <p><strong>Gender:</strong> {r.gender}</p>
+                                                                        <p><strong>DOB:</strong> {new Date(r.date_of_birth).toLocaleDateString()}</p>
+                                                                        <p><strong>Contact:</strong> {r.contactno || "—"}</p>
+                                                                        <p><strong>Address:</strong> {r.address || "—"}</p>
+                                                                        <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
+                                                                        <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
+                                                                        <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
+                                                                        <p><strong>Emergency:</strong> {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) - {r.emergency?.num || "—"}</p>
+                                                                        {r.patientType === "Student" && (
+                                                                            <>
+                                                                                <p><strong>Department:</strong> {r.department || "—"}</p>
+                                                                                <p><strong>Program:</strong> {r.program || "—"}</p>
+                                                                                <p><strong>Specialization:</strong> {r.specialization || "—"}</p>
+                                                                                <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
+                                                                            </>
+                                                                        )}
+                                                                    </TabsContent>
+
+                                                                    {/* Update Tab */}
+                                                                    <TabsContent value="update">
+                                                                        <form
+                                                                            className="space-y-3"
+                                                                            onSubmit={async (e) => {
+                                                                                e.preventDefault();
+                                                                                setLoading(true);
+                                                                                const form = e.currentTarget as HTMLFormElement;
+                                                                                const body = {
+                                                                                    type: r.patientType,
+                                                                                    contactno: (form.elements.namedItem("contactno") as HTMLInputElement).value,
+                                                                                    address: (form.elements.namedItem("address") as HTMLInputElement).value,
+                                                                                    bloodtype: (form.elements.namedItem("bloodtype") as HTMLInputElement).value,
+                                                                                    allergies: (form.elements.namedItem("allergies") as HTMLInputElement).value,
+                                                                                    medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement).value,
+                                                                                    emergency: {
+                                                                                        name: (form.elements.namedItem("emergency_name") as HTMLInputElement).value,
+                                                                                        num: (form.elements.namedItem("emergency_num") as HTMLInputElement).value,
+                                                                                        relation: (form.elements.namedItem("emergency_relation") as HTMLInputElement).value,
+                                                                                    },
+                                                                                };
+
+                                                                                const res = await fetch(`/api/nurse/records/${r.id}`, {
+                                                                                    method: "PATCH",
+                                                                                    headers: { "Content-Type": "application/json" },
+                                                                                    body: JSON.stringify(body),
+                                                                                });
+
+                                                                                if (res.ok) {
+                                                                                    toast.success("Health data updated");
+                                                                                    await loadRecords();
+                                                                                } else {
+                                                                                    toast.error("Failed to update");
+                                                                                }
+                                                                                setLoading(false);
+                                                                            }}
+                                                                        >
+                                                                            <div>
+                                                                                <Label>Contact No</Label>
+                                                                                <Input name="contactno" defaultValue={r.contactno || ""} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Address</Label>
+                                                                                <Input name="address" defaultValue={r.address || ""} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Blood Type</Label>
+                                                                                <Input name="bloodtype" defaultValue={r.bloodtype || ""} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Allergies</Label>
+                                                                                <Input name="allergies" defaultValue={r.allergies || ""} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Medical Conditions</Label>
+                                                                                <Input name="medical_cond" defaultValue={r.medical_cond || ""} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Emergency Contact Name</Label>
+                                                                                <Input name="emergency_name" defaultValue={r.emergency?.name || ""} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Emergency Contact No</Label>
+                                                                                <Input name="emergency_num" defaultValue={r.emergency?.num || ""} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Emergency Contact Relation</Label>
+                                                                                <Input name="emergency_relation" defaultValue={r.emergency?.relation || ""} />
+                                                                            </div>
+                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                                                                            </Button>
+                                                                        </form>
+                                                                    </TabsContent>
+
+                                                                    {/* Consultation Tab */}
+                                                                    <TabsContent value="consult">
+                                                                        <form
+                                                                            className="space-y-3"
+                                                                            onSubmit={async (e) => {
+                                                                                e.preventDefault();
+                                                                                setLoading(true);
+                                                                                const form = e.currentTarget as HTMLFormElement;
+                                                                                const body = {
+                                                                                    appointment_id: "TODO_APPOINTMENT_ID", // ⚠️ replace with real appointment id
+                                                                                    nurse_user_id: session?.user?.id, // nurse from session
+                                                                                    reason_of_visit: (form.elements.namedItem("reason_of_visit") as HTMLInputElement).value,
+                                                                                    findings: (form.elements.namedItem("findings") as HTMLInputElement).value,
+                                                                                    diagnosis: (form.elements.namedItem("diagnosis") as HTMLInputElement).value,
+                                                                                };
+
+                                                                                const res = await fetch(`/api/nurse/consultations`, {
+                                                                                    method: "POST",
+                                                                                    headers: { "Content-Type": "application/json" },
+                                                                                    body: JSON.stringify(body),
+                                                                                });
+
+                                                                                if (res.ok) {
+                                                                                    toast.success("Consultation notes saved");
+                                                                                } else {
+                                                                                    toast.error("Failed to save consultation");
+                                                                                }
+                                                                                setLoading(false);
+                                                                            }}
+                                                                        >
+                                                                            <div>
+                                                                                <Label>Reason of Visit</Label>
+                                                                                <Input name="reason_of_visit" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Findings</Label>
+                                                                                <Input name="findings" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Diagnosis</Label>
+                                                                                <Input name="diagnosis" />
+                                                                            </div>
+                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Notes"}
+                                                                            </Button>
+                                                                        </form>
+                                                                    </TabsContent>
+                                                                </Tabs>
                                                             </DialogContent>
                                                         </Dialog>
                                                     </TableCell>
@@ -355,7 +435,6 @@ export default function NurseRecordsPage() {
                     </Card>
                 </section>
 
-                {/* Footer */}
                 <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
                     © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
