@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import {
     Menu, X,
     Users,
@@ -16,16 +16,12 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardHeader,
-    CardContent
-} from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
     Table,
@@ -33,7 +29,7 @@ import {
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
+    TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -42,7 +38,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
-    DialogTrigger
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,8 +46,11 @@ import {
     SelectTrigger,
     SelectValue,
     SelectContent,
-    SelectItem
+    SelectItem,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 type PatientRecord = {
     id: string;
@@ -63,7 +62,6 @@ type PatientRecord = {
     status: string;
     department?: string | null;
     program?: string | null;
-    specialization?: string | null;
     year_level?: string | null;
     contactno?: string | null;
     address?: string | null;
@@ -78,13 +76,14 @@ type PatientRecord = {
 };
 
 export default function NurseRecordsPage() {
-    const [menuOpen] = useState(false);
+    const { data: session } = useSession();
+    const [menuOpen, setMenuOpen] = useState(false);
     const [records, setRecords] = useState<PatientRecord[]>([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
-
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     async function handleLogout() {
         try {
@@ -105,18 +104,14 @@ export default function NurseRecordsPage() {
         loadRecords();
     }, []);
 
-    // 🔍 Filtering logic
     const filtered = records.filter((r) => {
         const matchesSearch =
             r.fullName.toLowerCase().includes(search.toLowerCase()) ||
             r.patientId.toLowerCase().includes(search.toLowerCase()) ||
             r.patientType.toLowerCase().includes(search.toLowerCase());
 
-        const matchesStatus =
-            statusFilter === "All" || r.status === statusFilter;
-
-        const matchesType =
-            typeFilter === "All" || r.patientType === typeFilter;
+        const matchesStatus = statusFilter === "All" || r.status === statusFilter;
+        const matchesType = typeFilter === "All" || r.patientType === typeFilter;
 
         return matchesSearch && matchesStatus && matchesType;
     });
@@ -164,16 +159,17 @@ export default function NurseRecordsPage() {
                 </Button>
             </aside>
 
-            {/* Main Content */}
+            {/* Main */}
             <main className="flex-1 flex flex-col">
                 {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Patient Records</h2>
+                    {/* Mobile Dropdown */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
+                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -183,18 +179,18 @@ export default function NurseRecordsPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispense</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </header>
 
-                {/* Records Table */}
+                {/* Table */}
                 <section className="px-6 pt-6 pb-12 flex-1 flex flex-col">
                     <Card className="flex-1 flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                                {/* Search Bar */}
+                                {/* Search */}
                                 <div className="relative w-full md:w-64">
                                     <Search className="absolute right-2 top-2.5 h-4 w-4 text-gray-400" />
                                     <Input
@@ -204,7 +200,7 @@ export default function NurseRecordsPage() {
                                         className="pl-8"
                                     />
                                 </div>
-                                {/* Status Filter */}
+                                {/* Status */}
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                                     <SelectTrigger className="w-full md:w-40">
                                         <SelectValue placeholder="Filter by status" />
@@ -215,7 +211,7 @@ export default function NurseRecordsPage() {
                                         <SelectItem value="Inactive">Inactive</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {/* Patient Type Filter */}
+                                {/* Type */}
                                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                                     <SelectTrigger className="w-full md:w-40">
                                         <SelectValue placeholder="Filter by type" />
@@ -238,7 +234,7 @@ export default function NurseRecordsPage() {
                                             <TableHead>Full Name</TableHead>
                                             <TableHead>Type</TableHead>
                                             <TableHead>Gender</TableHead>
-                                            <TableHead>Date of Birth</TableHead>
+                                            <TableHead>DOB</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Action</TableHead>
                                         </TableRow>
@@ -256,40 +252,132 @@ export default function NurseRecordsPage() {
                                                     <TableCell>
                                                         <Dialog>
                                                             <DialogTrigger asChild>
-                                                                <Button
-                                                                    size="sm"
-                                                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                                                >
-                                                                    View Details
+                                                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                                                                    Manage
                                                                 </Button>
                                                             </DialogTrigger>
-                                                            <DialogContent className="max-w-lg">
+                                                            <DialogContent className="max-w-2xl">
                                                                 <DialogHeader>
                                                                     <DialogTitle>{r.fullName}</DialogTitle>
                                                                     <DialogDescription>
                                                                         {r.patientType} Patient Record
                                                                     </DialogDescription>
                                                                 </DialogHeader>
-                                                                <div className="space-y-2">
-                                                                    <p><strong>Patient ID:</strong> {r.patientId}</p>
-                                                                    <p><strong>Gender:</strong> {r.gender}</p>
-                                                                    <p><strong>Date of Birth:</strong> {new Date(r.date_of_birth).toLocaleDateString()}</p>
-                                                                    <p><strong>Contact No:</strong> {r.contactno || "—"}</p>
-                                                                    <p><strong>Address:</strong> {r.address || "—"}</p>
-                                                                    <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
-                                                                    <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
-                                                                    <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
-                                                                    <p><strong>Emergency Contact:</strong> {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) - {r.emergency?.num || "—"}</p>
 
-                                                                    {r.patientType === "Student" && (
-                                                                        <>
-                                                                            <p><strong>Department:</strong> {r.department || "—"}</p>
-                                                                            <p><strong>Program:</strong> {r.program || "—"}</p>
-                                                                            <p><strong>Specialization:</strong> {r.specialization || "—"}</p>
-                                                                            <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
-                                                                        </>
-                                                                    )}
-                                                                </div>
+                                                                <Tabs defaultValue="details">
+                                                                    <TabsList className="grid grid-cols-2 gap-2">
+                                                                        <TabsTrigger value="details">Details</TabsTrigger>
+                                                                        <TabsTrigger value="update">Update & Notes</TabsTrigger>
+                                                                    </TabsList>
+
+                                                                    {/* Details */}
+                                                                    <TabsContent value="details" className="space-y-2">
+                                                                        <p><strong>Patient ID:</strong> {r.patientId}</p>
+                                                                        <p><strong>Gender:</strong> {r.gender}</p>
+                                                                        <p><strong>DOB:</strong> {new Date(r.date_of_birth).toLocaleDateString()}</p>
+                                                                        <p><strong>Status:</strong> {r.status}</p>
+                                                                        <p><strong>Contact:</strong> {r.contactno || "—"}</p>
+                                                                        <p><strong>Address:</strong> {r.address || "—"}</p>
+                                                                        <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
+                                                                        <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
+                                                                        <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
+                                                                        <p>
+                                                                            <strong>Emergency:</strong> {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) - {r.emergency?.num || "—"}
+                                                                        </p>
+                                                                        {r.patientType === "Student" && (
+                                                                            <>
+                                                                                <p><strong>Department:</strong> {r.department || "—"}</p>
+                                                                                <p><strong>Program:</strong> {r.program || "—"}</p>
+                                                                                <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
+                                                                            </>
+                                                                        )}
+                                                                    </TabsContent>
+
+                                                                    {/* Update & Notes */}
+                                                                    <TabsContent value="update">
+                                                                        {/* Medical Conditions */}
+                                                                        <form
+                                                                            className="space-y-3 mb-6"
+                                                                            onSubmit={async (e) => {
+                                                                                e.preventDefault();
+                                                                                setLoading(true);
+                                                                                const form = e.currentTarget as HTMLFormElement;
+                                                                                const body = {
+                                                                                    type: r.patientType,
+                                                                                    medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement).value,
+                                                                                };
+
+                                                                                const res = await fetch(`/api/nurse/records/${r.id}`, {
+                                                                                    method: "PATCH",
+                                                                                    headers: { "Content-Type": "application/json" },
+                                                                                    body: JSON.stringify(body),
+                                                                                });
+
+                                                                                if (res.ok) {
+                                                                                    toast.success("Medical condition updated");
+                                                                                    await loadRecords();
+                                                                                } else {
+                                                                                    toast.error("Failed to update");
+                                                                                }
+                                                                                setLoading(false);
+                                                                            }}
+                                                                        >
+                                                                            <div>
+                                                                                <Label>Medical Conditions</Label>
+                                                                                <Input name="medical_cond" defaultValue={r.medical_cond || ""} />
+                                                                            </div>
+                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                                                                            </Button>
+                                                                        </form>
+
+                                                                        {/* Consultation Notes */}
+                                                                        <form
+                                                                            className="space-y-3"
+                                                                            onSubmit={async (e) => {
+                                                                                e.preventDefault();
+                                                                                setLoading(true);
+                                                                                const form = e.currentTarget as HTMLFormElement;
+                                                                                const body = {
+                                                                                    appointment_id: "TODO_APPOINTMENT_ID",
+                                                                                    nurse_user_id: session?.user?.id,
+                                                                                    reason_of_visit: (form.elements.namedItem("reason_of_visit") as HTMLInputElement).value,
+                                                                                    findings: (form.elements.namedItem("findings") as HTMLInputElement).value,
+                                                                                    diagnosis: (form.elements.namedItem("diagnosis") as HTMLInputElement).value,
+                                                                                };
+
+                                                                                const res = await fetch(`/api/nurse/consultations`, {
+                                                                                    method: "POST",
+                                                                                    headers: { "Content-Type": "application/json" },
+                                                                                    body: JSON.stringify(body),
+                                                                                });
+
+                                                                                if (res.ok) {
+                                                                                    toast.success("Consultation notes saved");
+                                                                                } else {
+                                                                                    toast.error("Failed to save consultation");
+                                                                                }
+                                                                                setLoading(false);
+                                                                            }}
+                                                                        >
+                                                                            <div>
+                                                                                <Label>Reason of Visit</Label>
+                                                                                <Input name="reason_of_visit" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Findings</Label>
+                                                                                <Input name="findings" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <Label>Diagnosis</Label>
+                                                                                <Input name="diagnosis" />
+                                                                            </div>
+                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Notes"}
+                                                                            </Button>
+                                                                        </form>
+                                                                    </TabsContent>
+                                                                </Tabs>
                                                             </DialogContent>
                                                         </Dialog>
                                                     </TableCell>
@@ -309,7 +397,6 @@ export default function NurseRecordsPage() {
                     </Card>
                 </section>
 
-                {/* Footer */}
                 <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
                     © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
