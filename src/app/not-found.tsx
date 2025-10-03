@@ -1,10 +1,20 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 export default function NotFound() {
+    const router = useRouter();
+
+    function handleGoBack() {
+        if (typeof window !== "undefined" && window.history.length > 1) {
+            router.back();
+        } else {
+            router.push("/"); // fallback to home if no history
+        }
+    }
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-green-50 px-6">
             {/* Illustration */}
@@ -28,16 +38,15 @@ export default function NotFound() {
 
             {/* Buttons */}
             <div className="flex flex-row gap-4 justify-center">
-                <Link href="/">
-                    <Button className="bg-green-600 hover:bg-green-700">
-                        Go Back Home
-                    </Button>
-                </Link>
-                <Link href="/login">
-                    <Button variant="outline">
-                        Login
-                    </Button>
-                </Link>
+                <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={handleGoBack}
+                >
+                    Go Back
+                </Button>
+                <Button variant="outline" onClick={() => router.push("/login")}>
+                    Login
+                </Button>
             </div>
         </div>
     );

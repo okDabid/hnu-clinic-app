@@ -74,9 +74,7 @@ export default function AboutPage() {
                             Contact
                         </Link>
                         <Link href="/login">
-                            <Button className="bg-green-600 hover:bg-green-700">
-                                Login
-                            </Button>
+                            <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
                         </Link>
                     </div>
                 )}
