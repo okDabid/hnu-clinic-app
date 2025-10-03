@@ -60,7 +60,20 @@ type PatientRecord = {
     gender: string;
     date_of_birth: string;
     status: string;
+    department?: string | null;
+    program?: string | null;
+    specialization?: string | null;
+    year_level?: string | null;
+    contactno?: string | null;
+    address?: string | null;
+    bloodtype?: string | null;
+    allergies?: string | null;
     medical_cond?: string | null;
+    emergency?: {
+        name?: string | null;
+        num?: string | null;
+        relation?: string | null;
+    };
 };
 
 export default function NurseRecordsPage() {
@@ -152,6 +165,7 @@ export default function NurseRecordsPage() {
                 {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Patient Records</h2>
+                    {/* Mobile Dropdown */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -243,7 +257,7 @@ export default function NurseRecordsPage() {
                                                                     Manage
                                                                 </Button>
                                                             </DialogTrigger>
-                                                            <DialogContent className="max-w-lg">
+                                                            <DialogContent className="max-w-2xl">
                                                                 <DialogHeader>
                                                                     <DialogTitle>{r.fullName}</DialogTitle>
                                                                     <DialogDescription>
@@ -262,58 +276,51 @@ export default function NurseRecordsPage() {
                                                                         <p><strong>Patient ID:</strong> {r.patientId}</p>
                                                                         <p><strong>Gender:</strong> {r.gender}</p>
                                                                         <p><strong>DOB:</strong> {new Date(r.date_of_birth).toLocaleDateString()}</p>
+                                                                        <p><strong>Status:</strong> {r.status}</p>
+                                                                        <p><strong>Contact:</strong> {r.contactno || "—"}</p>
+                                                                        <p><strong>Address:</strong> {r.address || "—"}</p>
+                                                                        <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
+                                                                        <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
                                                                         <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
+                                                                        <p>
+                                                                            <strong>Emergency:</strong> {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) - {r.emergency?.num || "—"}
+                                                                        </p>
+                                                                        {r.patientType === "Student" && (
+                                                                            <>
+                                                                                <p><strong>Department:</strong> {r.department || "—"}</p>
+                                                                                <p><strong>Program:</strong> {r.program || "—"}</p>
+                                                                                <p><strong>Specialization:</strong> {r.specialization || "—"}</p>
+                                                                                <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
+                                                                            </>
+                                                                        )}
                                                                     </TabsContent>
 
-                                                                    {/* Update & Consultation Notes */}
+                                                                    {/* Update & Notes */}
                                                                     <TabsContent value="update">
+                                                                        {/* Medical Conditions */}
                                                                         <form
-                                                                            className="space-y-3"
+                                                                            className="space-y-3 mb-6"
                                                                             onSubmit={async (e) => {
                                                                                 e.preventDefault();
                                                                                 setLoading(true);
                                                                                 const form = e.currentTarget as HTMLFormElement;
-
-                                                                                // PATCH health data
-                                                                                const healthBody = {
+                                                                                const body = {
                                                                                     type: r.patientType,
                                                                                     medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement).value,
                                                                                 };
 
-                                                                                const res1 = await fetch(`/api/nurse/records/${r.id}`, {
+                                                                                const res = await fetch(`/api/nurse/records/${r.id}`, {
                                                                                     method: "PATCH",
                                                                                     headers: { "Content-Type": "application/json" },
-                                                                                    body: JSON.stringify(healthBody),
+                                                                                    body: JSON.stringify(body),
                                                                                 });
 
-                                                                                if (res1.ok) {
+                                                                                if (res.ok) {
                                                                                     toast.success("Medical condition updated");
                                                                                     await loadRecords();
                                                                                 } else {
-                                                                                    toast.error("Failed to update health data");
+                                                                                    toast.error("Failed to update");
                                                                                 }
-
-                                                                                // POST consultation notes
-                                                                                const notesBody = {
-                                                                                    appointment_id: "TODO_APPOINTMENT_ID", // ⚠️ Replace later
-                                                                                    nurse_user_id: session?.user?.id,
-                                                                                    reason_of_visit: (form.elements.namedItem("reason_of_visit") as HTMLInputElement).value,
-                                                                                    findings: (form.elements.namedItem("findings") as HTMLInputElement).value,
-                                                                                    diagnosis: (form.elements.namedItem("diagnosis") as HTMLInputElement).value,
-                                                                                };
-
-                                                                                const res2 = await fetch("/api/nurse/consultations", {
-                                                                                    method: "POST",
-                                                                                    headers: { "Content-Type": "application/json" },
-                                                                                    body: JSON.stringify(notesBody),
-                                                                                });
-
-                                                                                if (res2.ok) {
-                                                                                    toast.success("Consultation notes saved");
-                                                                                } else {
-                                                                                    toast.error("Failed to save consultation notes");
-                                                                                }
-
                                                                                 setLoading(false);
                                                                             }}
                                                                         >
@@ -321,6 +328,40 @@ export default function NurseRecordsPage() {
                                                                                 <Label>Medical Conditions</Label>
                                                                                 <Input name="medical_cond" defaultValue={r.medical_cond || ""} />
                                                                             </div>
+                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                                                                            </Button>
+                                                                        </form>
+
+                                                                        {/* Consultation Notes */}
+                                                                        <form
+                                                                            className="space-y-3"
+                                                                            onSubmit={async (e) => {
+                                                                                e.preventDefault();
+                                                                                setLoading(true);
+                                                                                const form = e.currentTarget as HTMLFormElement;
+                                                                                const body = {
+                                                                                    appointment_id: "TODO_APPOINTMENT_ID",
+                                                                                    nurse_user_id: session?.user?.id,
+                                                                                    reason_of_visit: (form.elements.namedItem("reason_of_visit") as HTMLInputElement).value,
+                                                                                    findings: (form.elements.namedItem("findings") as HTMLInputElement).value,
+                                                                                    diagnosis: (form.elements.namedItem("diagnosis") as HTMLInputElement).value,
+                                                                                };
+
+                                                                                const res = await fetch(`/api/nurse/consultations`, {
+                                                                                    method: "POST",
+                                                                                    headers: { "Content-Type": "application/json" },
+                                                                                    body: JSON.stringify(body),
+                                                                                });
+
+                                                                                if (res.ok) {
+                                                                                    toast.success("Consultation notes saved");
+                                                                                } else {
+                                                                                    toast.error("Failed to save consultation");
+                                                                                }
+                                                                                setLoading(false);
+                                                                            }}
+                                                                        >
                                                                             <div>
                                                                                 <Label>Reason of Visit</Label>
                                                                                 <Input name="reason_of_visit" />
@@ -333,12 +374,8 @@ export default function NurseRecordsPage() {
                                                                                 <Label>Diagnosis</Label>
                                                                                 <Input name="diagnosis" />
                                                                             </div>
-                                                                            <Button
-                                                                                type="submit"
-                                                                                disabled={loading}
-                                                                                className="bg-green-600 hover:bg-green-700 text-white"
-                                                                            >
-                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Notes"}
                                                                             </Button>
                                                                         </form>
                                                                     </TabsContent>
