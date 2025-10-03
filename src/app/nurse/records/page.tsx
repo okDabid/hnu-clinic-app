@@ -268,7 +268,7 @@ export default function NurseRecordsPage() {
                                                                 <Tabs defaultValue="details">
                                                                     <TabsList className="grid grid-cols-2 gap-2">
                                                                         <TabsTrigger value="details">Details</TabsTrigger>
-                                                                        <TabsTrigger value="update">Update Health Record | Consultation Details</TabsTrigger>
+                                                                        <TabsTrigger value="update">Update & Notes</TabsTrigger>
                                                                     </TabsList>
 
                                                                     {/* Details */}
