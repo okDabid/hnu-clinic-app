@@ -50,7 +50,7 @@ export default function LoginPageClient() {
                     toast.error(result.error, { position: "top-center" });
                 }
             } else {
-                toast.success(`Welcome!`, { position: "top-center" });
+                toast(`Login successful.`, { position: "top-center", className: "bg-green-600 text-white" });
 
                 // ⚡️ Faster redirect using router.push instead of window.location.href
                 if (payload.role === "NURSE") router.push("/nurse");
