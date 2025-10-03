@@ -329,10 +329,17 @@ export default function NurseInventoryPage() {
                                             <DialogFooter>
                                                 <Button
                                                     type="submit"
-                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                    className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
                                                     disabled={loading}
                                                 >
-                                                    {loading ? "Saving..." : "Save"}
+                                                    {loading ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            Saving...
+                                                        </>
+                                                    ) : (
+                                                        "Save"
+                                                    )}
                                                 </Button>
                                             </DialogFooter>
                                         </form>

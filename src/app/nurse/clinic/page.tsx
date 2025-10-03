@@ -230,8 +230,19 @@ export default function NurseClinicPage() {
                                             <Input name="clinic_contactno" required />
                                         </div>
                                         <DialogFooter>
-                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">
-                                                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save"}
+                                            <Button
+                                                type="submit"
+                                                disabled={loading}
+                                                className="bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                                            >
+                                                {loading ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Saving...
+                                                    </>
+                                                ) : (
+                                                    "Save"
+                                                )}
                                             </Button>
                                         </DialogFooter>
                                     </form>
@@ -289,8 +300,19 @@ export default function NurseClinicPage() {
                                                                 />
                                                             </div>
                                                             <DialogFooter>
-                                                                <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">
-                                                                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Save Changes"}
+                                                                <Button
+                                                                    type="submit"
+                                                                    disabled={loading}
+                                                                    className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                                                >
+                                                                    {loading ? (
+                                                                        <>
+                                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                                            Saving changes...
+                                                                        </>
+                                                                    ) : (
+                                                                        "Save Changes"
+                                                                    )}
                                                                 </Button>
                                                             </DialogFooter>
                                                         </form>
