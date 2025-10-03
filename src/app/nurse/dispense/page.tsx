@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
-    CardHeader,
-    CardTitle
 } from "@/components/ui/card";
 
 import {
@@ -137,9 +135,6 @@ export default function NurseDispensePage() {
                 {/* Dispense Records Table */}
                 <section className="px-6 pt-6 pb-12 flex-1 flex flex-col">
                     <Card className="flex-1 flex flex-col">
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-bold text-green-600">Dispense Records</CardTitle>
-                        </CardHeader>
 
                         <CardContent className="flex-1 flex flex-col">
                             <div className="overflow-x-auto flex-1">
