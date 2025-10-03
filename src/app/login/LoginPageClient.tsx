@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
@@ -102,7 +102,13 @@ export default function LoginPageClient() {
                 disabled={loadingRole === role}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
             >
-                {loadingRole === role ? `Logging in...` : `Login as ${label}`}
+                {loadingRole === role ? (
+                    <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Logging in...
+                    </>
+                ) : (
+                    `Login as ${label}`
+                )}
             </Button>
         </form>
     );
