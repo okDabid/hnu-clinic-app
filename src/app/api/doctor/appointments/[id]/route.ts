@@ -4,22 +4,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { AppointmentStatus } from "@prisma/client";
 
+// ✅ Next.js expects an async function with `context: { params: { id: string } }`
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
+        // ✅ Await params for type correctness (since context.params is now a Promise)
+        const { id } = await context.params;
+
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const id = params.id;
         const { action } = await request.json();
 
-        // Map frontend actions to Prisma enum
+        // ✅ Map actions to AppointmentStatus enum
         let newStatus: AppointmentStatus;
-
         switch (action) {
             case "approve":
                 newStatus = "Approved";
@@ -34,7 +36,7 @@ export async function PATCH(
                 return NextResponse.json({ error: "Invalid action" }, { status: 400 });
         }
 
-        // Update record + include relations for client-side update
+        // ✅ Update the record, including relations
         const updated = await prisma.appointment.update({
             where: { appointment_id: id },
             data: { status: newStatus },
