@@ -164,7 +164,7 @@ export default function DoctorConsultationPage() {
                 <nav className="flex flex-col gap-4 text-gray-700">
                     <Link
                         href="/doctor"
-                        className="flex items-center gap-2 text-green-600 font-semibold"
+                        className="flex items-center gap-2 hover:text-green-600"
                     >
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
@@ -176,7 +176,7 @@ export default function DoctorConsultationPage() {
                     </Link>
                     <Link
                         href="/doctor/consultation"
-                        className="flex items-center gap-2 hover:text-green-600"
+                        className="flex items-center gap-2 text-green-600 font-semibold"
                     >
                         <Clock4 className="h-5 w-5" /> Consultation
                     </Link>

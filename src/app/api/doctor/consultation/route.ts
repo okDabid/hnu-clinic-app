@@ -56,22 +56,43 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const { clinic_id, available_date, available_timestart, available_timeend } = await req.json();
+        const body = await req.json();
+        const { clinic_id, available_date, available_timestart, available_timeend } = body;
 
         if (!clinic_id || !available_date || !available_timestart || !available_timeend) {
-            return NextResponse.json(
-                { error: "Missing required fields" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // ✅ Parse full timestamps (combine date + time)
+        const dateOnly = new Date(available_date);
+        if (isNaN(dateOnly.getTime())) {
+            return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
+        }
+
+        const startDate = new Date(`${available_date}T${available_timestart}:00`);
+        const endDate = new Date(`${available_date}T${available_timeend}:00`);
+
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            return NextResponse.json({ error: "Invalid time format" }, { status: 400 });
+        }
+
+        // ✅ Ensure clinic exists
+        const clinic = await prisma.clinic.findUnique({
+            where: { clinic_id },
+        });
+
+        if (!clinic) {
+            return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
+        }
+
+        // ✅ Save record
         const newAvailability = await prisma.doctorAvailability.create({
             data: {
                 doctor_user_id: doctor.user_id,
                 clinic_id,
-                available_date: new Date(available_date),
-                available_timestart: new Date(available_timestart),
-                available_timeend: new Date(available_timeend),
+                available_date: dateOnly,
+                available_timestart: startDate,
+                available_timeend: endDate,
             },
         });
 
@@ -81,9 +102,9 @@ export async function POST(req: Request) {
             data: newAvailability,
         });
     } catch (err) {
-        console.error("[POST /api/doctor/consultation]", err);
+        console.error("[POST /api/doctor/consultation] Detailed error:", err);
         return NextResponse.json(
-            { error: "Failed to add duty hours" },
+            { error: "Failed to add duty hours", details: String(err) },
             { status: 500 }
         );
     }

@@ -143,13 +143,13 @@ export default function DoctorAccountPage() {
                 <nav className="flex flex-col gap-4 text-gray-700">
                     <Link
                         href="/doctor"
-                        className="flex items-center gap-2 text-green-600 font-semibold"
+                        className="flex items-center gap-2 hover:text-green-600"
                     >
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
                     <Link
                         href="/doctor/account"
-                        className="flex items-center gap-2 hover:text-green-600"
+                        className="flex items-center gap-2 text-green-600 font-semibold"
                     >
                         <User className="h-5 w-5" /> Account
                     </Link>
