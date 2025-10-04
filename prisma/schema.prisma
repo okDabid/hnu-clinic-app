@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum AccountStatus {
+  Active
+  Inactive
+}
+
+enum MedcertStatus {
+  Valid
+  Expired
+}
+
+enum Role {
+  NURSE
+  DOCTOR
+  SCHOLAR
+  PATIENT
+  ADMIN
+}
+
+enum AppointmentStatus {
+  Pending
+  Approved
+  Moved
+  Cancelled
+  Completed
+}
+
+enum ServiceType {
+  Consultation
+  Dental
+  Assessment
+  Other
+}
+
+enum MedCategory {
+  Analgesic
+  Antibiotic
+  Antiviral
+  Antifungal
+  Antiparasitic
+  Antihistamine
+  Antacid
+  Antidiabetic
+  Cardiovascular
+  Psychiatric
+  Supplement
+  Other
+}
+
+enum DosageUnit {
+  mg
+  mcg
+  g
+  ml
+  IU
+}
+
+enum MedType {
+  Tablet
+  Capsule
+  Caplet
+  Syrup
+  Suspension
+  Solution
+}
+
+model Clinic {
+  clinic_id        String @id @default(cuid())
+  clinic_name      String
+  clinic_location  String
+  clinic_contactno String
+
+  medinventory MedInventory[]
+  doctorAvail  DoctorAvailability[]
+  appointments Appointment[]
+}
+
+model Users {
+  user_id   String        @id @default(cuid())
+  username  String        @unique
+  password  String
+  role      Role
+  status    AccountStatus @default(Active)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  student             Student?
+  employee            Employee?
+  doctorAvail         DoctorAvailability[]
+  appointmentsPatient Appointment[]        @relation("PatientAppointments")
+  appointmentsDoctor  Appointment[]        @relation("DoctorAppointments")
+  appointmentsCreated Appointment[]        @relation("CreatedAppointments")
+  consultationsDoctor Consultation[]       @relation("ConsultationDoctor")
+  consultationsNurse  Consultation[]       @relation("ConsultationNurse")
+  medcertIssued       MedCert[]            @relation("IssuedCertificates")
+  medcertPatient      MedCert[]            @relation("PatientCertificates")
+
+  @@index([role, status])
+  @@index([username])
+}
+
+model Student {
+  stud_user_id         String        @id @default(cuid())
+  user_id              String        @unique
+  student_id           String        @unique
+  fname                String
+  mname                String?
+  lname                String
+  date_of_birth        DateTime
+  gender               Gender
+  department           String?
+  program              String?
+  specialization       String?
+  year_level           String?
+  contactno            String?
+  address              String?
+  bloodtype            String?
+  allergies            String?
+  medical_cond         String?
+  emergencyco_name     String?
+  emergencyco_num      String?
+  emergencyco_relation String?
+  status               AccountStatus @default(Active)
+
+  user Users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model Employee {
+  emp_id               String        @id @default(cuid())
+  user_id              String        @unique
+  employee_id          String        @unique
+  fname                String
+  mname                String?
+  lname                String
+  date_of_birth        DateTime
+  gender               Gender
+  contactno            String?
+  address              String?
+  bloodtype            String?
+  allergies            String?
+  medical_cond         String?
+  emergencyco_name     String?
+  emergencyco_num      String?
+  emergencyco_relation String?
+  status               AccountStatus @default(Active)
+
+  user Users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model MedInventory {
+  med_id    String      @id @default(cuid())
+  clinic_id String
+  quantity  Int
+  item_name String
+  category  MedCategory @default(Analgesic)
+  item_type MedType     @default(Tablet)
+  strength  Float?
+  unit      DosageUnit?
+
+  clinic         Clinic          @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+  replenishments Replenishment[]
+  dispenses      MedDispense[]
+
+  @@index([clinic_id, item_name])
+}
+
+model Replenishment {
+  replenishment_id String   @id @default(cuid())
+  med_id           String
+  quantity_added   Int
+  remaining_qty    Int      @default(0)
+  date_received    DateTime
+  expiry_date      DateTime
+
+  med           MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  DispenseBatch DispenseBatch[]
+
+  @@index([med_id, expiry_date])
+}
+
+model DoctorAvailability {
+  availability_id     String   @id @default(cuid())
+  doctor_user_id      String
+  clinic_id           String
+  available_date      DateTime
+  available_timestart DateTime
+  available_timeend   DateTime
+
+  doctor Users  @relation(fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
+  clinic Clinic @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+
+  @@index([doctor_user_id, available_date])
+  @@index([clinic_id, available_date])
+}
+
+model Appointment {
+  appointment_id        String            @id @default(cuid())
+  patient_user_id       String
+  clinic_id             String
+  doctor_user_id        String
+  created_by_user_id    String?
+  appointment_date      DateTime
+  appointment_timestart DateTime
+  appointment_timeend   DateTime
+  service_type          ServiceType?
+  status                AppointmentStatus
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  patient      Users         @relation("PatientAppointments", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
+  doctor       Users         @relation("DoctorAppointments", fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
+  clinic       Clinic        @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+  createdBy    Users?        @relation("CreatedAppointments", fields: [created_by_user_id], references: [user_id], onDelete: SetNull)
+  consultation Consultation?
+
+  @@unique([doctor_user_id, appointment_timestart, appointment_timeend])
+  @@index([doctor_user_id, appointment_date, status])
+  @@index([patient_user_id, appointment_date, status])
+}
+
+model Consultation {
+  consultation_id String   @id @default(cuid())
+  appointment_id  String   @unique
+  doctor_user_id  String?
+  nurse_user_id   String?
+  reason_of_visit String?
+  findings        String?
+  diagnosis       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  appointment Appointment   @relation(fields: [appointment_id], references: [appointment_id], onDelete: Cascade)
+  doctor      Users?        @relation("ConsultationDoctor", fields: [doctor_user_id], references: [user_id], onDelete: SetNull)
+  nurse       Users?        @relation("ConsultationNurse", fields: [nurse_user_id], references: [user_id], onDelete: SetNull)
+  dispenses   MedDispense[]
+  medcerts    MedCert[]
+}
+
+model MedDispense {
+  dispense_id     String @id @default(cuid())
+  med_id          String
+  consultation_id String
+  quantity        Int
+
+  med             MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  consultation    Consultation    @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  dispenseBatches DispenseBatch[]
+
+  @@index([consultation_id])
+}
+
+model DispenseBatch {
+  id               String @id @default(cuid())
+  dispense_id      String
+  replenishment_id String
+  quantity_used    Int
+
+  dispense      MedDispense   @relation(fields: [dispense_id], references: [dispense_id], onDelete: Cascade)
+  replenishment Replenishment @relation(fields: [replenishment_id], references: [replenishment_id], onDelete: Cascade)
+}
+
+model MedCert {
+  certificate_id    String        @id @default(cuid())
+  consultation_id   String
+  patient_user_id   String
+  issued_by_user_id String?
+  issue_date        DateTime
+  valid_until       DateTime
+  status            MedcertStatus
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  patient      Users        @relation("PatientCertificates", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
+  issuedBy     Users?       @relation("IssuedCertificates", fields: [issued_by_user_id], references: [user_id], onDelete: SetNull)
+}
