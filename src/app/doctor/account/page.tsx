@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Menu, X, Home, User, Loader2, Cog, Eye, EyeOff, CalendarDays, ClipboardList } from "lucide-react";
+import { Menu, X, Home, User, Loader2, Cog, Eye, EyeOff, CalendarDays, ClipboardList, Clock4 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,14 +141,23 @@ export default function DoctorAccountPage() {
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
                 <nav className="flex flex-col gap-4 text-gray-700">
-                    <Link href="/doctor" className="flex items-center gap-2 hover:text-green-600">
+                    <Link
+                        href="/doctor"
+                        className="flex items-center gap-2 text-green-600 font-semibold"
+                    >
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
                     <Link
                         href="/doctor/account"
-                        className="flex items-center gap-2 text-green-600 font-semibold"
+                        className="flex items-center gap-2 hover:text-green-600"
                     >
                         <User className="h-5 w-5" /> Account
+                    </Link>
+                    <Link
+                        href="/doctor/consultation"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <Clock4 className="h-5 w-5" /> Consultation
                     </Link>
                     <Link
                         href="/doctor/appointments"

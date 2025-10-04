@@ -14,6 +14,7 @@ import {
     Loader2,
     Pencil,
     PlusCircle,
+    Clock4,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import {
     DialogTitle,
     DialogFooter,
     DialogTrigger,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
@@ -160,17 +162,35 @@ export default function DoctorConsultationPage() {
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
                 <nav className="flex flex-col gap-4 text-gray-700">
-                    <Link href="/doctor" className="flex items-center gap-2 hover:text-green-600">
+                    <Link
+                        href="/doctor"
+                        className="flex items-center gap-2 text-green-600 font-semibold"
+                    >
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
-                    <Link href="/doctor/account" className="flex items-center gap-2 hover:text-green-600">
+                    <Link
+                        href="/doctor/account"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
                         <User className="h-5 w-5" /> Account
                     </Link>
-                    <Link href="/doctor/consultation" className="flex items-center gap-2 text-green-600 font-semibold">
-                        <CalendarDays className="h-5 w-5" /> Consultation Slots
+                    <Link
+                        href="/doctor/consultation"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <Clock4 className="h-5 w-5" /> Consultation
                     </Link>
-                    <Link href="/doctor/appointments" className="flex items-center gap-2 hover:text-green-600">
-                        <ClipboardList className="h-5 w-5" /> Appointments
+                    <Link
+                        href="/doctor/appointments"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <CalendarDays className="h-5 w-5" /> Appointments
+                    </Link>
+                    <Link
+                        href="/doctor/patients"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <ClipboardList className="h-5 w-5" /> Patients
                     </Link>
                 </nav>
                 <Separator className="my-6" />
@@ -207,7 +227,9 @@ export default function DoctorConsultationPage() {
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild><Link href="/doctor">Dashboard</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild> <Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -226,6 +248,11 @@ export default function DoctorConsultationPage() {
                             <DialogContent className="rounded-xl">
                                 <DialogHeader>
                                     <DialogTitle>{editingSlot ? "Edit Consultation Slot" : "Add Consultation Slot"}</DialogTitle>
+                                    <DialogDescription>
+                                        {editingSlot
+                                            ? "Modify the details of your existing consultation slot."
+                                            : "Fill in the form below to add a new consultation slot."}
+                                    </DialogDescription>
                                 </DialogHeader>
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div>
