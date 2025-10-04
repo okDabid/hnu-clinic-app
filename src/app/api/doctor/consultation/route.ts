@@ -4,6 +4,16 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Role, Prisma } from "@prisma/client";
 
+// ✅ Helper: safely combine date + time into a proper ISO string
+function combineDateTime(date: string, time: string): Date {
+    const iso = `${date}T${time}:00`;
+    const parsed = new Date(iso);
+    if (isNaN(parsed.getTime())) {
+        throw new Error(`Invalid date/time format: ${iso}`);
+    }
+    return parsed;
+}
+
 // ✅ GET — Fetch doctor’s availability slots
 export async function GET() {
     try {
@@ -30,7 +40,14 @@ export async function GET() {
             ],
         });
 
-        return NextResponse.json(availability);
+        // ✅ Format time display for frontend (local-friendly)
+        const formatted = availability.map((slot) => ({
+            ...slot,
+            available_timestart: new Date(slot.available_timestart).toISOString(),
+            available_timeend: new Date(slot.available_timeend).toISOString(),
+        }));
+
+        return NextResponse.json(formatted);
     } catch (err) {
         console.error("[GET /api/doctor/consultation]", err);
         return NextResponse.json(
@@ -56,36 +73,22 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const body = await req.json();
-        const { clinic_id, available_date, available_timestart, available_timeend } = body;
+        const { clinic_id, available_date, available_timestart, available_timeend } = await req.json();
 
         if (!clinic_id || !available_date || !available_timestart || !available_timeend) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // ✅ Parse full timestamps (combine date + time)
-        const dateOnly = new Date(available_date);
-        if (isNaN(dateOnly.getTime())) {
-            return NextResponse.json({ error: "Invalid date format" }, { status: 400 });
-        }
-
-        const startDate = new Date(`${available_date}T${available_timestart}:00`);
-        const endDate = new Date(`${available_date}T${available_timeend}:00`);
-
-        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            return NextResponse.json({ error: "Invalid time format" }, { status: 400 });
-        }
-
-        // ✅ Ensure clinic exists
-        const clinic = await prisma.clinic.findUnique({
-            where: { clinic_id },
-        });
-
+        const clinic = await prisma.clinic.findUnique({ where: { clinic_id } });
         if (!clinic) {
             return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
         }
 
-        // ✅ Save record
+        // ✅ Properly combine date + time
+        const dateOnly = new Date(available_date);
+        const startDate = combineDateTime(available_date, available_timestart);
+        const endDate = combineDateTime(available_date, available_timeend);
+
         const newAvailability = await prisma.doctorAvailability.create({
             data: {
                 doctor_user_id: doctor.user_id,
@@ -133,17 +136,16 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Missing availability ID" }, { status: 400 });
         }
 
-
         const updateData: Prisma.DoctorAvailabilityUpdateInput = {};
 
         if (available_date) {
             updateData.available_date = new Date(available_date);
         }
-        if (available_timestart) {
-            updateData.available_timestart = new Date(available_timestart);
+        if (available_date && available_timestart) {
+            updateData.available_timestart = combineDateTime(available_date, available_timestart);
         }
-        if (available_timeend) {
-            updateData.available_timeend = new Date(available_timeend);
+        if (available_date && available_timeend) {
+            updateData.available_timeend = combineDateTime(available_date, available_timeend);
         }
 
         const updated = await prisma.doctorAvailability.update({
@@ -157,9 +159,9 @@ export async function PUT(req: Request) {
             data: updated,
         });
     } catch (err) {
-        console.error("[PUT /api/doctor/consultation]", err);
+        console.error("[PUT /api/doctor/consultation] Detailed error:", err);
         return NextResponse.json(
-            { error: "Failed to update schedule" },
+            { error: "Failed to update schedule", details: String(err) },
             { status: 500 }
         );
     }

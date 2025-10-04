@@ -80,7 +80,9 @@ export default function HomePage() {
             Book appointments, access health records, and stay connected.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-            <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">Book Appointment</Button>
+            <Link href={"/login"}>
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">Book Appointment</Button>
+            </Link>
             <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
               Learn More
             </Button>

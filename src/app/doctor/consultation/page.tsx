@@ -59,7 +59,6 @@ export default function DoctorConsultationPage() {
     const [slots, setSlots] = useState<Availability[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
 
-    // For adding/editing
     const [formData, setFormData] = useState({
         clinic_id: "",
         available_date: "",
@@ -78,7 +77,15 @@ export default function DoctorConsultationPage() {
         }
     }
 
-    // ✅ Load doctor's consultation slots
+    // 🟢 Helper to convert ISO to local HH:mm
+    function toLocalTime(iso: string): string {
+        const d = new Date(iso);
+        const hours = d.getHours().toString().padStart(2, "0");
+        const mins = d.getMinutes().toString().padStart(2, "0");
+        return `${hours}:${mins}`;
+    }
+
+    // ✅ Load doctor’s consultation slots
     async function loadSlots() {
         try {
             setLoading(true);
@@ -96,7 +103,7 @@ export default function DoctorConsultationPage() {
         }
     }
 
-    // ✅ Load available clinics
+    // ✅ Load clinics
     async function loadClinics() {
         try {
             const res = await fetch("/api/clinics", { cache: "no-store" });
@@ -115,7 +122,12 @@ export default function DoctorConsultationPage() {
     // ✅ Add or Update availability
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (!formData.clinic_id || !formData.available_date || !formData.available_timestart || !formData.available_timeend) {
+        if (
+            !formData.clinic_id ||
+            !formData.available_date ||
+            !formData.available_timestart ||
+            !formData.available_timeend
+        ) {
             toast.error("All fields are required.");
             return;
         }
@@ -162,34 +174,19 @@ export default function DoctorConsultationPage() {
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
                 <nav className="flex flex-col gap-4 text-gray-700">
-                    <Link
-                        href="/doctor"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor" className="flex items-center gap-2 hover:text-green-600">
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
-                    <Link
-                        href="/doctor/account"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor/account" className="flex items-center gap-2 hover:text-green-600">
                         <User className="h-5 w-5" /> Account
                     </Link>
-                    <Link
-                        href="/doctor/consultation"
-                        className="flex items-center gap-2 text-green-600 font-semibold"
-                    >
+                    <Link href="/doctor/consultation" className="flex items-center gap-2 text-green-600 font-semibold">
                         <Clock4 className="h-5 w-5" /> Consultation
                     </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor/appointments" className="flex items-center gap-2 hover:text-green-600">
                         <CalendarDays className="h-5 w-5" /> Appointments
                     </Link>
-                    <Link
-                        href="/doctor/patients"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor/patients" className="flex items-center gap-2 hover:text-green-600">
                         <ClipboardList className="h-5 w-5" /> Patients
                     </Link>
                 </nav>
@@ -211,7 +208,7 @@ export default function DoctorConsultationPage() {
                 </Button>
             </aside>
 
-            {/* Main Content */}
+            {/* Main */}
             <main className="flex-1 flex flex-col">
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Consultation Slots</h2>
@@ -229,13 +226,16 @@ export default function DoctorConsultationPage() {
                                 <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild> <Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
+                                    Logout
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </header>
 
+                {/* Duty Hours Table */}
                 <section className="px-6 py-8 max-w-6xl mx-auto w-full space-y-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-2xl font-semibold text-green-700">My Duty Hours</h3>
@@ -250,8 +250,8 @@ export default function DoctorConsultationPage() {
                                     <DialogTitle>{editingSlot ? "Edit Consultation Slot" : "Add Consultation Slot"}</DialogTitle>
                                     <DialogDescription>
                                         {editingSlot
-                                            ? "Modify the details of your existing consultation slot."
-                                            : "Fill in the form below to add a new consultation slot."}
+                                            ? "Modify your existing consultation slot."
+                                            : "Add a new consultation slot."}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -304,7 +304,11 @@ export default function DoctorConsultationPage() {
                                     </div>
 
                                     <DialogFooter>
-                                        <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
+                                        <Button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                        >
                                             {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                                             {editingSlot ? "Save Changes" : "Add Slot"}
                                         </Button>
@@ -336,8 +340,8 @@ export default function DoctorConsultationPage() {
                                         {slots.map((slot) => (
                                             <TableRow key={slot.availability_id}>
                                                 <TableCell>{slot.available_date.slice(0, 10)}</TableCell>
-                                                <TableCell>{new Date(slot.available_timestart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</TableCell>
-                                                <TableCell>{new Date(slot.available_timeend).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</TableCell>
+                                                <TableCell>{toLocalTime(slot.available_timestart)}</TableCell>
+                                                <TableCell>{toLocalTime(slot.available_timeend)}</TableCell>
                                                 <TableCell>{slot.clinic.clinic_name}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button
@@ -348,8 +352,8 @@ export default function DoctorConsultationPage() {
                                                             setFormData({
                                                                 clinic_id: slot.clinic.clinic_id,
                                                                 available_date: slot.available_date.slice(0, 10),
-                                                                available_timestart: new Date(slot.available_timestart).toISOString().slice(11, 16),
-                                                                available_timeend: new Date(slot.available_timeend).toISOString().slice(11, 16),
+                                                                available_timestart: toLocalTime(slot.available_timestart),
+                                                                available_timeend: toLocalTime(slot.available_timeend),
                                                             });
                                                             setDialogOpen(true);
                                                         }}
