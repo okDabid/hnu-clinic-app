@@ -184,7 +184,7 @@ export default function DoctorAccountPage() {
             {/* Main */}
             <main className="flex-1 flex flex-col">
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">My Account</h2>
+                    <h2 className="text-xl font-bold text-green-600">Edit Profile</h2>
 
                     <div className="md:hidden">
                         <DropdownMenu>
