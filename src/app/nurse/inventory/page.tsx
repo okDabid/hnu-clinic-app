@@ -412,77 +412,81 @@ export default function NurseInventoryPage() {
                             </div>
                         </CardHeader>
 
-                        {/* Table */}
                         <CardContent className="flex-1 flex flex-col">
-                            <div className="overflow-x-auto flex-1">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Clinic</TableHead>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Category</TableHead>
-                                            <TableHead>Item Type</TableHead>
-                                            <TableHead>Strength</TableHead>
-                                            <TableHead>Total Quantity</TableHead>
-                                            <TableHead>Expiry Batches</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredItems.length > 0 ? (
-                                            filteredItems.map((item) => (
-                                                <TableRow key={item.med_id} className="hover:bg-green-50">
-                                                    <TableCell>{item.clinic.clinic_name}</TableCell>
-                                                    <TableCell>{item.item_name}</TableCell>
-                                                    <TableCell>{item.category}</TableCell>
-                                                    <TableCell>{item.item_type || "-"}</TableCell>
-                                                    <TableCell>
-                                                        {item.strength ? `${item.strength} ${item.unit || ""}` : "-"}
-                                                    </TableCell>
-                                                    <TableCell>{item.quantity}</TableCell>
-                                                    <TableCell>
-                                                        <div className="space-y-1">
-                                                            {item.replenishments.map((rep, idx) => {
-                                                                const status = getStatus(rep.expiry_date);
-                                                                const daysLeft = Math.ceil(
-                                                                    (new Date(rep.expiry_date).getTime() - new Date().getTime()) /
-                                                                    (1000 * 60 * 60 * 24)
-                                                                );
-                                                                return (
-                                                                    <div
-                                                                        key={idx}
-                                                                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 shadow-sm"
-                                                                    >
-                                                                        {/* Expiry Date */}
-                                                                        <span className="font-medium text-gray-800">
-                                                                            {new Date(rep.expiry_date).toLocaleDateString()}
-                                                                        </span>
-
-                                                                        {/* Status + Days Left */}
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Badge variant="outline" className={status.color}>
-                                                                                {status.text}
-                                                                            </Badge>
-                                                                            <span className="text-sm text-gray-600">
-                                                                                ({daysLeft} days left)
+                            {loading ? (
+                                <div className="flex items-center justify-center py-10 text-gray-500">
+                                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                    Loading inventory...
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto flex-1">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Clinic</TableHead>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Category</TableHead>
+                                                <TableHead>Item Type</TableHead>
+                                                <TableHead>Strength</TableHead>
+                                                <TableHead>Total Quantity</TableHead>
+                                                <TableHead>Expiry Batches</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredItems.length > 0 ? (
+                                                filteredItems.map((item) => (
+                                                    <TableRow key={item.med_id} className="hover:bg-green-50">
+                                                        <TableCell>{item.clinic.clinic_name}</TableCell>
+                                                        <TableCell>{item.item_name}</TableCell>
+                                                        <TableCell>{item.category}</TableCell>
+                                                        <TableCell>{item.item_type || "-"}</TableCell>
+                                                        <TableCell>
+                                                            {item.strength ? `${item.strength} ${item.unit || ""}` : "-"}
+                                                        </TableCell>
+                                                        <TableCell>{item.quantity}</TableCell>
+                                                        <TableCell>
+                                                            <div className="space-y-1">
+                                                                {item.replenishments.map((rep, idx) => {
+                                                                    const status = getStatus(rep.expiry_date);
+                                                                    const daysLeft = Math.ceil(
+                                                                        (new Date(rep.expiry_date).getTime() -
+                                                                            new Date().getTime()) /
+                                                                        (1000 * 60 * 60 * 24)
+                                                                    );
+                                                                    return (
+                                                                        <div
+                                                                            key={idx}
+                                                                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 shadow-sm"
+                                                                        >
+                                                                            <span className="font-medium text-gray-800">
+                                                                                {new Date(rep.expiry_date).toLocaleDateString()}
                                                                             </span>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge variant="outline" className={status.color}>
+                                                                                    {status.text}
+                                                                                </Badge>
+                                                                                <span className="text-sm text-gray-600">
+                                                                                    ({daysLeft} days left)
+                                                                                </span>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="text-center text-gray-500 py-6">
+                                                        No items found
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={7} className="text-center text-gray-500 py-6">
-                                                    No items found
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </section>

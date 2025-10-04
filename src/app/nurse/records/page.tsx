@@ -226,174 +226,270 @@ export default function NurseRecordsPage() {
                         </CardHeader>
 
                         <CardContent className="flex-1 flex flex-col">
-                            <div className="overflow-x-auto flex-1">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Patient ID</TableHead>
-                                            <TableHead>Full Name</TableHead>
-                                            <TableHead>Type</TableHead>
-                                            <TableHead>Gender</TableHead>
-                                            <TableHead>DOB</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Action</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filtered.length > 0 ? (
-                                            filtered.map((r) => (
-                                                <TableRow key={r.id} className="hover:bg-green-50">
-                                                    <TableCell>{r.patientId}</TableCell>
-                                                    <TableCell>{r.fullName}</TableCell>
-                                                    <TableCell>{r.patientType}</TableCell>
-                                                    <TableCell>{r.gender}</TableCell>
-                                                    <TableCell>{new Date(r.date_of_birth).toLocaleDateString()}</TableCell>
-                                                    <TableCell>{r.status}</TableCell>
-                                                    <TableCell>
-                                                        <Dialog>
-                                                            <DialogTrigger asChild>
-                                                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                                                                    Manage
-                                                                </Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent className="max-w-2xl">
-                                                                <DialogHeader>
-                                                                    <DialogTitle>{r.fullName}</DialogTitle>
-                                                                    <DialogDescription>
-                                                                        {r.patientType} Patient Record
-                                                                    </DialogDescription>
-                                                                </DialogHeader>
+                            {loading ? (
+                                <div className="flex items-center justify-center py-10 text-gray-500">
+                                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                    Loading records...
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto flex-1">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Patient ID</TableHead>
+                                                <TableHead>Full Name</TableHead>
+                                                <TableHead>Type</TableHead>
+                                                <TableHead>Gender</TableHead>
+                                                <TableHead>DOB</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Action</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filtered.length > 0 ? (
+                                                filtered.map((r) => (
+                                                    <TableRow key={r.id} className="hover:bg-green-50">
+                                                        <TableCell>{r.patientId}</TableCell>
+                                                        <TableCell>{r.fullName}</TableCell>
+                                                        <TableCell>{r.patientType}</TableCell>
+                                                        <TableCell>{r.gender}</TableCell>
+                                                        <TableCell>
+                                                            {new Date(r.date_of_birth).toLocaleDateString()}
+                                                        </TableCell>
+                                                        <TableCell>{r.status}</TableCell>
+                                                        <TableCell>
+                                                            <Dialog>
+                                                                <DialogTrigger asChild>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                                                    >
+                                                                        Manage
+                                                                    </Button>
+                                                                </DialogTrigger>
+                                                                <DialogContent className="max-w-2xl">
+                                                                    <DialogHeader>
+                                                                        <DialogTitle>{r.fullName}</DialogTitle>
+                                                                        <DialogDescription>
+                                                                            {r.patientType} Patient Record
+                                                                        </DialogDescription>
+                                                                    </DialogHeader>
 
-                                                                <Tabs defaultValue="details">
-                                                                    <TabsList className="grid grid-cols-2 gap-2">
-                                                                        <TabsTrigger value="details">Details</TabsTrigger>
-                                                                        <TabsTrigger value="update">Update & Notes</TabsTrigger>
-                                                                    </TabsList>
+                                                                    <Tabs defaultValue="details">
+                                                                        <TabsList className="grid grid-cols-2 gap-2">
+                                                                            <TabsTrigger value="details">Details</TabsTrigger>
+                                                                            <TabsTrigger value="update">
+                                                                                Update & Notes
+                                                                            </TabsTrigger>
+                                                                        </TabsList>
 
-                                                                    {/* Details */}
-                                                                    <TabsContent value="details" className="space-y-2">
-                                                                        <p><strong>Patient ID:</strong> {r.patientId}</p>
-                                                                        <p><strong>Gender:</strong> {r.gender}</p>
-                                                                        <p><strong>DOB:</strong> {new Date(r.date_of_birth).toLocaleDateString()}</p>
-                                                                        <p><strong>Status:</strong> {r.status}</p>
-                                                                        <p><strong>Contact:</strong> {r.contactno || "—"}</p>
-                                                                        <p><strong>Address:</strong> {r.address || "—"}</p>
-                                                                        <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
-                                                                        <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
-                                                                        <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
-                                                                        <p>
-                                                                            <strong>Emergency:</strong> {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) - {r.emergency?.num || "—"}
-                                                                        </p>
-                                                                        {r.patientType === "Student" && (
-                                                                            <>
-                                                                                <p><strong>Department:</strong> {r.department || "—"}</p>
-                                                                                <p><strong>Program:</strong> {r.program || "—"}</p>
-                                                                                <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
-                                                                            </>
-                                                                        )}
-                                                                    </TabsContent>
+                                                                        {/* ✅ DETAILS TAB */}
+                                                                        <TabsContent value="details" className="space-y-2">
+                                                                            <p>
+                                                                                <strong>Patient ID:</strong> {r.patientId}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Gender:</strong> {r.gender}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>DOB:</strong>{" "}
+                                                                                {new Date(r.date_of_birth).toLocaleDateString()}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Status:</strong> {r.status}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Contact:</strong> {r.contactno || "—"}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Address:</strong> {r.address || "—"}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Blood Type:</strong> {r.bloodtype || "—"}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Allergies:</strong> {r.allergies || "—"}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Medical Conditions:</strong>{" "}
+                                                                                {r.medical_cond || "—"}
+                                                                            </p>
+                                                                            <p>
+                                                                                <strong>Emergency:</strong>{" "}
+                                                                                {r.emergency?.name || "—"} (
+                                                                                {r.emergency?.relation || "—"}) -{" "}
+                                                                                {r.emergency?.num || "—"}
+                                                                            </p>
+                                                                            {r.patientType === "Student" && (
+                                                                                <>
+                                                                                    <p>
+                                                                                        <strong>Department:</strong>{" "}
+                                                                                        {r.department || "—"}
+                                                                                    </p>
+                                                                                    <p>
+                                                                                        <strong>Program:</strong> {r.program || "—"}
+                                                                                    </p>
+                                                                                    <p>
+                                                                                        <strong>Year Level:</strong>{" "}
+                                                                                        {r.year_level || "—"}
+                                                                                    </p>
+                                                                                </>
+                                                                            )}
+                                                                        </TabsContent>
 
-                                                                    {/* Update & Notes */}
-                                                                    <TabsContent value="update">
-                                                                        {/* Medical Conditions */}
-                                                                        <form
-                                                                            className="space-y-3 mb-6"
-                                                                            onSubmit={async (e) => {
-                                                                                e.preventDefault();
-                                                                                setLoading(true);
-                                                                                const form = e.currentTarget as HTMLFormElement;
-                                                                                const body = {
-                                                                                    type: r.patientType,
-                                                                                    medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement).value,
-                                                                                };
+                                                                        {/* ✅ UPDATE TAB */}
+                                                                        <TabsContent value="update">
+                                                                            {/* Medical Conditions Form */}
+                                                                            <form
+                                                                                className="space-y-3 mb-6"
+                                                                                onSubmit={async (e) => {
+                                                                                    e.preventDefault();
+                                                                                    setLoading(true);
+                                                                                    const form =
+                                                                                        e.currentTarget as HTMLFormElement;
+                                                                                    const body = {
+                                                                                        type: r.patientType,
+                                                                                        medical_cond: (
+                                                                                            form.elements.namedItem(
+                                                                                                "medical_cond"
+                                                                                            ) as HTMLInputElement
+                                                                                        ).value,
+                                                                                    };
 
-                                                                                const res = await fetch(`/api/nurse/records/${r.id}`, {
-                                                                                    method: "PATCH",
-                                                                                    headers: { "Content-Type": "application/json" },
-                                                                                    body: JSON.stringify(body),
-                                                                                });
+                                                                                    const res = await fetch(
+                                                                                        `/api/nurse/records/${r.id}`,
+                                                                                        {
+                                                                                            method: "PATCH",
+                                                                                            headers: {
+                                                                                                "Content-Type": "application/json",
+                                                                                            },
+                                                                                            body: JSON.stringify(body),
+                                                                                        }
+                                                                                    );
 
-                                                                                if (res.ok) {
-                                                                                    toast.success("Medical condition updated");
-                                                                                    await loadRecords();
-                                                                                } else {
-                                                                                    toast.error("Failed to update");
-                                                                                }
-                                                                                setLoading(false);
-                                                                            }}
-                                                                        >
-                                                                            <div>
-                                                                                <Label>Medical Conditions</Label>
-                                                                                <Input name="medical_cond" defaultValue={r.medical_cond || ""} />
-                                                                            </div>
-                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
-                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
-                                                                            </Button>
-                                                                        </form>
+                                                                                    if (res.ok) {
+                                                                                        toast.success("Medical condition updated");
+                                                                                        await loadRecords();
+                                                                                    } else {
+                                                                                        toast.error("Failed to update");
+                                                                                    }
+                                                                                    setLoading(false);
+                                                                                }}
+                                                                            >
+                                                                                <div>
+                                                                                    <Label>Medical Conditions</Label>
+                                                                                    <Input
+                                                                                        name="medical_cond"
+                                                                                        defaultValue={r.medical_cond || ""}
+                                                                                    />
+                                                                                </div>
+                                                                                <Button
+                                                                                    type="submit"
+                                                                                    disabled={loading}
+                                                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                                                >
+                                                                                    {loading ? (
+                                                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                                                    ) : (
+                                                                                        "Save"
+                                                                                    )}
+                                                                                </Button>
+                                                                            </form>
 
-                                                                        {/* Consultation Notes */}
-                                                                        <form
-                                                                            className="space-y-3"
-                                                                            onSubmit={async (e) => {
-                                                                                e.preventDefault();
-                                                                                setLoading(true);
-                                                                                const form = e.currentTarget as HTMLFormElement;
-                                                                                const body = {
-                                                                                    appointment_id: "TODO_APPOINTMENT_ID",
-                                                                                    nurse_user_id: session?.user?.id,
-                                                                                    reason_of_visit: (form.elements.namedItem("reason_of_visit") as HTMLInputElement).value,
-                                                                                    findings: (form.elements.namedItem("findings") as HTMLInputElement).value,
-                                                                                    diagnosis: (form.elements.namedItem("diagnosis") as HTMLInputElement).value,
-                                                                                };
+                                                                            {/* Consultation Notes Form */}
+                                                                            <form
+                                                                                className="space-y-3"
+                                                                                onSubmit={async (e) => {
+                                                                                    e.preventDefault();
+                                                                                    setLoading(true);
+                                                                                    const form =
+                                                                                        e.currentTarget as HTMLFormElement;
+                                                                                    const body = {
+                                                                                        appointment_id: "TODO_APPOINTMENT_ID",
+                                                                                        nurse_user_id: session?.user?.id,
+                                                                                        reason_of_visit: (
+                                                                                            form.elements.namedItem(
+                                                                                                "reason_of_visit"
+                                                                                            ) as HTMLInputElement
+                                                                                        ).value,
+                                                                                        findings: (
+                                                                                            form.elements.namedItem(
+                                                                                                "findings"
+                                                                                            ) as HTMLInputElement
+                                                                                        ).value,
+                                                                                        diagnosis: (
+                                                                                            form.elements.namedItem(
+                                                                                                "diagnosis"
+                                                                                            ) as HTMLInputElement
+                                                                                        ).value,
+                                                                                    };
 
-                                                                                const res = await fetch(`/api/nurse/consultations`, {
-                                                                                    method: "POST",
-                                                                                    headers: { "Content-Type": "application/json" },
-                                                                                    body: JSON.stringify(body),
-                                                                                });
+                                                                                    const res = await fetch(
+                                                                                        `/api/nurse/consultations`,
+                                                                                        {
+                                                                                            method: "POST",
+                                                                                            headers: {
+                                                                                                "Content-Type": "application/json",
+                                                                                            },
+                                                                                            body: JSON.stringify(body),
+                                                                                        }
+                                                                                    );
 
-                                                                                if (res.ok) {
-                                                                                    toast.success("Consultation notes saved");
-                                                                                } else {
-                                                                                    toast.error("Failed to save consultation");
-                                                                                }
-                                                                                setLoading(false);
-                                                                            }}
-                                                                        >
-                                                                            <div>
-                                                                                <Label>Reason of Visit</Label>
-                                                                                <Input name="reason_of_visit" />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Findings</Label>
-                                                                                <Input name="findings" />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Diagnosis</Label>
-                                                                                <Input name="diagnosis" />
-                                                                            </div>
-                                                                            <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
-                                                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Notes"}
-                                                                            </Button>
-                                                                        </form>
-                                                                    </TabsContent>
-                                                                </Tabs>
-                                                            </DialogContent>
-                                                        </Dialog>
+                                                                                    if (res.ok) {
+                                                                                        toast.success("Consultation notes saved");
+                                                                                    } else {
+                                                                                        toast.error("Failed to save consultation");
+                                                                                    }
+                                                                                    setLoading(false);
+                                                                                }}
+                                                                            >
+                                                                                <div>
+                                                                                    <Label>Reason of Visit</Label>
+                                                                                    <Input name="reason_of_visit" />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <Label>Findings</Label>
+                                                                                    <Input name="findings" />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <Label>Diagnosis</Label>
+                                                                                    <Input name="diagnosis" />
+                                                                                </div>
+                                                                                <Button
+                                                                                    type="submit"
+                                                                                    disabled={loading}
+                                                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                                                >
+                                                                                    {loading ? (
+                                                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                                                    ) : (
+                                                                                        "Save Notes"
+                                                                                    )}
+                                                                                </Button>
+                                                                            </form>
+                                                                        </TabsContent>
+                                                                    </Tabs>
+                                                                </DialogContent>
+                                                            </Dialog>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            ) : (
+                                                <TableRow>
+                                                    <TableCell
+                                                        colSpan={7}
+                                                        className="text-center text-gray-500 py-6"
+                                                    >
+                                                        No patient records found
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={7} className="text-center text-gray-500 py-6">
-                                                    No patient records found
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )}
                         </CardContent>
+
                     </Card>
                 </section>
 
