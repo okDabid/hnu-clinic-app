@@ -4,13 +4,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { AppointmentStatus } from "@prisma/client";
 
-// ✅ Next.js expects an async function with `context: { params: { id: string } }`
+// ✅ Use Promise in context parameter (Next.js 14+ correct typing)
 export async function PATCH(
     request: Request,
     context: { params: Promise<{ id: string }> }
 ) {
     try {
-        // ✅ Await params for type correctness (since context.params is now a Promise)
+        // ✅ Await the promise for params
         const { id } = await context.params;
 
         const session = await getServerSession(authOptions);
@@ -20,7 +20,7 @@ export async function PATCH(
 
         const { action } = await request.json();
 
-        // ✅ Map actions to AppointmentStatus enum
+        // ✅ Map frontend actions to Prisma enum
         let newStatus: AppointmentStatus;
         switch (action) {
             case "approve":
@@ -36,7 +36,7 @@ export async function PATCH(
                 return NextResponse.json({ error: "Invalid action" }, { status: 400 });
         }
 
-        // ✅ Update the record, including relations
+        // ✅ Update appointment and include relations
         const updated = await prisma.appointment.update({
             where: { appointment_id: id },
             data: { status: newStatus },
@@ -52,6 +52,7 @@ export async function PATCH(
             },
         });
 
+        // ✅ Format for frontend
         const patientName =
             updated.patient.student?.fname && updated.patient.student?.lname
                 ? `${updated.patient.student.fname} ${updated.patient.student.lname}`
@@ -71,7 +72,7 @@ export async function PATCH(
             status: updated.status,
         });
     } catch (error) {
-        console.error("[PATCH /api/appointments/:id]", error);
+        console.error("[PATCH /api/doctor/appointments/:id]", error);
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 }

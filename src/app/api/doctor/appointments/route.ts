@@ -12,7 +12,7 @@ export async function GET() {
 
         const doctorId = session.user.id;
 
-        // Fetch doctor’s appointments and join patient + clinic info
+        // Fetch doctor’s appointments and include patient + clinic info
         const appointments = await prisma.appointment.findMany({
             where: { doctor_user_id: doctorId },
             include: {
@@ -34,7 +34,7 @@ export async function GET() {
             orderBy: { appointment_date: "desc" },
         });
 
-        // Format for frontend table
+        // Format for frontend
         const formatted = appointments.map((a) => ({
             id: a.appointment_id,
             patientName:
@@ -54,7 +54,7 @@ export async function GET() {
 
         return NextResponse.json(formatted);
     } catch (error) {
-        console.error("[GET /api/appointments]", error);
+        console.error("[GET /api/doctor/appointments]", error);
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 }
