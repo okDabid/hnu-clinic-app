@@ -77,7 +77,6 @@ export default function DoctorConsultationPage() {
         }
     }
 
-    // 🟢 Helper to convert ISO to local HH:mm
     function toLocalTime(iso: string): string {
         const d = new Date(iso);
         const hours = d.getHours().toString().padStart(2, "0");
@@ -85,17 +84,13 @@ export default function DoctorConsultationPage() {
         return `${hours}:${mins}`;
     }
 
-    // ✅ Load doctor’s consultation slots
     async function loadSlots() {
         try {
             setLoading(true);
             const res = await fetch("/api/doctor/consultation", { cache: "no-store" });
             const data = await res.json();
-            if (data.error) {
-                toast.error(data.error);
-            } else {
-                setSlots(data);
-            }
+            if (data.error) toast.error(data.error);
+            else setSlots(data);
         } catch {
             toast.error("Failed to load consultation slots");
         } finally {
@@ -103,7 +98,6 @@ export default function DoctorConsultationPage() {
         }
     }
 
-    // ✅ Load clinics
     async function loadClinics() {
         try {
             const res = await fetch("/api/clinics", { cache: "no-store" });
@@ -119,7 +113,6 @@ export default function DoctorConsultationPage() {
         loadClinics();
     }, []);
 
-    // ✅ Add or Update availability
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (
@@ -135,7 +128,6 @@ export default function DoctorConsultationPage() {
         const body = editingSlot
             ? { availability_id: editingSlot.availability_id, ...formData }
             : formData;
-
         const method = editingSlot ? "PUT" : "POST";
 
         try {
@@ -145,7 +137,6 @@ export default function DoctorConsultationPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
-
             const data = await res.json();
             if (data.error) {
                 toast.error(data.error);
@@ -239,27 +230,46 @@ export default function DoctorConsultationPage() {
                 <section className="px-6 py-8 max-w-6xl mx-auto w-full space-y-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-2xl font-semibold text-green-700">My Duty Hours</h3>
+
+                        {/* 🟢 FIX — Reset state before opening dialog for ADD */}
                         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-green-600 hover:bg-green-700 text-white gap-2">
-                                    <PlusCircle className="h-4 w-4" /> {editingSlot ? "Edit Slot" : "Add Slot"}
+                                <Button
+                                    className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                                    onClick={() => {
+                                        setEditingSlot(null);
+                                        setFormData({
+                                            clinic_id: "",
+                                            available_date: "",
+                                            available_timestart: "",
+                                            available_timeend: "",
+                                        });
+                                    }}
+                                >
+                                    <PlusCircle className="h-4 w-4" /> Add Slot
                                 </Button>
                             </DialogTrigger>
+
                             <DialogContent className="rounded-xl">
                                 <DialogHeader>
-                                    <DialogTitle>{editingSlot ? "Edit Consultation Slot" : "Add Consultation Slot"}</DialogTitle>
+                                    <DialogTitle>
+                                        {editingSlot ? "Edit Consultation Slot" : "Add Consultation Slot"}
+                                    </DialogTitle>
                                     <DialogDescription>
                                         {editingSlot
                                             ? "Modify your existing consultation slot."
                                             : "Add a new consultation slot."}
                                     </DialogDescription>
                                 </DialogHeader>
+
                                 <form onSubmit={handleSubmit} className="space-y-4">
                                     <div>
                                         <Label>Clinic</Label>
                                         <select
                                             value={formData.clinic_id}
-                                            onChange={(e) => setFormData({ ...formData, clinic_id: e.target.value })}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, clinic_id: e.target.value })
+                                            }
                                             required
                                             className="w-full border rounded-md p-2"
                                         >
@@ -277,7 +287,9 @@ export default function DoctorConsultationPage() {
                                         <Input
                                             type="date"
                                             value={formData.available_date}
-                                            onChange={(e) => setFormData({ ...formData, available_date: e.target.value })}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, available_date: e.target.value })
+                                            }
                                             required
                                         />
                                     </div>
@@ -288,7 +300,12 @@ export default function DoctorConsultationPage() {
                                             <Input
                                                 type="time"
                                                 value={formData.available_timestart}
-                                                onChange={(e) => setFormData({ ...formData, available_timestart: e.target.value })}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        available_timestart: e.target.value,
+                                                    })
+                                                }
                                                 required
                                             />
                                         </div>
@@ -297,7 +314,12 @@ export default function DoctorConsultationPage() {
                                             <Input
                                                 type="time"
                                                 value={formData.available_timeend}
-                                                onChange={(e) => setFormData({ ...formData, available_timeend: e.target.value })}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        available_timeend: e.target.value,
+                                                    })
+                                                }
                                                 required
                                             />
                                         </div>
@@ -320,7 +342,9 @@ export default function DoctorConsultationPage() {
 
                     <Card className="rounded-2xl shadow-lg">
                         <CardHeader>
-                            <CardTitle className="text-green-600">Scheduled Consultation Slots</CardTitle>
+                            <CardTitle className="text-green-600">
+                                Scheduled Consultation Slots
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             {loading ? (
@@ -348,12 +372,17 @@ export default function DoctorConsultationPage() {
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => {
+                                                            // 🟢 FIX — Set proper editing state before opening
                                                             setEditingSlot(slot);
                                                             setFormData({
                                                                 clinic_id: slot.clinic.clinic_id,
                                                                 available_date: slot.available_date.slice(0, 10),
-                                                                available_timestart: toLocalTime(slot.available_timestart),
-                                                                available_timeend: toLocalTime(slot.available_timeend),
+                                                                available_timestart: toLocalTime(
+                                                                    slot.available_timestart
+                                                                ),
+                                                                available_timeend: toLocalTime(
+                                                                    slot.available_timeend
+                                                                ),
                                                             });
                                                             setDialogOpen(true);
                                                         }}
