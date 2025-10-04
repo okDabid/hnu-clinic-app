@@ -37,13 +37,10 @@ interface Appointment {
 }
 
 export default function DoctorAppointmentsPage() {
-    const { data: session } = useSession();
     const [menuOpen, setMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
-
-    const fullName = session?.user?.name || "School Doctor";
 
     async function handleLogout() {
         try {
