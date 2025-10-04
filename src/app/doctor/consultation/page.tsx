@@ -78,9 +78,9 @@ export default function DoctorConsultationPage() {
     }
 
     function toLocalTime(iso: string): string {
-        const d = new Date(iso);
-        const hours = d.getHours().toString().padStart(2, "0");
-        const mins = d.getMinutes().toString().padStart(2, "0");
+        const date = new Date(iso);
+        const hours = date.getHours().toString().padStart(2, "0");
+        const mins = date.getMinutes().toString().padStart(2, "0");
         return `${hours}:${mins}`;
     }
 

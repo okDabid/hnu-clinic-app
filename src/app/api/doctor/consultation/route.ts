@@ -5,35 +5,30 @@ import { prisma } from "@/lib/prisma";
 import { Role, Prisma } from "@prisma/client";
 
 /**
- * 🧭 Helper: Converts date (YYYY-MM-DD) + time (HH:mm)
- * to a Date object in *local* time — avoids UTC offset issues.
+ * 🕒 Helper: Convert date (YYYY-MM-DD) and time (HH:mm)
+ * to a UTC Date to prevent timezone drift on deployment (e.g., Vercel)
  */
-function toLocalDate(date: string, time: string): Date {
+function toUTCDate(date: string, time: string): Date {
     const [year, month, day] = date.split("-").map(Number);
     const [hour, minute] = time.split(":").map(Number);
-    const d = new Date();
-    d.setFullYear(year, month - 1, day);
-    d.setHours(hour, minute, 0, 0);
-    return d;
+    return new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
 }
 
 /**
- * ✅ GET — Fetch doctor’s consultation availability
+ * ✅ GET — Fetch doctor consultation availability
  */
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.id)
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: session.user.id },
         });
 
-        if (!doctor || doctor.role !== Role.DOCTOR) {
+        if (!doctor || doctor.role !== Role.DOCTOR)
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
-        }
 
         const availability = await prisma.doctorAvailability.findMany({
             where: { doctor_user_id: doctor.user_id },
@@ -47,107 +42,92 @@ export async function GET() {
         return NextResponse.json(availability);
     } catch (err) {
         console.error("[GET /api/doctor/consultation]", err);
-        return NextResponse.json(
-            { error: "Failed to fetch consultation slots" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to fetch slots" }, { status: 500 });
     }
 }
 
 /**
- * ✅ POST — Add new doctor duty hours
+ * ✅ POST — Add new consultation slot
  */
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.id)
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: session.user.id },
         });
 
-        if (!doctor || doctor.role !== Role.DOCTOR) {
+        if (!doctor || doctor.role !== Role.DOCTOR)
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
-        }
 
         const { clinic_id, available_date, available_timestart, available_timeend } = await req.json();
 
-        if (!clinic_id || !available_date || !available_timestart || !available_timeend) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-        }
+        if (!clinic_id || !available_date || !available_timestart || !available_timeend)
+            return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
-        // 🕒 Convert to local timestamps
-        const startDate = toLocalDate(available_date, available_timestart);
-        const endDate = toLocalDate(available_date, available_timeend);
-
-        // Validate time logic
-        if (endDate <= startDate) {
-            return NextResponse.json({ error: "End time must be after start time" }, { status: 400 });
-        }
-
-        // Verify clinic exists
         const clinic = await prisma.clinic.findUnique({ where: { clinic_id } });
-        if (!clinic) {
+        if (!clinic)
             return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
-        }
 
-        const newAvailability = await prisma.doctorAvailability.create({
+        // 🕒 Convert to UTC for consistent storage
+        const startUTC = toUTCDate(available_date, available_timestart);
+        const endUTC = toUTCDate(available_date, available_timeend);
+
+        if (endUTC <= startUTC)
+            return NextResponse.json({ error: "End time must be after start time" }, { status: 400 });
+
+        const newSlot = await prisma.doctorAvailability.create({
             data: {
                 doctor_user_id: doctor.user_id,
                 clinic_id,
                 available_date: new Date(available_date),
-                available_timestart: startDate,
-                available_timeend: endDate,
+                available_timestart: startUTC,
+                available_timeend: endUTC,
             },
         });
 
         return NextResponse.json({
             success: true,
-            message: "Duty hours successfully added",
-            data: newAvailability,
+            message: "Consultation slot added successfully",
+            data: newSlot,
         });
     } catch (err) {
         console.error("[POST /api/doctor/consultation]", err);
-        return NextResponse.json(
-            { error: "Failed to add duty hours" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to add consultation slot" }, { status: 500 });
     }
 }
 
 /**
- * ✅ PUT — Update existing availability (edit slot)
+ * ✅ PUT — Edit existing consultation slot
  */
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.id)
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: session.user.id },
         });
 
-        if (!doctor || doctor.role !== Role.DOCTOR) {
+        if (!doctor || doctor.role !== Role.DOCTOR)
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
-        }
 
-        const { availability_id, available_date, available_timestart, available_timeend } = await req.json();
+        const { availability_id, available_date, available_timestart, available_timeend } =
+            await req.json();
 
-        if (!availability_id) {
+        if (!availability_id)
             return NextResponse.json({ error: "Missing availability ID" }, { status: 400 });
-        }
 
         const updateData: Prisma.DoctorAvailabilityUpdateInput = {};
 
         if (available_date) updateData.available_date = new Date(available_date);
         if (available_timestart && available_date)
-            updateData.available_timestart = toLocalDate(available_date, available_timestart);
+            updateData.available_timestart = toUTCDate(available_date, available_timestart);
         if (available_timeend && available_date)
-            updateData.available_timeend = toLocalDate(available_date, available_timeend);
+            updateData.available_timeend = toUTCDate(available_date, available_timeend);
 
         const updated = await prisma.doctorAvailability.update({
             where: { availability_id },
@@ -156,14 +136,11 @@ export async function PUT(req: Request) {
 
         return NextResponse.json({
             success: true,
-            message: "Availability updated successfully",
+            message: "Consultation slot updated successfully",
             data: updated,
         });
     } catch (err) {
         console.error("[PUT /api/doctor/consultation]", err);
-        return NextResponse.json(
-            { error: "Failed to update schedule" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to update slot" }, { status: 500 });
     }
 }
