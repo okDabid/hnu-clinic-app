@@ -13,6 +13,7 @@ import {
     Stethoscope,
     Home,
     Loader2,
+    Clock4,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,12 @@ export default function DoctorDashboardPage() {
                         className="flex items-center gap-2 hover:text-green-600"
                     >
                         <User className="h-5 w-5" /> Account
+                    </Link>
+                    <Link
+                        href="/doctor/consultation"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <Clock4 className="h-5 w-5" /> Consultation
                     </Link>
                     <Link
                         href="/doctor/appointments"
@@ -118,6 +125,9 @@ export default function DoctorDashboardPage() {
                                     <Link href="/doctor/account">Account</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
+                                    <Link href="/doctor/consultation">Consultation</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
                                     <Link href="/doctor/appointments">Appointments</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
@@ -135,47 +145,48 @@ export default function DoctorDashboardPage() {
                     </div>
                 </header>
 
-                {/* Welcome */}
+                {/* Welcome Section */}
                 <section className="px-6 py-8 bg-white shadow-sm">
                     <div className="text-center">
                         <h2 className="text-2xl md:text-3xl font-bold text-green-600">
                             Welcome, {fullName}
                         </h2>
                         <p className="text-gray-700 mt-2">
-                            Manage your account, consultation slots, appointments, and patient
-                            records.
+                            Manage your account, consultations, appointments, and medical
+                            certificates.
                         </p>
                     </div>
                 </section>
 
-                {/* Functionality Cards */}
+                {/* Cards */}
                 <section className="px-6 py-12 grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">
-                    {/* Account Management */}
+                    {/* Account */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <User className="w-6 h-6" /> Account Management
+                                <User className="w-6 h-6" /> Account
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Edit or update own account</li>
+                                <li>View and edit profile details</li>
+                                <li>Change account password</li>
                             </ul>
                         </CardContent>
                     </Card>
 
-                    {/* Consultation Slots */}
+                    {/* Consultation */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <CalendarDays className="w-6 h-6" /> Consultation Slots
+                                <Clock4 className="w-6 h-6" /> Consultation
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Input duty hours</li>
-                                <li>Generate consultation slots</li>
-                                <li>Approve or modify schedules</li>
+                                <li>Set duty hours and availability</li>
+                                <li>Modify consultation slots</li>
+                                <li>Approve schedule changes</li>
                             </ul>
                         </CardContent>
                     </Card>
@@ -184,29 +195,28 @@ export default function DoctorDashboardPage() {
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <ClipboardList className="w-6 h-6" /> Appointments
+                                <CalendarDays className="w-6 h-6" /> Appointments
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Approve, move, or cancel requests</li>
-                                <li>View all scheduled appointments</li>
+                                <li>Approve, move, or cancel appointments</li>
+                                <li>View all scheduled patients</li>
                             </ul>
                         </CardContent>
                     </Card>
 
-                    {/* Patient Records */}
+                    {/* Patients */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <Stethoscope className="w-6 h-6" /> Patient Records
+                                <Stethoscope className="w-6 h-6" /> Patients
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Search and view health records</li>
-                                <li>Update patient information</li>
-                                <li>Add consultation records</li>
+                                <li>View patient history and records</li>
+                                <li>Update patient consultation data</li>
                             </ul>
                         </CardContent>
                     </Card>
@@ -221,7 +231,7 @@ export default function DoctorDashboardPage() {
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
                                 <li>Generate medical certificates</li>
-                                <li>Based on consultation and health records</li>
+                                <li>Track issued certificates</li>
                             </ul>
                         </CardContent>
                     </Card>
