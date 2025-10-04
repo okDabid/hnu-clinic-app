@@ -348,7 +348,10 @@ export default function DoctorConsultationPage() {
                         </CardHeader>
                         <CardContent>
                             {loading ? (
-                                <Loader2 className="w-5 h-5 animate-spin mr-2">Loading slots...</Loader2>
+                                <div className="flex items-center justify-center py-10 text-gray-500">
+                                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                    Loading slots...
+                                </div>
                             ) : slots.length > 0 ? (
                                 <Table>
                                     <TableHeader>
