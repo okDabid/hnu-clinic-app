@@ -10,7 +10,6 @@ import {
     CalendarDays,
     ClipboardList,
     FileText,
-    Stethoscope,
     Home,
     Loader2,
     Clock4,
@@ -146,7 +145,7 @@ export default function DoctorAppointmentsPage() {
             <main className="flex-1 flex flex-col">
                 {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Doctor Panel Dashboard</h2>
+                    <h2 className="text-xl font-bold text-green-600">Manage Appointments</h2>
 
                     {/* Mobile Menu */}
                     <div className="md:hidden">
@@ -176,6 +175,9 @@ export default function DoctorAppointmentsPage() {
                                 <DropdownMenuItem asChild>
                                     <Link href="/doctor/patients">Patients</Link>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/doctor/medcert"></Link>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
                                 >
@@ -185,18 +187,6 @@ export default function DoctorAppointmentsPage() {
                         </DropdownMenu>
                     </div>
                 </header>
-
-                {/* Page Intro */}
-                <section className="px-6 py-8 bg-white shadow-sm">
-                    <div className="text-center">
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">
-                            Appointments Management
-                        </h2>
-                        <p className="text-gray-700 mt-2">
-                            Approve, move, or cancel appointments and view all scheduled patients.
-                        </p>
-                    </div>
-                </section>
 
                 {/* Table Section */}
                 <section className="px-6 py-10 max-w-6xl mx-auto w-full">
