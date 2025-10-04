@@ -4,17 +4,19 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Role, Prisma } from "@prisma/client";
 
-// 🕒 Helper: Convert local PH date & time → UTC Date
+/**
+ * 🕒 Convert PH local date + time to UTC Date
+ * Manila (UTC+8) → subtract 8 hours
+ */
 function toPHDateAsUTC(date: string, time: string): Date {
     const [year, month, day] = date.split("-").map(Number);
     const [hour, minute] = time.split(":").map(Number);
-
-    // Manila = UTC+8, so subtract 8 hours to get UTC equivalent
-    const d = new Date(Date.UTC(year, month - 1, day, hour - 8, minute, 0));
-    return d;
+    return new Date(Date.UTC(year, month - 1, day, hour - 8, minute, 0));
 }
 
-// ✅ GET — fetch all consultation slots for logged-in doctor
+/**
+ * ✅ GET — Fetch all consultation slots for logged-in doctor
+ */
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
@@ -32,7 +34,9 @@ export async function GET() {
 
         const slots = await prisma.doctorAvailability.findMany({
             where: { doctor_user_id: doctor.user_id },
-            include: { clinic: true },
+            include: {
+                clinic: { select: { clinic_id: true, clinic_name: true } },
+            },
             orderBy: [
                 { available_date: "asc" },
                 { available_timestart: "asc" },
@@ -42,11 +46,13 @@ export async function GET() {
         return NextResponse.json(slots);
     } catch (err) {
         console.error("[GET /api/doctor/consultation]", err);
-        return NextResponse.json({ error: "Failed to fetch slots" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to fetch consultation slots" }, { status: 500 });
     }
 }
 
-// ✅ POST — create new consultation slot (PHT)
+/**
+ * ✅ POST — Create new consultation slot
+ */
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -63,11 +69,11 @@ export async function POST(req: Request) {
         }
 
         const { clinic_id, available_date, available_timestart, available_timeend } = await req.json();
+
         if (!clinic_id || !available_date || !available_timestart || !available_timeend) {
-            return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+            return NextResponse.json({ error: "All fields are required" }, { status: 400 });
         }
 
-        // Convert from PH local to UTC (by subtracting 8 hours)
         const startUTC = toPHDateAsUTC(available_date, available_timestart);
         const endUTC = toPHDateAsUTC(available_date, available_timeend);
 
@@ -88,20 +94,21 @@ export async function POST(req: Request) {
                 available_timestart: startUTC,
                 available_timeend: endUTC,
             },
+            include: {
+                clinic: { select: { clinic_id: true, clinic_name: true } },
+            },
         });
 
-        return NextResponse.json({
-            success: true,
-            message: "Consultation slot added successfully",
-            data: newSlot,
-        });
+        return NextResponse.json(newSlot);
     } catch (err) {
         console.error("[POST /api/doctor/consultation]", err);
         return NextResponse.json({ error: "Failed to add consultation slot" }, { status: 500 });
     }
 }
 
-// ✅ PUT — update slot
+/**
+ * ✅ PUT — Update existing consultation slot
+ */
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -117,13 +124,16 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const { availability_id, available_date, available_timestart, available_timeend } = await req.json();
+        const { availability_id, clinic_id, available_date, available_timestart, available_timeend } =
+            await req.json();
+
         if (!availability_id) {
             return NextResponse.json({ error: "Missing availability ID" }, { status: 400 });
         }
 
         const updateData: Prisma.DoctorAvailabilityUpdateInput = {};
 
+        if (clinic_id) updateData.clinic = clinic_id;
         if (available_date) updateData.available_date = new Date(available_date);
         if (available_timestart && available_date)
             updateData.available_timestart = toPHDateAsUTC(available_date, available_timestart);
@@ -133,13 +143,12 @@ export async function PUT(req: Request) {
         const updated = await prisma.doctorAvailability.update({
             where: { availability_id },
             data: updateData,
+            include: {
+                clinic: { select: { clinic_id: true, clinic_name: true } },
+            },
         });
 
-        return NextResponse.json({
-            success: true,
-            message: "Consultation slot updated successfully",
-            data: updated,
-        });
+        return NextResponse.json(updated);
     } catch (err) {
         console.error("[PUT /api/doctor/consultation]", err);
         return NextResponse.json({ error: "Failed to update consultation slot" }, { status: 500 });
