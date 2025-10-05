@@ -29,7 +29,6 @@ export async function GET() {
                 date_of_birth: s.date_of_birth.toISOString(),
                 department: s.department,
                 program: s.program,
-                specialization: s.specialization,
                 year_level: s.year_level,
                 contactno: s.contactno,
                 address: s.address,
