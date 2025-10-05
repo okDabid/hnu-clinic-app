@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -156,7 +156,7 @@ export default function PatientAccountPage() {
     };
 
     // Load profile
-    const loadProfile = async () => {
+    const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
             const data = await res.json();
@@ -177,12 +177,13 @@ export default function PatientAccountPage() {
         } catch {
             toast.error("Failed to load profile");
         }
-    };
+    }, []);
+
 
 
     useEffect(() => {
         loadProfile();
-    }, []);
+    }, [loadProfile]);
 
     // Enum ↔ Label Mappings
     const departmentEnumMap: Record<string, string> = {
