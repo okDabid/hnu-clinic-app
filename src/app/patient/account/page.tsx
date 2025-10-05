@@ -46,7 +46,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-// ✅ Enum ↔ Label Mappings (moved above to fix dependency warnings)
+// ✅ Enum ↔ Label Mappings
 const departmentEnumMap: Record<string, string> = {
     EDUCATION: "College of Education",
     ARTS_AND_SCIENCES: "College of Arts and Sciences",
@@ -183,6 +183,9 @@ export default function PatientAccountPage() {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [menuOpen] = useState(false);
 
+    // 🆕 Added: differentiate between Student and Employee
+    const [profileType, setProfileType] = useState<"student" | "employee" | null>(null);
+
     // Password state
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
@@ -231,6 +234,9 @@ export default function PatientAccountPage() {
                 return;
             }
 
+            // 🆕 capture type from API (student | employee)
+            setProfileType(data.type || null);
+
             const p = data.profile || {};
             setProfile({
                 user_id: data.accountId,
@@ -264,10 +270,17 @@ export default function PatientAccountPage() {
         try {
             setProfileLoading(true);
 
+            // 🆕 Dynamic payload for student or employee
             const payload = {
                 ...profile,
-                department: reverseDepartmentEnumMap[profile.department || ""] || null,
-                year_level: reverseYearLevelEnumMap[profile.year_level || ""] || null,
+                department:
+                    profileType === "student"
+                        ? reverseDepartmentEnumMap[profile.department || ""] || null
+                        : profile.department || null,
+                year_level:
+                    profileType === "student"
+                        ? reverseYearLevelEnumMap[profile.year_level || ""] || null
+                        : null,
                 bloodtype: reverseBloodTypeEnumMap[profile.bloodtype || ""] || null,
             };
 
@@ -282,9 +295,13 @@ export default function PatientAccountPage() {
             if (data.error) {
                 toast.error(data.error);
             } else {
-                toast.success("Profile updated successfully!");
+                toast.success(
+                    profileType === "employee"
+                        ? "Employee profile updated successfully!"
+                        : "Profile updated successfully!"
+                );
 
-                // ✅ Update local state instead of full reload
+                // ✅ Update local state
                 setProfile((prev) => ({
                     ...prev!,
                     ...data.profile,
@@ -361,7 +378,9 @@ export default function PatientAccountPage() {
             {/* Main */}
             <main className="flex-1 flex flex-col">
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Edit Profile</h2>
+                    <h2 className="text-xl font-bold text-green-600">
+                        {profileType === "employee" ? "Employee Profile" : "Student Profile"}
+                    </h2>
 
                     {/* Mobile Menu */}
                     <div className="md:hidden">
@@ -424,8 +443,7 @@ export default function PatientAccountPage() {
                                         <DialogHeader>
                                             <DialogTitle>Update Password</DialogTitle>
                                             <DialogDescription>
-                                                Change your account password securely. Enter your current password and
-                                                set a new one.
+                                                Change your account password securely. Enter your current password and set a new one.
                                             </DialogDescription>
                                         </DialogHeader>
 
@@ -490,12 +508,16 @@ export default function PatientAccountPage() {
                                                         onClick={() => setShowCurrent(!showCurrent)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showCurrent ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
 
-                                            {/* New Password (with LIVE validation) */}
+                                            {/* New Password with live validation */}
                                             <div>
                                                 <Label>New Password</Label>
                                                 <div className="relative">
@@ -522,7 +544,11 @@ export default function PatientAccountPage() {
                                                         onClick={() => setShowNew(!showNew)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showNew ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -544,7 +570,11 @@ export default function PatientAccountPage() {
                                                         onClick={() => setShowConfirm(!showConfirm)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
+                                                        {showConfirm ? (
+                                                            <EyeOff className="h-5 w-5 text-gray-500" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5 text-gray-500" />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -577,6 +607,7 @@ export default function PatientAccountPage() {
                                         </form>
                                     </DialogContent>
                                 </Dialog>
+
                             </CardHeader>
 
                             <CardContent className="pt-6">
@@ -598,70 +629,85 @@ export default function PatientAccountPage() {
                                         <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
                                     </div>
 
-                                    {/* Academic Info */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Department</Label>
-                                            <Select
-                                                value={profile.department || ""}
-                                                onValueChange={(val) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        department: val,
-                                                        program: "",
-                                                        year_level: "",
-                                                    })
-                                                }
-                                            >
-                                                <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
-                                                <SelectContent>
-                                                    {departmentOptions.map((dept) => (
-                                                        <SelectItem key={dept} value={dept}>
-                                                            {dept}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                    {/* 🎓 Student Academic Info */}
+                                    {profileType === "student" && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="block mb-1 font-medium">Department</Label>
+                                                <Select
+                                                    value={profile.department || ""}
+                                                    onValueChange={(val) =>
+                                                        setProfile({
+                                                            ...profile,
+                                                            department: val,
+                                                            program: "",
+                                                            year_level: "",
+                                                        })
+                                                    }
+                                                >
+                                                    <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {departmentOptions.map((dept) => (
+                                                            <SelectItem key={dept} value={dept}>
+                                                                {dept}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
 
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Program</Label>
-                                            <Select
-                                                value={profile.program || ""}
-                                                onValueChange={(val) => setProfile({ ...profile, program: val })}
-                                            >
-                                                <SelectTrigger><SelectValue placeholder="Select Program" /></SelectTrigger>
-                                                <SelectContent>
-                                                    {(programOptions[profile.department || ""] || []).map((prog) => (
-                                                        <SelectItem key={prog} value={prog}>
-                                                            {prog}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                                            <div>
+                                                <Label className="block mb-1 font-medium">Program</Label>
+                                                <Select
+                                                    value={profile.program || ""}
+                                                    onValueChange={(val) => setProfile({ ...profile, program: val })}
+                                                >
+                                                    <SelectTrigger><SelectValue placeholder="Select Program" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {(programOptions[profile.department || ""] || []).map((prog) => (
+                                                            <SelectItem key={prog} value={prog}>
+                                                                {prog}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
 
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Year Level</Label>
-                                            <Select
-                                                value={profile.year_level || ""}
-                                                onValueChange={(val) => setProfile({ ...profile, year_level: val })}
-                                            >
-                                                <SelectTrigger><SelectValue placeholder="Select Year Level" /></SelectTrigger>
-                                                <SelectContent>
-                                                    {getYearLevelOptions(
-                                                        profile.department || "",
-                                                        profile.program ?? undefined
-                                                    ).map((lvl) => (
-                                                        <SelectItem key={lvl} value={lvl}>
-                                                            {lvl}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-
-                                            </Select>
+                                            <div>
+                                                <Label className="block mb-1 font-medium">Year Level</Label>
+                                                <Select
+                                                    value={profile.year_level || ""}
+                                                    onValueChange={(val) => setProfile({ ...profile, year_level: val })}
+                                                >
+                                                    <SelectTrigger><SelectValue placeholder="Select Year Level" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {getYearLevelOptions(
+                                                            profile.department || "",
+                                                            profile.program ?? undefined
+                                                        ).map((lvl) => (
+                                                            <SelectItem key={lvl} value={lvl}>
+                                                                {lvl}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {/* 💼 Employee Info */}
+                                    {profileType === "employee" && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="block mb-1 font-medium">Department / Office</Label>
+                                                <Input
+                                                    value={profile.department || ""}
+                                                    onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+                                                    placeholder="e.g. HR, Accounting, Nursing"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Contact Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

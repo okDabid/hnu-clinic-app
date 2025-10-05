@@ -12,19 +12,17 @@ import {
 } from "@prisma/client";
 
 // ---------------- ENUM HELPERS ----------------
-
-// 🧠 Friendly label → Enum and Enum → Enum passthrough
 function mapDepartment(val?: string | null): Department | undefined {
     if (!val) return undefined;
     const map: Record<string, Department> = {
         "College of Education": Department.EDUCATION,
         "College of Arts and Sciences": Department.ARTS_AND_SCIENCES,
         "College of Business and Accountancy": Department.BUSINESS_AND_ACCOUNTANCY,
-        "College of Engineering and Computer Studies": Department.ENGINEERING_AND_COMPUTER_STUDIES,
+        "College of Engineering and Computer Studies":
+            Department.ENGINEERING_AND_COMPUTER_STUDIES,
         "College of Health Sciences": Department.HEALTH_SCIENCES,
         "College of Law": Department.LAW,
         "Basic Education Department": Department.BASIC_EDUCATION,
-        // allow enum key directly
         EDUCATION: Department.EDUCATION,
         ARTS_AND_SCIENCES: Department.ARTS_AND_SCIENCES,
         BUSINESS_AND_ACCOUNTANCY: Department.BUSINESS_AND_ACCOUNTANCY,
@@ -112,7 +110,7 @@ function toDate(val: unknown): Date | undefined {
     return undefined;
 }
 
-// ---------------- UPDATE INPUT BUILDER ----------------
+// ---------------- UPDATE INPUT BUILDERS ----------------
 function buildStudentUpdateInput(
     raw: Record<string, unknown>
 ): Prisma.StudentUpdateInput {
@@ -121,13 +119,10 @@ function buildStudentUpdateInput(
     if (typeof raw.fname === "string") data.fname = raw.fname;
     if (typeof raw.mname === "string") data.mname = raw.mname;
     if (typeof raw.lname === "string") data.lname = raw.lname;
-
     if (isGender(raw.gender)) data.gender = raw.gender;
-
     const dob = toDate(raw.date_of_birth);
     if (dob) data.date_of_birth = dob;
 
-    // ✅ robust enum mapping (accepts enum keys or friendly names)
     const department = mapDepartment(raw.department as string);
     const year_level = mapYearLevel(raw.year_level as string);
     const bloodtype = mapBloodType(raw.bloodtype as string);
@@ -151,6 +146,36 @@ function buildStudentUpdateInput(
     return data;
 }
 
+function buildEmployeeUpdateInput(
+    raw: Record<string, unknown>
+): Prisma.EmployeeUpdateInput {
+    const data: Prisma.EmployeeUpdateInput = {};
+
+    if (typeof raw.fname === "string") data.fname = raw.fname;
+    if (typeof raw.mname === "string") data.mname = raw.mname;
+    if (typeof raw.lname === "string") data.lname = raw.lname;
+    if (isGender(raw.gender)) data.gender = raw.gender;
+
+    const dob = toDate(raw.date_of_birth);
+    if (dob) data.date_of_birth = dob;
+
+    const bloodtype = mapBloodType(raw.bloodtype as string);
+    if (bloodtype) data.bloodtype = bloodtype;
+
+    if (typeof raw.contactno === "string") data.contactno = raw.contactno;
+    if (typeof raw.address === "string") data.address = raw.address;
+    if (typeof raw.allergies === "string") data.allergies = raw.allergies;
+    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
+    if (typeof raw.emergencyco_name === "string")
+        data.emergencyco_name = raw.emergencyco_name;
+    if (typeof raw.emergencyco_num === "string")
+        data.emergencyco_num = raw.emergencyco_num;
+    if (typeof raw.emergencyco_relation === "string")
+        data.emergencyco_relation = raw.emergencyco_relation;
+
+    return data;
+}
+
 // ---------------- GET PROFILE ----------------
 export async function GET() {
     try {
@@ -160,7 +185,7 @@ export async function GET() {
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: { student: true },
+            include: { student: true, employee: true },
         });
 
         if (!user)
@@ -173,7 +198,8 @@ export async function GET() {
             username: user.username,
             role: user.role,
             status: user.status,
-            profile: user.student ?? null,
+            type: user.student ? "student" : user.employee ? "employee" : null,
+            profile: user.student ?? user.employee ?? null,
         });
     } catch (err) {
         console.error("[GET /api/patient/account/me]", err);
@@ -196,26 +222,36 @@ export async function PUT(req: Request) {
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: { student: true },
+            include: { student: true, employee: true },
         });
 
         if (!user)
             return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-        if (user.role !== Role.PATIENT || !user.student)
+        if (user.role !== Role.PATIENT)
             return NextResponse.json({ error: "Not a patient" }, { status: 403 });
 
-        const data = buildStudentUpdateInput(profile);
+        if (user.student) {
+            const data = buildStudentUpdateInput(profile);
+            const updated = await prisma.student.update({
+                where: { user_id: session.user.id },
+                data,
+            });
+            return NextResponse.json({ success: true, profile: updated, type: "student" });
+        }
 
-        const updated = await prisma.student.update({
-            where: { user_id: session.user.id },
-            data,
-        });
+        if (user.employee) {
+            const data = buildEmployeeUpdateInput(profile);
+            const updated = await prisma.employee.update({
+                where: { user_id: session.user.id },
+                data,
+            });
+            return NextResponse.json({ success: true, profile: updated, type: "employee" });
+        }
 
-        return NextResponse.json({
-            success: true,
-            profile: updated,
-        });
+        return NextResponse.json(
+            { error: "Profile not found for this user" },
+            { status: 404 }
+        );
     } catch (err) {
         console.error("[PUT /api/patient/account/me]", err);
         return NextResponse.json(
