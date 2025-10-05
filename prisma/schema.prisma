@@ -122,7 +122,7 @@ model Clinic {
 }
 
 model Users {
-  user_id   String        @id @default(cuid())
+  user_id   String        @id @unique @default(dbgenerated("concat('USER_', floor(random() * 1000000)::int)"))
   username  String        @unique
   password  String
   role      Role
@@ -146,7 +146,7 @@ model Users {
 }
 
 model Student {
-  stud_user_id         String        @id @default(cuid())
+  stud_user_id         String        @id @default(dbgenerated("concat('STUD_', floor(random() * 1000000)::int)"))
   user_id              String        @unique
   student_id           String        @unique
   fname                String
@@ -171,7 +171,7 @@ model Student {
 }
 
 model Employee {
-  emp_id               String        @id @default(cuid())
+  emp_id               String        @id @default(dbgenerated("concat('EMP_', floor(random() * 1000000)::int)"))
   user_id              String        @unique
   employee_id          String        @unique
   fname                String
