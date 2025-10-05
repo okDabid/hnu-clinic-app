@@ -84,16 +84,23 @@ const departmentOptions = [
 const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const programOptions: Record<string, string[]> = {
-    "College of Education": ["BSEd English", "BSEd Math", "BEEd", "BPEd"],
-    "College of Arts and Sciences": ["BA Communication", "BS Psychology", "BS Biology"],
-    "College of Business and Accountancy": ["BS Accountancy", "BSBA Marketing", "BSBA Finance"],
-    "College of Engineering and Computer Studies": [
-        "BS Computer Science",
-        "BS Civil Engineering",
-        "BS Architecture",
+    "College of Education": ["BSED English", "BSED Mathematics",
+        "BSED Filipino", "BSED Science", "BSE Qualifying",
+        "BSED Social Studies", "BEED", "PE ED", "TLED HE",
+        "SNED",
     ],
-    "College of Health Sciences": ["BS Nursing", "BS Medical Technology", "BS Pharmacy"],
-    "College of Law": ["Bachelor of Laws"],
+    "College of Arts and Sciences": ["BS Psychology", "BS Biology", "BS Criminology", "BA Communication", "BA Political Science"],
+    "College of Business and Accountancy": ["BS Accountancy", "BSMA Management Accounting",
+        "BSBA Marketing Management", "BSBA Financial Management",
+        "BSBA Human Resource Management", "BSTM Tourism Management", "BSHM Hospitality Management"
+    ],
+    "College of Engineering and Computer Studies": [
+        "BS Electronics Engineering",
+        "BS Civil Engineering",
+        "BS Information Technology",
+    ],
+    "College of Health Sciences": ["BS Nursing", "BS Medical Technology", "BS Radiologic Technology"],
+    "College of Law": ["JD	Juris Doctor"],
     "Basic Education Department": [
         "Kindergarten",
         "Elementary",
