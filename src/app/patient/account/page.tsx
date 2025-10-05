@@ -53,6 +53,14 @@ type Profile = {
     bloodtype?: string | null;
     allergies?: string | null;
     medical_cond?: string | null;
+    gender?: string | null;
+    department?: string | null;
+    program?: string | null;
+    specialization?: string | null;
+    year_level?: string | null;
+    emergencyco_name?: string | null;
+    emergencyco_num?: string | null;
+    emergencyco_relation?: string | null;
 };
 
 export default function PatientAccountPage() {
@@ -96,11 +104,19 @@ export default function PatientAccountPage() {
                     mname: data.profile?.mname || "",
                     lname: data.profile?.lname || "",
                     date_of_birth: data.profile?.date_of_birth || "",
+                    gender: data.profile?.gender || "",
+                    department: data.profile?.department || "",
+                    program: data.profile?.program || "",
+                    specialization: data.profile?.specialization || "",
+                    year_level: data.profile?.year_level || "",
                     contactno: data.profile?.contactno || "",
                     address: data.profile?.address || "",
                     bloodtype: data.profile?.bloodtype || "",
                     allergies: data.profile?.allergies || "",
                     medical_cond: data.profile?.medical_cond || "",
+                    emergencyco_name: data.profile?.emergencyco_name || "",
+                    emergencyco_num: data.profile?.emergencyco_num || "",
+                    emergencyco_relation: data.profile?.emergencyco_relation || "",
                 });
             }
         } catch {
@@ -224,11 +240,9 @@ export default function PatientAccountPage() {
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                             <CardHeader className="border-b flex sm:items-center sm:justify-between gap-3">
-                                <CardTitle className="text-2xl font-bold text-green-600">
-                                    My Account
-                                </CardTitle>
+                                <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
 
-                                {/* Change Password Dialog */}
+                                {/* ✅ Password Dialog with Full Validation */}
                                 <Dialog
                                     onOpenChange={(open) => {
                                         if (!open) {
@@ -290,14 +304,14 @@ export default function PatientAccountPage() {
                                                         form.reset();
                                                     }
                                                 } catch {
-                                                    setPasswordErrors(["Failed to update password."]);
+                                                    setPasswordErrors(["Failed to update password. Please try again."]);
                                                 } finally {
                                                     setPasswordLoading(false);
                                                 }
                                             }}
                                             className="space-y-4"
                                         >
-                                            {/* Password Inputs */}
+                                            {/* Current Password */}
                                             <div>
                                                 <Label>Current Password</Label>
                                                 <div className="relative">
@@ -311,14 +325,15 @@ export default function PatientAccountPage() {
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2"
                                                         onClick={() => setShowCurrent(!showCurrent)}
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
+                                            {/* New Password */}
                                             <div>
                                                 <Label>New Password</Label>
                                                 <div className="relative">
@@ -327,21 +342,32 @@ export default function PatientAccountPage() {
                                                         name="newPassword"
                                                         required
                                                         className="pr-10"
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            const errs: string[] = [];
+                                                            if (val.length < 8) errs.push("Password must be at least 8 characters.");
+                                                            if (!/[A-Z]/.test(val)) errs.push("Must contain an uppercase letter.");
+                                                            if (!/[a-z]/.test(val)) errs.push("Must contain a lowercase letter.");
+                                                            if (!/\d/.test(val)) errs.push("Must contain a number.");
+                                                            if (!/[^\w\s]/.test(val)) errs.push("Must contain a symbol.");
+                                                            setPasswordErrors(errs);
+                                                        }}
                                                     />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2"
                                                         onClick={() => setShowNew(!showNew)}
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
+                                            {/* Confirm Password */}
                                             <div>
-                                                <Label>Confirm Password</Label>
+                                                <Label>Confirm New Password</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type={showConfirm ? "text" : "password"}
@@ -353,14 +379,15 @@ export default function PatientAccountPage() {
                                                         type="button"
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2"
                                                         onClick={() => setShowConfirm(!showConfirm)}
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
+                                            {/* Validation Errors */}
                                             {passwordErrors.length > 0 && (
                                                 <ul className="text-sm text-red-600 space-y-1">
                                                     {passwordErrors.map((err, idx) => (
@@ -373,10 +400,10 @@ export default function PatientAccountPage() {
                                                 <p className="text-sm text-green-600">{passwordMessage}</p>
                                             )}
 
-                                            <DialogFooter>
+                                            <DialogFooter className="pt-2">
                                                 <Button
                                                     type="submit"
-                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
                                                     disabled={passwordLoading}
                                                 >
                                                     {passwordLoading ? (
@@ -396,55 +423,92 @@ export default function PatientAccountPage() {
                             {/* Profile Form */}
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
-                                    {/* Basic Info */}
+                                    {/* System Info (read-only) */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>User ID</Label>
+                                            <Input value={profile.user_id} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Username</Label>
+                                            <Input value={profile.username} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Role</Label>
+                                            <Input value={profile.role} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Status</Label>
+                                            <Input value={profile.status} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Date of Birth</Label>
+                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Gender</Label>
+                                            <Input value={profile.gender || ""} disabled />
+                                        </div>
+                                    </div>
+
+                                    {/* Academic Info */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Department</Label>
+                                            <Input value={profile.department || ""} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Program</Label>
+                                            <Input value={profile.program || ""} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Specialization</Label>
+                                            <Input value={profile.specialization || ""} disabled />
+                                        </div>
+                                        <div>
+                                            <Label>Year Level</Label>
+                                            <Input value={profile.year_level || ""} disabled />
+                                        </div>
+                                    </div>
+
+                                    {/* Editable Fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div>
                                             <Label>First Name</Label>
                                             <Input
                                                 value={profile.fname}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, fname: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
                                             />
                                         </div>
                                         <div>
                                             <Label>Middle Name</Label>
                                             <Input
                                                 value={profile.mname || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, mname: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
                                             />
                                         </div>
                                         <div>
                                             <Label>Last Name</Label>
                                             <Input
                                                 value={profile.lname}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, lname: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Contact Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label>Contact No.</Label>
                                             <Input
                                                 value={profile.contactno || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, contactno: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
                                             />
                                         </div>
                                         <div>
                                             <Label>Address</Label>
                                             <Input
                                                 value={profile.address || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, address: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                                             />
                                         </div>
                                     </div>
@@ -455,18 +519,14 @@ export default function PatientAccountPage() {
                                             <Label>Blood Type</Label>
                                             <Input
                                                 value={profile.bloodtype || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, bloodtype: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
                                             />
                                         </div>
                                         <div>
                                             <Label>Allergies</Label>
                                             <Input
                                                 value={profile.allergies || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, allergies: e.target.value })
-                                                }
+                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
                                             />
                                         </div>
                                     </div>
@@ -475,20 +535,49 @@ export default function PatientAccountPage() {
                                         <Label>Medical Conditions</Label>
                                         <Input
                                             value={profile.medical_cond || ""}
-                                            onChange={(e) =>
-                                                setProfile({ ...profile, medical_cond: e.target.value })
-                                            }
+                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
                                         />
+                                    </div>
+
+                                    {/* Emergency Contact Info */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div>
+                                            <Label>Emergency Contact Name</Label>
+                                            <Input
+                                                value={profile.emergencyco_name || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, emergencyco_name: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Emergency Contact Number</Label>
+                                            <Input
+                                                value={profile.emergencyco_num || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, emergencyco_num: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Relation</Label>
+                                            <Input
+                                                value={profile.emergencyco_relation || ""}
+                                                onChange={(e) =>
+                                                    setProfile({ ...profile, emergencyco_relation: e.target.value })
+                                                }
+                                            />
+                                        </div>
                                     </div>
 
                                     <Button
                                         type="submit"
-                                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading ? (
                                             <>
-                                                <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                                                <Loader2 className="h-5 w-5 animate-spin" /> Saving...
                                             </>
                                         ) : (
                                             "Save Changes"
@@ -507,3 +596,4 @@ export default function PatientAccountPage() {
         </div>
     );
 }
+
