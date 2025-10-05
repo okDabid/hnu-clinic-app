@@ -3,11 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { NextRequest } from "next/server";
-import { Role, Gender, Prisma } from "@prisma/client";
+import { Role, Gender, Prisma, Department, YearLevel, BloodType } from "@prisma/client";
 
 // Helpers
 function isGender(val: unknown): val is Gender {
     return val === "Male" || val === "Female";
+}
+
+function isEnumValue<T extends Record<string, string>>(enumObj: T, val: unknown): val is T[keyof T] {
+    return typeof val === "string" && Object.values(enumObj).includes(val);
 }
 
 function toDate(val: unknown): Date | undefined {
@@ -19,8 +23,10 @@ function toDate(val: unknown): Date | undefined {
     return undefined;
 }
 
+// ---------------- STUDENT ----------------
 function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUpdateInput {
     const data: Prisma.StudentUpdateInput = {};
+
     if (typeof raw.fname === "string") data.fname = raw.fname;
     if (typeof raw.mname === "string") data.mname = raw.mname;
     if (typeof raw.lname === "string") data.lname = raw.lname;
@@ -30,13 +36,15 @@ function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUp
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
-    if (typeof raw.department === "string") data.department = raw.department;
+    // ✅ ENUM HANDLING
+    if (isEnumValue(Department, raw.department)) data.department = raw.department as Department;
     if (typeof raw.program === "string") data.program = raw.program;
-    if (typeof raw.specialization === "string") data.specialization = raw.specialization;
-    if (typeof raw.year_level === "string") data.year_level = raw.year_level;
+    if (isEnumValue(YearLevel, raw.year_level)) data.year_level = raw.year_level as YearLevel;
+    if (isEnumValue(BloodType, raw.bloodtype)) data.bloodtype = raw.bloodtype as BloodType;
+
+    // Regular strings
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
-    if (typeof raw.bloodtype === "string") data.bloodtype = raw.bloodtype;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
     if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
     if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
@@ -46,8 +54,10 @@ function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUp
     return data;
 }
 
+// ---------------- EMPLOYEE ----------------
 function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.EmployeeUpdateInput {
     const data: Prisma.EmployeeUpdateInput = {};
+
     if (typeof raw.fname === "string") data.fname = raw.fname;
     if (typeof raw.mname === "string") data.mname = raw.mname;
     if (typeof raw.lname === "string") data.lname = raw.lname;
@@ -56,10 +66,10 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (dob) data.date_of_birth = dob;
 
     if (isGender(raw.gender)) data.gender = raw.gender;
+    if (isEnumValue(BloodType, raw.bloodtype)) data.bloodtype = raw.bloodtype as BloodType;
 
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
-    if (typeof raw.bloodtype === "string") data.bloodtype = raw.bloodtype;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
     if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
     if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
@@ -121,7 +131,6 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // PATIENT (student) or SCHOLAR -> update Student
         if ((user.role === Role.PATIENT || user.role === Role.SCHOLAR) && user.student) {
             const data = buildStudentUpdateInput(profile);
             await prisma.student.update({
@@ -130,7 +139,6 @@ export async function PUT(req: NextRequest) {
             });
         }
 
-        // NURSE/DOCTOR or PATIENT (employee) -> update Employee
         if ((user.role === Role.NURSE || user.role === Role.DOCTOR || user.role === Role.PATIENT) && user.employee) {
             const data = buildEmployeeUpdateInput(profile);
             await prisma.employee.update({
