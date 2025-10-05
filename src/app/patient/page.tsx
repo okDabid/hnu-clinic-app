@@ -9,7 +9,6 @@ import {
     CalendarDays,
     ClipboardList,
     Bell,
-    Activity,
     Home,
     Loader2,
     User,
