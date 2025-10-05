@@ -195,18 +195,30 @@ export default function PatientAccountPage() {
                 body: JSON.stringify({ profile }),
                 headers: { "Content-Type": "application/json" },
             });
+
             const data = await res.json();
-            if (data.error) toast.error(data.error);
-            else {
+
+            if (data.error) {
+                toast.error(data.error);
+            } else {
                 toast.success("Profile updated successfully!");
-                loadProfile();
+
+                // ✅ Immediately reflect new data in UI
+                if (data.profile) {
+                    setProfile((prev) => ({ ...prev!, ...data.profile }));
+                } else {
+                    // fallback if backend didn't return updated data
+                    loadProfile();
+                }
             }
-        } catch {
+        } catch (err) {
+            console.error("Profile update failed:", err);
             toast.error("Failed to update profile");
         } finally {
             setProfileLoading(false);
         }
     };
+
 
     return (
         <div className="flex min-h-screen bg-green-50">
@@ -496,8 +508,8 @@ export default function PatientAccountPage() {
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     {/* Uneditable Fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>User ID</Label><Input value={profile.user_id} disabled /></div>
-                                        <div><Label>Username</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label>Username</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label>User ID</Label><Input value={profile.username} disabled /></div>
                                         <div><Label>Role</Label><Input value={profile.role} disabled /></div>
                                         <div><Label>Status</Label><Input value={profile.status} disabled /></div>
                                         <div><Label>Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>

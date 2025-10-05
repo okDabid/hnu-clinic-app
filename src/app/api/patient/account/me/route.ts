@@ -164,12 +164,15 @@ export async function PUT(req: Request) {
 
         const data = buildStudentUpdateInput(profile);
 
-        await prisma.student.update({
+        const updatedStudent = await prisma.student.update({
             where: { user_id: session.user.id },
             data,
         });
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({
+            success: true,
+            profile: updatedStudent,
+        });
     } catch (err) {
         console.error("[PUT /api/patient/account/me]", err);
         return NextResponse.json(
