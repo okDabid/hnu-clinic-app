@@ -727,8 +727,6 @@ export default function NurseAccountsPage() {
                         </Card>
                     )}
 
-
-
                     {/* Create User */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardHeader className="border-b">
