@@ -583,25 +583,25 @@ export default function PatientAccountPage() {
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     {/* Uneditable Fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Username</Label><Input value={profile.user_id} disabled /></div>
-                                        <div><Label>User ID</Label><Input value={profile.username} disabled /></div>
-                                        <div><Label>Role</Label><Input value={profile.role} disabled /></div>
-                                        <div><Label>Status</Label><Input value={profile.status} disabled /></div>
-                                        <div><Label>Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
-                                        <div><Label>Gender</Label><Input value={profile.gender || ""} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Username</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Gender</Label><Input value={profile.gender || ""} disabled /></div>
                                     </div>
 
                                     {/* Editable Fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label>First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
-                                        <div><Label>Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
-                                        <div><Label>Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
                                     </div>
 
                                     {/* Academic Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label>Department</Label>
+                                            <Label className="block mb-1 font-medium">Department</Label>
                                             <Select
                                                 value={profile.department || ""}
                                                 onValueChange={(val) =>
@@ -625,7 +625,7 @@ export default function PatientAccountPage() {
                                         </div>
 
                                         <div>
-                                            <Label>Program</Label>
+                                            <Label className="block mb-1 font-medium">Program</Label>
                                             <Select
                                                 value={profile.program || ""}
                                                 onValueChange={(val) => setProfile({ ...profile, program: val })}
@@ -642,7 +642,7 @@ export default function PatientAccountPage() {
                                         </div>
 
                                         <div>
-                                            <Label>Year Level</Label>
+                                            <Label className="block mb-1 font-medium">Year Level</Label>
                                             <Select
                                                 value={profile.year_level || ""}
                                                 onValueChange={(val) => setProfile({ ...profile, year_level: val })}
@@ -665,14 +665,14 @@ export default function PatientAccountPage() {
 
                                     {/* Contact Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Contact No.</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
-                                        <div><Label>Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Contact No.</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
                                     </div>
 
                                     {/* Medical Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label>Blood Type</Label>
+                                            <Label className="block mb-1 font-medium">Blood Type</Label>
                                             <Select
                                                 value={profile.bloodtype || ""}
                                                 onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
@@ -687,19 +687,19 @@ export default function PatientAccountPage() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <div><Label>Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
                                     </div>
 
                                     <div>
-                                        <Label>Medical Conditions</Label>
+                                        <Label className="block mb-1 font-medium">Medical Conditions</Label>
                                         <Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} />
                                     </div>
 
                                     {/* Emergency Contact */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label>Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
-                                        <div><Label>Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
-                                        <div><Label>Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
                                     </div>
 
                                     <Button
