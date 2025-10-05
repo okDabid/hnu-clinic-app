@@ -6,13 +6,13 @@ import { signOut, useSession } from "next-auth/react";
 import {
     Menu,
     X,
-    UserCog,
-    CalendarDays,
+    Users,
     ClipboardList,
-    Bell,
-    Activity,
+    Pill,
+    Package,
+    BarChart3,
     Home,
-    Loader2,
+    Loader2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,12 +30,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 
-export default function PatientDashboardPage() {
+export default function NurseDashboardPage() {
     const { data: session } = useSession();
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [menuOpen] = useState(false);
 
-    const fullName = session?.user?.name || "Patient";
+    const fullName = session?.user?.name || "Nurse";
+
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     async function handleLogout() {
         try {
@@ -50,28 +51,33 @@ export default function PatientDashboardPage() {
         <div className="flex min-h-screen bg-green-50">
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
-                <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
+                <h1 className="text-2xl font-bold text-green-600 mb-8">
+                    HNU Clinic
+                </h1>
                 <nav className="flex flex-col gap-4 text-gray-700">
-                    <Link href="/patient" className="flex items-center gap-2 text-green-600 font-semibold">
+                    <Link href="/nurse" className="flex items-center gap-2 text-green-600 font-semibold">
                         <Home className="h-5 w-5" />
                         Dashboard
                     </Link>
-                    <Link href="/patient/appointments" className="flex items-center gap-2 hover:text-green-600">
-                        <CalendarDays className="h-5 w-5" />
-                        Appointments
+                    <Link href="/nurse/accounts" className="flex items-center gap-2 hover:text-green-600">
+                        <Users className="h-5 w-5" />
+                        Accounts
                     </Link>
-                    <Link href="/patient/services" className="flex items-center gap-2 hover:text-green-600">
-                        <ClipboardList className="h-5 w-5" />
-                        Services
+                    <Link href="/nurse/inventory" className="flex items-center gap-2 hover:text-green-600">
+                        <Package className="h-5 w-5" />
+                        Inventory
                     </Link>
-                    <Link href="/patient/notifications" className="flex items-center gap-2 hover:text-green-600">
-                        <Bell className="h-5 w-5" />
-                        Notifications
+                    <Link href="/nurse/clinic" className="flex items-center gap-2 hover:text-green-600">
+                        <ClipboardList className="h-5 w-5" /> Clinic
+                    </Link>
+                    <Link href="/nurse/dispense" className="flex items-center gap-2 hover:text-green-600">
+                        <Pill className="h-5 w-5" /> Dispense
+                    </Link>
+                    <Link href="/nurse/records" className="flex items-center gap-2 hover:text-green-600">
+                        <ClipboardList className="h-5 w-5" /> Records
                     </Link>
                 </nav>
-
                 <Separator className="my-6" />
-
                 <Button
                     variant="default"
                     className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
@@ -94,7 +100,7 @@ export default function PatientDashboardPage() {
                 {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">
-                        Patient Dashboard
+                        Nurse Panel Dashboard
                     </h2>
 
                     {/* Mobile Menu */}
@@ -107,16 +113,22 @@ export default function PatientDashboardPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                    <Link href="/patient">Dashboard</Link>
+                                    <Link href="/nurse">Dashboard</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/patient/appointments">Appointments</Link>
+                                    <Link href="/nurse/accounts">Accounts</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/patient/services">Services</Link>
+                                    <Link href="/nurse/inventory">Inventory</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/patient/notifications">Notifications</Link>
+                                    <Link href="/nurse/clinic">Clinic</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/nurse/dispense">Dispense</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                    <Link href="/nurse/records">Records</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
@@ -128,101 +140,97 @@ export default function PatientDashboardPage() {
                     </div>
                 </header>
 
-                {/* Welcome Section */}
+                {/* Welcome + KPI Section */}
                 <section className="px-6 py-8 bg-white shadow-sm">
                     <div className="text-center">
                         <h2 className="text-2xl md:text-3xl font-bold text-green-600">
                             Welcome, {fullName}
                         </h2>
                         <p className="text-gray-700 mt-2">
-                            Manage your account, appointments, and stay updated with clinic
-                            notifications.
+                            Manage clinic operations, accounts, appointments, records, and inventory.
                         </p>
                     </div>
                 </section>
 
-                {/* Dashboard Cards */}
+                {/* Functionality Cards */}
                 <section className="px-6 py-12 grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">
-                    {/* Account Management */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <UserCog className="w-6 h-6" /> Account Management
+                                <Users className="w-6 h-6" /> Accounts Management
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>View or update your account information</li>
-                                <li>Change password or personal details</li>
+                                <li>Create Scholar/Doctor/Admin accounts</li>
+                                <li>Edit/update account info</li>
+                                <li>Activate/deactivate accounts</li>
                             </ul>
                         </CardContent>
                     </Card>
 
-                    {/* Appointments */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <CalendarDays className="w-6 h-6" /> Appointments
+                                <ClipboardList className="w-6 h-6" /> Patient Records
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Schedule and manage your appointments</li>
-                                <li>View appointment history</li>
-                                <li>Reschedule or cancel existing bookings</li>
+                                <li>Search and view patient records</li>
+                                <li>Update health data</li>
+                                <li>Record consultation notes</li>
                             </ul>
                         </CardContent>
                     </Card>
 
-                    {/* Services */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <ClipboardList className="w-6 h-6" /> Clinic Services
+                                <Pill className="w-6 h-6" /> Medicine Dispensing
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Explore available clinic services</li>
-                                <li>View doctor availability</li>
+                                <li>Record medicines dispensed</li>
+                                <li>Maintain medicine history</li>
                             </ul>
                         </CardContent>
                     </Card>
 
-                    {/* Notifications */}
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <Bell className="w-6 h-6" /> Notifications
+                                <Package className="w-6 h-6" /> Inventory Management
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Receive appointment reminders via SMS</li>
-                                <li>Stay updated with clinic announcements</li>
+                                <li>Add stocks & replenishments</li>
+                                <li>Expiry date monitoring (FIFO)</li>
+                                <li>Track stock levels</li>
                             </ul>
                         </CardContent>
                     </Card>
 
-                    {/* Health Insights */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition md:col-span-3">
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <Activity className="w-6 h-6" /> Health Insights
+                                <BarChart3 className="w-6 h-6" /> Reports
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-gray-700 text-sm">
-                                View personalized health recommendations and past visit summaries to
-                                keep track of your well-being and progress.
-                            </p>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Generate inventory reports</li>
+                                <li>Generate quarterly clinic reports</li>
+                            </ul>
                         </CardContent>
                     </Card>
                 </section>
 
                 {/* Footer */}
                 <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
-                    © {new Date().getFullYear()} HNU Clinic – Patient Panel
+                    © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
             </main>
         </div>
