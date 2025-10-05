@@ -106,7 +106,7 @@ export default function NurseRecordsPage() {
             if (!res.ok) throw new Error("Failed to load records");
             const data = await res.json();
             setRecords(data);
-        } catch (err) {
+        } catch {
             toast.error("Error loading records.");
         } finally {
             setLoadingRecords(false);
