@@ -124,28 +124,26 @@ export default function PatientAccountPage() {
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
     // Dynamic year levels
-    const getYearLevelOptions = (dept: string) => {
+    const getYearLevelOptions = (dept: string, program?: string) => {
         if (dept === "Basic Education Department") {
-            return [
-                "Kindergarten 1",
-                "Kindergarten 2",
-                "Grade 1",
-                "Grade 2",
-                "Grade 3",
-                "Grade 4",
-                "Grade 5",
-                "Grade 6",
-                "Grade 7",
-                "Grade 8",
-                "Grade 9",
-                "Grade 10",
-                "Grade 11",
-                "Grade 12",
-            ];
+            switch (program) {
+                case "Kindergarten":
+                    return ["Kindergarten 1", "Kindergarten 2"];
+                case "Elementary":
+                    return ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"];
+                case "Junior High School":
+                    return ["Grade 7", "Grade 8", "Grade 9", "Grade 10"];
+                case "Senior High School":
+                    return ["Grade 11", "Grade 12"];
+                default:
+                    return [];
+            }
         } else {
+            // College Departments
             return ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
         }
     };
+
 
     // Logout
     const handleLogout = async () => {
@@ -564,12 +562,16 @@ export default function PatientAccountPage() {
                                             >
                                                 <SelectTrigger><SelectValue placeholder="Select Year Level" /></SelectTrigger>
                                                 <SelectContent>
-                                                    {getYearLevelOptions(profile.department || "").map((lvl) => (
+                                                    {getYearLevelOptions(
+                                                        profile.department || "",
+                                                        profile.program ?? undefined
+                                                    ).map((lvl) => (
                                                         <SelectItem key={lvl} value={lvl}>
                                                             {lvl}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
+
                                             </Select>
                                         </div>
                                     </div>
