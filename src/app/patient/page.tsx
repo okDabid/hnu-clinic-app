@@ -210,21 +210,6 @@ export default function PatientDashboardPage() {
                             </ul>
                         </CardContent>
                     </Card>
-
-                    {/* Health Insights */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition md:col-span-3">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <Activity className="w-6 h-6" /> Health Insights
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-gray-700 text-sm">
-                                View personalized health recommendations and past visit summaries to
-                                keep track of your well-being and progress.
-                            </p>
-                        </CardContent>
-                    </Card>
                 </section>
 
                 {/* Footer */}
