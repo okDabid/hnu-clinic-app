@@ -38,6 +38,77 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// 🎓 ENUM OPTIONS
+const departments = {
+    EDUCATION: "College of Education",
+    ARTS_AND_SCIENCES: "College of Arts and Sciences",
+    BUSINESS_AND_ACCOUNTANCY: "College of Business and Accountancy",
+    ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
+    HEALTH_SCIENCES: "College of Health Sciences",
+    LAW: "College of Law",
+    BASIC_EDUCATION: "Basic Education Department",
+};
+
+const programsByDepartment: Record<string, string[]> = {
+    EDUCATION: [
+        "Bachelor of Elementary Education",
+        "Bachelor of Secondary Education",
+        "Bachelor of Physical Education",
+    ],
+    ARTS_AND_SCIENCES: [
+        "Bachelor of Arts in Communication",
+        "Bachelor of Arts in Political Science",
+        "Bachelor of Science in Psychology",
+    ],
+    BUSINESS_AND_ACCOUNTANCY: [
+        "Bachelor of Science in Business Administration",
+        "Bachelor of Science in Accountancy",
+        "Bachelor of Science in Management Accounting",
+    ],
+    ENGINEERING_AND_COMPUTER_STUDIES: [
+        "Bachelor of Science in Computer Science",
+        "Bachelor of Science in Information Technology",
+        "Bachelor of Science in Civil Engineering",
+        "Bachelor of Science in Electrical Engineering",
+    ],
+    HEALTH_SCIENCES: [
+        "Bachelor of Science in Nursing",
+        "Bachelor of Science in Pharmacy",
+        "Bachelor of Science in Medical Technology",
+    ],
+    LAW: ["Juris Doctor"],
+    BASIC_EDUCATION: [
+        "Kindergarten",
+        "Elementary",
+        "Junior High School",
+        "Senior High School",
+    ],
+};
+
+const yearLevels = {
+    FIRST_YEAR: "1st Year",
+    SECOND_YEAR: "2nd Year",
+    THIRD_YEAR: "3rd Year",
+    FOURTH_YEAR: "4th Year",
+    FIFTH_YEAR: "5th Year",
+    KINDERGARTEN: "Kindergarten",
+    ELEMENTARY: "Elementary",
+    JUNIOR_HIGH: "Junior High School",
+    SENIOR_HIGH: "Senior High School",
+};
+
+const bloodTypes = {
+    A_POS: "A+",
+    A_NEG: "A−",
+    B_POS: "B+",
+    B_NEG: "B−",
+    AB_POS: "AB+",
+    AB_NEG: "AB−",
+    O_POS: "O+",
+    O_NEG: "O−",
+};
 
 type Profile = {
     user_id: string;
@@ -56,7 +127,6 @@ type Profile = {
     gender?: string | null;
     department?: string | null;
     program?: string | null;
-    specialization?: string | null;
     year_level?: string | null;
     emergencyco_name?: string | null;
     emergencyco_num?: string | null;
@@ -66,15 +136,13 @@ type Profile = {
 export default function PatientAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
-
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [menuOpen] = useState(false);
 
-    // Password state
+    // Password dialog state
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
-
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
@@ -92,9 +160,8 @@ export default function PatientAccountPage() {
         try {
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
             const data = await res.json();
-            if (data.error) {
-                toast.error(data.error);
-            } else {
+            if (data.error) toast.error(data.error);
+            else {
                 setProfile({
                     user_id: data.accountId,
                     username: data.username,
@@ -107,7 +174,6 @@ export default function PatientAccountPage() {
                     gender: data.profile?.gender || "",
                     department: data.profile?.department || "",
                     program: data.profile?.program || "",
-                    specialization: data.profile?.specialization || "",
                     year_level: data.profile?.year_level || "",
                     contactno: data.profile?.contactno || "",
                     address: data.profile?.address || "",
@@ -131,7 +197,6 @@ export default function PatientAccountPage() {
     async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!profile) return;
-
         if (!profile.fname.trim() || !profile.lname.trim()) {
             toast.error("First and Last Name are required.");
             return;
@@ -145,9 +210,8 @@ export default function PatientAccountPage() {
                 headers: { "Content-Type": "application/json" },
             });
             const data = await res.json();
-            if (data.error) {
-                toast.error(data.error);
-            } else {
+            if (data.error) toast.error(data.error);
+            else {
                 toast.success("Profile updated!");
                 loadProfile();
             }
@@ -200,6 +264,7 @@ export default function PatientAccountPage() {
 
             {/* Main */}
             <main className="flex-1 flex flex-col">
+                {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Edit Profile</h2>
 
@@ -242,7 +307,7 @@ export default function PatientAccountPage() {
                             <CardHeader className="border-b flex sm:items-center sm:justify-between gap-3">
                                 <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
 
-                                {/* ✅ Password Dialog with Full Validation */}
+                                {/* ⚙️ Password Dialog */}
                                 <Dialog
                                     onOpenChange={(open) => {
                                         if (!open) {
@@ -262,7 +327,7 @@ export default function PatientAccountPage() {
                                         <DialogHeader>
                                             <DialogTitle>Update Password</DialogTitle>
                                             <DialogDescription>
-                                                Change your account password securely. Enter your current password and set a new one.
+                                                Change your account password securely.
                                             </DialogDescription>
                                         </DialogHeader>
 
@@ -294,100 +359,55 @@ export default function PatientAccountPage() {
                                                         headers: { "Content-Type": "application/json" },
                                                         body: JSON.stringify({ oldPassword, newPassword }),
                                                     });
-
                                                     const data = await res.json();
-                                                    if (data.error) {
-                                                        setPasswordErrors([data.error]);
-                                                    } else {
-                                                        setPasswordMessage("Password updated successfully!");
+                                                    if (data.error) setPasswordErrors([data.error]);
+                                                    else {
                                                         toast.success("Password updated successfully!");
+                                                        setPasswordMessage("Password updated successfully!");
                                                         form.reset();
                                                     }
                                                 } catch {
-                                                    setPasswordErrors(["Failed to update password. Please try again."]);
+                                                    setPasswordErrors(["Failed to update password."]);
                                                 } finally {
                                                     setPasswordLoading(false);
                                                 }
                                             }}
                                             className="space-y-4"
                                         >
-                                            {/* Current Password */}
-                                            <div>
-                                                <Label>Current Password</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showCurrent ? "text" : "password"}
-                                                        name="oldPassword"
-                                                        required
-                                                        className="pr-10"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setShowCurrent(!showCurrent)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                    >
-                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
-                                                    </Button>
-                                                </div>
-                                            </div>
+                                            {/* Password Fields */}
+                                            {["oldPassword", "newPassword", "confirmPassword"].map((field, idx) => {
+                                                const label = ["Current Password", "New Password", "Confirm Password"][idx];
+                                                const show = [showCurrent, showNew, showConfirm][idx];
+                                                const setShow = [setShowCurrent, setShowNew, setShowConfirm][idx];
+                                                return (
+                                                    <div key={field}>
+                                                        <Label>{label}</Label>
+                                                        <div className="relative">
+                                                            <Input
+                                                                type={show ? "text" : "password"}
+                                                                name={field}
+                                                                required
+                                                                className="pr-10"
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                                                onClick={() => setShow(!show)}
+                                                            >
+                                                                {show ? (
+                                                                    <EyeOff className="h-5 w-5 text-gray-500" />
+                                                                ) : (
+                                                                    <Eye className="h-5 w-5 text-gray-500" />
+                                                                )}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
 
-                                            {/* New Password */}
-                                            <div>
-                                                <Label>New Password</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showNew ? "text" : "password"}
-                                                        name="newPassword"
-                                                        required
-                                                        className="pr-10"
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            const errs: string[] = [];
-                                                            if (val.length < 8) errs.push("Password must be at least 8 characters.");
-                                                            if (!/[A-Z]/.test(val)) errs.push("Must contain an uppercase letter.");
-                                                            if (!/[a-z]/.test(val)) errs.push("Must contain a lowercase letter.");
-                                                            if (!/\d/.test(val)) errs.push("Must contain a number.");
-                                                            if (!/[^\w\s]/.test(val)) errs.push("Must contain a symbol.");
-                                                            setPasswordErrors(errs);
-                                                        }}
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setShowNew(!showNew)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                    >
-                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            {/* Confirm Password */}
-                                            <div>
-                                                <Label>Confirm New Password</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showConfirm ? "text" : "password"}
-                                                        name="confirmPassword"
-                                                        required
-                                                        className="pr-10"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setShowConfirm(!showConfirm)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                    >
-                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            {/* Validation Errors */}
+                                            {/* Validation */}
                                             {passwordErrors.length > 0 && (
                                                 <ul className="text-sm text-red-600 space-y-1">
                                                     {passwordErrors.map((err, idx) => (
@@ -395,12 +415,9 @@ export default function PatientAccountPage() {
                                                     ))}
                                                 </ul>
                                             )}
+                                            {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
 
-                                            {passwordMessage && (
-                                                <p className="text-sm text-green-600">{passwordMessage}</p>
-                                            )}
-
-                                            <DialogFooter className="pt-2">
+                                            <DialogFooter>
                                                 <Button
                                                     type="submit"
                                                     className="w-full bg-green-600 hover:bg-green-700 text-white"
@@ -423,151 +440,96 @@ export default function PatientAccountPage() {
                             {/* Profile Form */}
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
-                                    {/* System Info (read-only) */}
+                                    {/* Read-only fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>User ID</Label>
-                                            <Input value={profile.user_id} disabled />
-                                        </div>
-                                        <div>
-                                            <Label>Username</Label>
-                                            <Input value={profile.username} disabled />
-                                        </div>
-                                        <div>
-                                            <Label>Role</Label>
-                                            <Input value={profile.role} disabled />
-                                        </div>
-                                        <div>
-                                            <Label>Status</Label>
-                                            <Input value={profile.status} disabled />
-                                        </div>
-                                        <div>
-                                            <Label>Date of Birth</Label>
-                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled />
-                                        </div>
-                                        <div>
-                                            <Label>Gender</Label>
-                                            <Input value={profile.gender || ""} disabled />
-                                        </div>
+                                        <div><Label>Username</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label>User ID</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label>Role</Label><Input value={profile.role} disabled /></div>
+                                        <div><Label>Status</Label><Input value={profile.status} disabled /></div>
+                                        <div><Label>Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
+                                        <div><Label>Gender</Label><Input value={profile.gender || ""} disabled /></div>
                                     </div>
 
-                                    {/* Academic Info */}
+                                    {/* Editable dropdowns */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label>Department</Label>
-                                            <Input value={profile.department || ""} disabled />
+                                            <Select
+                                                value={profile.department || ""}
+                                                onValueChange={(val) =>
+                                                    setProfile({ ...profile, department: val, program: "" })
+                                                }
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.entries(departments).map(([key, label]) => (
+                                                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
+
                                         <div>
                                             <Label>Program</Label>
-                                            <Input value={profile.program || ""} disabled />
+                                            <Select
+                                                value={profile.program || ""}
+                                                onValueChange={(val) => setProfile({ ...profile, program: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Program" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {(programsByDepartment[profile.department || ""] || []).map(
+                                                        (prog) => <SelectItem key={prog} value={prog}>{prog}</SelectItem>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                        <div>
-                                            <Label>Specialization</Label>
-                                            <Input value={profile.specialization || ""} disabled />
-                                        </div>
+
                                         <div>
                                             <Label>Year Level</Label>
-                                            <Input value={profile.year_level || ""} disabled />
+                                            <Select
+                                                value={profile.year_level || ""}
+                                                onValueChange={(val) => setProfile({ ...profile, year_level: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Year Level" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.entries(yearLevels).map(([key, label]) => (
+                                                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                    </div>
 
-                                    {/* Editable Fields */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div>
-                                            <Label>First Name</Label>
-                                            <Input
-                                                value={profile.fname}
-                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Middle Name</Label>
-                                            <Input
-                                                value={profile.mname || ""}
-                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Last Name</Label>
-                                            <Input
-                                                value={profile.lname}
-                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label>Contact No.</Label>
-                                            <Input
-                                                value={profile.contactno || ""}
-                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Address</Label>
-                                            <Input
-                                                value={profile.address || ""}
-                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Medical Info */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label>Blood Type</Label>
-                                            <Input
+                                            <Select
                                                 value={profile.bloodtype || ""}
-                                                onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Allergies</Label>
-                                            <Input
-                                                value={profile.allergies || ""}
-                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
-                                            />
+                                                onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Blood Type" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {Object.entries(bloodTypes).map(([key, label]) => (
+                                                        <SelectItem key={key} value={key}>{label}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <Label>Medical Conditions</Label>
-                                        <Input
-                                            value={profile.medical_cond || ""}
-                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
-                                        />
+                                    {/* Editable contact & medical info */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div><Label>Contact No.</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
+                                        <div><Label>Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
                                     </div>
 
-                                    {/* Emergency Contact Info */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div><Label>Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                                        <div><Label>Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
+                                    </div>
+
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div>
-                                            <Label>Emergency Contact Name</Label>
-                                            <Input
-                                                value={profile.emergencyco_name || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, emergencyco_name: e.target.value })
-                                                }
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Emergency Contact Number</Label>
-                                            <Input
-                                                value={profile.emergencyco_num || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, emergencyco_num: e.target.value })
-                                                }
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label>Relation</Label>
-                                            <Input
-                                                value={profile.emergencyco_relation || ""}
-                                                onChange={(e) =>
-                                                    setProfile({ ...profile, emergencyco_relation: e.target.value })
-                                                }
-                                            />
-                                        </div>
+                                        <div><Label>Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
+                                        <div><Label>Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
+                                        <div><Label>Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
                                     </div>
 
                                     <Button
@@ -596,4 +558,3 @@ export default function PatientAccountPage() {
         </div>
     );
 }
-

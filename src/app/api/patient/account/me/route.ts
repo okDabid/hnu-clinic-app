@@ -2,38 +2,83 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { Role } from "@prisma/client";
+import { Role, Gender, Department, YearLevel, BloodType, Prisma } from "@prisma/client";
+
+// ✅ Enum Validators
+function isGender(val: unknown): val is Gender {
+    return val === "Male" || val === "Female";
+}
+
+function isDepartment(val: unknown): val is Department {
+    return Object.values(Department).includes(val as Department);
+}
+
+function isYearLevel(val: unknown): val is YearLevel {
+    return Object.values(YearLevel).includes(val as YearLevel);
+}
+
+function isBloodType(val: unknown): val is BloodType {
+    return Object.values(BloodType).includes(val as BloodType);
+}
+
+function toDate(val: unknown): Date | undefined {
+    if (val instanceof Date && !isNaN(val.getTime())) return val;
+    if (typeof val === "string") {
+        const d = new Date(val);
+        if (!isNaN(d.getTime())) return d;
+    }
+    return undefined;
+}
+
+function buildStudentUpdateInput(
+    raw: Record<string, unknown>
+): Prisma.StudentUpdateInput {
+    const data: Prisma.StudentUpdateInput = {};
+
+    if (typeof raw.fname === "string") data.fname = raw.fname;
+    if (typeof raw.mname === "string") data.mname = raw.mname;
+    if (typeof raw.lname === "string") data.lname = raw.lname;
+    if (isGender(raw.gender)) data.gender = raw.gender;
+
+    const dob = toDate(raw.date_of_birth);
+    if (dob) data.date_of_birth = dob;
+
+    if (isDepartment(raw.department)) data.department = raw.department;
+    if (typeof raw.program === "string") data.program = raw.program;
+    if (isYearLevel(raw.year_level)) data.year_level = raw.year_level;
+    if (isBloodType(raw.bloodtype)) data.bloodtype = raw.bloodtype;
+
+    if (typeof raw.contactno === "string") data.contactno = raw.contactno;
+    if (typeof raw.address === "string") data.address = raw.address;
+    if (typeof raw.allergies === "string") data.allergies = raw.allergies;
+    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
+    if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
+    if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
+    if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
+
+    return data;
+}
 
 // ---------------- GET OWN PROFILE ----------------
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: {
-                student: true,
-                employee: true,
-            },
+            include: { student: true },
         });
 
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        if (user.role !== Role.PATIENT) {
-            return NextResponse.json({ error: "Not a patient" }, { status: 403 });
-        }
+        if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+        if (user.role !== Role.PATIENT) return NextResponse.json({ error: "Not a patient" }, { status: 403 });
 
         return NextResponse.json({
             accountId: user.user_id,
             username: user.username,
             role: user.role,
             status: user.status,
-            profile: user.student ?? user.employee ?? null,
+            profile: user.student ?? null,
         });
     } catch (err) {
         console.error("[GET /api/patient/account/me]", err);
@@ -45,73 +90,26 @@ export async function GET() {
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const payload = await req.json();
-        const profile = payload?.profile ?? {};
+        const profile = (payload?.profile ?? {}) as Record<string, unknown>;
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: {
-                student: true,
-                employee: true,
-            },
+            include: { student: true },
         });
 
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        if (user.role !== Role.PATIENT) {
+        if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+        if (user.role !== Role.PATIENT || !user.student)
             return NextResponse.json({ error: "Not a patient" }, { status: 403 });
-        }
 
-        // Determine if this patient is a student or employee record
-        if (user.student) {
-            await prisma.student.update({
-                where: { user_id: user.user_id },
-                data: {
-                    fname: profile.fname ?? user.student.fname,
-                    mname: profile.mname ?? user.student.mname,
-                    lname: profile.lname ?? user.student.lname,
-                    contactno: profile.contactno ?? user.student.contactno,
-                    address: profile.address ?? user.student.address,
-                    bloodtype: profile.bloodtype ?? user.student.bloodtype,
-                    allergies: profile.allergies ?? user.student.allergies,
-                    medical_cond: profile.medical_cond ?? user.student.medical_cond,
-                    emergencyco_name: profile.emergencyco_name ?? user.student.emergencyco_name,
-                    emergencyco_num: profile.emergencyco_num ?? user.student.emergencyco_num,
-                    emergencyco_relation: profile.emergencyco_relation ?? user.student.emergencyco_relation,
-                },
-            });
-        } else if (user.employee) {
-            await prisma.employee.update({
-                where: { user_id: user.user_id },
-                data: {
-                    fname: profile.fname ?? user.employee.fname,
-                    mname: profile.mname ?? user.employee.mname,
-                    lname: profile.lname ?? user.employee.lname,
-                    contactno: profile.contactno ?? user.employee.contactno,
-                    address: profile.address ?? user.employee.address,
-                    bloodtype: profile.bloodtype ?? user.employee.bloodtype,
-                    allergies: profile.allergies ?? user.employee.allergies,
-                    medical_cond: profile.medical_cond ?? user.employee.medical_cond,
-                    emergencyco_name: profile.emergencyco_name ?? user.employee.emergencyco_name,
-                    emergencyco_num: profile.emergencyco_num ?? user.employee.emergencyco_num,
-                    emergencyco_relation: profile.emergencyco_relation ?? user.employee.emergencyco_relation,
-                },
-            });
-        } else {
-            // If not student or employee, just update user metadata
-            await prisma.users.update({
-                where: { user_id: user.user_id },
-                data: {
-                    username: profile.username ?? user.username,
-                },
-            });
-        }
+        const data = buildStudentUpdateInput(profile);
+
+        await prisma.student.update({
+            where: { user_id: session.user.id },
+            data,
+        });
 
         return NextResponse.json({ success: true });
     } catch (err) {
