@@ -77,6 +77,39 @@ enum MedType {
   Solution
 }
 
+enum Department {
+  EDUCATION
+  ARTS_AND_SCIENCES
+  BUSINESS_AND_ACCOUNTANCY
+  ENGINEERING_AND_COMPUTER_STUDIES
+  HEALTH_SCIENCES
+  LAW
+  BASIC_EDUCATION
+}
+
+enum YearLevel {
+  FIRST_YEAR
+  SECOND_YEAR
+  THIRD_YEAR
+  FOURTH_YEAR
+  FIFTH_YEAR
+  KINDERGARTEN
+  ELEMENTARY
+  JUNIOR_HIGH
+  SENIOR_HIGH
+}
+
+enum BloodType {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
+}
+
 model Clinic {
   clinic_id        String @id @default(cuid())
   clinic_name      String
@@ -121,13 +154,12 @@ model Student {
   lname                String
   date_of_birth        DateTime
   gender               Gender
-  department           String?
+  department           Department?
   program              String?
-  specialization       String?
-  year_level           String?
+  year_level           YearLevel?
   contactno            String?
   address              String?
-  bloodtype            String?
+  bloodtype            BloodType?
   allergies            String?
   medical_cond         String?
   emergencyco_name     String?
@@ -149,7 +181,7 @@ model Employee {
   gender               Gender
   contactno            String?
   address              String?
-  bloodtype            String?
+  bloodtype            BloodType?
   allergies            String?
   medical_cond         String?
   emergencyco_name     String?

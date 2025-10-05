@@ -34,7 +34,6 @@ function buildEmployeeUpdateInput(
 
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
-    if (typeof raw.bloodtype === "string") data.bloodtype = raw.bloodtype;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
     if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
     if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
