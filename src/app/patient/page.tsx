@@ -6,13 +6,13 @@ import { signOut, useSession } from "next-auth/react";
 import {
     Menu,
     X,
-    UserCog,
     CalendarDays,
     ClipboardList,
     Bell,
     Activity,
     Home,
     Loader2,
+    User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,10 @@ export default function PatientDashboardPage() {
                     <Link href="/patient" className="flex items-center gap-2 text-green-600 font-semibold">
                         <Home className="h-5 w-5" />
                         Dashboard
+                    </Link>
+                    <Link href="/patient/account" className="flex items-center gap-2 hover:text-green-600">
+                        <User className="h-5 w-5" />
+                        Account
                     </Link>
                     <Link href="/patient/appointments" className="flex items-center gap-2 hover:text-green-600">
                         <CalendarDays className="h-5 w-5" />
@@ -110,6 +114,9 @@ export default function PatientDashboardPage() {
                                     <Link href="/patient">Dashboard</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
+                                    <Link href="/patient/account">Account</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
                                     <Link href="/patient/appointments">Appointments</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
@@ -147,7 +154,7 @@ export default function PatientDashboardPage() {
                     <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-green-600">
-                                <UserCog className="w-6 h-6" /> Account Management
+                                <User className="w-6 h-6" /> Account Management
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
