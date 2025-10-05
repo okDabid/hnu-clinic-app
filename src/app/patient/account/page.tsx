@@ -46,6 +46,52 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
+// ✅ Enum ↔ Label Mappings (moved above to fix dependency warnings)
+const departmentEnumMap: Record<string, string> = {
+    EDUCATION: "College of Education",
+    ARTS_AND_SCIENCES: "College of Arts and Sciences",
+    BUSINESS_AND_ACCOUNTANCY: "College of Business and Accountancy",
+    ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
+    HEALTH_SCIENCES: "College of Health Sciences",
+    LAW: "College of Law",
+    BASIC_EDUCATION: "Basic Education Department",
+};
+
+const reverseDepartmentEnumMap = Object.fromEntries(
+    Object.entries(departmentEnumMap).map(([key, val]) => [val, key])
+);
+
+const yearLevelEnumMap: Record<string, string> = {
+    FIRST_YEAR: "1st Year",
+    SECOND_YEAR: "2nd Year",
+    THIRD_YEAR: "3rd Year",
+    FOURTH_YEAR: "4th Year",
+    FIFTH_YEAR: "5th Year",
+    KINDERGARTEN: "Kindergarten",
+    ELEMENTARY: "Elementary",
+    JUNIOR_HIGH: "Junior High School",
+    SENIOR_HIGH: "Senior High School",
+};
+
+const reverseYearLevelEnumMap = Object.fromEntries(
+    Object.entries(yearLevelEnumMap).map(([key, val]) => [val, key])
+);
+
+const bloodTypeEnumMap: Record<string, string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
+
+const reverseBloodTypeEnumMap = Object.fromEntries(
+    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
+);
+
 // ✅ Type Definition
 type Profile = {
     user_id: string;
@@ -84,23 +130,45 @@ const departmentOptions = [
 const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const programOptions: Record<string, string[]> = {
-    "College of Education": ["BSED English", "BSED Mathematics",
-        "BSED Filipino", "BSED Science", "BSE Qualifying",
-        "BSED Social Studies", "BEED", "PE ED", "TLED HE",
+    "College of Education": [
+        "BSED English",
+        "BSED Mathematics",
+        "BSED Filipino",
+        "BSED Science",
+        "BSE Qualifying",
+        "BSED Social Studies",
+        "BEED",
+        "PE ED",
+        "TLED HE",
         "SNED",
     ],
-    "College of Arts and Sciences": ["BS Psychology", "BS Biology", "BS Criminology", "BA Communication", "BA Political Science"],
-    "College of Business and Accountancy": ["BS Accountancy", "BSMA Management Accounting",
-        "BSBA Marketing Management", "BSBA Financial Management",
-        "BSBA Human Resource Management", "BSTM Tourism Management", "BSHM Hospitality Management"
+    "College of Arts and Sciences": [
+        "BS Psychology",
+        "BS Biology",
+        "BS Criminology",
+        "BA Communication",
+        "BA Political Science",
+    ],
+    "College of Business and Accountancy": [
+        "BS Accountancy",
+        "BSMA Management Accounting",
+        "BSBA Marketing Management",
+        "BSBA Financial Management",
+        "BSBA Human Resource Management",
+        "BSTM Tourism Management",
+        "BSHM Hospitality Management",
     ],
     "College of Engineering and Computer Studies": [
         "BS Electronics Engineering",
         "BS Civil Engineering",
         "BS Information Technology",
     ],
-    "College of Health Sciences": ["BS Nursing", "BS Medical Technology", "BS Radiologic Technology"],
-    "College of Law": ["JD	Juris Doctor"],
+    "College of Health Sciences": [
+        "BS Nursing",
+        "BS Medical Technology",
+        "BS Radiologic Technology",
+    ],
+    "College of Law": ["JD Juris Doctor"],
     "Basic Education Department": [
         "Kindergarten",
         "Elementary",
@@ -139,11 +207,9 @@ export default function PatientAccountPage() {
                     return [];
             }
         } else {
-            // College Departments
             return ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
         }
     };
-
 
     // Logout
     const handleLogout = async () => {
@@ -155,81 +221,35 @@ export default function PatientAccountPage() {
         }
     };
 
-    // Load profile
+    // Load profile (fixed dependencies)
     const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
             const data = await res.json();
-            if (data.error) toast.error(data.error);
-            else {
-                const p = data.profile || {};
-                setProfile({
-                    user_id: data.accountId,
-                    username: data.username,
-                    role: data.role,
-                    status: data.status,
-                    ...p,
-                    department: p.department ? departmentEnumMap[p.department] : "",
-                    year_level: p.year_level ? yearLevelEnumMap[p.year_level] : "",
-                    bloodtype: p.bloodtype ? bloodTypeEnumMap[p.bloodtype] : "",
-                });
+            if (data.error) {
+                toast.error(data.error);
+                return;
             }
+
+            const p = data.profile || {};
+            setProfile({
+                user_id: data.accountId,
+                username: data.username,
+                role: data.role,
+                status: data.status,
+                ...p,
+                department: p.department ? departmentEnumMap[p.department] : "",
+                year_level: p.year_level ? yearLevelEnumMap[p.year_level] : "",
+                bloodtype: p.bloodtype ? bloodTypeEnumMap[p.bloodtype] : "",
+            });
         } catch {
             toast.error("Failed to load profile");
         }
     }, []);
 
-
-
     useEffect(() => {
         loadProfile();
     }, [loadProfile]);
-
-    // Enum ↔ Label Mappings
-    const departmentEnumMap: Record<string, string> = {
-        EDUCATION: "College of Education",
-        ARTS_AND_SCIENCES: "College of Arts and Sciences",
-        BUSINESS_AND_ACCOUNTANCY: "College of Business and Accountancy",
-        ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
-        HEALTH_SCIENCES: "College of Health Sciences",
-        LAW: "College of Law",
-        BASIC_EDUCATION: "Basic Education Department",
-    };
-
-    const reverseDepartmentEnumMap = Object.fromEntries(
-        Object.entries(departmentEnumMap).map(([key, val]) => [val, key])
-    );
-
-    const yearLevelEnumMap: Record<string, string> = {
-        FIRST_YEAR: "1st Year",
-        SECOND_YEAR: "2nd Year",
-        THIRD_YEAR: "3rd Year",
-        FOURTH_YEAR: "4th Year",
-        FIFTH_YEAR: "5th Year",
-        KINDERGARTEN: "Kindergarten",
-        ELEMENTARY: "Elementary",
-        JUNIOR_HIGH: "Junior High School",
-        SENIOR_HIGH: "Senior High School",
-    };
-
-    const reverseYearLevelEnumMap = Object.fromEntries(
-        Object.entries(yearLevelEnumMap).map(([key, val]) => [val, key])
-    );
-
-    const bloodTypeEnumMap: Record<string, string> = {
-        A_POS: "A+",
-        A_NEG: "A-",
-        B_POS: "B+",
-        B_NEG: "B-",
-        AB_POS: "AB+",
-        AB_NEG: "AB-",
-        O_POS: "O+",
-        O_NEG: "O-",
-    };
-
-    const reverseBloodTypeEnumMap = Object.fromEntries(
-        Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
-    );
 
     // Update profile
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -262,7 +282,7 @@ export default function PatientAccountPage() {
             if (data.error) toast.error(data.error);
             else {
                 toast.success("Profile updated successfully!");
-                loadProfile(); // reload to show friendly text again
+                loadProfile();
             }
         } catch (err) {
             console.error("Profile update failed:", err);
@@ -271,8 +291,6 @@ export default function PatientAccountPage() {
             setProfileLoading(false);
         }
     };
-
-
 
     return (
         <div className="flex min-h-screen bg-green-50">
