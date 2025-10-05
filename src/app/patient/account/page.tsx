@@ -161,22 +161,74 @@ export default function PatientAccountPage() {
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
             const data = await res.json();
             if (data.error) toast.error(data.error);
-            else
+            else {
+                const p = data.profile || {};
                 setProfile({
                     user_id: data.accountId,
                     username: data.username,
                     role: data.role,
                     status: data.status,
-                    ...data.profile,
+                    ...p,
+                    department: p.department ? departmentEnumMap[p.department] : "",
+                    year_level: p.year_level ? yearLevelEnumMap[p.year_level] : "",
+                    bloodtype: p.bloodtype ? bloodTypeEnumMap[p.bloodtype] : "",
                 });
+            }
         } catch {
             toast.error("Failed to load profile");
         }
     };
 
+
     useEffect(() => {
         loadProfile();
     }, []);
+
+    // Enum ↔ Label Mappings
+    const departmentEnumMap: Record<string, string> = {
+        EDUCATION: "College of Education",
+        ARTS_AND_SCIENCES: "College of Arts and Sciences",
+        BUSINESS_AND_ACCOUNTANCY: "College of Business and Accountancy",
+        ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
+        HEALTH_SCIENCES: "College of Health Sciences",
+        LAW: "College of Law",
+        BASIC_EDUCATION: "Basic Education Department",
+    };
+
+    const reverseDepartmentEnumMap = Object.fromEntries(
+        Object.entries(departmentEnumMap).map(([key, val]) => [val, key])
+    );
+
+    const yearLevelEnumMap: Record<string, string> = {
+        FIRST_YEAR: "1st Year",
+        SECOND_YEAR: "2nd Year",
+        THIRD_YEAR: "3rd Year",
+        FOURTH_YEAR: "4th Year",
+        FIFTH_YEAR: "5th Year",
+        KINDERGARTEN: "Kindergarten",
+        ELEMENTARY: "Elementary",
+        JUNIOR_HIGH: "Junior High School",
+        SENIOR_HIGH: "Senior High School",
+    };
+
+    const reverseYearLevelEnumMap = Object.fromEntries(
+        Object.entries(yearLevelEnumMap).map(([key, val]) => [val, key])
+    );
+
+    const bloodTypeEnumMap: Record<string, string> = {
+        A_POS: "A+",
+        A_NEG: "A-",
+        B_POS: "B+",
+        B_NEG: "B-",
+        AB_POS: "AB+",
+        AB_NEG: "AB-",
+        O_POS: "O+",
+        O_NEG: "O-",
+    };
+
+    const reverseBloodTypeEnumMap = Object.fromEntries(
+        Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
+    );
 
     // Update profile
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -191,23 +243,25 @@ export default function PatientAccountPage() {
         try {
             setProfileLoading(true);
 
+            const payload = {
+                ...profile,
+                department: reverseDepartmentEnumMap[profile.department || ""] || null,
+                year_level: reverseYearLevelEnumMap[profile.year_level || ""] || null,
+                bloodtype: reverseBloodTypeEnumMap[profile.bloodtype || ""] || null,
+            };
+
             const res = await fetch("/api/patient/account/me", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ profile }),
+                body: JSON.stringify({ profile: payload }),
             });
 
             const data = await res.json();
 
-            if (data.error) {
-                toast.error(data.error);
-            } else {
+            if (data.error) toast.error(data.error);
+            else {
                 toast.success("Profile updated successfully!");
-
-                // ✅ Instantly show updated dropdowns and fields
-                if (data.profile) {
-                    setProfile((prev) => ({ ...prev!, ...data.profile }));
-                }
+                loadProfile(); // reload to show friendly text again
             }
         } catch (err) {
             console.error("Profile update failed:", err);
@@ -216,6 +270,7 @@ export default function PatientAccountPage() {
             setProfileLoading(false);
         }
     };
+
 
 
     return (
