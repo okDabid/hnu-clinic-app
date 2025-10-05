@@ -279,10 +279,25 @@ export default function PatientAccountPage() {
 
             const data = await res.json();
 
-            if (data.error) toast.error(data.error);
-            else {
+            if (data.error) {
+                toast.error(data.error);
+            } else {
                 toast.success("Profile updated successfully!");
-                loadProfile();
+
+                // ✅ Update local state instead of full reload
+                setProfile((prev) => ({
+                    ...prev!,
+                    ...data.profile,
+                    department: data.profile.department
+                        ? departmentEnumMap[data.profile.department]
+                        : prev?.department,
+                    year_level: data.profile.year_level
+                        ? yearLevelEnumMap[data.profile.year_level]
+                        : prev?.year_level,
+                    bloodtype: data.profile.bloodtype
+                        ? bloodTypeEnumMap[data.profile.bloodtype]
+                        : prev?.bloodtype,
+                }));
             }
         } catch (err) {
             console.error("Profile update failed:", err);
