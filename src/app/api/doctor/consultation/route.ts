@@ -124,8 +124,13 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const { availability_id, clinic_id, available_date, available_timestart, available_timeend } =
-            await req.json();
+        const {
+            availability_id,
+            clinic_id,
+            available_date,
+            available_timestart,
+            available_timeend,
+        } = await req.json();
 
         if (!availability_id) {
             return NextResponse.json({ error: "Missing availability ID" }, { status: 400 });
@@ -133,12 +138,22 @@ export async function PUT(req: Request) {
 
         const updateData: Prisma.DoctorAvailabilityUpdateInput = {};
 
-        if (clinic_id) updateData.clinic = clinic_id;
-        if (available_date) updateData.available_date = new Date(available_date);
-        if (available_timestart && available_date)
+        // ✅ Fix: connect relation properly
+        if (clinic_id) {
+            updateData.clinic = { connect: { clinic_id } };
+        }
+
+        if (available_date) {
+            updateData.available_date = new Date(available_date);
+        }
+
+        if (available_timestart && available_date) {
             updateData.available_timestart = toPHDateAsUTC(available_date, available_timestart);
-        if (available_timeend && available_date)
+        }
+
+        if (available_timeend && available_date) {
             updateData.available_timeend = toPHDateAsUTC(available_date, available_timeend);
+        }
 
         const updated = await prisma.doctorAvailability.update({
             where: { availability_id },
@@ -154,3 +169,4 @@ export async function PUT(req: Request) {
         return NextResponse.json({ error: "Failed to update consultation slot" }, { status: 500 });
     }
 }
+
