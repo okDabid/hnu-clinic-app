@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
-    Menu, X,
+    Menu,
+    X,
     Package,
     Users,
     Home,
@@ -82,9 +83,13 @@ export default function NurseInventoryPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [clinicFilter, setClinicFilter] = useState("All");
-    const [loading, setLoading] = useState(false);
+
+    // 🧩 Separate loading states
+    const [loadingInventory, setLoadingInventory] = useState(false);
+    const [savingStock, setSavingStock] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+    // 🔹 Logout handler
     async function handleLogout() {
         try {
             setIsLoggingOut(true);
@@ -96,37 +101,52 @@ export default function NurseInventoryPage() {
 
     // 🔹 Load inventory
     async function loadInventory() {
-        const res = await fetch("/api/nurse/inventory", { cache: "no-store" });
-        const data = await res.json();
+        try {
+            setLoadingInventory(true);
+            const res = await fetch("/api/nurse/inventory", { cache: "no-store" });
+            const data = await res.json();
 
-        if (data.error) {
-            toast.error(data.error);
-            return;
-        }
+            if (data.error) {
+                toast.error(data.error);
+                return;
+            }
 
-        setItems(data.inventory);
+            setItems(data.inventory);
 
-        if (data.expiredDeducted > 0) {
-            toast.warning(`Auto-deducted ${data.expiredDeducted} expired units from stock.`, {
-                duration: 5000,
-            });
+            if (data.expiredDeducted > 0) {
+                toast.warning(`Auto-deducted ${data.expiredDeducted} expired units from stock.`, {
+                    duration: 5000,
+                });
+            }
+        } catch {
+            toast.error("Failed to load inventory.");
+        } finally {
+            setLoadingInventory(false);
         }
     }
 
     // 🔹 Load clinics
     async function loadClinics() {
-        const res = await fetch("/api/nurse/clinic", { cache: "no-store" });
-        const data = await res.json();
-        setClinics(data);
+        try {
+            const res = await fetch("/api/nurse/clinic", { cache: "no-store" });
+            const data = await res.json();
+            setClinics(data);
+        } catch {
+            toast.error("Failed to load clinics.");
+        }
     }
 
     // 🔹 Load enums
     async function loadEnums() {
-        const res = await fetch("/api/enums", { cache: "no-store" });
-        const data = await res.json();
-        setCategories(data.categories);
-        setUnits(data.units);
-        setMedTypes(data.medTypes);
+        try {
+            const res = await fetch("/api/enums", { cache: "no-store" });
+            const data = await res.json();
+            setCategories(data.categories);
+            setUnits(data.units);
+            setMedTypes(data.medTypes);
+        } catch {
+            toast.error("Failed to load enums.");
+        }
     }
 
     useEffect(() => {
@@ -298,7 +318,7 @@ export default function NurseInventoryPage() {
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
                                                 const form = e.currentTarget as HTMLFormElement;
-                                                setLoading(true);
+                                                setSavingStock(true);
 
                                                 const body = {
                                                     clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
@@ -325,7 +345,7 @@ export default function NurseInventoryPage() {
                                                     toast.error("Failed to add stock");
                                                 }
 
-                                                setLoading(false);
+                                                setSavingStock(false);
                                             }}
                                         >
                                             <div>
@@ -394,9 +414,9 @@ export default function NurseInventoryPage() {
                                                 <Button
                                                     type="submit"
                                                     className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                                                    disabled={loading}
+                                                    disabled={savingStock}
                                                 >
-                                                    {loading ? (
+                                                    {savingStock ? (
                                                         <>
                                                             <Loader2 className="w-4 h-4 animate-spin" />
                                                             Saving...
@@ -413,7 +433,7 @@ export default function NurseInventoryPage() {
                         </CardHeader>
 
                         <CardContent className="flex-1 flex flex-col">
-                            {loading ? (
+                            {loadingInventory ? (
                                 <div className="flex items-center justify-center py-10 text-gray-500">
                                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                     Loading inventory...
