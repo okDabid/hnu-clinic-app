@@ -351,6 +351,7 @@ export default function DoctorAccountPage() {
                                             </div>
 
                                             {/* Confirm Password */}
+                                            {/* Confirm Password */}
                                             <div className="flex flex-col space-y-2">
                                                 <Label className="block mb-1 font-medium">Confirm New Password</Label>
                                                 <div className="relative">

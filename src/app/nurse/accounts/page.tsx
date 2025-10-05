@@ -400,7 +400,7 @@ export default function NurseAccountsPage() {
                 </header>
 
                 {/* Sections */}
-                <section className="px-6 py-8 max-w-4xl mx-auto w-full">
+                <section className="px-6 py-8 space-y-10 max-w-6xl mx-auto w-full">
                     {/* My Account */}
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
