@@ -159,19 +159,21 @@ export async function PUT(req: Request) {
 
         if (!user)
             return NextResponse.json({ error: "User not found" }, { status: 404 });
+
         if (user.role !== Role.PATIENT || !user.student)
             return NextResponse.json({ error: "Not a patient" }, { status: 403 });
 
         const data = buildStudentUpdateInput(profile);
 
-        const updatedStudent = await prisma.student.update({
+        const updated = await prisma.student.update({
             where: { user_id: session.user.id },
             data,
         });
 
+        // ✅ Return updated data
         return NextResponse.json({
             success: true,
-            profile: updatedStudent,
+            profile: updated,
         });
     } catch (err) {
         console.error("[PUT /api/patient/account/me]", err);

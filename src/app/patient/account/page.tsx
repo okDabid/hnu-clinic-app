@@ -190,10 +190,11 @@ export default function PatientAccountPage() {
 
         try {
             setProfileLoading(true);
+
             const res = await fetch("/api/patient/account/me", {
                 method: "PUT",
-                body: JSON.stringify({ profile }),
                 headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ profile }),
             });
 
             const data = await res.json();
@@ -203,12 +204,9 @@ export default function PatientAccountPage() {
             } else {
                 toast.success("Profile updated successfully!");
 
-                // ✅ Immediately reflect new data in UI
+                // ✅ Instantly show updated dropdowns and fields
                 if (data.profile) {
                     setProfile((prev) => ({ ...prev!, ...data.profile }));
-                } else {
-                    // fallback if backend didn't return updated data
-                    loadProfile();
                 }
             }
         } catch (err) {
@@ -346,28 +344,17 @@ export default function PatientAccountPage() {
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
                                                 const form = e.currentTarget;
-                                                const oldPassword = (
-                                                    form.elements.namedItem("oldPassword") as HTMLInputElement
-                                                ).value;
-                                                const newPassword = (
-                                                    form.elements.namedItem("newPassword") as HTMLInputElement
-                                                ).value;
-                                                const confirmPassword = (
-                                                    form.elements.namedItem("confirmPassword") as HTMLInputElement
-                                                ).value;
+                                                const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
+                                                const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
+                                                const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
                                                 const errors: string[] = [];
-                                                if (newPassword.length < 8)
-                                                    errors.push("Password must be at least 8 characters.");
-                                                if (!/[A-Z]/.test(newPassword))
-                                                    errors.push("Must contain an uppercase letter.");
-                                                if (!/[a-z]/.test(newPassword))
-                                                    errors.push("Must contain a lowercase letter.");
+                                                if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
+                                                if (!/[A-Z]/.test(newPassword)) errors.push("Must contain an uppercase letter.");
+                                                if (!/[a-z]/.test(newPassword)) errors.push("Must contain a lowercase letter.");
                                                 if (!/\d/.test(newPassword)) errors.push("Must contain a number.");
-                                                if (!/[^\w\s]/.test(newPassword))
-                                                    errors.push("Must contain a symbol.");
-                                                if (newPassword !== confirmPassword)
-                                                    errors.push("Passwords do not match.");
+                                                if (!/[^\w\s]/.test(newPassword)) errors.push("Must contain a symbol.");
+                                                if (newPassword !== confirmPassword) errors.push("Passwords do not match.");
 
                                                 if (errors.length > 0) {
                                                     setPasswordErrors(errors);
@@ -397,7 +384,7 @@ export default function PatientAccountPage() {
                                             }}
                                             className="space-y-4"
                                         >
-                                            {/* Inputs */}
+                                            {/* Current Password */}
                                             <div>
                                                 <Label>Current Password</Label>
                                                 <div className="relative">
@@ -414,15 +401,12 @@ export default function PatientAccountPage() {
                                                         onClick={() => setShowCurrent(!showCurrent)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showCurrent ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showCurrent ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
+                                            {/* New Password (with LIVE validation) */}
                                             <div>
                                                 <Label>New Password</Label>
                                                 <div className="relative">
@@ -431,6 +415,16 @@ export default function PatientAccountPage() {
                                                         name="newPassword"
                                                         required
                                                         className="pr-10"
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            const errs: string[] = [];
+                                                            if (val.length < 8) errs.push("Password must be at least 8 characters.");
+                                                            if (!/[A-Z]/.test(val)) errs.push("Must contain an uppercase letter.");
+                                                            if (!/[a-z]/.test(val)) errs.push("Must contain a lowercase letter.");
+                                                            if (!/\d/.test(val)) errs.push("Must contain a number.");
+                                                            if (!/[^\w\s]/.test(val)) errs.push("Must contain a symbol.");
+                                                            setPasswordErrors(errs);
+                                                        }}
                                                     />
                                                     <Button
                                                         type="button"
@@ -439,15 +433,12 @@ export default function PatientAccountPage() {
                                                         onClick={() => setShowNew(!showNew)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showNew ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
+                                            {/* Confirm Password */}
                                             <div>
                                                 <Label>Confirm Password</Label>
                                                 <div className="relative">
@@ -464,15 +455,12 @@ export default function PatientAccountPage() {
                                                         onClick={() => setShowConfirm(!showConfirm)}
                                                         className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                     >
-                                                        {showConfirm ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
+                                                        {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                                                     </Button>
                                                 </div>
                                             </div>
 
+                                            {/* Validation Feedback */}
                                             {passwordErrors.length > 0 && (
                                                 <ul className="text-sm text-red-600 space-y-1">
                                                     {passwordErrors.map((err, idx) => (
@@ -480,9 +468,7 @@ export default function PatientAccountPage() {
                                                     ))}
                                                 </ul>
                                             )}
-                                            {passwordMessage && (
-                                                <p className="text-sm text-green-600">{passwordMessage}</p>
-                                            )}
+                                            {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
 
                                             <DialogFooter className="pt-2">
                                                 <Button
