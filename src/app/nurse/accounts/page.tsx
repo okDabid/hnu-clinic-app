@@ -406,7 +406,7 @@ export default function NurseAccountsPage() {
                     {/* My Account */}
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition mb-10">
-                            <CardHeader className="border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <CardHeader className="border-b flex items-center justify-between flex-wrap gap-3">
                                 <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                                     My Account
                                 </CardTitle>
