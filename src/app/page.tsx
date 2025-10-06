@@ -79,11 +79,17 @@ export default function HomePage() {
             A secure and easy-to-use system for patients and doctors at HNU Clinic.
             Book appointments, access health records, and stay connected.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-            <Link href={"/login"}>
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">Book Appointment</Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start w-full sm:w-auto">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white">
+                Book Appointment
+              </Button>
             </Link>
-            <Button size="lg" variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto border-green-600 text-green-600 hover:bg-green-50"
+            >
               Learn More
             </Button>
           </div>
