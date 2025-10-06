@@ -15,28 +15,22 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-} from "@/components/ui/card";
-
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Table,
     TableBody,
     TableCell,
     TableHead,
     TableHeader,
-    TableRow
+    TableRow,
 } from "@/components/ui/table";
-
 import { Separator } from "@/components/ui/separator";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // 🔹 Extend Dispense type to include batch usage
 type Dispense = {
@@ -65,9 +59,8 @@ type Dispense = {
 };
 
 export default function NurseDispensePage() {
-    const [menuOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [dispenses, setDispenses] = useState<Dispense[]>([]);
-
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     async function handleLogout() {
@@ -79,7 +72,6 @@ export default function NurseDispensePage() {
         }
     }
 
-    // Load dispenses
     async function loadDispenses() {
         const res = await fetch("/api/nurse/dispense", { cache: "no-store" });
         const data = await res.json();
@@ -91,7 +83,7 @@ export default function NurseDispensePage() {
     }, []);
 
     return (
-        <div className="flex min-h-screen bg-green-50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
@@ -133,15 +125,19 @@ export default function NurseDispensePage() {
                 </Button>
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col">
+            {/* Main */}
+            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
                 {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Dispense Records</h2>
+                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-lg sm:text-xl font-bold text-green-600">
+                        Dispense Records
+                    </h2>
+
+                    {/* Mobile Menu */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
                                     {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
@@ -152,19 +148,25 @@ export default function NurseDispensePage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispense</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
+                                    Logout
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </header>
 
-                {/* Dispense Records Table */}
-                <section className="px-6 pt-6 pb-12 flex-1 flex flex-col">
-                    <Card className="flex-1 flex flex-col">
-
-                        <CardContent className="flex-1 flex flex-col">
-                            <div className="overflow-x-auto flex-1">
-                                <Table>
+                {/* Dispense Records */}
+                <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col space-y-8">
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
+                        <CardHeader className="border-b">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                Dispense History
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex flex-col pt-4">
+                            <div className="overflow-x-auto w-full">
+                                <Table className="min-w-full text-sm">
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Clinic</TableHead>
@@ -180,22 +182,42 @@ export default function NurseDispensePage() {
                                     <TableBody>
                                         {dispenses.length > 0 ? (
                                             dispenses.map((d) => (
-                                                <TableRow key={d.dispense_id} className="hover:bg-green-50">
+                                                <TableRow
+                                                    key={d.dispense_id}
+                                                    className="hover:bg-green-50 transition"
+                                                >
                                                     <TableCell>{d.med.clinic.clinic_name}</TableCell>
-                                                    <TableCell>{d.consultation.appointment.patient.username}</TableCell>
+                                                    <TableCell>
+                                                        {d.consultation.appointment.patient.username}
+                                                    </TableCell>
                                                     <TableCell>{d.med.item_name}</TableCell>
                                                     <TableCell>{d.quantity}</TableCell>
-                                                    <TableCell>{d.consultation.doctor?.username || "—"}</TableCell>
-                                                    <TableCell>{d.consultation.nurse?.username || "—"}</TableCell>
-                                                    <TableCell>{new Date(d.createdAt).toLocaleString()}</TableCell>
+                                                    <TableCell>
+                                                        {d.consultation.doctor?.username || "—"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {d.consultation.nurse?.username || "—"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {new Date(d.createdAt).toLocaleString()}
+                                                    </TableCell>
                                                     <TableCell>
                                                         {d.dispenseBatches.length > 0 ? (
                                                             <ul className="text-sm text-gray-700 space-y-1">
                                                                 {d.dispenseBatches.map((batch, i) => (
                                                                     <li key={i}>
-                                                                        <span className="font-medium">{batch.quantity_used}</span> used from batch
-                                                                        (Expiry: {new Date(batch.replenishment.expiry_date).toLocaleDateString()},
-                                                                        Received: {new Date(batch.replenishment.date_received).toLocaleDateString()})
+                                                                        <span className="font-medium">
+                                                                            {batch.quantity_used}
+                                                                        </span>{" "}
+                                                                        used from batch (Expiry:{" "}
+                                                                        {new Date(
+                                                                            batch.replenishment.expiry_date
+                                                                        ).toLocaleDateString()}
+                                                                        , Received:{" "}
+                                                                        {new Date(
+                                                                            batch.replenishment.date_received
+                                                                        ).toLocaleDateString()}
+                                                                        )
                                                                     </li>
                                                                 ))}
                                                             </ul>
@@ -207,7 +229,10 @@ export default function NurseDispensePage() {
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={8} className="text-center text-gray-500 py-6">
+                                                <TableCell
+                                                    colSpan={8}
+                                                    className="text-center text-gray-500 py-6"
+                                                >
                                                     No dispense records found
                                                 </TableCell>
                                             </TableRow>
@@ -220,7 +245,7 @@ export default function NurseDispensePage() {
                 </section>
 
                 {/* Footer */}
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
                     © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
             </main>
