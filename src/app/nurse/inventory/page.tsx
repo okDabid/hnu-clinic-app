@@ -246,14 +246,59 @@ export default function NurseInventoryPage() {
             {/* Main */}
             <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
                 {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Inventory Management</h2>
-                    <button
-                        className="md:hidden p-2 text-green-600"
-                        onClick={() => setMenuOpen(!menuOpen)}
-                    >
-                        {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                    </button>
+                <header className="w-full bg-white shadow px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sticky top-0 z-40">
+                    <h2 className="text-xl sm:text-2xl font-bold text-green-600">Inventory Management</h2>
+
+                    {/* Mobile Dropdown Menu */}
+                    <div className="sm:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                                    <Menu className="w-5 h-5 text-green-600" />
+                                    <span>Menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem asChild><Link href="/nurse">Dashboard</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    {/* Desktop Nav Buttons */}
+                    <nav className="hidden sm:flex items-center gap-4">
+                        <Link href="/nurse" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                            <Home className="h-4 w-4" /> Dashboard
+                        </Link>
+                        <Link href="/nurse/accounts" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                            <Users className="h-4 w-4" /> Accounts
+                        </Link>
+                        <Link href="/nurse/inventory" className="text-green-600 font-semibold flex items-center gap-1">
+                            <Package className="h-4 w-4" /> Inventory
+                        </Link>
+                        <Link href="/nurse/clinic" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                            <ClipboardList className="h-4 w-4" /> Clinic
+                        </Link>
+                        <Link href="/nurse/dispense" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                            <Pill className="h-4 w-4" /> Dispense
+                        </Link>
+                        <Link href="/nurse/records" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                            <ClipboardList className="h-4 w-4" /> Records
+                        </Link>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
+                            className="border-green-600 text-green-600 hover:bg-green-50"
+                        >
+                            Logout
+                        </Button>
+                    </nav>
                 </header>
 
                 {/* Inventory Table */}
