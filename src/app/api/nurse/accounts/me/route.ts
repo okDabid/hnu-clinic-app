@@ -140,7 +140,11 @@ export async function GET() {
         // ✅ Convert bloodtype enum to display string ("A+")
         if (profile?.bloodtype && typeof profile.bloodtype === "string") {
             const mapped = bloodTypeEnumMap[profile.bloodtype];
-            if (mapped) (profile as any).bloodtype = mapped;
+            if (mapped) {
+                if ("bloodtype" in profile) {
+                    (profile as { bloodtype: string }).bloodtype = mapped;
+                }
+            }
         }
 
         return NextResponse.json({
