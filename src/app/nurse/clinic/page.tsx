@@ -49,11 +49,10 @@ type Clinic = {
 };
 
 export default function NurseClinicPage() {
-    const [menuOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
-    const [loading, setLoading] = useState(false); // ✅ global loading state
-
+    const [loading, setLoading] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     async function handleLogout() {
@@ -65,7 +64,6 @@ export default function NurseClinicPage() {
         }
     }
 
-    // Load clinics
     async function loadClinics() {
         const res = await fetch("/api/nurse/clinic");
         const data = await res.json();
@@ -76,7 +74,6 @@ export default function NurseClinicPage() {
         loadClinics();
     }, []);
 
-    // Add new clinic
     async function handleAddClinic(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
@@ -104,7 +101,6 @@ export default function NurseClinicPage() {
         }
     }
 
-    // Update clinic
     async function handleUpdateClinic(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!selectedClinic) return;
@@ -135,7 +131,7 @@ export default function NurseClinicPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-green-50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
@@ -178,14 +174,20 @@ export default function NurseClinicPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col">
+            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
                 {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Clinic Management</h2>
+                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-lg sm:text-xl font-bold text-green-600">
+                        Clinic Management
+                    </h2>
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setMenuOpen(!menuOpen)}
+                                >
                                     {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
@@ -194,22 +196,26 @@ export default function NurseClinicPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispense</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </header>
 
                 {/* Clinics Section */}
-                <section className="px-6 py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
-                    <Card>
-                        <CardHeader className="flex justify-between items-center">
-                            <CardTitle className="text-2xl text-green-600">Clinics</CardTitle>
+                <section className="px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
+                        <CardHeader className="border-b flex flex-col sm:flex-row sm:justify-between gap-3">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                Clinics
+                            </CardTitle>
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button className="bg-green-600 hover:bg-green-700">+ Add Clinic</Button>
+                                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                        + Add Clinic
+                                    </Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
@@ -250,8 +256,8 @@ export default function NurseClinicPage() {
                             </Dialog>
                         </CardHeader>
 
-                        <CardContent>
-                            <table className="w-full border-collapse border border-gray-200">
+                        <CardContent className="overflow-x-auto">
+                            <table className="w-full border-collapse border border-gray-200 text-sm sm:text-base">
                                 <thead className="bg-green-50">
                                     <tr>
                                         <th className="border p-2">Name</th>
@@ -262,7 +268,7 @@ export default function NurseClinicPage() {
                                 </thead>
                                 <tbody>
                                     {clinics.map((clinic) => (
-                                        <tr key={clinic.clinic_id} className="hover:bg-green-50">
+                                        <tr key={clinic.clinic_id} className="hover:bg-green-50 transition">
                                             <td className="border p-2">{clinic.clinic_name}</td>
                                             <td className="border p-2">{clinic.clinic_location}</td>
                                             <td className="border p-2">{clinic.clinic_contactno}</td>
@@ -280,7 +286,9 @@ export default function NurseClinicPage() {
                                                     <DialogContent>
                                                         <DialogHeader>
                                                             <DialogTitle>Update Clinic</DialogTitle>
-                                                            <DialogDescription>Update location or contact number.</DialogDescription>
+                                                            <DialogDescription>
+                                                                Update location or contact number.
+                                                            </DialogDescription>
                                                         </DialogHeader>
                                                         <form onSubmit={handleUpdateClinic} className="space-y-4">
                                                             <div>
@@ -328,7 +336,7 @@ export default function NurseClinicPage() {
                 </section>
 
                 {/* Footer */}
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
                     © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
             </main>

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -84,11 +84,10 @@ export default function NurseRecordsPage() {
     const [typeFilter, setTypeFilter] = useState("All");
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    // 🔹 Separate loading states
+    // Separate loading states
     const [loadingRecords, setLoadingRecords] = useState(false);
     const [savingData, setSavingData] = useState(false);
 
-    // 🔹 Logout
     async function handleLogout() {
         try {
             setIsLoggingOut(true);
@@ -98,7 +97,6 @@ export default function NurseRecordsPage() {
         }
     }
 
-    // 🔹 Load records
     async function loadRecords() {
         try {
             setLoadingRecords(true);
@@ -117,7 +115,6 @@ export default function NurseRecordsPage() {
         loadRecords();
     }, []);
 
-    // 🔹 Filters
     const filtered = records.filter((r) => {
         const matchesSearch =
             r.fullName.toLowerCase().includes(search.toLowerCase()) ||
@@ -131,7 +128,7 @@ export default function NurseRecordsPage() {
     });
 
     return (
-        <div className="flex min-h-screen bg-green-50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
@@ -174,15 +171,21 @@ export default function NurseRecordsPage() {
             </aside>
 
             {/* Main */}
-            <main className="flex-1 flex flex-col">
+            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
                 {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Patient Records</h2>
+                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-lg sm:text-xl font-bold text-green-600">Patient Records</h2>
+
+                    {/* Mobile Menu */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5" />}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setMenuOpen(!menuOpen)}
+                                >
+                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -198,14 +201,17 @@ export default function NurseRecordsPage() {
                     </div>
                 </header>
 
-                {/* Table */}
-                <section className="px-6 pt-6 pb-12 flex-1 flex flex-col">
-                    <Card className="flex-1 flex flex-col">
-                        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                {/* Content */}
+                <section className="px-4 sm:px-6 py-6 sm:py-8 flex-1 flex flex-col space-y-8 max-w-7xl mx-auto w-full">
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
+                        <CardHeader className="border-b flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                Patient List
+                            </CardTitle>
                             <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
                                 {/* Search */}
                                 <div className="relative w-full md:w-64">
-                                    <Search className="absolute right-2 top-2.5 h-4 w-4 text-gray-400" />
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                                     <Input
                                         placeholder="Search patients..."
                                         value={search}
@@ -261,7 +267,7 @@ export default function NurseRecordsPage() {
                                         <TableBody>
                                             {filtered.length > 0 ? (
                                                 filtered.map((r) => (
-                                                    <TableRow key={r.id} className="hover:bg-green-50">
+                                                    <TableRow key={r.id} className="hover:bg-green-50 transition">
                                                         <TableCell>{r.patientId}</TableCell>
                                                         <TableCell>{r.fullName}</TableCell>
                                                         <TableCell>{r.patientType}</TableCell>
@@ -320,10 +326,10 @@ export default function NurseRecordsPage() {
                                                                         </TabsContent>
 
                                                                         {/* UPDATE TAB */}
-                                                                        <TabsContent value="update">
+                                                                        <TabsContent value="update" className="space-y-6">
                                                                             {/* Medical Condition Update */}
                                                                             <form
-                                                                                className="space-y-3 mb-6"
+                                                                                className="space-y-3"
                                                                                 onSubmit={async (e) => {
                                                                                     e.preventDefault();
                                                                                     setSavingData(true);
@@ -460,7 +466,8 @@ export default function NurseRecordsPage() {
                     </Card>
                 </section>
 
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                {/* Footer */}
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
                     © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
             </main>
