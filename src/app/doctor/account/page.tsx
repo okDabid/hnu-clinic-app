@@ -174,10 +174,12 @@ export default function DoctorAccountPage() {
                     ...prev!,
                     ...profile,
                     bloodtype:
-                        profile.bloodtype && reverseBloodTypeEnumMap[profile.bloodtype]
-                            ? profile.bloodtype // still readable
-                            : bloodTypeEnumMap[data.profile?.bloodtype] || prev?.bloodtype,
+                        profile.bloodtype ||
+                        (data.profile?.bloodtype
+                            ? bloodTypeEnumMap[data.profile.bloodtype] || prev?.bloodtype
+                            : prev?.bloodtype),
                 }));
+
             }
         } catch (err) {
             console.error("Profile update failed:", err);
