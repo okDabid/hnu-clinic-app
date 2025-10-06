@@ -59,15 +59,18 @@ function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUp
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
+    // ✅ ENUM HANDLING
     if (isEnumValue(Department, raw.department)) data.department = raw.department as Department;
     if (typeof raw.program === "string") data.program = raw.program;
     if (isEnumValue(YearLevel, raw.year_level)) data.year_level = raw.year_level as YearLevel;
 
-    // ✅ Safe blood type mapping
+    // ✅ Convert blood type from "A+" to enum value (A_POS, etc.)
     if (typeof raw.bloodtype === "string") {
-        data.bloodtype = bloodTypeMap[raw.bloodtype] ?? null;
+        const mapped = bloodTypeMap[raw.bloodtype] || (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
+        if (mapped) data.bloodtype = mapped as BloodType;
     }
 
+    // Regular strings
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
@@ -92,9 +95,10 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
-    // ✅ Safe blood type mapping
+    // ✅ Convert blood type from "A+" to enum value
     if (typeof raw.bloodtype === "string") {
-        data.bloodtype = bloodTypeMap[raw.bloodtype] ?? null;
+        const mapped = bloodTypeMap[raw.bloodtype] || (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
+        if (mapped) data.bloodtype = mapped as BloodType;
     }
 
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
@@ -125,18 +129,18 @@ export async function GET() {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // ✅ Create a widened copy of profile (avoid enum assignment error)
-        let profile:
-            | (Omit<Prisma.StudentGetPayload<{}>, "bloodtype"> & { bloodtype: string | null })
-            | (Omit<Prisma.EmployeeGetPayload<{}>, "bloodtype"> & { bloodtype: string | null })
-            | null = null;
+        // ✅ Clone the object so TypeScript doesn't complain
+        const profile =
+            user.student
+                ? { ...user.student }
+                : user.employee
+                    ? { ...user.employee }
+                    : null;
 
-        if (user.student) {
-            const bt = user.student.bloodtype ? bloodTypeEnumMap[user.student.bloodtype] ?? user.student.bloodtype : null;
-            profile = { ...user.student, bloodtype: bt };
-        } else if (user.employee) {
-            const bt = user.employee.bloodtype ? bloodTypeEnumMap[user.employee.bloodtype] ?? user.employee.bloodtype : null;
-            profile = { ...user.employee, bloodtype: bt };
+        // ✅ Convert bloodtype enum to display string ("A+")
+        if (profile?.bloodtype && typeof profile.bloodtype === "string") {
+            const mapped = bloodTypeEnumMap[profile.bloodtype];
+            if (mapped) (profile as any).bloodtype = mapped;
         }
 
         return NextResponse.json({
