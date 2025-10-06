@@ -213,35 +213,44 @@ export default function NurseAccountsPage() {
     // 🔹 Fetch own profile
     const loadProfile = useCallback(async () => {
         try {
-            const res = await fetch("/api/nurse/accounts/me", { cache: "no-store" });
+            const res = await fetch("/api/nurse/account/me", {
+                cache: "no-store",
+                next: { revalidate: 0 }, // ensures it always re-fetches
+            });
+
             const data = await res.json();
 
             if (data.error) {
                 toast.error(data.error);
-            } else {
-                setProfile({
-                    user_id: data.accountId,
-                    username: data.username,
-                    role: data.role,
-                    status: data.status,
-                    fname: data.profile?.fname || "",
-                    mname: data.profile?.mname || "",
-                    lname: data.profile?.lname || "",
-                    date_of_birth: data.profile?.date_of_birth || "",
-                    contactno: data.profile?.contactno || "",
-                    address: data.profile?.address || "",
-                    // 🩸 Convert enum → readable
-                    bloodtype: data.profile?.bloodtype
-                        ? bloodTypeEnumMap[data.profile.bloodtype] || ""
-                        : "",
-                    allergies: data.profile?.allergies || "",
-                    medical_cond: data.profile?.medical_cond || "",
-                    emergencyco_name: data.profile?.emergencyco_name || "",
-                    emergencyco_num: data.profile?.emergencyco_num || "",
-                    emergencyco_relation: data.profile?.emergencyco_relation || "",
-                });
+                return;
             }
-        } catch {
+
+            // 🩸 Normalize blood type no matter what format the backend sends
+            const bloodTypeValue =
+                typeof data.profile?.bloodtype === "string"
+                    ? bloodTypeEnumMap[data.profile.bloodtype] || data.profile.bloodtype
+                    : "";
+
+            setProfile({
+                user_id: data.accountId,
+                username: data.username,
+                role: data.role,
+                status: data.status,
+                fname: data.profile?.fname || "",
+                mname: data.profile?.mname || "",
+                lname: data.profile?.lname || "",
+                date_of_birth: data.profile?.date_of_birth || "",
+                contactno: data.profile?.contactno || "",
+                address: data.profile?.address || "",
+                bloodtype: bloodTypeValue,
+                allergies: data.profile?.allergies || "",
+                medical_cond: data.profile?.medical_cond || "",
+                emergencyco_name: data.profile?.emergencyco_name || "",
+                emergencyco_num: data.profile?.emergencyco_num || "",
+                emergencyco_relation: data.profile?.emergencyco_relation || "",
+            });
+        } catch (err) {
+            console.error("Failed to load profile:", err);
             toast.error("Failed to load profile");
         }
     }, []);
