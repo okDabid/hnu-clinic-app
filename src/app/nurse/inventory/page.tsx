@@ -74,7 +74,7 @@ type Clinic = {
 };
 
 export default function NurseInventoryPage() {
-    const [menuOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [items, setItems] = useState<InventoryItem[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
@@ -195,8 +195,16 @@ export default function NurseInventoryPage() {
     return (
         <div className="flex min-h-screen bg-green-50">
             {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
+            <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg p-6 transform md:translate-x-0 transition-transform duration-300 ease-in-out
+    ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
+            >
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
+                <button
+                    className="md:hidden absolute top-4 right-4 p-2 text-green-600 hover:text-green-700"
+                    onClick={() => setMenuOpen(false)}
+                >
+                    <X className="h-5 w-5" />
+                </button>
                 <nav className="flex flex-col gap-4 text-gray-700">
                     <Link href="/nurse" className="flex items-center gap-2 hover:text-green-600">
                         <Home className="h-5 w-5" /> Dashboard
@@ -236,28 +244,16 @@ export default function NurseInventoryPage() {
             </aside>
 
             {/* Main */}
-            <main className="flex-1 flex flex-col">
+            <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
                 {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Inventory Management</h2>
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild><Link href="/nurse">Dashboard</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
+                    <button
+                        className="md:hidden p-2 text-green-600"
+                        onClick={() => setMenuOpen(!menuOpen)}
+                    >
+                        {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </button>
                 </header>
 
                 {/* Inventory Table */}
@@ -265,7 +261,7 @@ export default function NurseInventoryPage() {
                     <Card className="flex-1 flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <CardTitle className="text-2xl font-bold text-green-600">Stock List</CardTitle>
-                            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                            <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full md:w-auto">
                                 {/* Search */}
                                 <div className="relative flex-1 md:flex-initial">
                                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
