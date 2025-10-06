@@ -1,13 +1,40 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const BloodTypes = [
+    "A_POS",
+    "A_NEG",
+    "B_POS",
+    "B_NEG",
+    "AB_POS",
+    "AB_NEG",
+    "O_POS",
+    "O_NEG",
+] as const;
+
+const PatchSchema = z.object({
+    type: z.enum(["Student", "Employee"]),
+    contactno: z.string().optional(),
+    address: z.string().optional(),
+    bloodtype: z.enum(BloodTypes).nullable().optional(),
+    allergies: z.string().optional(),
+    medical_cond: z.string().optional(),
+    emergency: z
+        .object({
+            name: z.string().optional(),
+            num: z.string().optional(),
+            relation: z.string().optional(),
+        })
+        .optional(),
+});
 
 export async function PATCH(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = await params;
-
+        const { id } = params;
         if (!id) {
             return NextResponse.json(
                 { error: "Missing patient ID in request params" },
@@ -15,46 +42,45 @@ export async function PATCH(
             );
         }
 
-        const body = await req.json();
-        const { type, ...healthData } = body;
-
-        if (!type || !["Student", "Employee"].includes(type)) {
+        const json = await req.json();
+        const parsed = PatchSchema.safeParse(json);
+        if (!parsed.success) {
             return NextResponse.json(
-                { error: "Invalid or missing patient type" },
+                { error: "Invalid request body", details: parsed.error.flatten() },
                 { status: 400 }
             );
         }
 
+        const { type, ...healthData } = parsed.data;
+
+        const commonData = {
+            contactno: healthData.contactno ?? undefined,
+            address: healthData.address ?? undefined,
+            bloodtype:
+                healthData.bloodtype !== undefined
+                    ? { set: healthData.bloodtype }
+                    : undefined,
+            allergies: healthData.allergies ?? undefined,
+            medical_cond: healthData.medical_cond ?? undefined,
+            emergencyco_name: healthData.emergency?.name ?? undefined,
+            emergencyco_num: healthData.emergency?.num ?? undefined,
+            emergencyco_relation: healthData.emergency?.relation ?? undefined,
+        };
+
+        // 🧑‍🎓 Student update
         if (type === "Student") {
             const student = await prisma.student.update({
-                where: { user_id: id },
-                data: {
-                    contactno: healthData.contactno ?? undefined,
-                    address: healthData.address ?? undefined,
-                    bloodtype: healthData.bloodtype ?? undefined,
-                    allergies: healthData.allergies ?? undefined,
-                    medical_cond: healthData.medical_cond ?? undefined,
-                    emergencyco_name: healthData.emergency?.name ?? undefined,
-                    emergencyco_num: healthData.emergency?.num ?? undefined,
-                    emergencyco_relation: healthData.emergency?.relation ?? undefined,
-                },
+                where: { stud_user_id: id }, // ✅ FIXED
+                data: commonData,
             });
             return NextResponse.json(student);
         }
 
+        // 👩‍💼 Employee update
         if (type === "Employee") {
             const employee = await prisma.employee.update({
-                where: { user_id: id },
-                data: {
-                    contactno: healthData.contactno ?? undefined,
-                    address: healthData.address ?? undefined,
-                    bloodtype: healthData.bloodtype ?? undefined,
-                    allergies: healthData.allergies ?? undefined,
-                    medical_cond: healthData.medical_cond ?? undefined,
-                    emergencyco_name: healthData.emergency?.name ?? undefined,
-                    emergencyco_num: healthData.emergency?.num ?? undefined,
-                    emergencyco_relation: healthData.emergency?.relation ?? undefined,
-                },
+                where: { emp_id: id }, // ✅ FIXED
+                data: commonData,
             });
             return NextResponse.json(employee);
         }
@@ -64,12 +90,7 @@ export async function PATCH(
             { status: 400 }
         );
     } catch (err: unknown) {
-        if (err instanceof Error) {
-            console.error("PATCH /api/nurse/records/[id] error:", err.message);
-        } else {
-            console.error("PATCH /api/nurse/records/[id] error: Unknown error", err);
-        }
-
+        console.error("PATCH /api/nurse/records/[id] error:", err);
         return NextResponse.json(
             { error: "Failed to update health data" },
             { status: 500 }

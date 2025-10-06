@@ -295,13 +295,15 @@ export default function NurseRecordsPage() {
                                                                         </DialogDescription>
                                                                     </DialogHeader>
 
+                                                                    {/* Tabs for clarity */}
                                                                     <Tabs defaultValue="details">
-                                                                        <TabsList className="grid grid-cols-2 gap-2">
+                                                                        <TabsList className="grid grid-cols-3 gap-2">
                                                                             <TabsTrigger value="details">Details</TabsTrigger>
-                                                                            <TabsTrigger value="update">Update & Notes</TabsTrigger>
+                                                                            <TabsTrigger value="update">Update Info</TabsTrigger>
+                                                                            <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
                                                                         </TabsList>
 
-                                                                        {/* DETAILS TAB */}
+                                                                        {/* 🧍 DETAILS TAB */}
                                                                         <TabsContent value="details" className="space-y-2">
                                                                             <p><strong>Patient ID:</strong> {r.patientId}</p>
                                                                             <p><strong>Gender:</strong> {r.gender}</p>
@@ -313,8 +315,9 @@ export default function NurseRecordsPage() {
                                                                             <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
                                                                             <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
                                                                             <p>
-                                                                                <strong>Emergency:</strong> {r.emergency?.name || "—"} (
-                                                                                {r.emergency?.relation || "—"}) - {r.emergency?.num || "—"}
+                                                                                <strong>Emergency:</strong>{" "}
+                                                                                {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) -{" "}
+                                                                                {r.emergency?.num || "—"}
                                                                             </p>
                                                                             {r.patientType === "Student" && (
                                                                                 <>
@@ -325,11 +328,9 @@ export default function NurseRecordsPage() {
                                                                             )}
                                                                         </TabsContent>
 
-                                                                        {/* UPDATE TAB */}
-                                                                        <TabsContent value="update" className="space-y-6">
-                                                                            {/* Medical Condition Update */}
+                                                                        {/* 🩺 UPDATE INFO TAB */}
+                                                                        <TabsContent value="update" className="space-y-4 pt-2">
                                                                             <form
-                                                                                className="space-y-3"
                                                                                 onSubmit={async (e) => {
                                                                                     e.preventDefault();
                                                                                     setSavingData(true);
@@ -338,6 +339,8 @@ export default function NurseRecordsPage() {
                                                                                         type: r.patientType,
                                                                                         medical_cond: (
                                                                                             form.elements.namedItem("medical_cond") as HTMLInputElement
+                                                                                        ).value,
+                                                                                        allergies: (form.elements.namedItem("allergies") as HTMLInputElement
                                                                                         ).value,
                                                                                     };
 
@@ -353,14 +356,27 @@ export default function NurseRecordsPage() {
                                                                                     } else {
                                                                                         toast.error("Failed to update condition");
                                                                                     }
+
                                                                                     setSavingData(false);
                                                                                 }}
+                                                                                className="space-y-3"
                                                                             >
                                                                                 <div>
-                                                                                    <Label>Medical Conditions</Label>
+                                                                                    <Label className="block mb-1 font-medium" htmlFor="medical_cond">Medical Conditions</Label>
                                                                                     <Input
+                                                                                        id="medical_cond"
                                                                                         name="medical_cond"
                                                                                         defaultValue={r.medical_cond || ""}
+                                                                                    />
+                                                                                </div>
+
+                                                                                <div>
+                                                                                    <Label className="block mb-1 font-medium" htmlFor="allergies">Allergies</Label>
+                                                                                    <Input
+                                                                                        id="allergies"
+                                                                                        name="allergies"
+                                                                                        defaultValue={r.allergies || ""}
+                                                                                        placeholder="e.g. Penicillin, Peanuts"
                                                                                     />
                                                                                 </div>
                                                                                 <Button
@@ -374,20 +390,21 @@ export default function NurseRecordsPage() {
                                                                                             Saving...
                                                                                         </>
                                                                                     ) : (
-                                                                                        "Save"
+                                                                                        "Save Info"
                                                                                     )}
                                                                                 </Button>
                                                                             </form>
+                                                                        </TabsContent>
 
-                                                                            {/* Consultation Notes */}
+                                                                        {/* 🧾 CONSULTATION NOTES TAB */}
+                                                                        <TabsContent value="notes" className="space-y-4 pt-2">
                                                                             <form
-                                                                                className="space-y-3"
                                                                                 onSubmit={async (e) => {
                                                                                     e.preventDefault();
                                                                                     setSavingData(true);
                                                                                     const form = e.currentTarget as HTMLFormElement;
                                                                                     const body = {
-                                                                                        appointment_id: "TODO_APPOINTMENT_ID",
+                                                                                        appointment_id: "TODO_APPOINTMENT_ID", // Replace when ready
                                                                                         nurse_user_id: session?.user?.id,
                                                                                         reason_of_visit: (
                                                                                             form.elements.namedItem("reason_of_visit") as HTMLInputElement
@@ -408,23 +425,26 @@ export default function NurseRecordsPage() {
 
                                                                                     if (res.ok) {
                                                                                         toast.success("Consultation notes saved");
+                                                                                        form.reset();
                                                                                     } else {
                                                                                         toast.error("Failed to save consultation");
                                                                                     }
+
                                                                                     setSavingData(false);
                                                                                 }}
+                                                                                className="space-y-3"
                                                                             >
                                                                                 <div>
-                                                                                    <Label>Reason of Visit</Label>
-                                                                                    <Input name="reason_of_visit" />
+                                                                                    <Label className="block mb-1 font-medium" htmlFor="reason_of_visit">Reason of Visit</Label>
+                                                                                    <Input id="reason_of_visit" name="reason_of_visit" />
                                                                                 </div>
                                                                                 <div>
-                                                                                    <Label>Findings</Label>
-                                                                                    <Input name="findings" />
+                                                                                    <Label className="block mb-1 font-medium" htmlFor="findings">Findings</Label>
+                                                                                    <Input id="findings" name="findings" />
                                                                                 </div>
                                                                                 <div>
-                                                                                    <Label>Diagnosis</Label>
-                                                                                    <Input name="diagnosis" />
+                                                                                    <Label className="block mb-1 font-medium" htmlFor="diagnosis">Diagnosis</Label>
+                                                                                    <Input id="diagnosis" name="diagnosis" />
                                                                                 </div>
                                                                                 <Button
                                                                                     type="submit"
@@ -444,6 +464,7 @@ export default function NurseRecordsPage() {
                                                                         </TabsContent>
                                                                     </Tabs>
                                                                 </DialogContent>
+
                                                             </Dialog>
                                                         </TableCell>
                                                     </TableRow>

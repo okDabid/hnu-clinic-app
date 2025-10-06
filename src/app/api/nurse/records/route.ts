@@ -6,7 +6,22 @@ export async function GET() {
         // 🧑‍🎓 Student patients
         const students = await prisma.student.findMany({
             include: {
-                user: { select: { role: true, status: true } },
+                user: {
+                    select: {
+                        role: true,
+                        status: true,
+                        user_id: true,
+                        // ✅ Include latest appointment if exists
+                        appointmentsPatient: {
+                            where: {
+                                status: { in: ["Pending", "Approved", "Completed"] },
+                            },
+                            orderBy: { appointment_date: "desc" },
+                            take: 1,
+                            select: { appointment_id: true },
+                        },
+                    },
+                },
             },
             where: { user: { role: "PATIENT" } },
         });
@@ -14,11 +29,26 @@ export async function GET() {
         // 👩‍💼 Employee patients
         const employees = await prisma.employee.findMany({
             include: {
-                user: { select: { role: true, status: true } },
+                user: {
+                    select: {
+                        role: true,
+                        status: true,
+                        user_id: true,
+                        appointmentsPatient: {
+                            where: {
+                                status: { in: ["Pending", "Approved", "Completed"] },
+                            },
+                            orderBy: { appointment_date: "desc" },
+                            take: 1,
+                            select: { appointment_id: true },
+                        },
+                    },
+                },
             },
             where: { user: { role: "PATIENT" } },
         });
 
+        // ✅ Combine and normalize output for frontend
         const records = [
             ...students.map((s) => ({
                 id: s.stud_user_id,
@@ -41,6 +71,7 @@ export async function GET() {
                     relation: s.emergencyco_relation,
                 },
                 status: s.user.status,
+                appointment_id: s.user.appointmentsPatient?.[0]?.appointment_id ?? null, // ✅ added
             })),
             ...employees.map((e) => ({
                 id: e.emp_id,
@@ -60,6 +91,7 @@ export async function GET() {
                     relation: e.emergencyco_relation,
                 },
                 status: e.user.status,
+                appointment_id: e.user.appointmentsPatient?.[0]?.appointment_id ?? null, // ✅ added
             })),
         ];
 
