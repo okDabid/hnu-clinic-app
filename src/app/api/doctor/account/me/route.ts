@@ -4,21 +4,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Role, Gender, Prisma, BloodType } from "@prisma/client";
 
-// 🔹 Helpers
-function isGender(val: unknown): val is Gender {
-    return val === "Male" || val === "Female";
-}
+// 🩸 Blood type mapping (text ⇄ enum)
+const bloodTypeMap: Record<string, BloodType> = {
+    "A+": BloodType.A_POS,
+    "A-": BloodType.A_NEG,
+    "B+": BloodType.B_POS,
+    "B-": BloodType.B_NEG,
+    "AB+": BloodType.AB_POS,
+    "AB-": BloodType.AB_NEG,
+    "O+": BloodType.O_POS,
+    "O-": BloodType.O_NEG,
+};
 
-function toDate(val: unknown): Date | undefined {
-    if (val instanceof Date && !isNaN(val.getTime())) return val;
-    if (typeof val === "string") {
-        const d = new Date(val);
-        if (!isNaN(d.getTime())) return d;
-    }
-    return undefined;
-}
-
-// 🔹 Blood type mapping (for readable ↔ enum)
 const bloodTypeEnumMap: Record<string, string> = {
     A_POS: "A+",
     A_NEG: "A-",
@@ -30,10 +27,28 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_NEG: "O-",
 };
 
-const reverseBloodTypeEnumMap = Object.fromEntries(
-    Object.entries(bloodTypeEnumMap).map(([k, v]) => [v, k])
-);
+// ---------------- HELPERS ----------------
+function isGender(val: unknown): val is Gender {
+    return val === "Male" || val === "Female";
+}
 
+function isEnumValue<T extends Record<string, string>>(
+    enumObj: T,
+    val: unknown
+): val is T[keyof T] {
+    return typeof val === "string" && Object.values(enumObj).includes(val);
+}
+
+function toDate(val: unknown): Date | undefined {
+    if (val instanceof Date && !isNaN(val.getTime())) return val;
+    if (typeof val === "string") {
+        const d = new Date(val);
+        if (!isNaN(d.getTime())) return d;
+    }
+    return undefined;
+}
+
+// ---------------- EMPLOYEE (DOCTOR) ----------------
 function buildEmployeeUpdateInput(
     raw: Record<string, unknown>
 ): Prisma.EmployeeUpdateInput {
@@ -48,6 +63,14 @@ function buildEmployeeUpdateInput(
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
+    // ✅ Convert blood type from "A+" to enum value
+    if (typeof raw.bloodtype === "string") {
+        const mapped =
+            bloodTypeMap[raw.bloodtype] ||
+            (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
+        if (mapped) data.bloodtype = mapped as BloodType;
+    }
+
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
@@ -58,13 +81,6 @@ function buildEmployeeUpdateInput(
         data.emergencyco_num = raw.emergencyco_num;
     if (typeof raw.emergencyco_relation === "string")
         data.emergencyco_relation = raw.emergencyco_relation;
-
-    // 🔹 Convert readable blood type (A+, O−, etc.) → enum key
-    if (typeof raw.bloodtype === "string") {
-        const btKey = reverseBloodTypeEnumMap[raw.bloodtype];
-        if (btKey && Object.keys(BloodType).includes(btKey))
-            data.bloodtype = btKey as BloodType;
-    }
 
     return data;
 }
@@ -86,13 +102,14 @@ export async function GET() {
         if (user.role !== Role.DOCTOR)
             return NextResponse.json({ error: "Not a doctor" }, { status: 403 });
 
-        // 🔹 Map enum blood type → readable form
+        // ✅ Convert bloodtype enum → readable format
         const profile = user.employee
             ? {
                 ...user.employee,
-                bloodtype: user.employee.bloodtype
-                    ? bloodTypeEnumMap[user.employee.bloodtype] || null
-                    : null,
+                bloodtype:
+                    user.employee.bloodtype && typeof user.employee.bloodtype === "string"
+                        ? bloodTypeEnumMap[user.employee.bloodtype] || null
+                        : null,
             }
             : null;
 

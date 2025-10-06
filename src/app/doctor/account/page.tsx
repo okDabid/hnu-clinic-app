@@ -142,11 +142,18 @@ export default function DoctorAccountPage() {
     // 🔹 Update Profile
     async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        if (!profile) return;
+
+        if (!profile.fname.trim() || !profile.lname.trim()) {
+            toast.error("First and Last Name are required.");
+            return;
+        }
+
         try {
             setProfileLoading(true);
             const payload = {
                 ...profile,
-                bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                bloodtype: reverseBloodTypeEnumMap[profile.bloodtype || ""] || null,
             };
 
             const res = await fetch("/api/doctor/account/me", {
@@ -154,19 +161,32 @@ export default function DoctorAccountPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ profile: payload }),
             });
+
             const data = await res.json();
+
             if (data.error) {
                 toast.error(data.error);
             } else {
-                toast.success("Profile updated!");
-                loadProfile();
+                toast.success("Profile updated successfully!");
+
+                // 🩸 Update local state to reflect readable blood type again
+                setProfile((prev) => ({
+                    ...prev!,
+                    ...profile,
+                    bloodtype:
+                        profile.bloodtype && reverseBloodTypeEnumMap[profile.bloodtype]
+                            ? profile.bloodtype // still readable
+                            : bloodTypeEnumMap[data.profile?.bloodtype] || prev?.bloodtype,
+                }));
             }
-        } catch {
+        } catch (err) {
+            console.error("Profile update failed:", err);
             toast.error("Failed to update profile");
         } finally {
             setProfileLoading(false);
         }
     }
+
 
     // 🔹 Logout
     async function handleLogout() {
