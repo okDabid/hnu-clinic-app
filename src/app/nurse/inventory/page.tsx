@@ -74,7 +74,7 @@ type Clinic = {
 };
 
 export default function NurseInventoryPage() {
-    const [menuOpen, setMenuOpen] = useState(false);
+    const [menuOpen] = useState(false);
     const [items, setItems] = useState<InventoryItem[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
@@ -193,18 +193,10 @@ export default function NurseInventoryPage() {
     });
 
     return (
-        <div className="flex min-h-screen bg-green-50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
-            <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg p-6 transform md:translate-x-0 transition-transform duration-300 ease-in-out
-    ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
-            >
+            <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
-                <button
-                    className="md:hidden absolute top-4 right-4 p-2 text-green-600 hover:text-green-700"
-                    onClick={() => setMenuOpen(false)}
-                >
-                    <X className="h-5 w-5" />
-                </button>
                 <nav className="flex flex-col gap-4 text-gray-700">
                     <Link href="/nurse" className="flex items-center gap-2 hover:text-green-600">
                         <Home className="h-5 w-5" /> Dashboard
@@ -244,84 +236,58 @@ export default function NurseInventoryPage() {
             </aside>
 
             {/* Main */}
-            <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
+            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
                 {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sticky top-0 z-40">
-                    <h2 className="text-xl sm:text-2xl font-bold text-green-600">Inventory Management</h2>
+                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-lg sm:text-xl font-bold text-green-600">Inventory Management</h2>
 
-                    {/* Mobile Dropdown Menu */}
-                    <div className="sm:hidden">
+                    {/* Mobile Menu (kept as you had it) */}
+                    <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                                    <Menu className="w-5 h-5 text-green-600" />
-                                    <span>Menu</span>
+                                <Button variant="outline" size="sm">
+                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild><Link href="/nurse">Dashboard</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
+                                    Logout
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
-
-                    {/* Desktop Nav Buttons */}
-                    <nav className="hidden sm:flex items-center gap-4">
-                        <Link href="/nurse" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                            <Home className="h-4 w-4" /> Dashboard
-                        </Link>
-                        <Link href="/nurse/accounts" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                            <Users className="h-4 w-4" /> Accounts
-                        </Link>
-                        <Link href="/nurse/inventory" className="text-green-600 font-semibold flex items-center gap-1">
-                            <Package className="h-4 w-4" /> Inventory
-                        </Link>
-                        <Link href="/nurse/clinic" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                            <ClipboardList className="h-4 w-4" /> Clinic
-                        </Link>
-                        <Link href="/nurse/dispense" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                            <Pill className="h-4 w-4" /> Dispense
-                        </Link>
-                        <Link href="/nurse/records" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                            <ClipboardList className="h-4 w-4" /> Records
-                        </Link>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
-                            className="border-green-600 text-green-600 hover:bg-green-50"
-                        >
-                            Logout
-                        </Button>
-                    </nav>
                 </header>
 
-                {/* Inventory Table */}
-                <section className="px-6 pt-4 pb-12 flex-1 flex flex-col">
-                    <Card className="flex-1 flex flex-col">
+                {/* Content */}
+                <section className="px-4 sm:px-6 pt-6 sm:pt-8 pb-12 space-y-10 w-full max-w-7xl mx-auto flex-1 flex flex-col">
+                    <Card className="flex-1 flex flex-col rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <CardTitle className="text-2xl font-bold text-green-600">Stock List</CardTitle>
-                            <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full md:w-auto">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">Stock List</CardTitle>
+
+                            {/* Controls: responsive like accounts page */}
+                            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                                 {/* Search */}
-                                <div className="relative flex-1 md:flex-initial">
+                                <div className="relative w-full sm:w-72">
                                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                                     <Input
-                                        placeholder="Search items..."
+                                        placeholder="Search items or clinics..."
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         className="pl-8"
                                     />
                                 </div>
+
                                 {/* Status Filter */}
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="border rounded p-2"
+                                    className="w-full sm:w-44 border rounded p-2"
                                 >
                                     <option value="All">All</option>
                                     <option value="Valid">Valid</option>
@@ -329,11 +295,12 @@ export default function NurseInventoryPage() {
                                     <option value="Expiring Very Soon">Expiring Very Soon</option>
                                     <option value="Expired">Expired</option>
                                 </select>
+
                                 {/* Clinic Filter */}
                                 <select
                                     value={clinicFilter}
                                     onChange={(e) => setClinicFilter(e.target.value)}
-                                    className="border rounded p-2"
+                                    className="w-full sm:w-48 border rounded p-2"
                                 >
                                     <option value="All">All Clinics</option>
                                     {clinics.map((clinic) => (
@@ -342,18 +309,20 @@ export default function NurseInventoryPage() {
                                         </option>
                                     ))}
                                 </select>
+
                                 {/* Add Stock */}
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                        <Button className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white">
                                             <Plus className="h-4 w-4 mr-1" /> Add Stock
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent>
+                                    <DialogContent className="w-[95%] max-w-lg rounded-xl">
                                         <DialogHeader>
                                             <DialogTitle>Add New Stock</DialogTitle>
                                             <DialogDescription>Fill in the details of the stock item.</DialogDescription>
                                         </DialogHeader>
+
                                         <form
                                             className="space-y-4"
                                             onSubmit={async (e) => {
@@ -367,7 +336,7 @@ export default function NurseInventoryPage() {
                                                     quantity: Number((form.elements.namedItem("quantity") as HTMLInputElement).value),
                                                     expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
                                                     category: (form.elements.namedItem("category") as HTMLSelectElement).value,
-                                                    item_type: (form.elements.namedItem("item_type") as HTMLInputElement).value,
+                                                    item_type: (form.elements.namedItem("item_type") as HTMLSelectElement).value,
                                                     strength: parseFloat((form.elements.namedItem("strength") as HTMLInputElement).value),
                                                     unit: (form.elements.namedItem("unit") as HTMLSelectElement).value,
                                                 };
@@ -454,7 +423,7 @@ export default function NurseInventoryPage() {
                                             <DialogFooter>
                                                 <Button
                                                     type="submit"
-                                                    className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
                                                     disabled={savingStock}
                                                 >
                                                     {savingStock ? (
@@ -481,7 +450,7 @@ export default function NurseInventoryPage() {
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto flex-1">
-                                    <Table>
+                                    <Table className="min-w-[860px]">
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>Clinic</TableHead>
