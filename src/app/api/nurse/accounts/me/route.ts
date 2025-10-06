@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import type { NextRequest } from "next/server";
-import { Role, Gender, Prisma, Department, YearLevel, BloodType } from "@prisma/client";
+import { Role, Gender, Prisma, BloodType } from "@prisma/client";
 
 // 🩸 Blood type mapping (text ⇄ enum)
 const bloodTypeMap: Record<string, BloodType> = {
@@ -33,10 +32,6 @@ function isGender(val: unknown): val is Gender {
     return val === "Male" || val === "Female";
 }
 
-function isEnumValue<T extends Record<string, string>>(enumObj: T, val: unknown): val is T[keyof T] {
-    return typeof val === "string" && Object.values(enumObj).includes(val);
-}
-
 function toDate(val: unknown): Date | undefined {
     if (val instanceof Date && !isNaN(val.getTime())) return val;
     if (typeof val === "string") {
@@ -46,43 +41,6 @@ function toDate(val: unknown): Date | undefined {
     return undefined;
 }
 
-// ---------------- STUDENT ----------------
-function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUpdateInput {
-    const data: Prisma.StudentUpdateInput = {};
-
-    if (typeof raw.fname === "string") data.fname = raw.fname;
-    if (typeof raw.mname === "string") data.mname = raw.mname;
-    if (typeof raw.lname === "string") data.lname = raw.lname;
-
-    const dob = toDate(raw.date_of_birth);
-    if (dob) data.date_of_birth = dob;
-
-    if (isGender(raw.gender)) data.gender = raw.gender;
-
-    // ✅ ENUM HANDLING
-    if (isEnumValue(Department, raw.department)) data.department = raw.department as Department;
-    if (typeof raw.program === "string") data.program = raw.program;
-    if (isEnumValue(YearLevel, raw.year_level)) data.year_level = raw.year_level as YearLevel;
-
-    // ✅ Convert blood type from "A+" to enum value (A_POS, etc.)
-    if (typeof raw.bloodtype === "string") {
-        const mapped = bloodTypeMap[raw.bloodtype] || (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
-        if (mapped) data.bloodtype = mapped as BloodType;
-    }
-
-    // Regular strings
-    if (typeof raw.contactno === "string") data.contactno = raw.contactno;
-    if (typeof raw.address === "string") data.address = raw.address;
-    if (typeof raw.allergies === "string") data.allergies = raw.allergies;
-    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
-    if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
-    if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
-    if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
-
-    return data;
-}
-
-// ---------------- EMPLOYEE ----------------
 function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.EmployeeUpdateInput {
     const data: Prisma.EmployeeUpdateInput = {};
 
@@ -95,12 +53,6 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
-    // ✅ Convert blood type from "A+" to enum value
-    if (typeof raw.bloodtype === "string") {
-        const mapped = bloodTypeMap[raw.bloodtype] || (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
-        if (mapped) data.bloodtype = mapped as BloodType;
-    }
-
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
@@ -109,6 +61,16 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
     if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
 
+    // ✅ Convert "A+" → enum (A_POS)
+    if (typeof raw.bloodtype === "string") {
+        const mapped =
+            bloodTypeMap[raw.bloodtype] ||
+            (Object.values(BloodType).includes(raw.bloodtype as BloodType)
+                ? (raw.bloodtype as BloodType)
+                : undefined);
+        if (mapped) data.bloodtype = mapped;
+    }
+
     return data;
 }
 
@@ -116,36 +78,29 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.id)
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: { student: true, employee: true },
+            include: { employee: true },
         });
 
-        if (!user) {
+        if (!user)
             return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
 
-        // ✅ Clone the object so TypeScript doesn't complain
-        const profile =
-            user.student
-                ? { ...user.student }
-                : user.employee
-                    ? { ...user.employee }
-                    : null;
+        if (user.role !== Role.NURSE)
+            return NextResponse.json({ error: "Not a nurse" }, { status: 403 });
 
-        // ✅ Convert bloodtype enum to display string ("A+")
-        if (profile?.bloodtype && typeof profile.bloodtype === "string") {
-            const mapped = bloodTypeEnumMap[profile.bloodtype];
-            if (mapped) {
-                if ("bloodtype" in profile) {
-                    (profile as { bloodtype: string }).bloodtype = mapped;
-                }
+        const profile = user.employee
+            ? {
+                ...user.employee,
+                bloodtype:
+                    user.employee.bloodtype && typeof user.employee.bloodtype === "string"
+                        ? bloodTypeEnumMap[user.employee.bloodtype] || user.employee.bloodtype
+                        : null,
             }
-        }
+            : null;
 
         return NextResponse.json({
             accountId: user.user_id,
@@ -156,49 +111,55 @@ export async function GET() {
         });
     } catch (err) {
         console.error("[GET /api/nurse/accounts/me]", err);
-        return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Failed to fetch profile" },
+            { status: 500 }
+        );
     }
 }
 
 // ---------------- UPDATE OWN PROFILE ----------------
-export async function PUT(req: NextRequest) {
+export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.id)
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
 
         const payload = await req.json();
         const profile = (payload?.profile ?? {}) as Record<string, unknown>;
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: { student: true, employee: true },
+            include: { employee: true },
         });
 
-        if (!user) {
+        if (!user)
             return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
 
-        if ((user.role === Role.PATIENT || user.role === Role.SCHOLAR) && user.student) {
-            const data = buildStudentUpdateInput(profile);
-            await prisma.student.update({
-                where: { user_id: session.user.id },
-                data,
-            });
-        }
+        if (user.role !== Role.NURSE || !user.employee)
+            return NextResponse.json({ error: "Not a nurse" }, { status: 403 });
 
-        if ((user.role === Role.NURSE || user.role === Role.DOCTOR || user.role === Role.PATIENT) && user.employee) {
-            const data = buildEmployeeUpdateInput(profile);
-            await prisma.employee.update({
-                where: { user_id: session.user.id },
-                data,
-            });
-        }
+        const data = buildEmployeeUpdateInput(profile);
 
-        return NextResponse.json({ success: true });
+        const updated = await prisma.employee.update({
+            where: { user_id: session.user.id },
+            data,
+        });
+
+        return NextResponse.json({
+            success: true,
+            profile: {
+                ...updated,
+                bloodtype: updated.bloodtype
+                    ? bloodTypeEnumMap[updated.bloodtype] || updated.bloodtype
+                    : null,
+            },
+        });
     } catch (err) {
         console.error("[PUT /api/nurse/accounts/me]", err);
-        return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Failed to update profile" },
+            { status: 500 }
+        );
     }
 }

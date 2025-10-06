@@ -1,15 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Menu, X, Home, User, Loader2, Cog, Eye, EyeOff, CalendarDays, ClipboardList, Clock4 } from "lucide-react";
+import {
+    Menu,
+    X,
+    Home,
+    User,
+    Loader2,
+    Cog,
+    Eye,
+    EyeOff,
+    CalendarDays,
+    ClipboardList,
+    Clock4,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardContent,
+} from "@/components/ui/card";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,6 +43,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 type Profile = {
     user_id: string;
@@ -46,6 +70,22 @@ type Profile = {
     emergencyco_relation?: string | null;
 };
 
+// 🔹 Blood Type Mappings
+const bloodTypeEnumMap: Record<string, string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
+
+const reverseBloodTypeEnumMap = Object.fromEntries(
+    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
+);
+
 export default function DoctorAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
@@ -61,50 +101,56 @@ export default function DoctorAccountPage() {
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
-    async function handleLogout() {
+    // 🔹 Load Profile
+    const loadProfile = useCallback(async () => {
         try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
+            const res = await fetch("/api/doctor/account/me", {
+                cache: "no-store",
+                next: { revalidate: 0 }, // ensures it always re-fetches
+            });
 
-    async function loadProfile() {
-        try {
-            const res = await fetch("/api/doctor/account/me", { cache: "no-store" });
             const data = await res.json();
+
             if (data.error) {
                 toast.error(data.error);
-            } else {
-                setProfile({
-                    user_id: data.accountId,
-                    username: data.username,
-                    role: data.role,
-                    status: data.status,
-                    fname: data.profile?.fname || "",
-                    mname: data.profile?.mname || "",
-                    lname: data.profile?.lname || "",
-                    date_of_birth: data.profile?.date_of_birth || "",
-                    contactno: data.profile?.contactno || "",
-                    address: data.profile?.address || "",
-                    bloodtype: data.profile?.bloodtype || "",
-                    allergies: data.profile?.allergies || "",
-                    medical_cond: data.profile?.medical_cond || "",
-                    emergencyco_name: data.profile?.emergencyco_name || "",
-                    emergencyco_num: data.profile?.emergencyco_num || "",
-                    emergencyco_relation: data.profile?.emergencyco_relation || "",
-                });
+                return;
             }
-        } catch {
+
+            // 🩸 Normalize blood type no matter what format the backend sends
+            const bloodTypeValue =
+                typeof data.profile?.bloodtype === "string"
+                    ? bloodTypeEnumMap[data.profile.bloodtype] || data.profile.bloodtype
+                    : "";
+
+            setProfile({
+                user_id: data.accountId,
+                username: data.username,
+                role: data.role,
+                status: data.status,
+                fname: data.profile?.fname || "",
+                mname: data.profile?.mname || "",
+                lname: data.profile?.lname || "",
+                date_of_birth: data.profile?.date_of_birth || "",
+                contactno: data.profile?.contactno || "",
+                address: data.profile?.address || "",
+                bloodtype: bloodTypeValue,
+                allergies: data.profile?.allergies || "",
+                medical_cond: data.profile?.medical_cond || "",
+                emergencyco_name: data.profile?.emergencyco_name || "",
+                emergencyco_num: data.profile?.emergencyco_num || "",
+                emergencyco_relation: data.profile?.emergencyco_relation || "",
+            });
+        } catch (err) {
+            console.error("Failed to load profile:", err);
             toast.error("Failed to load profile");
         }
-    }
+    }, []);
 
     useEffect(() => {
         loadProfile();
-    }, []);
+    }, [loadProfile]);
 
+    // 🔹 Update Profile
     async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!profile) return;
@@ -116,59 +162,76 @@ export default function DoctorAccountPage() {
 
         try {
             setProfileLoading(true);
+            const payload = {
+                ...profile,
+                bloodtype: reverseBloodTypeEnumMap[profile.bloodtype || ""] || null,
+            };
+
             const res = await fetch("/api/doctor/account/me", {
                 method: "PUT",
-                body: JSON.stringify({ profile }),
                 headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ profile: payload }),
             });
+
             const data = await res.json();
+
             if (data.error) {
                 toast.error(data.error);
             } else {
-                toast.success("Profile updated!");
-                loadProfile();
+                toast.success("Profile updated successfully!");
+
+                // 🩸 Update local state to reflect readable blood type again
+                setProfile((prev) => ({
+                    ...prev!,
+                    ...profile,
+                    bloodtype:
+                        profile.bloodtype ||
+                        (data.profile?.bloodtype
+                            ? bloodTypeEnumMap[data.profile.bloodtype] || prev?.bloodtype
+                            : prev?.bloodtype),
+                }));
+
             }
-        } catch {
+        } catch (err) {
+            console.error("Profile update failed:", err);
             toast.error("Failed to update profile");
         } finally {
             setProfileLoading(false);
         }
     }
 
+
+    // 🔹 Logout
+    async function handleLogout() {
+        try {
+            setIsLoggingOut(true);
+            await signOut({ callbackUrl: "/login?logout=success" });
+        } finally {
+            setIsLoggingOut(false);
+        }
+    }
+
+    const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
     return (
-        <div className="flex min-h-screen bg-green-50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
                 <nav className="flex flex-col gap-4 text-gray-700">
-                    <Link
-                        href="/doctor"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor" className="flex items-center gap-2 hover:text-green-600">
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
-                    <Link
-                        href="/doctor/account"
-                        className="flex items-center gap-2 text-green-600 font-semibold"
-                    >
+                    <Link href="/doctor/account" className="flex items-center gap-2 text-green-600 font-semibold">
                         <User className="h-5 w-5" /> Account
                     </Link>
-                    <Link
-                        href="/doctor/consultation"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor/consultation" className="flex items-center gap-2 hover:text-green-600">
                         <Clock4 className="h-5 w-5" /> Consultation
                     </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor/appointments" className="flex items-center gap-2 hover:text-green-600">
                         <CalendarDays className="h-5 w-5" /> Appointments
                     </Link>
-                    <Link
-                        href="/doctor/patients"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/doctor/patients" className="flex items-center gap-2 hover:text-green-600">
                         <ClipboardList className="h-5 w-5" /> Patients
                     </Link>
                 </nav>
@@ -181,8 +244,7 @@ export default function DoctorAccountPage() {
                 >
                     {isLoggingOut ? (
                         <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
+                            <Loader2 className="h-4 w-4 animate-spin" /> Logging out...
                         </>
                     ) : (
                         "Logout"
@@ -190,11 +252,12 @@ export default function DoctorAccountPage() {
                 </Button>
             </aside>
 
-            {/* Main */}
-            <main className="flex-1 flex flex-col">
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Edit Profile</h2>
-
+            {/* Main Content */}
+            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
+                {/* Header */}
+                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-lg sm:text-xl font-bold text-green-600">Account Management</h2>
+                    {/* Mobile Menu */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -203,36 +266,26 @@ export default function DoctorAccountPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor">Dashboard</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/account">Account</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/appointments">Appointments</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/patients">Patients</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
-                                >
-                                    Logout
-                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor">Dashboard</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </header>
 
-                {/* Account */}
-                <section className="px-6 py-8 max-w-4xl mx-auto w-full">
+                {/* Sections */}
+                <section className="px-4 sm:px-6 py-6 sm:py-8 space-y-10 w-full max-w-4xl mx-auto">
+                    {/* My Account */}
                     {profile && (
-                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardHeader className="border-b flex sm:items-center sm:justify-between gap-3">
-                                <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
+                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition mb-10">
+                            <CardHeader className="border-b flex items-center justify-between flex-wrap gap-3">
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">My Account</CardTitle>
 
-                                {/* Password Update */}
+                                {/* Password Update Dialog */}
                                 <Dialog
                                     onOpenChange={(open) => {
                                         if (!open) {
@@ -250,16 +303,17 @@ export default function DoctorAccountPage() {
 
                                     <DialogContent className="w-[95%] max-w-sm sm:max-w-md lg:max-w-lg rounded-xl">
                                         <DialogHeader>
-                                            <DialogTitle>Update Password</DialogTitle>
-                                            <DialogDescription>
+                                            <DialogTitle className="text-lg sm:text-xl">Update Password</DialogTitle>
+                                            <DialogDescription className="text-sm sm:text-base">
                                                 Change your account password securely. Enter your current password and set a new one.
                                             </DialogDescription>
                                         </DialogHeader>
 
+                                        {/* Password Form */}
                                         <form
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
-                                                const form = e.currentTarget as HTMLFormElement;
+                                                const form = e.currentTarget;
                                                 const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
                                                 const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
@@ -284,11 +338,9 @@ export default function DoctorAccountPage() {
                                                         headers: { "Content-Type": "application/json" },
                                                         body: JSON.stringify({ oldPassword, newPassword }),
                                                     });
-
                                                     const data = await res.json();
-                                                    if (data.error) {
-                                                        setPasswordErrors([data.error]);
-                                                    } else {
+                                                    if (data.error) setPasswordErrors([data.error]);
+                                                    else {
                                                         setPasswordMessage("Password updated successfully!");
                                                         toast.success("Password updated successfully!");
                                                         form.reset();
@@ -301,8 +353,8 @@ export default function DoctorAccountPage() {
                                             }}
                                             className="space-y-4"
                                         >
-                                            {/* Current Password */}
-                                            <div className="flex flex-col space-y-2">
+                                            {/* Password Fields */}
+                                            <div>
                                                 <Label className="block mb-1 font-medium">Current Password</Label>
                                                 <div className="relative">
                                                     <Input type={showCurrent ? "text" : "password"} name="oldPassword" required className="pr-10" />
@@ -318,8 +370,7 @@ export default function DoctorAccountPage() {
                                                 </div>
                                             </div>
 
-                                            {/* New Password */}
-                                            <div className="flex flex-col space-y-2">
+                                            <div>
                                                 <Label className="block mb-1 font-medium">New Password</Label>
                                                 <div className="relative">
                                                     <Input
@@ -350,10 +401,8 @@ export default function DoctorAccountPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Confirm Password */}
-                                            {/* Confirm Password */}
-                                            <div className="flex flex-col space-y-2">
-                                                <Label className="block mb-1 font-medium">Confirm New Password</Label>
+                                            <div>
+                                                <Label className="block mb-1 font-medium">Confirm Password</Label>
                                                 <div className="relative">
                                                     <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required className="pr-10" />
                                                     <Button
@@ -368,7 +417,6 @@ export default function DoctorAccountPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Validation Errors */}
                                             {passwordErrors.length > 0 && (
                                                 <ul className="text-sm text-red-600 space-y-1">
                                                     {passwordErrors.map((err, idx) => (
@@ -376,11 +424,7 @@ export default function DoctorAccountPage() {
                                                     ))}
                                                 </ul>
                                             )}
-
-                                            {/* Success Message */}
-                                            {passwordMessage && (
-                                                <p className="text-sm text-green-600">{passwordMessage}</p>
-                                            )}
+                                            {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
 
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
@@ -400,135 +444,54 @@ export default function DoctorAccountPage() {
                             {/* Profile Form */}
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
-                                    {/* System info (read-only) */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Username</Label>
-                                            <Input value={profile.user_id} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">User ID</Label>
-                                            <Input value={profile.username} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Role</Label>
-                                            <Input value={profile.role} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Status</Label>
-                                            <Input value={profile.status} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Date of Birth</Label>
-                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled className="w-full" />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Username</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
                                     </div>
 
-                                    {/* Editable fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">First Name</Label>
-                                            <Input
-                                                value={profile.fname}
-                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Middle Name</Label>
-                                            <Input
-                                                value={profile.mname || ""}
-                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Last Name</Label>
-                                            <Input
-                                                value={profile.lname}
-                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Contact No</Label>
-                                            <Input
-                                                value={profile.contactno || ""}
-                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Address</Label>
-                                            <Input
-                                                value={profile.address || ""}
-                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label className="block mb-1 font-medium">Blood Type</Label>
-                                            <Input
+                                            <Select
                                                 value={profile.bloodtype || ""}
-                                                onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
-                                                className="w-full"
-                                            />
+                                                onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Blood Type" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {bloodTypeOptions.map((type) => (
+                                                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Allergies</Label>
-                                            <Input
-                                                value={profile.allergies || ""}
-                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
                                     </div>
 
-                                    <div>
-                                        <Label className="block mb-1 font-medium">Medical Conditions</Label>
-                                        <Input
-                                            value={profile.medical_cond || ""}
-                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
-                                            className="w-full"
-                                        />
-                                    </div>
+                                    <div><Label className="block mb-1 font-medium">Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Emergency Contact Name</Label>
-                                            <Input
-                                                value={profile.emergencyco_name || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Emergency Contact Number</Label>
-                                            <Input
-                                                value={profile.emergencyco_num || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Emergency Contact Relation</Label>
-                                            <Input
-                                                value={profile.emergencyco_relation || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
                                     </div>
 
                                     <Button
                                         type="submit"
-                                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
@@ -540,7 +503,8 @@ export default function DoctorAccountPage() {
                     )}
                 </section>
 
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                {/* Footer */}
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
                     © {new Date().getFullYear()} HNU Clinic – Doctor Panel
                 </footer>
             </main>

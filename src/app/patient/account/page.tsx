@@ -452,7 +452,7 @@ export default function PatientAccountPage() {
                                         >
                                             {/* Current Password */}
                                             <div>
-                                                <Label>Current Password</Label>
+                                                <Label className="block mb-1 font-medium">Current Password</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type={showCurrent ? "text" : "password"}
@@ -478,7 +478,7 @@ export default function PatientAccountPage() {
 
                                             {/* New Password with live validation */}
                                             <div>
-                                                <Label>New Password</Label>
+                                                <Label className="block mb-1 font-medium">New Password</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type={showNew ? "text" : "password"}
@@ -514,7 +514,7 @@ export default function PatientAccountPage() {
 
                                             {/* Confirm Password */}
                                             <div>
-                                                <Label>Confirm Password</Label>
+                                                <Label className="block mb-1 font-medium">Confirm Password</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type={showConfirm ? "text" : "password"}
@@ -704,7 +704,7 @@ export default function PatientAccountPage() {
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                         <div><Label className="block mb-1 font-medium">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
                                         <div><Label className="block mb-1 font-medium">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
-                                        <div><Label className="block mb-1 font-medium">Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Conctac Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
                                     </div>
 
                                     <Button
