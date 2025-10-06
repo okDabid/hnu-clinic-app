@@ -173,7 +173,7 @@ export default function DoctorAppointmentsPage() {
                                     <Link href="/doctor/patients">Patients</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/doctor/medcert"></Link>
+                                    <Link href="/doctor/medcert">Medcert</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
