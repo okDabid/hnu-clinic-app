@@ -59,13 +59,17 @@ function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUp
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
+    // ✅ ENUM HANDLING
     if (isEnumValue(Department, raw.department)) data.department = raw.department as Department;
     if (typeof raw.program === "string") data.program = raw.program;
     if (isEnumValue(YearLevel, raw.year_level)) data.year_level = raw.year_level as YearLevel;
 
-    // ✅ Fixed blood type conversion
+    // ✅ Convert blood type from "A+" → enum value (A_POS, etc.)
     if (typeof raw.bloodtype === "string") {
-        data.bloodtype = bloodTypeMap[raw.bloodtype] ?? null;
+        const mapped =
+            bloodTypeMap[raw.bloodtype] ||
+            (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
+        if (mapped) data.bloodtype = mapped as BloodType;
     }
 
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
@@ -92,9 +96,12 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
-    // ✅ Fixed blood type conversion
+    // ✅ Convert blood type from "A+" → enum value
     if (typeof raw.bloodtype === "string") {
-        data.bloodtype = bloodTypeMap[raw.bloodtype] ?? null;
+        const mapped =
+            bloodTypeMap[raw.bloodtype] ||
+            (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
+        if (mapped) data.bloodtype = mapped as BloodType;
     }
 
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
@@ -125,13 +132,14 @@ export async function GET() {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
+        // ✅ Clone and widen type to allow display strings
         const profile = user.student
             ? { ...user.student, bloodtype: user.student.bloodtype as string | null }
             : user.employee
                 ? { ...user.employee, bloodtype: user.employee.bloodtype as string | null }
                 : null;
 
-        // ✅ Convert enum → display string
+        // ✅ Convert enum → display string ("A_POS" → "A+")
         if (profile?.bloodtype && typeof profile.bloodtype === "string") {
             const mapped = bloodTypeEnumMap[profile.bloodtype];
             if (mapped) profile.bloodtype = mapped;
@@ -170,6 +178,7 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
+        // ✅ Handle both student & employee safely
         if ((user.role === Role.PATIENT || user.role === Role.SCHOLAR) && user.student) {
             const data = buildStudentUpdateInput(profile);
             await prisma.student.update({
