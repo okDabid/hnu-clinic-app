@@ -2,13 +2,36 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
-import { Prisma, Gender } from "@prisma/client";
+import { Prisma, Gender, BloodType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 // Password generator (8 chars, alphanumeric)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const generatePassword = customAlphabet(alphabet, 8);
+
+// 🩸 Blood type mapping (text ⇄ enum)
+const bloodTypeMap: Record<string, BloodType> = {
+    "A+": BloodType.A_POS,
+    "A-": BloodType.A_NEG,
+    "B+": BloodType.B_POS,
+    "B-": BloodType.B_NEG,
+    "AB+": BloodType.AB_POS,
+    "AB-": BloodType.AB_NEG,
+    "O+": BloodType.O_POS,
+    "O-": BloodType.O_NEG,
+};
+
+const bloodTypeEnumMap: Record<string, string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
 
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
@@ -41,16 +64,21 @@ export async function POST(req: Request) {
         });
 
         // Role-specific profile creation
+        const sharedProfileData = {
+            fname: payload.fname,
+            mname: payload.mname,
+            lname: payload.lname,
+            date_of_birth: new Date(payload.date_of_birth),
+            gender: payload.gender as Gender,
+            bloodtype: bloodTypeMap[payload.bloodtype] || null, // ✅ Save as enum if sent
+        };
+
         if (payload.role === "PATIENT" && payload.patientType === "student") {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.student_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -60,11 +88,7 @@ export async function POST(req: Request) {
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -74,11 +98,7 @@ export async function POST(req: Request) {
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -88,11 +108,7 @@ export async function POST(req: Request) {
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.school_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -137,6 +153,10 @@ export async function GET() {
                 displayId = u.username;
             }
 
+            // ✅ Determine display blood type
+            const bloodTypeRaw = u.student?.bloodtype || u.employee?.bloodtype || null;
+            const bloodTypeDisplay = bloodTypeRaw ? bloodTypeEnumMap[bloodTypeRaw] || bloodTypeRaw : null;
+
             return {
                 user_id: displayId,
                 accountId: u.user_id,
@@ -148,6 +168,7 @@ export async function GET() {
                         : u.employee?.fname && u.employee?.lname
                             ? `${u.employee.fname} ${u.employee.lname}`
                             : u.username,
+                bloodtype: bloodTypeDisplay,
             };
         });
 
@@ -216,7 +237,6 @@ export async function PUT(req: Request) {
                 "date_of_birth", "gender",
             ] as const;
 
-            // ✅ simplified normalizeProfile (removed unused `K`)
             const normalizeProfile = <T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput>(
                 raw: Record<string, unknown>,
                 allowed: readonly string[],
@@ -229,6 +249,9 @@ export async function PUT(req: Request) {
                         (safe as Record<string, unknown>)[key] = new Date(value);
                     } else if (key === "gender" && (value === "Male" || value === "Female")) {
                         (safe as Record<string, unknown>)[key] = value as Gender;
+                    } else if (key === "bloodtype" && typeof value === "string") {
+                        const mapped = bloodTypeMap[value] || (value as BloodType);
+                        (safe as Record<string, unknown>)[key] = mapped;
                     } else {
                         (safe as Record<string, unknown>)[key] = value;
                     }

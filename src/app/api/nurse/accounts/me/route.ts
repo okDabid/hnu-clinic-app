@@ -5,7 +5,30 @@ import { authOptions } from "@/lib/auth";
 import type { NextRequest } from "next/server";
 import { Role, Gender, Prisma, Department, YearLevel, BloodType } from "@prisma/client";
 
-// Helpers
+// 🩸 Blood type mapping (text ⇄ enum)
+const bloodTypeMap: Record<string, BloodType> = {
+    "A+": BloodType.A_POS,
+    "A-": BloodType.A_NEG,
+    "B+": BloodType.B_POS,
+    "B-": BloodType.B_NEG,
+    "AB+": BloodType.AB_POS,
+    "AB-": BloodType.AB_NEG,
+    "O+": BloodType.O_POS,
+    "O-": BloodType.O_NEG,
+};
+
+const bloodTypeEnumMap: Record<string, string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
+
+// ---------------- HELPERS ----------------
 function isGender(val: unknown): val is Gender {
     return val === "Male" || val === "Female";
 }
@@ -40,7 +63,12 @@ function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUp
     if (isEnumValue(Department, raw.department)) data.department = raw.department as Department;
     if (typeof raw.program === "string") data.program = raw.program;
     if (isEnumValue(YearLevel, raw.year_level)) data.year_level = raw.year_level as YearLevel;
-    if (isEnumValue(BloodType, raw.bloodtype)) data.bloodtype = raw.bloodtype as BloodType;
+
+    // ✅ Convert blood type from "A+" to enum value (A_POS, etc.)
+    if (typeof raw.bloodtype === "string") {
+        const mapped = bloodTypeMap[raw.bloodtype] || (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
+        if (mapped) data.bloodtype = mapped as BloodType;
+    }
 
     // Regular strings
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
@@ -66,7 +94,12 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (dob) data.date_of_birth = dob;
 
     if (isGender(raw.gender)) data.gender = raw.gender;
-    if (isEnumValue(BloodType, raw.bloodtype)) data.bloodtype = raw.bloodtype as BloodType;
+
+    // ✅ Convert blood type from "A+" to enum value
+    if (typeof raw.bloodtype === "string") {
+        const mapped = bloodTypeMap[raw.bloodtype] || (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
+        if (mapped) data.bloodtype = mapped as BloodType;
+    }
 
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
@@ -96,7 +129,19 @@ export async function GET() {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const profile = user.student ?? user.employee ?? null;
+        // ✅ Clone the object so TypeScript doesn't complain
+        const profile =
+            user.student
+                ? { ...user.student }
+                : user.employee
+                    ? { ...user.employee }
+                    : null;
+
+        // ✅ Convert bloodtype enum to display string ("A+")
+        if (profile?.bloodtype && typeof profile.bloodtype === "string") {
+            const mapped = bloodTypeEnumMap[profile.bloodtype];
+            if (mapped) (profile as any).bloodtype = mapped;
+        }
 
         return NextResponse.json({
             accountId: user.user_id,
