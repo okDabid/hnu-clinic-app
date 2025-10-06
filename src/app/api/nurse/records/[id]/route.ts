@@ -31,10 +31,11 @@ const PatchSchema = z.object({
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { id: string } }
+    context: { params: { id: string } } // ✅ FIXED typing
 ) {
     try {
-        const { id } = params;
+        const { id } = context.params;
+
         if (!id) {
             return NextResponse.json(
                 { error: "Missing patient ID in request params" },
@@ -44,6 +45,7 @@ export async function PATCH(
 
         const json = await req.json();
         const parsed = PatchSchema.safeParse(json);
+
         if (!parsed.success) {
             return NextResponse.json(
                 { error: "Invalid request body", details: parsed.error.flatten() },
@@ -70,7 +72,7 @@ export async function PATCH(
         // 🧑‍🎓 Student update
         if (type === "Student") {
             const student = await prisma.student.update({
-                where: { stud_user_id: id }, // ✅ FIXED
+                where: { stud_user_id: id },
                 data: commonData,
             });
             return NextResponse.json(student);
@@ -79,7 +81,7 @@ export async function PATCH(
         // 👩‍💼 Employee update
         if (type === "Employee") {
             const employee = await prisma.employee.update({
-                where: { emp_id: id }, // ✅ FIXED
+                where: { emp_id: id },
                 data: commonData,
             });
             return NextResponse.json(employee);
@@ -89,7 +91,7 @@ export async function PATCH(
             { error: "Unhandled patient type" },
             { status: 400 }
         );
-    } catch (err: unknown) {
+    } catch (err) {
         console.error("PATCH /api/nurse/records/[id] error:", err);
         return NextResponse.json(
             { error: "Failed to update health data" },
