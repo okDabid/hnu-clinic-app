@@ -513,7 +513,7 @@ export default function NurseAccountsPage() {
                                         >
                                             {/* Current Password */}
                                             <div className="flex flex-col space-y-2">
-                                                <Label>Current Password</Label>
+                                                <Label className="block mb-1 font-medium">Current Password</Label>
                                                 <div className="relative">
                                                     <Input type={showCurrent ? "text" : "password"} name="oldPassword" required className="pr-10" />
                                                     <Button
@@ -530,7 +530,7 @@ export default function NurseAccountsPage() {
 
                                             {/* New Password */}
                                             <div className="flex flex-col space-y-2">
-                                                <Label>New Password</Label>
+                                                <Label className="block mb-1 font-medium">New Password</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type={showNew ? "text" : "password"}
@@ -562,7 +562,7 @@ export default function NurseAccountsPage() {
 
                                             {/* Confirm Password */}
                                             <div className="flex flex-col space-y-2">
-                                                <Label>Confirm New Password</Label>
+                                                <Label className="block mb-1 font-medium">Confirm New Password</Label>
                                                 <div className="relative">
                                                     <Input type={showConfirm ? "text" : "password"} name="confirmPassword" required className="pr-10" />
                                                     <Button
@@ -608,22 +608,22 @@ export default function NurseAccountsPage() {
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label className="space-y-2">Username</Label><Input value={profile.user_id} disabled /></div>
-                                        <div><Label className="space-y-2">User ID</Label><Input value={profile.username} disabled /></div>
-                                        <div><Label className="space-y-2">Role</Label><Input value={profile.role} disabled /></div>
-                                        <div><Label className="space-y-2">Status</Label><Input value={profile.status} disabled /></div>
-                                        <div><Label className="space-y-2">Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Username</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label className="space-y-2">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
-                                        <div><Label className="space-y-2">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
-                                        <div><Label className="space-y-2">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label className="space-y-2">Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
-                                        <div><Label className="space-y-2">Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -643,15 +643,15 @@ export default function NurseAccountsPage() {
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <div><Label className="space-y-2">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
                                     </div>
 
-                                    <div><Label className="space-y-2">Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
+                                    <div><Label className="block mb-1 font-medium">Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label className="space-y-2">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
-                                        <div><Label className="space-y-2">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
-                                        <div><Label className="space-y-2">Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
                                     </div>
 
                                     <Button
@@ -675,7 +675,7 @@ export default function NurseAccountsPage() {
                         <CardContent className="pt-6">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="space-y-2">
-                                    <Label>Role</Label>
+                                    <Label className="block mb-1 font-medium">Role</Label>
                                     <Select value={role} onValueChange={setRole}>
                                         <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                                         <SelectContent>
@@ -692,7 +692,7 @@ export default function NurseAccountsPage() {
 
                                 {role === "PATIENT" && (
                                     <div className="space-y-2">
-                                        <Label>Patient Type</Label>
+                                        <Label className="block mb-1 font-medium">Patient Type</Label>
                                         <Select
                                             value={patientType}
                                             onValueChange={(val) => setPatientType(val as "student" | "employee" | "")}
@@ -710,15 +710,15 @@ export default function NurseAccountsPage() {
                                 {role === "PATIENT" && patientType === "employee" && <div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>}
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div><Label className="space-y-2">First Name</Label><Input name="fname" required /></div>
-                                    <div><Label className="space-y-2">Middle Name</Label><Input name="mname" /></div>
-                                    <div><Label className="space-y-2">Last Name</Label><Input name="lname" required /></div>
+                                    <div><Label className="block mb-1 font-medium">First Name</Label><Input name="fname" required /></div>
+                                    <div><Label className="block mb-1 font-medium">Middle Name</Label><Input name="mname" /></div>
+                                    <div><Label className="block mb-1 font-medium">Last Name</Label><Input name="lname" required /></div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div><Label className="space-y-2">Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
+                                    <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
                                     <div>
-                                        <Label className="space-y-2">Gender</Label>
+                                        <Label className="block mb-1 font-medium">Gender</Label>
                                         <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
                                             <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
                                             <SelectContent>
