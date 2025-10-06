@@ -179,10 +179,24 @@ export default function NurseAccountsPage() {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
             const data = await res.json();
 
+            console.log("Fetched users:", data); // 🧠 Debug check
+
+            // Normalize API response shape to match frontend expectations
+            const usersData = (Array.isArray(data) ? data : []).map((u) => ({
+                user_id: u.user_id || u.accountId || u.id || "N/A",
+                accountId: u.accountId || u.user_id || "N/A",
+                role: u.role || "Unknown",
+                status: u.status || "Inactive",
+                fullName:
+                    u.fullName ||
+                    [u.fname, u.mname, u.lname].filter(Boolean).join(" ") ||
+                    "Unnamed",
+            }));
+
             const sorted = orderBy(
-                data,
+                usersData,
                 [
-                    (u) => u.role,
+                    (u) => u.role.toLowerCase(),
                     (u) => {
                         const n = parseInt(u.user_id, 10);
                         return isNaN(n) ? u.user_id : n;
@@ -192,7 +206,8 @@ export default function NurseAccountsPage() {
             );
 
             setUsers(sorted);
-        } catch {
+        } catch (err) {
+            console.error("Failed to load users:", err);
             toast.error("Failed to load users", { position: "top-center" });
         }
     }
