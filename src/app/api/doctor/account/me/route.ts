@@ -32,13 +32,6 @@ function isGender(val: unknown): val is Gender {
     return val === "Male" || val === "Female";
 }
 
-function isEnumValue<T extends Record<string, string>>(
-    enumObj: T,
-    val: unknown
-): val is T[keyof T] {
-    return typeof val === "string" && Object.values(enumObj).includes(val);
-}
-
 function toDate(val: unknown): Date | undefined {
     if (val instanceof Date && !isNaN(val.getTime())) return val;
     if (typeof val === "string") {
@@ -48,10 +41,7 @@ function toDate(val: unknown): Date | undefined {
     return undefined;
 }
 
-// ---------------- EMPLOYEE (DOCTOR) ----------------
-function buildEmployeeUpdateInput(
-    raw: Record<string, unknown>
-): Prisma.EmployeeUpdateInput {
+function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.EmployeeUpdateInput {
     const data: Prisma.EmployeeUpdateInput = {};
 
     if (typeof raw.fname === "string") data.fname = raw.fname;
@@ -63,24 +53,22 @@ function buildEmployeeUpdateInput(
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
-    // ✅ Convert blood type from "A+" to enum value
-    if (typeof raw.bloodtype === "string") {
-        const mapped =
-            bloodTypeMap[raw.bloodtype] ||
-            (isEnumValue(BloodType, raw.bloodtype) ? raw.bloodtype : undefined);
-        if (mapped) data.bloodtype = mapped as BloodType;
-    }
-
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
     if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
-    if (typeof raw.emergencyco_name === "string")
-        data.emergencyco_name = raw.emergencyco_name;
-    if (typeof raw.emergencyco_num === "string")
-        data.emergencyco_num = raw.emergencyco_num;
-    if (typeof raw.emergencyco_relation === "string")
-        data.emergencyco_relation = raw.emergencyco_relation;
+    if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
+    if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
+    if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
+
+    // ✅ Convert "A+" → enum (A_POS)
+    if (typeof raw.bloodtype === "string") {
+        const mapped = bloodTypeMap[raw.bloodtype] ||
+            (Object.values(BloodType).includes(raw.bloodtype as BloodType)
+                ? (raw.bloodtype as BloodType)
+                : undefined);
+        if (mapped) data.bloodtype = mapped;
+    }
 
     return data;
 }
@@ -99,16 +87,17 @@ export async function GET() {
 
         if (!user)
             return NextResponse.json({ error: "User not found" }, { status: 404 });
+
         if (user.role !== Role.DOCTOR)
             return NextResponse.json({ error: "Not a doctor" }, { status: 403 });
 
-        // ✅ Convert bloodtype enum → readable format
+        // ✅ Map enum blood type → readable form before sending back
         const profile = user.employee
             ? {
                 ...user.employee,
                 bloodtype:
                     user.employee.bloodtype && typeof user.employee.bloodtype === "string"
-                        ? bloodTypeEnumMap[user.employee.bloodtype] || null
+                        ? bloodTypeEnumMap[user.employee.bloodtype] || user.employee.bloodtype
                         : null,
             }
             : null;
@@ -146,17 +135,26 @@ export async function PUT(req: Request) {
 
         if (!user)
             return NextResponse.json({ error: "User not found" }, { status: 404 });
+
         if (user.role !== Role.DOCTOR || !user.employee)
             return NextResponse.json({ error: "Not a doctor" }, { status: 403 });
 
         const data = buildEmployeeUpdateInput(profile);
 
-        await prisma.employee.update({
+        const updated = await prisma.employee.update({
             where: { user_id: session.user.id },
             data,
         });
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({
+            success: true,
+            profile: {
+                ...updated,
+                bloodtype: updated.bloodtype
+                    ? bloodTypeEnumMap[updated.bloodtype] || updated.bloodtype
+                    : null,
+            },
+        });
     } catch (err) {
         console.error("[PUT /api/doctor/account/me]", err);
         return NextResponse.json(
