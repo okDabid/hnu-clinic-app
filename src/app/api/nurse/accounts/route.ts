@@ -63,14 +63,13 @@ export async function POST(req: Request) {
             },
         });
 
-        // Role-specific profile creation
         const sharedProfileData = {
             fname: payload.fname,
             mname: payload.mname,
             lname: payload.lname,
             date_of_birth: new Date(payload.date_of_birth),
             gender: payload.gender as Gender,
-            bloodtype: bloodTypeMap[payload.bloodtype] || null, // ✅ Save as enum if sent
+            bloodtype: bloodTypeMap[payload.bloodtype] || null,
         };
 
         if (payload.role === "PATIENT" && payload.patientType === "student") {
@@ -126,7 +125,7 @@ export async function POST(req: Request) {
                             : newUser.username,
             password: plainPassword,
         });
-    } catch (err: unknown) {
+    } catch (err) {
         console.error("[POST /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
     }
@@ -140,20 +139,23 @@ export async function GET() {
         });
 
         const formatted = users.map((u) => {
-            let displayId: string;
+            let displayId = u.username;
+
             if (u.role === "PATIENT") {
-                if (u.student) displayId = u.student.student_id;
-                else if (u.employee) displayId = u.employee.employee_id;
-                else displayId = u.username;
+                displayId = u.student?.student_id ?? u.employee?.employee_id ?? u.username;
             } else if (u.role === "NURSE" || u.role === "DOCTOR") {
                 displayId = u.employee?.employee_id ?? u.username;
             } else if (u.role === "SCHOLAR") {
                 displayId = u.student?.student_id ?? u.username;
-            } else {
-                displayId = u.username;
             }
 
-            // ✅ Determine display blood type
+            const fullName =
+                u.student?.fname && u.student?.lname
+                    ? `${u.student.fname} ${u.student.lname}`
+                    : u.employee?.fname && u.employee?.lname
+                        ? `${u.employee.fname} ${u.employee.lname}`
+                        : u.username;
+
             const bloodTypeRaw = u.student?.bloodtype || u.employee?.bloodtype || null;
             const bloodTypeDisplay = bloodTypeRaw ? bloodTypeEnumMap[bloodTypeRaw] || bloodTypeRaw : null;
 
@@ -162,18 +164,13 @@ export async function GET() {
                 accountId: u.user_id,
                 role: u.role,
                 status: u.status,
-                fullName:
-                    u.student?.fname && u.student?.lname
-                        ? `${u.student.fname} ${u.student.lname}`
-                        : u.employee?.fname && u.employee?.lname
-                            ? `${u.employee.fname} ${u.employee.lname}`
-                            : u.username,
+                fullName,
                 bloodtype: bloodTypeDisplay,
             };
         });
 
         return NextResponse.json(formatted);
-    } catch (err: unknown) {
+    } catch (err) {
         console.error("[GET /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
@@ -194,12 +191,9 @@ export async function PUT(req: Request) {
 
         const { user_id, newStatus, profile } = await req.json();
 
-        // ✅ Prevent self-deactivation
+        // Prevent self-deactivation
         if (newStatus && session.user.id === user_id) {
-            return NextResponse.json(
-                { error: "You cannot deactivate your own account." },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "You cannot deactivate your own account." }, { status: 400 });
         }
 
         if (newStatus) {
@@ -223,35 +217,19 @@ export async function PUT(req: Request) {
                 return NextResponse.json({ error: "User not found" }, { status: 404 });
             }
 
-            const allowedStudentFields = [
-                "fname", "mname", "lname", "contactno", "address",
-                "bloodtype", "allergies", "medical_cond",
-                "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-                "date_of_birth", "gender",
-            ] as const;
-
-            const allowedEmployeeFields = [
-                "fname", "mname", "lname", "contactno", "address",
-                "bloodtype", "allergies", "medical_cond",
-                "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-                "date_of_birth", "gender",
-            ] as const;
-
             const normalizeProfile = <T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput>(
                 raw: Record<string, unknown>,
-                allowed: readonly string[],
+                allowed: readonly string[]
             ): Partial<T> => {
                 const safe: Partial<T> = {};
                 for (const [key, value] of Object.entries(raw)) {
                     if (!allowed.includes(key)) continue;
-
                     if (key === "date_of_birth" && typeof value === "string") {
                         (safe as Record<string, unknown>)[key] = new Date(value);
                     } else if (key === "gender" && (value === "Male" || value === "Female")) {
                         (safe as Record<string, unknown>)[key] = value as Gender;
                     } else if (key === "bloodtype" && typeof value === "string") {
-                        const mapped = bloodTypeMap[value] || (value as BloodType);
-                        (safe as Record<string, unknown>)[key] = mapped;
+                        (safe as Record<string, unknown>)[key] = bloodTypeMap[value] || (value as BloodType);
                     } else {
                         (safe as Record<string, unknown>)[key] = value;
                     }
@@ -259,25 +237,26 @@ export async function PUT(req: Request) {
                 return safe;
             };
 
+            const allowedFields = [
+                "fname", "mname", "lname", "contactno", "address",
+                "bloodtype", "allergies", "medical_cond",
+                "emergencyco_name", "emergencyco_num", "emergencyco_relation",
+                "date_of_birth", "gender",
+            ] as const;
+
             if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
-                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(
-                    profile,
-                    allowedStudentFields
-                );
+                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(profile, allowedFields);
                 await prisma.student.update({ where: { user_id }, data: safeProfile });
             }
 
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(
-                    profile,
-                    allowedEmployeeFields
-                );
+                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(profile, allowedFields);
                 await prisma.employee.update({ where: { user_id }, data: safeProfile });
             }
         }
 
         return NextResponse.json({ success: true });
-    } catch (err: unknown) {
+    } catch (err) {
         console.error("[PUT /api/nurse/accounts] ERROR:", err);
         return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }

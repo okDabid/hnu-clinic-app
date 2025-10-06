@@ -179,8 +179,6 @@ export default function NurseAccountsPage() {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
             const data = await res.json();
 
-            console.log("Fetched users:", data); // 🧠 Debug check
-
             // Normalize API response shape to match frontend expectations
             const usersData = (Array.isArray(data) ? data : []).map((u) => ({
                 user_id: u.user_id || u.accountId || u.id || "N/A",
@@ -251,6 +249,10 @@ export default function NurseAccountsPage() {
     useEffect(() => {
         loadProfile();
     }, [loadProfile]);
+
+    useEffect(() => {
+        loadUsers();
+    }, []);
 
     const filteredUsers = users.filter(
         (u) =>
