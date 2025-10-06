@@ -201,7 +201,9 @@ export default function NurseAccountsPage() {
                     date_of_birth: data.profile?.date_of_birth || "",
                     contactno: data.profile?.contactno || "",
                     address: data.profile?.address || "",
-                    bloodtype: data.profile?.bloodtype || "",
+                    bloodtype: data.profile?.bloodtype
+                        ? bloodTypeEnumMap[data.profile.bloodtype] || ""
+                        : "",
                     allergies: data.profile?.allergies || "",
                     medical_cond: data.profile?.medical_cond || "",
                     emergencyco_name: data.profile?.emergencyco_name || "",
