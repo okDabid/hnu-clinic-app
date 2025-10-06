@@ -181,12 +181,10 @@ export default function PatientAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [menuOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
-    // 🆕 Added: differentiate between Student and Employee
     const [profileType, setProfileType] = useState<"student" | "employee" | null>(null);
 
-    // Password state
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
@@ -194,7 +192,6 @@ export default function PatientAccountPage() {
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
-    // Dynamic year levels
     const getYearLevelOptions = (dept: string, program?: string) => {
         if (dept === "Basic Education Department") {
             switch (program) {
@@ -214,7 +211,6 @@ export default function PatientAccountPage() {
         }
     };
 
-    // Logout
     const handleLogout = async () => {
         try {
             setIsLoggingOut(true);
@@ -224,7 +220,6 @@ export default function PatientAccountPage() {
         }
     };
 
-    // Load profile (fixed dependencies)
     const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
@@ -233,10 +228,7 @@ export default function PatientAccountPage() {
                 toast.error(data.error);
                 return;
             }
-
-            // 🆕 capture type from API (student | employee)
             setProfileType(data.type || null);
-
             const p = data.profile || {};
             setProfile({
                 user_id: data.accountId,
@@ -257,20 +249,15 @@ export default function PatientAccountPage() {
         loadProfile();
     }, [loadProfile]);
 
-    // Update profile
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!profile) return;
-
         if (!profile.fname.trim() || !profile.lname.trim()) {
             toast.error("First and Last Name are required.");
             return;
         }
-
         try {
             setProfileLoading(true);
-
-            // 🆕 Dynamic payload for student or employee
             const payload = {
                 ...profile,
                 department:
@@ -300,8 +287,6 @@ export default function PatientAccountPage() {
                         ? "Employee profile updated successfully!"
                         : "Profile updated successfully!"
                 );
-
-                // ✅ Update local state
                 setProfile((prev) => ({
                     ...prev!,
                     ...data.profile,
@@ -333,28 +318,16 @@ export default function PatientAccountPage() {
                     <Link href="/patient" className="flex items-center gap-2 hover:text-green-600">
                         <Home className="h-5 w-5" /> Dashboard
                     </Link>
-                    <Link
-                        href="/patient/account"
-                        className="flex items-center gap-2 text-green-600 font-semibold"
-                    >
+                    <Link href="/patient/account" className="flex items-center gap-2 text-green-600 font-semibold">
                         <User className="h-5 w-5" /> Account
                     </Link>
-                    <Link
-                        href="/patient/appointments"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/patient/appointments" className="flex items-center gap-2 hover:text-green-600">
                         <CalendarDays className="h-5 w-5" /> Appointments
                     </Link>
-                    <Link
-                        href="/patient/services"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/patient/services" className="flex items-center gap-2 hover:text-green-600">
                         <ClipboardList className="h-5 w-5" /> Services
                     </Link>
-                    <Link
-                        href="/patient/notifications"
-                        className="flex items-center gap-2 hover:text-green-600"
-                    >
+                    <Link href="/patient/notifications" className="flex items-center gap-2 hover:text-green-600">
                         <Bell className="h-5 w-5" /> Notifications
                     </Link>
                 </nav>
@@ -367,7 +340,8 @@ export default function PatientAccountPage() {
                 >
                     {isLoggingOut ? (
                         <>
-                            <Loader2 className="h-4 w-4 animate-spin" /> Logging out...
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Logging out...
                         </>
                     ) : (
                         "Logout"
@@ -381,36 +355,21 @@ export default function PatientAccountPage() {
                     <h2 className="text-xl font-bold text-green-600">
                         {profileType === "employee" ? "Employee Profile" : "Student Profile"}
                     </h2>
-
                     {/* Mobile Menu */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
                                     {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient">Dashboard</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient/account">Account</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient/appointments">Appointments</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient/services">Services</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient/notifications">Notifications</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
-                                >
-                                    Logout
-                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/patient">Dashboard</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/patient/account">Account</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/patient/appointments">Appointments</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/patient/services">Services</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/patient/notifications">Notifications</Link></DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
