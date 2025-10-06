@@ -294,11 +294,18 @@ export default function NurseAccountsPage() {
         e.preventDefault();
         try {
             setProfileLoading(true);
+
+            const payload = {
+                ...profile,
+                bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+            };
+
             const res = await fetch("/api/nurse/accounts/me", {
                 method: "PUT",
-                body: JSON.stringify({ profile }),
+                body: JSON.stringify({ profile: payload }),
                 headers: { "Content-Type": "application/json" },
             });
+
             const data = await res.json();
             if (data.error) {
                 toast.error(data.error);
@@ -328,6 +335,21 @@ export default function NurseAccountsPage() {
             toast.error("Failed to update user status", { position: "top-center" });
         }
     }
+
+    const bloodTypeEnumMap: Record<string, string> = {
+        A_POS: "A+",
+        A_NEG: "A-",
+        B_POS: "B+",
+        B_NEG: "B-",
+        AB_POS: "AB+",
+        AB_NEG: "AB-",
+        O_POS: "O+",
+        O_NEG: "O-",
+    };
+
+    const reverseBloodTypeEnumMap = Object.fromEntries(
+        Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
+    );
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
