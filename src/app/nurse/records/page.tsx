@@ -404,7 +404,7 @@ export default function NurseRecordsPage() {
                                                                                     setSavingData(true);
                                                                                     const form = e.currentTarget as HTMLFormElement;
                                                                                     const body = {
-                                                                                        appointment_id: "TODO_APPOINTMENT_ID", // Replace when ready
+                                                                                        appointment_id: null, // Replace when ready
                                                                                         nurse_user_id: session?.user?.id,
                                                                                         reason_of_visit: (
                                                                                             form.elements.namedItem("reason_of_visit") as HTMLInputElement
