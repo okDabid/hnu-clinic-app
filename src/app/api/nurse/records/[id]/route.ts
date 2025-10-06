@@ -31,10 +31,11 @@ const PatchSchema = z.object({
 
 export async function PATCH(
     req: Request,
-    context: { params: { id: string } } // ✅ FIXED typing
+    { params }: { params: Promise<{ id: string }> } // ✅ FIXED for Next.js 14+
 ) {
     try {
-        const { id } = context.params;
+        // Must await params in Next.js 14 dynamic routes
+        const { id } = await params;
 
         if (!id) {
             return NextResponse.json(
@@ -69,7 +70,6 @@ export async function PATCH(
             emergencyco_relation: healthData.emergency?.relation ?? undefined,
         };
 
-        // 🧑‍🎓 Student update
         if (type === "Student") {
             const student = await prisma.student.update({
                 where: { stud_user_id: id },
@@ -78,7 +78,6 @@ export async function PATCH(
             return NextResponse.json(student);
         }
 
-        // 👩‍💼 Employee update
         if (type === "Employee") {
             const employee = await prisma.employee.update({
                 where: { emp_id: id },
