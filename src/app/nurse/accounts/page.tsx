@@ -329,6 +329,8 @@ export default function NurseAccountsPage() {
         }
     }
 
+    const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
@@ -582,35 +584,50 @@ export default function NurseAccountsPage() {
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Username</Label><Input value={profile.user_id} disabled /></div>
-                                        <div><Label>User ID</Label><Input value={profile.username} disabled /></div>
-                                        <div><Label>Role</Label><Input value={profile.role} disabled /></div>
-                                        <div><Label>Status</Label><Input value={profile.status} disabled /></div>
-                                        <div><Label>Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
+                                        <div><Label className="space-y-2">Username</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label className="space-y-2">User ID</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label className="space-y-2">Role</Label><Input value={profile.role} disabled /></div>
+                                        <div><Label className="space-y-2">Status</Label><Input value={profile.status} disabled /></div>
+                                        <div><Label className="space-y-2">Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label>First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
-                                        <div><Label>Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
-                                        <div><Label>Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
-                                        <div><Label>Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label>Blood Type</Label><Input value={profile.bloodtype || ""} onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })} /></div>
-                                        <div><Label>Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Blood Type</Label>
+                                            <Select
+                                                value={profile.bloodtype || ""}
+                                                onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Blood Type" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {bloodTypeOptions.map((type) => (
+                                                        <SelectItem key={type} value={type}>
+                                                            {type}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div><Label className="space-y-2">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
                                     </div>
 
-                                    <div><Label>Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
+                                    <div><Label className="space-y-2">Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label>Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
-                                        <div><Label>Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
-                                        <div><Label>Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
+                                        <div><Label className="space-y-2">Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
                                     </div>
 
                                     <Button
@@ -669,15 +686,15 @@ export default function NurseAccountsPage() {
                                 {role === "PATIENT" && patientType === "employee" && <div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>}
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div><Label>First Name</Label><Input name="fname" required /></div>
-                                    <div><Label>Middle Name</Label><Input name="mname" /></div>
-                                    <div><Label>Last Name</Label><Input name="lname" required /></div>
+                                    <div><Label className="space-y-2">First Name</Label><Input name="fname" required /></div>
+                                    <div><Label className="space-y-2">Middle Name</Label><Input name="mname" /></div>
+                                    <div><Label className="space-y-2">Last Name</Label><Input name="lname" required /></div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div><Label>Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
+                                    <div><Label className="space-y-2">Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
                                     <div>
-                                        <Label>Gender</Label>
+                                        <Label className="space-y-2">Gender</Label>
                                         <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
                                             <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
                                             <SelectContent>
