@@ -213,7 +213,7 @@ export default function NurseAccountsPage() {
     // 🔹 Fetch own profile
     const loadProfile = useCallback(async () => {
         try {
-            const res = await fetch("/api/nurse/account/me", {
+            const res = await fetch("/api/nurse/accounts/me", {
                 cache: "no-store",
                 next: { revalidate: 0 }, // ensures it always re-fetches
             });
