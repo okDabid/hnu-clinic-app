@@ -61,7 +61,7 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
     if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
 
-    // ✅ Convert "A+" → enum (A_POS) before saving
+    // ✅ Convert "A+" → enum (A_POS)
     if (typeof raw.bloodtype === "string") {
         const mapped =
             bloodTypeMap[raw.bloodtype] ||
@@ -92,7 +92,6 @@ export async function GET() {
         if (user.role !== Role.NURSE)
             return NextResponse.json({ error: "Not a nurse" }, { status: 403 });
 
-        // ✅ Map enum → readable before sending to client
         const profile = user.employee
             ? {
                 ...user.employee,
@@ -147,7 +146,6 @@ export async function PUT(req: Request) {
             data,
         });
 
-        // ✅ Return readable blood type immediately
         return NextResponse.json({
             success: true,
             profile: {
