@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import orderBy from "lodash/orderBy";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -123,6 +123,21 @@ type Profile = {
     emergencyco_relation?: string | null;
 };
 
+const bloodTypeEnumMap: Record<string, string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
+
+const reverseBloodTypeEnumMap = Object.fromEntries(
+    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
+);
+
 export default function NurseAccountsPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
@@ -164,10 +179,22 @@ export default function NurseAccountsPage() {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
             const data = await res.json();
 
+            // Normalize API response shape to match frontend expectations
+            const usersData = (Array.isArray(data) ? data : []).map((u) => ({
+                user_id: u.user_id || u.accountId || u.id || "N/A",
+                accountId: u.accountId || u.user_id || "N/A",
+                role: u.role || "Unknown",
+                status: u.status || "Inactive",
+                fullName:
+                    u.fullName ||
+                    [u.fname, u.mname, u.lname].filter(Boolean).join(" ") ||
+                    "Unnamed",
+            }));
+
             const sorted = orderBy(
-                data,
+                usersData,
                 [
-                    (u) => u.role,
+                    (u) => u.role.toLowerCase(),
                     (u) => {
                         const n = parseInt(u.user_id, 10);
                         return isNaN(n) ? u.user_id : n;
@@ -177,16 +204,18 @@ export default function NurseAccountsPage() {
             );
 
             setUsers(sorted);
-        } catch {
+        } catch (err) {
+            console.error("Failed to load users:", err);
             toast.error("Failed to load users", { position: "top-center" });
         }
     }
 
     // 🔹 Fetch own profile
-    async function loadProfile() {
+    const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/nurse/accounts/me", { cache: "no-store" });
             const data = await res.json();
+
             if (data.error) {
                 toast.error(data.error);
             } else {
@@ -201,7 +230,10 @@ export default function NurseAccountsPage() {
                     date_of_birth: data.profile?.date_of_birth || "",
                     contactno: data.profile?.contactno || "",
                     address: data.profile?.address || "",
-                    bloodtype: data.profile?.bloodtype || "",
+                    // 🩸 Convert enum → readable
+                    bloodtype: data.profile?.bloodtype
+                        ? bloodTypeEnumMap[data.profile.bloodtype] || ""
+                        : "",
                     allergies: data.profile?.allergies || "",
                     medical_cond: data.profile?.medical_cond || "",
                     emergencyco_name: data.profile?.emergencyco_name || "",
@@ -212,11 +244,14 @@ export default function NurseAccountsPage() {
         } catch {
             toast.error("Failed to load profile");
         }
-    }
+    }, []);
+
+    useEffect(() => {
+        loadProfile();
+    }, [loadProfile]);
 
     useEffect(() => {
         loadUsers();
-        loadProfile();
     }, []);
 
     const filteredUsers = users.filter(
@@ -294,11 +329,18 @@ export default function NurseAccountsPage() {
         e.preventDefault();
         try {
             setProfileLoading(true);
+
+            const payload = {
+                ...profile,
+                bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+            };
+
             const res = await fetch("/api/nurse/accounts/me", {
                 method: "PUT",
-                body: JSON.stringify({ profile }),
+                body: JSON.stringify({ profile: payload }),
                 headers: { "Content-Type": "application/json" },
             });
+
             const data = await res.json();
             if (data.error) {
                 toast.error(data.error);
@@ -329,8 +371,10 @@ export default function NurseAccountsPage() {
         }
     }
 
+    const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
     return (
-        <div className="flex min-h-screen bg-green-50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
@@ -373,10 +417,10 @@ export default function NurseAccountsPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col">
+            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
                 {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Accounts Management</h2>
+                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-lg sm:text-xl font-bold text-green-600">Accounts Management</h2>
 
                     {/* Mobile Menu */}
                     <div className="md:hidden">
@@ -393,18 +437,20 @@ export default function NurseAccountsPage() {
                                 <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispensed</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
+                                    Logout
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </header>
 
                 {/* Sections */}
-                <section className="px-6 py-8 space-y-10 max-w-6xl mx-auto w-full">
+                <section className="px-4 sm:px-6 py-6 sm:py-8 space-y-10 w-full max-w-6xl mx-auto">
                     {/* My Account */}
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition mb-10">
-                            <CardHeader className="border-b flex sm:items-center sm:justify-between gap-3">
+                            <CardHeader className="border-b flex items-center justify-between flex-wrap gap-3">
                                 <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                                     My Account
                                 </CardTitle>
@@ -413,25 +459,19 @@ export default function NurseAccountsPage() {
                                 <Dialog
                                     onOpenChange={(open) => {
                                         if (!open) {
-                                            // Clear state when dialog closes
                                             setPasswordErrors([]);
                                             setPasswordMessage(null);
                                             setPasswordLoading(false);
-
-                                            // Clear password fields
-                                            const inputs = document.querySelectorAll<HTMLInputElement>(
-                                                'input[name="oldPassword"], input[name="newPassword"], input[name="confirmPassword"]'
-                                            );
-                                            inputs.forEach((input) => (input.value = ""));
+                                            document
+                                                .querySelectorAll<HTMLInputElement>(
+                                                    'input[name="oldPassword"], input[name="newPassword"], input[name="confirmPassword"]'
+                                                )
+                                                .forEach((input) => (input.value = ""));
                                         }
                                     }}
                                 >
                                     <DialogTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="hover:bg-green-50"
-                                        >
+                                        <Button variant="outline" size="icon" className="hover:bg-green-50">
                                             <Cog className="h-5 w-5 text-green-600" />
                                         </Button>
                                     </DialogTrigger>
@@ -447,12 +487,11 @@ export default function NurseAccountsPage() {
                                         <form
                                             onSubmit={async (e) => {
                                                 e.preventDefault();
-                                                const form = e.currentTarget as HTMLFormElement;
+                                                const form = e.currentTarget;
                                                 const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
                                                 const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
                                                 const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
 
-                                                // ✅ Client-side real-time validation
                                                 const errors: string[] = [];
                                                 if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
                                                 if (!/[a-z]/.test(newPassword)) errors.push("Must contain a lowercase letter.");
@@ -566,9 +605,7 @@ export default function NurseAccountsPage() {
                                             )}
 
                                             {/* Success Message */}
-                                            {passwordMessage && (
-                                                <p className="text-sm text-green-600">{passwordMessage}</p>
-                                            )}
+                                            {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
 
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
@@ -588,135 +625,56 @@ export default function NurseAccountsPage() {
                             {/* Profile Form */}
                             <CardContent className="pt-6">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
-                                    {/* System info (read-only) */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Username</Label>
-                                            <Input value={profile.user_id} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">User ID</Label>
-                                            <Input value={profile.username} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Role</Label>
-                                            <Input value={profile.role} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Status</Label>
-                                            <Input value={profile.status} disabled className="w-full" />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Date of Birth</Label>
-                                            <Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled className="w-full" />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Username</Label><Input value={profile.user_id} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
                                     </div>
 
-                                    {/* Editable fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">First Name</Label>
-                                            <Input
-                                                value={profile.fname}
-                                                onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Middle Name</Label>
-                                            <Input
-                                                value={profile.mname || ""}
-                                                onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Last Name</Label>
-                                            <Input
-                                                value={profile.lname}
-                                                onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Contact No</Label>
-                                            <Input
-                                                value={profile.contactno || ""}
-                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Address</Label>
-                                            <Input
-                                                value={profile.address || ""}
-                                                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Contact No</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <Label className="block mb-1 font-medium">Blood Type</Label>
-                                            <Input
+                                            <Select
                                                 value={profile.bloodtype || ""}
-                                                onChange={(e) => setProfile({ ...profile, bloodtype: e.target.value })}
-                                                className="w-full"
-                                            />
+                                                onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Blood Type" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {bloodTypeOptions.map((type) => (
+                                                        <SelectItem key={type} value={type}>
+                                                            {type}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Allergies</Label>
-                                            <Input
-                                                value={profile.allergies || ""}
-                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
                                     </div>
 
-                                    <div>
-                                        <Label className="block mb-1 font-medium">Medical Conditions</Label>
-                                        <Input
-                                            value={profile.medical_cond || ""}
-                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
-                                            className="w-full"
-                                        />
-                                    </div>
+                                    <div><Label className="block mb-1 font-medium">Medical Conditions</Label><Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} /></div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Emergency Contact Name</Label>
-                                            <Input
-                                                value={profile.emergencyco_name || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Emergency Contact Number</Label>
-                                            <Input
-                                                value={profile.emergencyco_num || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Emergency Contact Relation</Label>
-                                            <Input
-                                                value={profile.emergencyco_relation || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
-                                                className="w-full"
-                                            />
-                                        </div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
+                                        <div><Label className="block mb-1 font-medium">Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
                                     </div>
 
                                     <Button
                                         type="submit"
-                                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
@@ -730,13 +688,12 @@ export default function NurseAccountsPage() {
                     {/* Create User */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardHeader className="border-b">
-                            <CardTitle className="text-2xl font-bold text-green-600">Create New User</CardTitle>
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">Create New User</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6">
                             <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* Role */}
                                 <div className="space-y-2">
-                                    <Label className="block mb-1">Role</Label>
+                                    <Label className="block mb-1 font-medium">Role</Label>
                                     <Select value={role} onValueChange={setRole}>
                                         <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                                         <SelectContent>
@@ -748,14 +705,16 @@ export default function NurseAccountsPage() {
                                     </Select>
                                 </div>
 
-                                {/* Conditional IDs */}
-                                {role === "SCHOLAR" && (<div className="space-y-2"><Label className="block mb-1">School ID</Label><Input name="school_id" required /></div>)}
-                                {(role === "NURSE" || role === "DOCTOR") && (<div className="space-y-2"><Label className="block mb-1">Employee ID</Label><Input name="employee_id" required /></div>)}
+                                {role === "SCHOLAR" && <div className="space-y-2"><Label>School ID</Label><Input name="school_id" required /></div>}
+                                {(role === "NURSE" || role === "DOCTOR") && <div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>}
 
                                 {role === "PATIENT" && (
                                     <div className="space-y-2">
-                                        <Label className="block mb-1">Patient Type</Label>
-                                        <Select value={patientType} onValueChange={(val: "student" | "employee") => setPatientType(val)}>
+                                        <Label className="block mb-1 font-medium">Patient Type</Label>
+                                        <Select
+                                            value={patientType}
+                                            onValueChange={(val) => setPatientType(val as "student" | "employee" | "")}
+                                        >
                                             <SelectTrigger><SelectValue placeholder="Select patient type" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="student">Student</SelectItem>
@@ -765,32 +724,34 @@ export default function NurseAccountsPage() {
                                     </div>
                                 )}
 
-                                {role === "PATIENT" && patientType === "student" && (<div className="space-y-2"><Label>Student ID</Label><Input name="student_id" required /></div>)}
-                                {role === "PATIENT" && patientType === "employee" && (<div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>)}
+                                {role === "PATIENT" && patientType === "student" && <div className="space-y-2"><Label>Student ID</Label><Input name="student_id" required /></div>}
+                                {role === "PATIENT" && patientType === "employee" && <div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>}
 
-                                {/* Name Fields */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="space-y-2"><Label className="block mb-1 font-medium">First Name</Label><Input name="fname" required /></div>
-                                    <div className="space-y-2"><Label className="block mb-1 font-medium">Middle Name</Label><Input name="mname" /></div>
-                                    <div className="space-y-2"><Label className="block mb-1 font-medium">Last Name</Label><Input name="lname" required /></div>
+                                    <div><Label className="block mb-1 font-medium">First Name</Label><Input name="fname" required /></div>
+                                    <div><Label className="block mb-1 font-medium">Middle Name</Label><Input name="mname" /></div>
+                                    <div><Label className="block mb-1 font-medium">Last Name</Label><Input name="lname" required /></div>
                                 </div>
 
-                                {/* DOB */}
-                                <div className="space-y-2"><Label className="block mb-1">Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
-
-                                {/* Gender */}
-                                <div className="space-y-2">
-                                    <Label className="block mb-1">Gender</Label>
-                                    <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
-                                        <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Male">Male</SelectItem>
-                                            <SelectItem value="Female">Female</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Gender</Label>
+                                        <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
+                                            <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Male">Male</SelectItem>
+                                                <SelectItem value="Female">Female</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
 
-                                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2" disabled={loading}>
+                                <Button
+                                    type="submit"
+                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                    disabled={loading}
+                                >
                                     {loading && <Loader2 className="h-5 w-5 animate-spin" />}
                                     {loading ? "Creating..." : "Create User"}
                                 </Button>
@@ -801,7 +762,7 @@ export default function NurseAccountsPage() {
                     {/* Manage Users */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
                         <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <CardTitle className="text-2xl font-bold text-green-600">Manage Existing Users</CardTitle>
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">Manage Existing Users</CardTitle>
                             <div className="relative w-full md:w-72">
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                                 <Input
@@ -809,7 +770,7 @@ export default function NurseAccountsPage() {
                                     value={search}
                                     onChange={(e) => {
                                         setSearch(e.target.value);
-                                        setCurrentPage(1); // reset to page 1 when searching
+                                        setCurrentPage(1);
                                     }}
                                     className="pl-8"
                                 />
@@ -817,8 +778,8 @@ export default function NurseAccountsPage() {
                         </CardHeader>
 
                         <CardContent className="flex-1 flex flex-col">
-                            <div className="overflow-x-auto flex-1">
-                                <Table>
+                            <div className="overflow-x-auto w-full">
+                                <Table className="min-w-full text-sm">
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>User ID</TableHead>
@@ -831,20 +792,19 @@ export default function NurseAccountsPage() {
                                     <TableBody>
                                         {filteredUsers.length > 0 ? (
                                             filteredUsers
-                                                .slice((currentPage - 1) * 8, currentPage * 8) // ✅ show 8 users per page
+                                                .slice((currentPage - 1) * 8, currentPage * 8)
                                                 .map((user) => (
                                                     <TableRow key={user.user_id} className="hover:bg-green-50 transition">
-                                                        <TableCell className="font-medium">{user.user_id}</TableCell>
+                                                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{user.user_id}</TableCell>
                                                         <TableCell>{user.role}</TableCell>
                                                         <TableCell>{user.fullName}</TableCell>
                                                         <TableCell>
                                                             <Badge
                                                                 variant="outline"
-                                                                className={
-                                                                    user.status === "Active"
-                                                                        ? "bg-green-100 text-green-700 border-green-200 px-4 py-1"
-                                                                        : "bg-red-100 text-red-700 border-red-200 px-4 py-1"
-                                                                }
+                                                                className={`px-3 py-1 ${user.status === "Active"
+                                                                    ? "bg-green-100 text-green-700 border-green-200"
+                                                                    : "bg-red-100 text-red-700 border-red-200"
+                                                                    }`}
                                                             >
                                                                 {user.status}
                                                             </Badge>
@@ -908,8 +868,8 @@ export default function NurseAccountsPage() {
                                 </Table>
                             </div>
 
-                            {/* ✅ Pagination Controls fixed at bottom */}
-                            <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                            {/* Pagination */}
+                            <div className="flex justify-between items-center mt-4 pt-4 border-t text-sm sm:text-base">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -918,17 +878,13 @@ export default function NurseAccountsPage() {
                                 >
                                     Previous
                                 </Button>
-                                <span className="text-sm text-gray-600">
+                                <span className="text-gray-600">
                                     Page {currentPage} of {Math.ceil(filteredUsers.length / 8) || 1}
                                 </span>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() =>
-                                        setCurrentPage((prev) =>
-                                            Math.min(prev + 1, Math.ceil(filteredUsers.length / 8))
-                                        )
-                                    }
+                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredUsers.length / 8)))}
                                     disabled={currentPage === Math.ceil(filteredUsers.length / 8) || filteredUsers.length === 0}
                                 >
                                     Next
@@ -936,14 +892,14 @@ export default function NurseAccountsPage() {
                             </div>
                         </CardContent>
                     </Card>
-
                 </section>
 
                 {/* Footer */}
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
                     © {new Date().getFullYear()} HNU Clinic – Nurse Panel
                 </footer>
             </main>
         </div>
     );
+
 }

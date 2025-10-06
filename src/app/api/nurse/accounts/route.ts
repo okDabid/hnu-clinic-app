@@ -2,13 +2,36 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
-import { Prisma, Gender } from "@prisma/client";
+import { Prisma, Gender, BloodType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 // Password generator (8 chars, alphanumeric)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const generatePassword = customAlphabet(alphabet, 8);
+
+// 🩸 Blood type mapping (text ⇄ enum)
+const bloodTypeMap: Record<string, BloodType> = {
+    "A+": BloodType.A_POS,
+    "A-": BloodType.A_NEG,
+    "B+": BloodType.B_POS,
+    "B-": BloodType.B_NEG,
+    "AB+": BloodType.AB_POS,
+    "AB-": BloodType.AB_NEG,
+    "O+": BloodType.O_POS,
+    "O-": BloodType.O_NEG,
+};
+
+const bloodTypeEnumMap: Record<string, string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
 
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
@@ -40,17 +63,21 @@ export async function POST(req: Request) {
             },
         });
 
-        // Role-specific profile creation
+        const sharedProfileData = {
+            fname: payload.fname,
+            mname: payload.mname,
+            lname: payload.lname,
+            date_of_birth: new Date(payload.date_of_birth),
+            gender: payload.gender as Gender,
+            bloodtype: bloodTypeMap[payload.bloodtype] || null,
+        };
+
         if (payload.role === "PATIENT" && payload.patientType === "student") {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.student_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -60,11 +87,7 @@ export async function POST(req: Request) {
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -74,11 +97,7 @@ export async function POST(req: Request) {
                 data: {
                     user_id: newUser.user_id,
                     employee_id: payload.employee_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -88,11 +107,7 @@ export async function POST(req: Request) {
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.school_id,
-                    fname: payload.fname,
-                    mname: payload.mname,
-                    lname: payload.lname,
-                    date_of_birth: new Date(payload.date_of_birth),
-                    gender: payload.gender,
+                    ...sharedProfileData,
                 },
             });
         }
@@ -110,7 +125,7 @@ export async function POST(req: Request) {
                             : newUser.username,
             password: plainPassword,
         });
-    } catch (err: unknown) {
+    } catch (err) {
         console.error("[POST /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
     }
@@ -124,35 +139,38 @@ export async function GET() {
         });
 
         const formatted = users.map((u) => {
-            let displayId: string;
+            let displayId = u.username;
+
             if (u.role === "PATIENT") {
-                if (u.student) displayId = u.student.student_id;
-                else if (u.employee) displayId = u.employee.employee_id;
-                else displayId = u.username;
+                displayId = u.student?.student_id ?? u.employee?.employee_id ?? u.username;
             } else if (u.role === "NURSE" || u.role === "DOCTOR") {
                 displayId = u.employee?.employee_id ?? u.username;
             } else if (u.role === "SCHOLAR") {
                 displayId = u.student?.student_id ?? u.username;
-            } else {
-                displayId = u.username;
             }
+
+            const fullName =
+                u.student?.fname && u.student?.lname
+                    ? `${u.student.fname} ${u.student.lname}`
+                    : u.employee?.fname && u.employee?.lname
+                        ? `${u.employee.fname} ${u.employee.lname}`
+                        : u.username;
+
+            const bloodTypeRaw = u.student?.bloodtype || u.employee?.bloodtype || null;
+            const bloodTypeDisplay = bloodTypeRaw ? bloodTypeEnumMap[bloodTypeRaw] || bloodTypeRaw : null;
 
             return {
                 user_id: displayId,
                 accountId: u.user_id,
                 role: u.role,
                 status: u.status,
-                fullName:
-                    u.student?.fname && u.student?.lname
-                        ? `${u.student.fname} ${u.student.lname}`
-                        : u.employee?.fname && u.employee?.lname
-                            ? `${u.employee.fname} ${u.employee.lname}`
-                            : u.username,
+                fullName,
+                bloodtype: bloodTypeDisplay,
             };
         });
 
         return NextResponse.json(formatted);
-    } catch (err: unknown) {
+    } catch (err) {
         console.error("[GET /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
@@ -173,12 +191,9 @@ export async function PUT(req: Request) {
 
         const { user_id, newStatus, profile } = await req.json();
 
-        // ✅ Prevent self-deactivation
+        // Prevent self-deactivation
         if (newStatus && session.user.id === user_id) {
-            return NextResponse.json(
-                { error: "You cannot deactivate your own account." },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "You cannot deactivate your own account." }, { status: 400 });
         }
 
         if (newStatus) {
@@ -202,33 +217,19 @@ export async function PUT(req: Request) {
                 return NextResponse.json({ error: "User not found" }, { status: 404 });
             }
 
-            const allowedStudentFields = [
-                "fname", "mname", "lname", "contactno", "address",
-                "bloodtype", "allergies", "medical_cond",
-                "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-                "date_of_birth", "gender",
-            ] as const;
-
-            const allowedEmployeeFields = [
-                "fname", "mname", "lname", "contactno", "address",
-                "bloodtype", "allergies", "medical_cond",
-                "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-                "date_of_birth", "gender",
-            ] as const;
-
-            // ✅ simplified normalizeProfile (removed unused `K`)
             const normalizeProfile = <T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput>(
                 raw: Record<string, unknown>,
-                allowed: readonly string[],
+                allowed: readonly string[]
             ): Partial<T> => {
                 const safe: Partial<T> = {};
                 for (const [key, value] of Object.entries(raw)) {
                     if (!allowed.includes(key)) continue;
-
                     if (key === "date_of_birth" && typeof value === "string") {
                         (safe as Record<string, unknown>)[key] = new Date(value);
                     } else if (key === "gender" && (value === "Male" || value === "Female")) {
                         (safe as Record<string, unknown>)[key] = value as Gender;
+                    } else if (key === "bloodtype" && typeof value === "string") {
+                        (safe as Record<string, unknown>)[key] = bloodTypeMap[value] || (value as BloodType);
                     } else {
                         (safe as Record<string, unknown>)[key] = value;
                     }
@@ -236,25 +237,26 @@ export async function PUT(req: Request) {
                 return safe;
             };
 
+            const allowedFields = [
+                "fname", "mname", "lname", "contactno", "address",
+                "bloodtype", "allergies", "medical_cond",
+                "emergencyco_name", "emergencyco_num", "emergencyco_relation",
+                "date_of_birth", "gender",
+            ] as const;
+
             if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
-                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(
-                    profile,
-                    allowedStudentFields
-                );
+                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(profile, allowedFields);
                 await prisma.student.update({ where: { user_id }, data: safeProfile });
             }
 
             if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(
-                    profile,
-                    allowedEmployeeFields
-                );
+                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(profile, allowedFields);
                 await prisma.employee.update({ where: { user_id }, data: safeProfile });
             }
         }
 
         return NextResponse.json({ success: true });
-    } catch (err: unknown) {
+    } catch (err) {
         console.error("[PUT /api/nurse/accounts] ERROR:", err);
         return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
