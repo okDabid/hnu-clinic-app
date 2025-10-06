@@ -379,7 +379,7 @@ export default function PatientAccountPage() {
                 <section className="px-6 py-8 max-w-4xl mx-auto w-full">
                     {profile && (
                         <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardHeader className="border-b flex sm:items-center sm:justify-between gap-3">
+                            <CardHeader className="border-b flex items-center justify-between gap-3">
                                 <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
 
                                 {/* Password Dialog */}
