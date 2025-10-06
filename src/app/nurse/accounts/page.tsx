@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import orderBy from "lodash/orderBy";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
@@ -123,6 +123,21 @@ type Profile = {
     emergencyco_relation?: string | null;
 };
 
+const bloodTypeEnumMap: Record<string, string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
+
+const reverseBloodTypeEnumMap = Object.fromEntries(
+    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
+);
+
 export default function NurseAccountsPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");
@@ -183,10 +198,11 @@ export default function NurseAccountsPage() {
     }
 
     // 🔹 Fetch own profile
-    async function loadProfile() {
+    const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/nurse/accounts/me", { cache: "no-store" });
             const data = await res.json();
+
             if (data.error) {
                 toast.error(data.error);
             } else {
@@ -201,6 +217,7 @@ export default function NurseAccountsPage() {
                     date_of_birth: data.profile?.date_of_birth || "",
                     contactno: data.profile?.contactno || "",
                     address: data.profile?.address || "",
+                    // 🩸 Convert enum → readable
                     bloodtype: data.profile?.bloodtype
                         ? bloodTypeEnumMap[data.profile.bloodtype] || ""
                         : "",
@@ -214,12 +231,11 @@ export default function NurseAccountsPage() {
         } catch {
             toast.error("Failed to load profile");
         }
-    }
+    }, []);
 
     useEffect(() => {
-        loadUsers();
         loadProfile();
-    }, []);
+    }, [loadProfile]);
 
     const filteredUsers = users.filter(
         (u) =>
@@ -337,21 +353,6 @@ export default function NurseAccountsPage() {
             toast.error("Failed to update user status", { position: "top-center" });
         }
     }
-
-    const bloodTypeEnumMap: Record<string, string> = {
-        A_POS: "A+",
-        A_NEG: "A-",
-        B_POS: "B+",
-        B_NEG: "B-",
-        AB_POS: "AB+",
-        AB_NEG: "AB-",
-        O_POS: "O+",
-        O_NEG: "O-",
-    };
-
-    const reverseBloodTypeEnumMap = Object.fromEntries(
-        Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
-    );
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
