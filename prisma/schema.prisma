@@ -140,6 +140,7 @@ model Users {
   consultationsNurse  Consultation[]       @relation("ConsultationNurse")
   medcertIssued       MedCert[]            @relation("IssuedCertificates")
   medcertPatient      MedCert[]            @relation("PatientCertificates")
+  passwordResetTokens PasswordResetToken[]
 
   @@index([role, status])
   @@index([username])
@@ -157,7 +158,8 @@ model Student {
   department           Department?
   program              String?
   year_level           YearLevel?
-  contactno            String?
+  email                String?       @unique
+  contactno            String?       @unique
   address              String?
   bloodtype            BloodType?
   allergies            String?
@@ -179,7 +181,8 @@ model Employee {
   lname                String
   date_of_birth        DateTime
   gender               Gender
-  contactno            String?
+  email                String?       @unique
+  contactno            String?       @unique
   address              String?
   bloodtype            BloodType?
   allergies            String?
@@ -302,6 +305,22 @@ model DispenseBatch {
 
   dispense      MedDispense   @relation(fields: [dispense_id], references: [dispense_id], onDelete: Cascade)
   replenishment Replenishment @relation(fields: [replenishment_id], references: [replenishment_id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  contact   String
+  type      String   @default("EMAIL")
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user Users @relation(fields: [userId], references: [user_id], onDelete: Cascade)
+
+  @@index([contact, type])
+  @@index([userId])
 }
 
 model MedCert {

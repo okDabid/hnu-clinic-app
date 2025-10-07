@@ -6,11 +6,11 @@ import { Prisma, Gender, BloodType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-// Password generator (8 chars, alphanumeric)
+// Generate random password (8 chars)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const generatePassword = customAlphabet(alphabet, 8);
 
-// 🩸 Blood type mapping (text ⇄ enum)
+// Blood type mapping
 const bloodTypeMap: Record<string, BloodType> = {
     "A+": BloodType.A_POS,
     "A-": BloodType.A_NEG,
@@ -41,19 +41,21 @@ export async function POST(req: Request) {
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
+        // Determine username
         let username: string;
         if (payload.role === "NURSE" || payload.role === "DOCTOR") {
-            username = `${payload.employee_id}`;
+            username = payload.employee_id;
         } else if (payload.role === "PATIENT" && payload.patientType === "student") {
-            username = `${payload.student_id}`;
+            username = payload.student_id;
         } else if (payload.role === "PATIENT" && payload.patientType === "employee") {
-            username = `${payload.employee_id}`;
+            username = payload.employee_id;
         } else if (payload.role === "SCHOLAR") {
-            username = `${payload.school_id}`;
+            username = payload.school_id;
         } else {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
 
+        // ✅ Create user (no email or phone in Users)
         const newUser = await prisma.users.create({
             data: {
                 username,
@@ -63,6 +65,7 @@ export async function POST(req: Request) {
             },
         });
 
+        // Shared fields
         const sharedProfileData = {
             fname: payload.fname,
             mname: payload.mname,
@@ -70,13 +73,25 @@ export async function POST(req: Request) {
             date_of_birth: new Date(payload.date_of_birth),
             gender: payload.gender as Gender,
             bloodtype: bloodTypeMap[payload.bloodtype] || null,
+            address: payload.address ?? null,
+            allergies: payload.allergies ?? null,
+            medical_cond: payload.medical_cond ?? null,
+            emergencyco_name: payload.emergencyco_name ?? null,
+            emergencyco_num: payload.emergencyco_num ?? null,
+            emergencyco_relation: payload.emergencyco_relation ?? null,
+            email: payload.email?.trim() || null,     // ✅ now stored here
+            contactno: payload.phone?.trim() || null, // ✅ now stored here
         };
 
+        // Create profile based on role
         if (payload.role === "PATIENT" && payload.patientType === "student") {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.student_id,
+                    department: payload.department ?? null,
+                    program: payload.program ?? null,
+                    year_level: payload.year_level ?? null,
                     ...sharedProfileData,
                 },
             });
@@ -107,22 +122,17 @@ export async function POST(req: Request) {
                 data: {
                     user_id: newUser.user_id,
                     student_id: payload.school_id,
+                    department: payload.department ?? null,
+                    program: payload.program ?? null,
+                    year_level: payload.year_level ?? null,
                     ...sharedProfileData,
                 },
             });
         }
 
+        // Return generated credentials
         return NextResponse.json({
-            id:
-                payload.role === "PATIENT" && payload.patientType === "student"
-                    ? payload.student_id
-                    : (payload.role === "PATIENT" && payload.patientType === "employee") ||
-                        payload.role === "NURSE" ||
-                        payload.role === "DOCTOR"
-                        ? payload.employee_id
-                        : payload.role === "SCHOLAR"
-                            ? payload.school_id
-                            : newUser.username,
+            id: username,
             password: plainPassword,
         });
     } catch (err) {
@@ -165,6 +175,8 @@ export async function GET() {
                 role: u.role,
                 status: u.status,
                 fullName,
+                email: u.student?.email ?? u.employee?.email ?? null, // ✅ pulled from sub-tables
+                contactno: u.student?.contactno ?? u.employee?.contactno ?? null, // ✅ same here
                 bloodtype: bloodTypeDisplay,
             };
         });
@@ -184,20 +196,18 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Only NURSE or ADMIN can update accounts
         if (session.user.role !== "NURSE" && session.user.role !== "ADMIN") {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         const { user_id, newStatus, profile } = await req.json();
 
-        // Prevent self-deactivation
         if (newStatus && session.user.id === user_id) {
             return NextResponse.json({ error: "You cannot deactivate your own account." }, { status: 400 });
         }
 
         if (newStatus) {
-            if (newStatus !== "Active" && newStatus !== "Inactive") {
+            if (!["Active", "Inactive"].includes(newStatus)) {
                 return NextResponse.json({ error: "Invalid status" }, { status: 400 });
             }
 
@@ -238,7 +248,7 @@ export async function PUT(req: Request) {
             };
 
             const allowedFields = [
-                "fname", "mname", "lname", "contactno", "address",
+                "fname", "mname", "lname", "contactno", "email", "address",
                 "bloodtype", "allergies", "medical_cond",
                 "emergencyco_name", "emergencyco_num", "emergencyco_relation",
                 "date_of_birth", "gender",
