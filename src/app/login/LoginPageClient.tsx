@@ -27,6 +27,7 @@ export default function LoginPageClient() {
     const [tokenSent, setTokenSent] = useState(false);
     const [contact, setContact] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [code, setCode] = useState("");
     const router = useRouter();
 
     // ---------- LOGIN ----------
@@ -117,7 +118,11 @@ export default function LoginPageClient() {
             const res = await fetch("/api/auth/reset-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contact: contact.trim(), newPassword }),
+                body: JSON.stringify({
+                    contact: contact.trim(),
+                    code: code.trim(), // ✅ include the verification code
+                    newPassword,
+                }),
             });
             const data = await res.json();
             if (res.ok) {
@@ -126,15 +131,17 @@ export default function LoginPageClient() {
                 setTokenSent(false);
                 setContact("");
                 setNewPassword("");
+                setCode("");
             } else {
                 toast.error(data.error || "Reset failed");
             }
-        } catch (_error) {
+        } catch {
             toast.error("Network error. Try again.");
         } finally {
             setResetting(false);
         }
     }
+
 
     // ---------- FORM RENDER ----------
     const renderForm = (role: string, label: string, fieldName: string, placeholder: string) => (
@@ -267,6 +274,12 @@ export default function LoginPageClient() {
                         </form>
                     ) : (
                         <form onSubmit={handleReset} className="space-y-4 mt-2">
+                            <Input
+                                placeholder="Enter 6-digit code"
+                                value={code}
+                                onChange={(e) => setCode(e.target.value)}
+                                required
+                            />
                             <Input
                                 type="password"
                                 placeholder="New Password"
