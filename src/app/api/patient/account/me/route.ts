@@ -119,6 +119,7 @@ function buildStudentUpdateInput(
     if (typeof raw.fname === "string") data.fname = raw.fname;
     if (typeof raw.mname === "string") data.mname = raw.mname;
     if (typeof raw.lname === "string") data.lname = raw.lname;
+    if (typeof raw.email === "string") data.email = raw.email;
     if (isGender(raw.gender)) data.gender = raw.gender;
     const dob = toDate(raw.date_of_birth);
     if (dob) data.date_of_birth = dob;
@@ -154,6 +155,7 @@ function buildEmployeeUpdateInput(
     if (typeof raw.fname === "string") data.fname = raw.fname;
     if (typeof raw.mname === "string") data.mname = raw.mname;
     if (typeof raw.lname === "string") data.lname = raw.lname;
+    if (typeof raw.email === "string") data.email = raw.email;
     if (isGender(raw.gender)) data.gender = raw.gender;
 
     const dob = toDate(raw.date_of_birth);
