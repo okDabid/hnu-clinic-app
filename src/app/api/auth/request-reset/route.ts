@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import crypto from "crypto";
+import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
     try {
@@ -16,10 +16,17 @@ export async function POST(req: Request) {
             );
         }
 
-        // Find user by email or phone
+        // 🔍 Find user via nested relations
         const user = await prisma.users.findFirst({
             where: {
-                OR: [{ email: contact }, { phone: contact }],
+                OR: [
+                    { student: { OR: [{ email: contact }, { contactno: contact }] } },
+                    { employee: { OR: [{ email: contact }, { contactno: contact }] } },
+                ],
+            },
+            include: {
+                student: true,
+                employee: true,
             },
         });
 
@@ -30,28 +37,28 @@ export async function POST(req: Request) {
             );
         }
 
-        // 6-digit OTP (store in token field)
+        // 🎟️ Generate OTP (6 digits)
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-        // Optionally clear old tokens for this contact first
+        // 💾 Clear previous tokens for this user/contact
         await prisma.passwordResetToken.deleteMany({
             where: { userId: user.user_id, contact },
         });
 
+        // 💾 Save OTP to DB
         await prisma.passwordResetToken.create({
             data: {
                 userId: user.user_id,
-                token: code, // <-- store the OTP here
+                token: code,
                 contact,
                 type: contact.includes("@") ? "EMAIL" : "PHONE",
                 expiresAt,
             },
         });
 
+        // ✉️ If contact is email → send via Gmail
         if (contact.includes("@")) {
-            // Email via Nodemailer
-            const nodemailer = await import("nodemailer");
             const transporter = nodemailer.createTransport({
                 service: "gmail",
                 auth: {
@@ -64,17 +71,18 @@ export async function POST(req: Request) {
                 from: `"HNU Clinic" <${process.env.EMAIL_USER}>`,
                 to: contact,
                 subject: "Password Reset Code",
-                text: `Your password reset code is: ${code}\nThis code will expire in 10 minutes.`,
+                text: `Your password reset code is: ${code}\nIt will expire in 10 minutes.`,
             });
-        } else {
-            // SMS via Semaphore
+        }
+        // 📱 If contact is phone → send via Semaphore
+        else {
             const resp = await fetch("https://api.semaphore.co/api/v4/messages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     apikey: process.env.SEMAPHORE_API_KEY,
                     number: contact,
-                    message: `Your HNU Clinic password reset code: ${code} (valid 10 mins)`,
+                    message: `Your HNU Clinic password reset code: ${code} (valid for 10 mins)`,
                     sendername: "HNClinic",
                 }),
             });

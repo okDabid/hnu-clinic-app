@@ -127,8 +127,6 @@ model Users {
   password  String
   role      Role
   status    AccountStatus @default(Active)
-  email     String?       @unique
-  phone     String?       @unique
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
@@ -160,7 +158,8 @@ model Student {
   department           Department?
   program              String?
   year_level           YearLevel?
-  contactno            String?
+  email                String?       @unique
+  contactno            String?       @unique
   address              String?
   bloodtype            BloodType?
   allergies            String?
@@ -182,7 +181,8 @@ model Employee {
   lname                String
   date_of_birth        DateTime
   gender               Gender
-  contactno            String?
+  email                String?       @unique
+  contactno            String?       @unique
   address              String?
   bloodtype            BloodType?
   allergies            String?
