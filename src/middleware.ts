@@ -4,51 +4,77 @@ import { getToken } from "next-auth/jwt";
 import { AccountStatus } from "@prisma/client";
 
 export async function middleware(req: NextRequest) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     const { pathname } = req.nextUrl;
 
-    // ✅ If no token and trying to access protected route → redirect to login
-    if (!token && !pathname.startsWith("/login") && !pathname.startsWith("/api")) {
+    // ⛔️ Allow all public and auth routes without token
+    const publicPaths = [
+        "/login",
+        "/forgot-password",
+        "/reset-password",
+        "/verify-reset",
+        "/api/auth",
+    ];
+
+    if (publicPaths.some((path) => pathname.startsWith(path))) {
+        return NextResponse.next();
+    }
+
+    // ✅ Extract session token
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+    // ⛔️ No token → redirect to login page
+    if (!token) {
+        // For API routes, return 401 JSON instead of redirect
+        if (pathname.startsWith("/api")) {
+            return NextResponse.json(
+                { error: "Unauthorized: no session token" },
+                { status: 401 }
+            );
+        }
         return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // ✅ If user IS logged in
-    if (token) {
-        const role = token.role as string;
-        const status = token.status as AccountStatus | undefined;
+    // ✅ If token exists
+    const role = token.role as string | undefined;
+    const status = token.status as AccountStatus | undefined;
 
-        // Block inactive accounts
-        if (status === "Inactive") {
-            return NextResponse.redirect(new URL("/login?error=inactive", req.url));
+    // 🚫 Block inactive users
+    if (status === "Inactive") {
+        if (pathname.startsWith("/api")) {
+            return NextResponse.json(
+                { error: "Account inactive. Contact admin." },
+                { status: 403 }
+            );
         }
+        return NextResponse.redirect(new URL("/login?error=inactive", req.url));
+    }
 
-        // Role-based guards
-        if (pathname.startsWith("/nurse") && role !== "NURSE") {
-            return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
-        }
+    // 🔐 Role-based route guards
+    const roleGuardMap: Record<string, string> = {
+        "/nurse": "NURSE",
+        "/doctor": "DOCTOR",
+        "/scholar": "SCHOLAR",
+        "/patient": "PATIENT",
+        "/admin": "ADMIN",
+    };
 
-        if (pathname.startsWith("/doctor") && role !== "DOCTOR") {
-            return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
-        }
-
-        if (pathname.startsWith("/scholar") && role !== "SCHOLAR") {
-            return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
-        }
-
-        if (pathname.startsWith("/patient") && role !== "PATIENT") {
-            return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
-        }
-
-        if (pathname.startsWith("/admin") && role !== "ADMIN") {
+    for (const prefix in roleGuardMap) {
+        if (pathname.startsWith(prefix) && role !== roleGuardMap[prefix]) {
+            if (pathname.startsWith("/api")) {
+                return NextResponse.json(
+                    { error: "Unauthorized: insufficient role" },
+                    { status: 403 }
+                );
+            }
             return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
         }
     }
 
-    // ✅ Allow request
+    // ✅ Allow if all checks pass
     return NextResponse.next();
 }
 
-// ✅ Apply middleware only to protected routes
+// ✅ Apply only to protected routes
 export const config = {
     matcher: [
         "/nurse/:path*",
@@ -56,5 +82,6 @@ export const config = {
         "/scholar/:path*",
         "/patient/:path*",
         "/admin/:path*",
+        "/api/:path*", // secure API routes too
     ],
 };

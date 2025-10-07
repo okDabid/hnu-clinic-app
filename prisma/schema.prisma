@@ -127,6 +127,8 @@ model Users {
   password  String
   role      Role
   status    AccountStatus @default(Active)
+  email     String?       @unique
+  phone     String?       @unique
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
