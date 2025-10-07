@@ -82,12 +82,15 @@ export async function POST(req: Request) {
         // ✉️ If contact is email → send via Gmail
         if (contact.includes("@")) {
             const transporter = nodemailer.createTransport({
-                service: "gmail",
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS,
                 },
             });
+
 
             const htmlContent = `
                 <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
