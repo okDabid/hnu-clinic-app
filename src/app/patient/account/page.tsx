@@ -102,6 +102,7 @@ type Profile = {
     mname?: string | null;
     lname: string;
     date_of_birth?: string;
+    email?: string;
     contactno?: string | null;
     address?: string | null;
     bloodtype?: string | null;
@@ -353,7 +354,16 @@ export default function PatientAccountPage() {
             <main className="flex-1 flex flex-col">
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">
-                        {profileType === "employee" ? "Employee Profile" : "Student Profile"}
+                        {profileLoading || !profileType ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+                                <span>Loading Profile</span>
+                            </div>
+                        ) : profileType === "employee" ? (
+                            "Employee Profile"
+                        ) : (
+                            "Student Profile"
+                        )}
                     </h2>
                     {/* Mobile Menu */}
                     <div className="md:hidden">
@@ -670,9 +680,34 @@ export default function PatientAccountPage() {
 
                                     {/* Contact Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label className="block mb-1 font-medium">Contact No.</Label><Input value={profile.contactno || ""} onChange={(e) => setProfile({ ...profile, contactno: e.target.value })} /></div>
-                                        <div><Label className="block mb-1 font-medium">Address</Label><Input value={profile.address || ""} onChange={(e) => setProfile({ ...profile, address: e.target.value })} /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Email</Label>
+                                            <Input
+                                                type="email"
+                                                placeholder="example@hnu.edu.ph"
+                                                value={profile.email || ""}
+                                                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Contact No.</Label>
+                                            <Input
+                                                type="tel"
+                                                placeholder="09XXXXXXXXX"
+                                                value={profile.contactno || ""}
+                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
+
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Address</Label>
+                                        <Input
+                                            value={profile.address || ""}
+                                            onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                                        />
+                                    </div>
+
 
                                     {/* Medical Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
