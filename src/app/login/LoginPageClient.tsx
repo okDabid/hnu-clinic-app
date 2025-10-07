@@ -36,36 +36,55 @@ export default function LoginPageClient() {
 
         const payload: Record<string, string> = {
             role: role.toUpperCase(),
-            password: formData.get("password") as string,
+            password: String(formData.get("password") ?? ""),
         };
 
-        if (role === "doctor" || role === "nurse") payload.id = formData.get("employee_id") as string;
-        else if (role === "scholar") payload.id = formData.get("school_id") as string;
-        else if (role === "patient") payload.id = formData.get("patient_id") as string;
+        if (role === "doctor" || role === "nurse") payload.id = String(formData.get("employee_id") ?? "");
+        else if (role === "scholar") payload.id = String(formData.get("school_id") ?? "");
+        else if (role === "patient") payload.id = String(formData.get("patient_id") ?? "");
 
         try {
             setLoadingRole(role);
+
             const result = await signIn("credentials", { redirect: false, ...payload });
+
             if (result?.error) {
-                toast.error(
-                    result.error.includes("inactive")
-                        ? "Your account is inactive. Please contact the administrator."
-                        : result.error,
-                    { position: "top-center" }
-                );
-            } else {
-                toast.success("Successful login!", { position: "top-center" });
-                if (payload.role === "NURSE") router.push("/nurse");
-                else if (payload.role === "DOCTOR") router.push("/doctor");
-                else if (payload.role === "SCHOLAR") router.push("/scholar");
-                else if (payload.role === "PATIENT") router.push("/patient");
+                const message = result.error.includes("inactive")
+                    ? "Your account is inactive. Please contact the administrator."
+                    : result.error;
+
+                toast.error(message, { position: "top-center" });
+                return;
             }
-        } catch (err: any) {
-            toast.error(err?.message || "Something went wrong", { position: "top-center" });
+
+            toast.success("Successful login!", { position: "top-center" });
+
+            // 🚀 Redirect by role
+            switch (payload.role) {
+                case "NURSE":
+                    router.push("/nurse");
+                    break;
+                case "DOCTOR":
+                    router.push("/doctor");
+                    break;
+                case "SCHOLAR":
+                    router.push("/scholar");
+                    break;
+                case "PATIENT":
+                    router.push("/patient");
+                    break;
+                default:
+                    router.push("/login");
+            }
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : "Unexpected error occurred.";
+            toast.error(message, { position: "top-center" });
         } finally {
             setLoadingRole(null);
         }
     }
+
 
     // ---------- FORGOT PASSWORD ----------
     async function handleSendCode(e: React.FormEvent) {
@@ -75,18 +94,18 @@ export default function LoginPageClient() {
             const res = await fetch("/api/auth/request-reset", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contact: contact.trim() }), // email or phone
+                body: JSON.stringify({ contact: contact.trim() }),
             });
             const data = await res.json();
-            setVerifying(false);
             if (res.ok) {
                 toast.success("Verification code sent via Email/SMS!");
                 setTokenSent(true);
             } else {
                 toast.error(data.error || "Account not found");
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error("Network error. Try again.");
+        } finally {
             setVerifying(false);
         }
     }
@@ -101,7 +120,6 @@ export default function LoginPageClient() {
                 body: JSON.stringify({ contact: contact.trim(), newPassword }),
             });
             const data = await res.json();
-            setResetting(false);
             if (res.ok) {
                 toast.success("Password reset successful!");
                 setForgotOpen(false);
@@ -111,8 +129,9 @@ export default function LoginPageClient() {
             } else {
                 toast.error(data.error || "Reset failed");
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error("Network error. Try again.");
+        } finally {
             setResetting(false);
         }
     }
