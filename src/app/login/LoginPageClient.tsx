@@ -13,6 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
@@ -248,6 +249,11 @@ export default function LoginPageClient() {
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="text-green-700">Reset Password</DialogTitle>
+                        <DialogDescription className="text-gray-600">
+                            {tokenSent
+                                ? "Enter the 6-digit code sent to your contact and set your new password."
+                                : "Enter your registered email or phone number to receive a reset code."}
+                        </DialogDescription>
                     </DialogHeader>
 
                     {!tokenSent ? (
@@ -304,6 +310,7 @@ export default function LoginPageClient() {
                     )}
                 </DialogContent>
             </Dialog>
+
         </div>
     );
 }
