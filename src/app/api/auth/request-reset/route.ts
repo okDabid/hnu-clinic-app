@@ -122,7 +122,7 @@ export async function POST(req: Request) {
                                 If you didn’t request this, please ignore this email.
                             </p>
 
-                            <a href="https://your-hnu-app-url.com/login" 
+                            <a href="https://hnu-clinic-app.vercel.app/login" 
                             style="display: inline-block; background-color: #16a34a; color: #ffffff; 
                                     text-decoration: none; padding: 10px 20px; border-radius: 6px; 
                                     margin-top: 16px; font-weight: 500;">
