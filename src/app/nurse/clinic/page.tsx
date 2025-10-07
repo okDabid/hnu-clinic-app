@@ -207,54 +207,57 @@ export default function NurseClinicPage() {
                 {/* Clinics Section */}
                 <section className="px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
-                        <CardHeader className="border-b flex flex-col sm:flex-row sm:justify-between gap-3">
-                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
-                                Clinics
-                            </CardTitle>
-                            <Dialog>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-green-600 hover:bg-green-700 text-white">
-                                        + Add Clinic
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Add Clinic</DialogTitle>
-                                        <DialogDescription>Fill in the clinic details.</DialogDescription>
-                                    </DialogHeader>
-                                    <form onSubmit={handleAddClinic} className="space-y-4">
-                                        <div>
-                                            <Label className="block mb-1">Clinic Name</Label>
-                                            <Input name="clinic_name" required />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1">Location</Label>
-                                            <Input name="clinic_location" required />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1">Contact No</Label>
-                                            <Input name="clinic_contactno" required />
-                                        </div>
-                                        <DialogFooter>
-                                            <Button
-                                                type="submit"
-                                                disabled={loading}
-                                                className="bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
-                                            >
-                                                {loading ? (
-                                                    <>
-                                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                                        Saving...
-                                                    </>
-                                                ) : (
-                                                    "Save"
-                                                )}
-                                            </Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
+                        <CardHeader className="border-b">
+                            <div className="flex justify-between items-center flex-wrap gap-3">
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                    Clinics
+                                </CardTitle>
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                            + Add Clinic
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add Clinic</DialogTitle>
+                                            <DialogDescription>Fill in the clinic details.</DialogDescription>
+                                        </DialogHeader>
+                                        <form onSubmit={handleAddClinic} className="space-y-4">
+                                            <div>
+                                                <Label className="block mb-1">Clinic Name</Label>
+                                                <Input name="clinic_name" required />
+                                            </div>
+                                            <div>
+                                                <Label className="block mb-1">Location</Label>
+                                                <Input name="clinic_location" required />
+                                            </div>
+                                            <div>
+                                                <Label className="block mb-1">Contact No</Label>
+                                                <Input name="clinic_contactno" required />
+                                            </div>
+                                            <DialogFooter>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={loading}
+                                                    className="bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                                                >
+                                                    {loading ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            Saving...
+                                                        </>
+                                                    ) : (
+                                                        "Save"
+                                                    )}
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                         </CardHeader>
+
 
                         <CardContent className="overflow-x-auto">
                             <table className="w-full border-collapse border border-gray-200 text-sm sm:text-base">

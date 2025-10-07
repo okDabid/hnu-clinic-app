@@ -193,7 +193,7 @@ model Employee {
 }
 
 model MedInventory {
-  med_id    String      @id @default(cuid())
+  med_id    String      @id @default(dbgenerated("concat('MEDINV_', floor(random() * 1000000)::int)"))
   clinic_id String
   quantity  Int
   item_name String
@@ -210,7 +210,7 @@ model MedInventory {
 }
 
 model Replenishment {
-  replenishment_id String   @id @default(cuid())
+  replenishment_id String   @id @default(dbgenerated("concat('REP_', floor(random() * 1000000)::int)"))
   med_id           String
   quantity_added   Int
   remaining_qty    Int      @default(0)
@@ -224,7 +224,7 @@ model Replenishment {
 }
 
 model DoctorAvailability {
-  availability_id     String   @id @default(cuid())
+  availability_id     String   @id @default(dbgenerated("concat('AVAIL_', floor(random() * 1000000)::int)"))
   doctor_user_id      String
   clinic_id           String
   available_date      DateTime
@@ -239,7 +239,7 @@ model DoctorAvailability {
 }
 
 model Appointment {
-  appointment_id        String            @id @default(cuid())
+  appointment_id        String            @id @default(dbgenerated("concat('APT_', floor(random() * 1000000)::int)"))
   patient_user_id       String
   clinic_id             String
   doctor_user_id        String
@@ -264,8 +264,8 @@ model Appointment {
 }
 
 model Consultation {
-  consultation_id String   @id @default(cuid())
-  appointment_id  String   @unique
+  consultation_id String   @id @default(dbgenerated("concat('CON_', floor(random() * 1000000)::int)"))
+  appointment_id  String?  @unique
   doctor_user_id  String?
   nurse_user_id   String?
   reason_of_visit String?
@@ -274,7 +274,7 @@ model Consultation {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  appointment Appointment   @relation(fields: [appointment_id], references: [appointment_id], onDelete: Cascade)
+  appointment Appointment?  @relation(fields: [appointment_id], references: [appointment_id], onDelete: Cascade)
   doctor      Users?        @relation("ConsultationDoctor", fields: [doctor_user_id], references: [user_id], onDelete: SetNull)
   nurse       Users?        @relation("ConsultationNurse", fields: [nurse_user_id], references: [user_id], onDelete: SetNull)
   dispenses   MedDispense[]
@@ -282,7 +282,7 @@ model Consultation {
 }
 
 model MedDispense {
-  dispense_id     String @id @default(cuid())
+  dispense_id     String @id @default(dbgenerated("concat('DESP_', floor(random() * 1000000)::int)"))
   med_id          String
   consultation_id String
   quantity        Int
@@ -295,7 +295,7 @@ model MedDispense {
 }
 
 model DispenseBatch {
-  id               String @id @default(cuid())
+  id               String @id @default(dbgenerated("concat('DESBATCH_', floor(random() * 1000000)::int)"))
   dispense_id      String
   replenishment_id String
   quantity_used    Int
@@ -305,7 +305,7 @@ model DispenseBatch {
 }
 
 model MedCert {
-  certificate_id    String        @id @default(cuid())
+  certificate_id    String        @id @default(dbgenerated("concat('MEDCERT_', floor(random() * 1000000)::int)"))
   consultation_id   String
   patient_user_id   String
   issued_by_user_id String?
