@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
 
-// Extend next-auth types
+// --- Extend next-auth types ---
 declare module "next-auth" {
     interface User {
         status?: AccountStatus;
@@ -23,7 +23,7 @@ declare module "next-auth" {
     }
 }
 
-// Custom app types
+// --- Custom app types ---
 interface AppUser {
     id: string;
     name?: string | null;
@@ -35,7 +35,7 @@ interface AppJWT extends JWT {
     id?: string;
     role?: Role;
     status?: AccountStatus;
-    lastChecked?: number; // ⏳ used to throttle DB refresh
+    lastChecked?: number;
 }
 
 interface AppSession extends Session {
@@ -47,9 +47,11 @@ interface AppSession extends Session {
     };
 }
 
+// --- Auth configuration ---
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
+            id: "credentials", // ✅ Explicitly set ID (important for /callback/credentials)
             name: "Credentials",
             credentials: {
                 id: { label: "ID", type: "text" },
@@ -66,9 +68,10 @@ export const authOptions: NextAuthOptions = {
                 if (!Object.values(Role).includes(roleStr as Role)) {
                     throw new Error("Invalid role provided.");
                 }
+
                 const role = roleStr as Role;
 
-                // ⚡ Only select fields you need
+                // 🔍 Find the user in the DB
                 const user = await prisma.users.findFirst({
                     where: {
                         role,
@@ -88,15 +91,11 @@ export const authOptions: NextAuthOptions = {
                     },
                 });
 
-
                 if (!user) throw new Error("No account found with these credentials.");
-
-                // 🔐 Block inactive accounts
                 if (user.status === AccountStatus.Inactive) {
                     throw new Error("This account is inactive. Please contact the administrator.");
                 }
 
-                // ⚡ bcrypt compare
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) throw new Error("Invalid password.");
 
@@ -114,10 +113,11 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
 
+    // --- Sessions ---
     session: { strategy: "jwt" },
 
+    // --- JWT + Session callbacks ---
     callbacks: {
-        // Store extra fields in JWT
         async jwt({ token, user }): Promise<AppJWT> {
             if (user) {
                 const u = user as AppUser;
@@ -125,25 +125,24 @@ export const authOptions: NextAuthOptions = {
                 token.role = u.role;
                 token.name = u.name ?? token.name;
                 token.status = u.status;
-                token.lastChecked = Date.now(); // ✅ initialize timestamp
+                token.lastChecked = Date.now();
             } else if (token.id) {
                 const now = Date.now();
-                const lastChecked = (token as AppJWT).lastChecked ?? 0; // ✅ safe default
+                const lastChecked = (token as AppJWT).lastChecked ?? 0;
 
-                // Refresh DB status only every 5 minutes
+                // Refresh every 5 minutes
                 if (now - lastChecked > 5 * 60 * 1000) {
                     const dbUser = await prisma.users.findUnique({
                         where: { user_id: token.id },
                         select: { status: true },
                     });
                     token.status = dbUser?.status ?? AccountStatus.Inactive;
-                    (token as AppJWT).lastChecked = now; // ✅ always set
+                    (token as AppJWT).lastChecked = now;
                 }
             }
             return token as AppJWT;
         },
 
-        // Expose fields in session
         async session({ session, token }): Promise<AppSession> {
             const t = token as AppJWT;
             if (session.user) {
@@ -156,8 +155,12 @@ export const authOptions: NextAuthOptions = {
         },
     },
 
+    // --- Pages ---
     pages: {
         signIn: "/login",
         error: "/login",
     },
+
+    // --- Secret (required in production) ---
+    secret: process.env.NEXTAUTH_SECRET,
 };
