@@ -6,11 +6,12 @@ import { prisma } from "@/lib/prisma";
  */
 export async function withDb<T>(op: () => Promise<T>): Promise<T> {
     try {
-        await prisma.$connect();            // ensure a live socket on cold start
+        await prisma.$connect();          // ensure a live socket on cold start
         return await op();
-    } catch (e: any) {
-        const msg = String(e?.message || "");
-        const code = e?.code;
+    } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error(String(e));
+        const msg = err.message ?? "";
+        const code = (err as { code?: string }).code;
 
         const isConnDrop =
             msg.includes("Server has closed the connection") ||
@@ -19,9 +20,9 @@ export async function withDb<T>(op: () => Promise<T>): Promise<T> {
 
         if (isConnDrop) {
             try { await prisma.$disconnect(); } catch { }
-            await prisma.$connect();          // re-open socket
-            return await op();                // retry once
+            await prisma.$connect();        // re-open socket
+            return await op();              // retry once
         }
-        throw e;
+        throw err;
     }
 }
