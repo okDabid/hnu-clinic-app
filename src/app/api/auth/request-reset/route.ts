@@ -4,10 +4,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import nodemailer from "nodemailer";
 
-/**
- * Password Reset Request Handler
- * Sends a password reset code via Email or SMS using Semaphore API
- */
 export async function POST(req: Request) {
     try {
         const { contact } = await req.json();
@@ -49,9 +45,9 @@ export async function POST(req: Request) {
 
         // 🎟️ Generate OTP and expiry
         const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-        // 💾 Save the token
+        // 💾 Save token
         await prisma.passwordResetToken.deleteMany({
             where: { userId: user.user_id, contact },
         });
@@ -114,7 +110,7 @@ export async function POST(req: Request) {
             });
         }
 
-        // 📱 SMS HANDLER (Semaphore)
+        // 📱 SMS HANDLER (Semaphore v4/messages)
         else {
             if (!process.env.SEMAPHORE_API_KEY) {
                 return NextResponse.json(
@@ -123,20 +119,32 @@ export async function POST(req: Request) {
                 );
             }
 
-            // ✅ Convert 09... to +639... format
-            let smsNumber = contact;
-            if (/^09\d{9}$/.test(contact)) {
-                smsNumber = "+63" + contact.slice(1);
+            // ✅ Normalize number to +63XXXXXXXXXX format
+            let smsNumber = contact.trim();
+            if (/^09\d{9}$/.test(smsNumber)) {
+                smsNumber = "+63" + smsNumber.slice(1);
+            } else if (/^63\d{10}$/.test(smsNumber)) {
+                smsNumber = "+" + smsNumber;
             }
 
+            if (!smsNumber.startsWith("+63")) {
+                return NextResponse.json(
+                    { error: "Invalid Philippine number format." },
+                    { status: 400 }
+                );
+            }
+
+            console.log("📞 Sending SMS to:", smsNumber);
+
+            // ✅ Standard Semaphore Messages Endpoint
             const params = new URLSearchParams({
                 apikey: process.env.SEMAPHORE_API_KEY,
                 number: smsNumber,
                 message: `Your HNU Clinic password reset code is ${code}. Valid for 10 minutes.`,
-                sendername: "SEMAPHORE", // ✅ Use default until your own sender is approved
+                sendername: "SEMAPHORE", // must be ALL CAPS
             });
 
-            const resp = await fetch("https://semaphore.co/api/v4/messages", {
+            const resp = await fetch("https://api.semaphore.co/api/v4/messages", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: params.toString(),
@@ -145,11 +153,25 @@ export async function POST(req: Request) {
             const resultText = await resp.text();
             console.log("📩 Semaphore API response:", resultText);
 
-            if (!resp.ok) {
+            if (!resp.ok || resultText.includes('"status":"Failed"')) {
+                console.error("❌ SMS send failed:", resultText);
                 return NextResponse.json(
                     { error: "Failed to send SMS.", details: resultText },
-                    { status: 500 }
+                    { status: 502 }
                 );
+            }
+
+            try {
+                const parsed = JSON.parse(resultText);
+                if (Array.isArray(parsed)) {
+                    const sms = parsed[0];
+                    console.log("✅ SMS sent successfully:", sms.message);
+                    if (sms.status !== "Sent") {
+                        console.warn("⚠️ Message still pending (network routing not yet active).");
+                    }
+                }
+            } catch {
+                console.warn("⚠️ Unable to parse Semaphore response.");
             }
         }
 
