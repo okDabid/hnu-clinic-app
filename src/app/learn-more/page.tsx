@@ -206,7 +206,7 @@ export default function LearnMorePage() {
             </section>
 
             {/* Footer */}
-            <footer className="bg-green-50 py-6 text-center text-gray-600 text-sm md:text-base border-t">
+            <footer className="bg-white py-6 text-center text-gray-600 text-sm md:text-base border-t">
                 © {new Date().getFullYear()} HNU Clinic Capstone Project
             </footer>
         </div>
