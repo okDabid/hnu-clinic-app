@@ -70,7 +70,14 @@ export const authOptions: NextAuthOptions = {
 
                 // ⚡ Only select fields you need
                 const user = await prisma.users.findFirst({
-                    where: { username: id, role },
+                    where: {
+                        role,
+                        OR: [
+                            { username: id },
+                            { student: { is: { student_id: id } } },
+                            { employee: { is: { employee_id: id } } },
+                        ],
+                    },
                     select: {
                         user_id: true,
                         password: true,
@@ -80,6 +87,7 @@ export const authOptions: NextAuthOptions = {
                         employee: { select: { fname: true, lname: true } },
                     },
                 });
+
 
                 if (!user) throw new Error("No account found with these credentials.");
 
