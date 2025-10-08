@@ -104,30 +104,34 @@ export async function POST(req: Request) {
             const htmlContent = `
                 <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
                     <div style="max-width: 480px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    
+
                     <!-- Header -->
-                    <div style="background-color: #16a34a; padding: 24px; text-align: center;">
-                        <div style="width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-                        <img 
-                            src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
-                            alt="HNU Clinic Logo" 
-                            width="50" 
-                            height="50"
-                            style="display:block;"
-                        />
-                        </div>
-                        <h1 style="color:#ffffff;font-size:22px;margin:0;">HNU Clinic</h1>
-                        <p style="color:#d1fae5;margin:4px 0 0;">Password Reset Code</p>
+                    <div style="background-color: #16a34a; padding: 40px 20px 32px; text-align: center; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                        <table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto 16px;">
+                        <tr>
+                            <td align="center" valign="middle" width="80" height="80" style="background: #ffffff; border-radius: 50%;">
+                            <img 
+                                src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
+                                alt="HNU Clinic Logo"
+                                width="44" 
+                                height="44"
+                                style="display:block; margin:auto;"
+                            />
+                            </td>
+                        </tr>
+                        </table>
+                        <h1 style="color:#ffffff;font-size:22px;margin:0;font-weight:700;">HNU Clinic</h1>
+                        <p style="color:#d1fae5;margin:6px 0 0;font-size:15px;">Password Reset Code</p>
                     </div>
 
                     <!-- Body -->
-                    <div style="padding:24px;text-align:center;color:#1f2937;">
+                    <div style="padding:28px;text-align:center;color:#1f2937;">
                         <p>Hello, ${fullName},</p>
                         <p>You requested to reset your password. Use this code:</p>
 
                         <div style="background-color:#f0fdf4; border:1px dashed #16a34a; padding:12px 20px; border-radius:8px; margin:20px auto; width:fit-content;">
                         <code style="font-size:26px; font-weight:bold; color:#15803d; letter-spacing:3px;">
-                            ${code}
+                            ${code.split("").join(" ")}
                         </code>
                         </div>
 
