@@ -251,7 +251,7 @@ export default function LoginPageClient() {
                         <DialogTitle className="text-green-700">Reset Password</DialogTitle>
                         <DialogDescription className="text-gray-600">
                             {tokenSent
-                                ? "Enter the 6-digit code sent to your contact and set your new password."
+                                ? "Enter the 6 digit code sent to your contact and set your new password."
                                 : "Enter your registered email or phone number to receive a reset code."}
                         </DialogDescription>
                     </DialogHeader>
