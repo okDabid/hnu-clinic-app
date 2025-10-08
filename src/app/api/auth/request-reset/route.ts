@@ -15,7 +15,7 @@ export async function POST(req: Request) {
             );
         }
 
-        // 🔍 Find the user by email or phone
+        // 🔍 Find user by email or phone
         const user = await prisma.users.findFirst({
             where: {
                 OR: [
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
             );
         }
 
-        // 👤 Determine display name
+        // 👤 Display name
         let fullName = user.username;
         if (user.student) fullName = `${user.student.fname} ${user.student.lname}`;
         if (user.employee) fullName = `${user.employee.fname} ${user.employee.lname}`;
@@ -64,20 +64,29 @@ export async function POST(req: Request) {
 
         // ✉️ EMAIL HANDLER
         if (contact.includes("@")) {
-            if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            const EMAIL_USER = process.env.EMAIL_USER;
+            const EMAIL_PASS = process.env.EMAIL_PASS;
+
+            if (!EMAIL_USER || !EMAIL_PASS) {
+                console.error("❌ Missing EMAIL_USER or EMAIL_PASS in environment");
                 return NextResponse.json(
                     { error: "Email service not configured." },
                     { status: 500 }
                 );
             }
 
+            // ✅ Use SMTP for Gmail (works better on Vercel)
             const transporter = nodemailer.createTransport({
-                service: "gmail",
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
                 auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS,
+                    user: EMAIL_USER,
+                    pass: EMAIL_PASS,
                 },
             });
+
+            await transporter.verify().then(() => console.log("✅ Email transporter ready")).catch(console.error);
 
             const htmlContent = `
         <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
@@ -93,7 +102,7 @@ export async function POST(req: Request) {
               <p>Hello, ${fullName},</p>
               <p>You requested to reset your password. Use this code:</p>
               <div style="background-color:#f0fdf4;border:1px dashed #16a34a;padding:12px;border-radius:8px;margin:20px auto;width:fit-content;">
-                <span style="font-size:26px;font-weight:bold;color:#15803d;">${code}</span>
+                <code style="font-size:26px;font-weight:bold;color:#15803d;letter-spacing:3px;background:#f0fdf4;padding:6px 10px;border-radius:8px;">${code.split('').join(' ')}</code>
               </div>
               <p>This code will expire in <strong>10 minutes</strong>.</p>
               <p>If you didn’t request this, please ignore this message.</p>
@@ -102,30 +111,38 @@ export async function POST(req: Request) {
         </div>
       `;
 
-            await transporter.sendMail({
-                from: `"HNU Clinic" <${process.env.EMAIL_USER}>`,
-                to: contact,
-                subject: "Password Reset Code",
-                html: htmlContent,
-            });
+            try {
+                const info = await transporter.sendMail({
+                    from: `"HNU Clinic" <${EMAIL_USER}>`,
+                    to: contact,
+                    subject: "Password Reset Code",
+                    html: htmlContent,
+                });
+
+                console.log("📧 Email sent:", info.messageId);
+            } catch (err) {
+                console.error("❌ Email send failed:", err);
+                return NextResponse.json(
+                    { error: "Failed to send email.", details: String(err) },
+                    { status: 502 }
+                );
+            }
         }
 
-        // 📱 SMS HANDLER (Semaphore v4/messages)
+        // 📱 SMS HANDLER (Semaphore)
         else {
-            if (!process.env.SEMAPHORE_API_KEY) {
+            const API_KEY = process.env.SEMAPHORE_API_KEY;
+            if (!API_KEY) {
+                console.error("❌ Missing SEMAPHORE_API_KEY");
                 return NextResponse.json(
                     { error: "SMS service not configured." },
                     { status: 500 }
                 );
             }
 
-            // ✅ Normalize number to +63XXXXXXXXXX format
             let smsNumber = contact.trim();
-            if (/^09\d{9}$/.test(smsNumber)) {
-                smsNumber = "+63" + smsNumber.slice(1);
-            } else if (/^63\d{10}$/.test(smsNumber)) {
-                smsNumber = "+" + smsNumber;
-            }
+            if (/^09\d{9}$/.test(smsNumber)) smsNumber = "+63" + smsNumber.slice(1);
+            else if (/^63\d{10}$/.test(smsNumber)) smsNumber = "+" + smsNumber;
 
             if (!smsNumber.startsWith("+63")) {
                 return NextResponse.json(
@@ -136,45 +153,39 @@ export async function POST(req: Request) {
 
             console.log("📞 Sending SMS to:", smsNumber);
 
-            // ✅ Standard Semaphore Messages Endpoint
             const params = new URLSearchParams({
-                apikey: process.env.SEMAPHORE_API_KEY,
+                apikey: API_KEY,
                 number: smsNumber,
                 message: `Your HNU Clinic password reset code is ${code}. Valid for 10 minutes.`,
-                sendername: "SEMAPHORE", // must be ALL CAPS
+                sendername: "HNUCLINIC",
             });
 
-            const resp = await fetch("https://api.semaphore.co/api/v4/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: params.toString(),
-            });
+            try {
+                const resp = await fetch("https://api.semaphore.co/api/v4/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: params.toString(),
+                });
 
-            const resultText = await resp.text();
-            console.log("📩 Semaphore API response:", resultText);
+                const resultText = await resp.text();
+                console.log("📩 Semaphore API response:", resultText);
 
-            if (!resp.ok || resultText.includes('"status":"Failed"')) {
-                console.error("❌ SMS send failed:", resultText);
+                if (!resp.ok || resultText.includes('"status":"Failed"')) {
+                    return NextResponse.json(
+                        { error: "Failed to send SMS.", details: resultText },
+                        { status: 502 }
+                    );
+                }
+            } catch (err) {
+                console.error("❌ SMS send failed:", err);
                 return NextResponse.json(
-                    { error: "Failed to send SMS.", details: resultText },
+                    { error: "Failed to send SMS.", details: String(err) },
                     { status: 502 }
                 );
             }
-
-            try {
-                const parsed = JSON.parse(resultText);
-                if (Array.isArray(parsed)) {
-                    const sms = parsed[0];
-                    console.log("✅ SMS sent successfully:", sms.message);
-                    if (sms.status !== "Sent") {
-                        console.warn("⚠️ Message still pending (network routing not yet active).");
-                    }
-                }
-            } catch {
-                console.warn("⚠️ Unable to parse Semaphore response.");
-            }
         }
 
+        // ✅ Success
         return NextResponse.json({
             success: true,
             message: "Reset code sent successfully.",
@@ -184,7 +195,8 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 error: "Internal server error.",
-                details: error instanceof Error ? error.message : JSON.stringify(error),
+                details:
+                    error instanceof Error ? error.message : JSON.stringify(error),
             },
             { status: 500 }
         );
