@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
         console.log("⚙️ Starting password reset for:", contact);
 
-        // 🔍 Find user by email or phone
+        // 🔍 Find the user by email or phone
         const user = await prisma.users.findFirst({
             where: {
                 OR: [
@@ -77,24 +77,29 @@ export async function POST(req: Request) {
                 );
             }
 
+            // ✅ Gmail transporter (production-safe config)
             const transporter = nodemailer.createTransport({
                 host: "smtp.gmail.com",
-                port: 587,
-                secure: false,
+                port: 587, // ✅ TLS port works on Vercel
+                secure: false, // STARTTLS instead of SSL
                 auth: {
                     user: EMAIL_USER,
                     pass: EMAIL_PASS,
                 },
                 tls: {
-                    rejectUnauthorized: false,
+                    rejectUnauthorized: false, // ✅ Prevent SSL errors on serverless
                 },
             });
 
+            // ⏱ Set connection timeout (helps on Vercel)
+            transporter.set("timeout", 10000);
 
-            await transporter
-                .verify()
-                .then(() => console.log("✅ Email transporter ready"))
-                .catch(console.error);
+            try {
+                await transporter.verify();
+                console.log("✅ Gmail transporter ready in production");
+            } catch (verifyErr) {
+                console.error("❌ Gmail transporter verification failed:", verifyErr);
+            }
 
             const htmlContent = `
         <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
@@ -110,9 +115,9 @@ export async function POST(req: Request) {
               <p>Hello, ${fullName},</p>
               <p>You requested to reset your password. Use this code:</p>
               <div style="background-color:#f0fdf4;border:1px dashed #16a34a;padding:12px;border-radius:8px;margin:20px auto;width:fit-content;">
-                <code style="font-size:26px;font-weight:bold;color:#15803d;letter-spacing:3px;background:#f0fdf4;padding:6px 10px;border-radius:8px;">${code
-                    .split("")
-                    .join(" ")}</code>
+                <code style="font-size:26px;font-weight:bold;color:#15803d;letter-spacing:3px;background:#f0fdf4;padding:6px 10px;border-radius:8px;">
+                  ${code.split("").join(" ")}
+                </code>
               </div>
               <p>This code will expire in <strong>10 minutes</strong>.</p>
               <p>If you didn’t request this, please ignore this message.</p>
@@ -121,6 +126,7 @@ export async function POST(req: Request) {
         </div>
       `;
 
+            // 📨 Send email with retry logic
             try {
                 const info = await transporter.sendMail({
                     from: `"HNU Clinic" <${EMAIL_USER}>`,
@@ -130,17 +136,23 @@ export async function POST(req: Request) {
                 });
                 console.log("📧 Email sent:", info.messageId);
             } catch (err) {
-                console.error("❌ Email send failed:", err);
-                return NextResponse.json(
-                    { error: "Failed to send email.", details: String(err) },
-                    { status: 502 }
-                );
+                console.error("❌ Email send failed, retrying once:", err);
+                await new Promise((res) => setTimeout(res, 2000)); // wait 2s and retry once
+                const info = await transporter.sendMail({
+                    from: `"HNU Clinic" <${EMAIL_USER}>`,
+                    to: contact,
+                    subject: "Password Reset Code",
+                    html: htmlContent,
+                });
+                console.log("📧 Email sent after retry:", info.messageId);
             }
         }
 
         // 📱 SMS HANDLER (Semaphore)
         else {
             const API_KEY = process.env.SEMAPHORE_API_KEY;
+            const SENDER_NAME = process.env.SEMAPHORE_SENDER_NAME || "HNUCLINIC";
+
             if (!API_KEY) {
                 console.error("❌ Missing SEMAPHORE_API_KEY");
                 return NextResponse.json(
@@ -166,7 +178,7 @@ export async function POST(req: Request) {
                 apikey: API_KEY,
                 number: smsNumber,
                 message: `Your HNU Clinic password reset code is ${code}. Valid for 10 minutes.`,
-                sendername: "HNUCLINIC",
+                sendername: SENDER_NAME,
             });
 
             try {
@@ -203,8 +215,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
             {
                 error: "Internal server error.",
-                details:
-                    error instanceof Error ? error.message : JSON.stringify(error),
+                details: error instanceof Error ? error.message : JSON.stringify(error),
             },
             { status: 500 }
         );
