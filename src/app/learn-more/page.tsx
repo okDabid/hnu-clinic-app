@@ -166,7 +166,7 @@ export default function LearnMorePage() {
                             {
                                 name: "David Matthew Maniwang",
                                 role: "Project Lead / Backend Developer",
-                                img: "/developer1.png",
+                                img: "/profile/pic1.png",
                             },
                             {
                                 name: "Dulce Maris Ongyot",
@@ -176,7 +176,7 @@ export default function LearnMorePage() {
                             {
                                 name: "Joanamarie Ayuban Burato",
                                 role: "Frontend Developer / UI Designer",
-                                img: "/developer3.png",
+                                img: "/profile/pic3.jpg",
                             },
                             {
                                 name: "Christian Dale Ombrosa",
