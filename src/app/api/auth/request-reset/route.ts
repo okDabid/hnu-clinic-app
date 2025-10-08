@@ -102,29 +102,33 @@ export async function POST(req: Request) {
             }
 
             const htmlContent = `
-        <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
-          <div style="max-width: 480px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <div style="background-color: #16a34a; padding: 24px; text-align: center;">
-              <img src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
-                   alt="HNU Clinic Logo" width="60" height="60"
-                   style="display:block;margin:0 auto 10px;border-radius:50%;background:white;padding:5px;" />
-              <h1 style="color:#ffffff;font-size:22px;margin:0;">HNU Clinic</h1>
-              <p style="color:#d1fae5;margin:4px 0 0;">Password Reset Code</p>
+            <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
+                <div style="max-width: 480px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="background-color: #16a34a; padding: 24px; text-align: center;">
+                    <div style="background-color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+                    <img src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
+                        alt="Clinic Shield Icon" width="36" height="36" />
+                    </div>
+                    <h1 style="color:#ffffff;font-size:22px;margin:0;">HNU Clinic</h1>
+                    <p style="color:#d1fae5;margin:4px 0 0;">Password Reset Code</p>
+                </div>
+
+                <div style="padding: 28px; text-align: center; color: #1f2937;">
+                    <p style="margin-top:0;">Hello, <strong>${fullName}</strong>,</p>
+                    <p>You requested to reset your password. Use this code:</p>
+
+                    <div style="background-color:#f0fdf4; border:1px dashed #16a34a; padding:14px 20px; border-radius:10px; display:inline-block; margin:20px 0;">
+                    <code style="font-size:28px; font-weight:bold; color:#15803d; letter-spacing:4px;">
+                        ${code}
+                    </code>
+                    </div>
+
+                    <p>This code will expire in <strong>10 minutes</strong>.</p>
+                    <p style="margin-bottom:0;">If you didn’t request this, please ignore this message.</p>
+                </div>
+                </div>
             </div>
-            <div style="padding:24px;text-align:center;">
-              <p>Hello, ${fullName},</p>
-              <p>You requested to reset your password. Use this code:</p>
-              <div style="background-color:#f0fdf4;border:1px dashed #16a34a;padding:12px;border-radius:8px;margin:20px auto;width:fit-content;">
-                <code style="font-size:26px;font-weight:bold;color:#15803d;letter-spacing:3px;background:#f0fdf4;padding:6px 10px;border-radius:8px;">
-                  ${code.split("").join(" ")}
-                </code>
-              </div>
-              <p>This code will expire in <strong>10 minutes</strong>.</p>
-              <p>If you didn’t request this, please ignore this message.</p>
-            </div>
-          </div>
-        </div>
-      `;
+            `;
 
             // 📨 Send email with retry logic
             try {

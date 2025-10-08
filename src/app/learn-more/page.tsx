@@ -166,22 +166,22 @@ export default function LearnMorePage() {
                             {
                                 name: "David Matthew Maniwang",
                                 role: "Project Lead / Backend Developer",
-                                img: "/developer1.png",
+                                img: "/profile/pic1.png",
                             },
                             {
                                 name: "Dulce Maris Ongyot",
                                 role: "Database & Integration",
-                                img: "/developer2.png",
+                                img: "/profile/pic2.png",
                             },
                             {
                                 name: "Joanamarie Ayuban Burato",
                                 role: "Frontend Developer / UI Designer",
-                                img: "/developer3.png",
+                                img: "/profile/pic3.jpg",
                             },
                             {
                                 name: "Christian Dale Ombrosa",
                                 role: "Frontend Developer / UX Designer",
-                                img: "/developer4.png",
+                                img: "/profile/pic4.png",
                             },
                         ].map((dev) => (
                             <div
