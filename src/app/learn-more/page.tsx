@@ -171,7 +171,7 @@ export default function LearnMorePage() {
                             {
                                 name: "Dulce Maris Ongyot",
                                 role: "Database & Integration",
-                                img: "/developer2.png",
+                                img: "/profile/pic2.png",
                             },
                             {
                                 name: "Joanamarie Ayuban Burato",
@@ -181,7 +181,7 @@ export default function LearnMorePage() {
                             {
                                 name: "Christian Dale Ombrosa",
                                 role: "Frontend Developer / UX Designer",
-                                img: "/developer4.png",
+                                img: "/profile/pic4.png",
                             },
                         ].map((dev) => (
                             <div
