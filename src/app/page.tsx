@@ -85,13 +85,15 @@ export default function HomePage() {
                 Book Appointment
               </Button>
             </Link>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto border-green-600 text-green-600 hover:bg-green-50"
-            >
-              Learn More
-            </Button>
+            <Link href="/learn-more" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
+              >
+                Learn More
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="flex justify-center md:justify-end flex-1">

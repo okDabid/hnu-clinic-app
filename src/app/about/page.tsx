@@ -132,10 +132,10 @@ export default function AboutPage() {
             <section className="px-6 md:px-12 py-20 bg-green-50">
                 <div className="max-w-6xl mx-auto text-center">
                     <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
-                        Meet Our Team
+                        Health Services Department
                     </h2>
                     <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
-                        Our dedicated team of doctors and nurses are here to
+                        Our dedicated school doctors and nurses are here to
                         provide compassionate care and reliable health services.
                     </p>
 
