@@ -7,6 +7,222 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Clinic {
+  clinic_id        String               @id @default(cuid())
+  clinic_name      String
+  clinic_location  String
+  clinic_contactno String
+  appointments     Appointment[]
+  doctorAvail      DoctorAvailability[]
+  medinventory     MedInventory[]
+}
+
+model Users {
+  user_id             String               @id @unique @default(dbgenerated("concat('USER_', (floor((random() * (1000000)::double precision)))::integer)"))
+  username            String               @unique
+  password            String
+  status              AccountStatus        @default(Active)
+  role                Role
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  appointmentsCreated Appointment[]        @relation("CreatedAppointments")
+  appointmentsDoctor  Appointment[]        @relation("DoctorAppointments")
+  appointmentsPatient Appointment[]        @relation("PatientAppointments")
+  consultationsDoctor Consultation[]       @relation("ConsultationDoctor")
+  consultationsNurse  Consultation[]       @relation("ConsultationNurse")
+  doctorAvail         DoctorAvailability[]
+  employee            Employee?
+  medcertIssued       MedCert[]            @relation("IssuedCertificates")
+  medcertPatient      MedCert[]            @relation("PatientCertificates")
+  passwordResetTokens PasswordResetToken[]
+  student             Student?
+
+  @@index([role, status])
+  @@index([username])
+}
+
+model Student {
+  stud_user_id         String        @id @default(dbgenerated("concat('STUD_', (floor((random() * (1000000)::double precision)))::integer)"))
+  user_id              String        @unique
+  student_id           String        @unique
+  fname                String
+  mname                String?
+  lname                String
+  date_of_birth        DateTime
+  gender               Gender
+  program              String?
+  contactno            String?       @unique
+  address              String?
+  allergies            String?
+  medical_cond         String?
+  emergencyco_name     String?
+  emergencyco_num      String?
+  emergencyco_relation String?
+  status               AccountStatus @default(Active)
+  department           Department?
+  year_level           YearLevel?
+  bloodtype            BloodType?
+  email                String?       @unique
+  user                 Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model Employee {
+  emp_id               String        @id @default(dbgenerated("concat('EMP_', (floor((random() * (1000000)::double precision)))::integer)"))
+  user_id              String        @unique
+  employee_id          String        @unique
+  fname                String
+  mname                String?
+  lname                String
+  date_of_birth        DateTime
+  gender               Gender
+  contactno            String?       @unique
+  address              String?
+  allergies            String?
+  medical_cond         String?
+  emergencyco_name     String?
+  emergencyco_num      String?
+  emergencyco_relation String?
+  status               AccountStatus @default(Active)
+  bloodtype            BloodType?
+  email                String?       @unique
+  user                 Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model MedInventory {
+  med_id         String          @id @default(dbgenerated("concat('MEDINV_', (floor((random() * (1000000)::double precision)))::integer)"))
+  clinic_id      String
+  quantity       Int
+  item_name      String
+  category       MedCategory     @default(Analgesic)
+  strength       Float?
+  unit           DosageUnit?
+  item_type      MedType         @default(Tablet)
+  dispenses      MedDispense[]
+  clinic         Clinic          @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+  replenishments Replenishment[]
+
+  @@index([clinic_id, item_name])
+}
+
+model Replenishment {
+  replenishment_id String          @id @default(dbgenerated("concat('REP_', (floor((random() * (1000000)::double precision)))::integer)"))
+  med_id           String
+  quantity_added   Int
+  date_received    DateTime
+  expiry_date      DateTime
+  remaining_qty    Int             @default(0)
+  DispenseBatch    DispenseBatch[]
+  med              MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+
+  @@index([med_id, expiry_date])
+}
+
+model DoctorAvailability {
+  availability_id     String   @id @default(dbgenerated("concat('AVAIL_', (floor((random() * (1000000)::double precision)))::integer)"))
+  doctor_user_id      String
+  clinic_id           String
+  available_date      DateTime
+  available_timestart DateTime
+  available_timeend   DateTime
+  clinic              Clinic   @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+  doctor              Users    @relation(fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([doctor_user_id, available_date])
+  @@index([clinic_id, available_date])
+}
+
+model Appointment {
+  appointment_id        String            @id @default(dbgenerated("concat('APT_', (floor((random() * (1000000)::double precision)))::integer)"))
+  patient_user_id       String
+  clinic_id             String
+  doctor_user_id        String
+  created_by_user_id    String?
+  appointment_date      DateTime
+  appointment_timestart DateTime
+  appointment_timeend   DateTime
+  service_type          ServiceType?
+  status                AppointmentStatus
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  clinic                Clinic            @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
+  createdBy             Users?            @relation("CreatedAppointments", fields: [created_by_user_id], references: [user_id])
+  doctor                Users             @relation("DoctorAppointments", fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
+  patient               Users             @relation("PatientAppointments", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
+  consultation          Consultation?
+
+  @@unique([doctor_user_id, appointment_timestart, appointment_timeend])
+  @@index([doctor_user_id, appointment_date, status])
+  @@index([patient_user_id, appointment_date, status])
+}
+
+model Consultation {
+  consultation_id String        @id @default(dbgenerated("concat('CON_', (floor((random() * (1000000)::double precision)))::integer)"))
+  appointment_id  String?       @unique
+  doctor_user_id  String?
+  nurse_user_id   String?
+  reason_of_visit String?
+  findings        String?
+  diagnosis       String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  appointment     Appointment?  @relation(fields: [appointment_id], references: [appointment_id], onDelete: Cascade)
+  doctor          Users?        @relation("ConsultationDoctor", fields: [doctor_user_id], references: [user_id])
+  nurse           Users?        @relation("ConsultationNurse", fields: [nurse_user_id], references: [user_id])
+  medcerts        MedCert[]
+  dispenses       MedDispense[]
+}
+
+model MedDispense {
+  dispense_id     String          @id @default(dbgenerated("concat('DESP_', (floor((random() * (1000000)::double precision)))::integer)"))
+  med_id          String
+  consultation_id String
+  quantity        Int
+  dispenseBatches DispenseBatch[]
+  consultation    Consultation    @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  med             MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+
+  @@index([consultation_id])
+}
+
+model DispenseBatch {
+  id               String        @id @default(dbgenerated("concat('DESBATCH_', (floor((random() * (1000000)::double precision)))::integer)"))
+  dispense_id      String
+  replenishment_id String
+  quantity_used    Int
+  dispense         MedDispense   @relation(fields: [dispense_id], references: [dispense_id], onDelete: Cascade)
+  replenishment    Replenishment @relation(fields: [replenishment_id], references: [replenishment_id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  contact   String
+  createdAt DateTime @default(now())
+  type      String   @default("EMAIL")
+  verified  Boolean  @default(false)
+  user      Users    @relation(fields: [userId], references: [user_id], onDelete: Cascade)
+
+  @@index([contact, type])
+  @@index([userId])
+}
+
+model MedCert {
+  certificate_id    String        @id @default(dbgenerated("concat('MEDCERT_', (floor((random() * (1000000)::double precision)))::integer)"))
+  consultation_id   String
+  patient_user_id   String
+  issued_by_user_id String?
+  issue_date        DateTime
+  valid_until       DateTime
+  status            MedcertStatus
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  consultation      Consultation  @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  issuedBy          Users?        @relation("IssuedCertificates", fields: [issued_by_user_id], references: [user_id])
+  patient           Users         @relation("PatientCertificates", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
+}
+
 enum Gender {
   Male
   Female
@@ -108,233 +324,4 @@ enum BloodType {
   AB_NEG
   O_POS
   O_NEG
-}
-
-model Clinic {
-  clinic_id        String @id @default(cuid())
-  clinic_name      String
-  clinic_location  String
-  clinic_contactno String
-
-  medinventory MedInventory[]
-  doctorAvail  DoctorAvailability[]
-  appointments Appointment[]
-}
-
-model Users {
-  user_id   String        @id @unique @default(dbgenerated("concat('USER_', floor(random() * 1000000)::int)"))
-  username  String        @unique
-  password  String
-  role      Role
-  status    AccountStatus @default(Active)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-
-  student             Student?
-  employee            Employee?
-  doctorAvail         DoctorAvailability[]
-  appointmentsPatient Appointment[]        @relation("PatientAppointments")
-  appointmentsDoctor  Appointment[]        @relation("DoctorAppointments")
-  appointmentsCreated Appointment[]        @relation("CreatedAppointments")
-  consultationsDoctor Consultation[]       @relation("ConsultationDoctor")
-  consultationsNurse  Consultation[]       @relation("ConsultationNurse")
-  medcertIssued       MedCert[]            @relation("IssuedCertificates")
-  medcertPatient      MedCert[]            @relation("PatientCertificates")
-  passwordResetTokens PasswordResetToken[]
-
-  @@index([role, status])
-  @@index([username])
-}
-
-model Student {
-  stud_user_id         String        @id @default(dbgenerated("concat('STUD_', floor(random() * 1000000)::int)"))
-  user_id              String        @unique
-  student_id           String        @unique
-  fname                String
-  mname                String?
-  lname                String
-  date_of_birth        DateTime
-  gender               Gender
-  department           Department?
-  program              String?
-  year_level           YearLevel?
-  email                String?       @unique
-  contactno            String?       @unique
-  address              String?
-  bloodtype            BloodType?
-  allergies            String?
-  medical_cond         String?
-  emergencyco_name     String?
-  emergencyco_num      String?
-  emergencyco_relation String?
-  status               AccountStatus @default(Active)
-
-  user Users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-}
-
-model Employee {
-  emp_id               String        @id @default(dbgenerated("concat('EMP_', floor(random() * 1000000)::int)"))
-  user_id              String        @unique
-  employee_id          String        @unique
-  fname                String
-  mname                String?
-  lname                String
-  date_of_birth        DateTime
-  gender               Gender
-  email                String?       @unique
-  contactno            String?       @unique
-  address              String?
-  bloodtype            BloodType?
-  allergies            String?
-  medical_cond         String?
-  emergencyco_name     String?
-  emergencyco_num      String?
-  emergencyco_relation String?
-  status               AccountStatus @default(Active)
-
-  user Users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-}
-
-model MedInventory {
-  med_id    String      @id @default(dbgenerated("concat('MEDINV_', floor(random() * 1000000)::int)"))
-  clinic_id String
-  quantity  Int
-  item_name String
-  category  MedCategory @default(Analgesic)
-  item_type MedType     @default(Tablet)
-  strength  Float?
-  unit      DosageUnit?
-
-  clinic         Clinic          @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
-  replenishments Replenishment[]
-  dispenses      MedDispense[]
-
-  @@index([clinic_id, item_name])
-}
-
-model Replenishment {
-  replenishment_id String   @id @default(dbgenerated("concat('REP_', floor(random() * 1000000)::int)"))
-  med_id           String
-  quantity_added   Int
-  remaining_qty    Int      @default(0)
-  date_received    DateTime
-  expiry_date      DateTime
-
-  med           MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
-  DispenseBatch DispenseBatch[]
-
-  @@index([med_id, expiry_date])
-}
-
-model DoctorAvailability {
-  availability_id     String   @id @default(dbgenerated("concat('AVAIL_', floor(random() * 1000000)::int)"))
-  doctor_user_id      String
-  clinic_id           String
-  available_date      DateTime
-  available_timestart DateTime
-  available_timeend   DateTime
-
-  doctor Users  @relation(fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
-  clinic Clinic @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
-
-  @@index([doctor_user_id, available_date])
-  @@index([clinic_id, available_date])
-}
-
-model Appointment {
-  appointment_id        String            @id @default(dbgenerated("concat('APT_', floor(random() * 1000000)::int)"))
-  patient_user_id       String
-  clinic_id             String
-  doctor_user_id        String
-  created_by_user_id    String?
-  appointment_date      DateTime
-  appointment_timestart DateTime
-  appointment_timeend   DateTime
-  service_type          ServiceType?
-  status                AppointmentStatus
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-
-  patient      Users         @relation("PatientAppointments", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
-  doctor       Users         @relation("DoctorAppointments", fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
-  clinic       Clinic        @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
-  createdBy    Users?        @relation("CreatedAppointments", fields: [created_by_user_id], references: [user_id], onDelete: SetNull)
-  consultation Consultation?
-
-  @@unique([doctor_user_id, appointment_timestart, appointment_timeend])
-  @@index([doctor_user_id, appointment_date, status])
-  @@index([patient_user_id, appointment_date, status])
-}
-
-model Consultation {
-  consultation_id String   @id @default(dbgenerated("concat('CON_', floor(random() * 1000000)::int)"))
-  appointment_id  String?  @unique
-  doctor_user_id  String?
-  nurse_user_id   String?
-  reason_of_visit String?
-  findings        String?
-  diagnosis       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  appointment Appointment?  @relation(fields: [appointment_id], references: [appointment_id], onDelete: Cascade)
-  doctor      Users?        @relation("ConsultationDoctor", fields: [doctor_user_id], references: [user_id], onDelete: SetNull)
-  nurse       Users?        @relation("ConsultationNurse", fields: [nurse_user_id], references: [user_id], onDelete: SetNull)
-  dispenses   MedDispense[]
-  medcerts    MedCert[]
-}
-
-model MedDispense {
-  dispense_id     String @id @default(dbgenerated("concat('DESP_', floor(random() * 1000000)::int)"))
-  med_id          String
-  consultation_id String
-  quantity        Int
-
-  med             MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
-  consultation    Consultation    @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
-  dispenseBatches DispenseBatch[]
-
-  @@index([consultation_id])
-}
-
-model DispenseBatch {
-  id               String @id @default(dbgenerated("concat('DESBATCH_', floor(random() * 1000000)::int)"))
-  dispense_id      String
-  replenishment_id String
-  quantity_used    Int
-
-  dispense      MedDispense   @relation(fields: [dispense_id], references: [dispense_id], onDelete: Cascade)
-  replenishment Replenishment @relation(fields: [replenishment_id], references: [replenishment_id], onDelete: Cascade)
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  contact   String
-  type      String   @default("EMAIL")
-  verified  Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  user Users @relation(fields: [userId], references: [user_id], onDelete: Cascade)
-
-  @@index([contact, type])
-  @@index([userId])
-}
-
-model MedCert {
-  certificate_id    String        @id @default(dbgenerated("concat('MEDCERT_', floor(random() * 1000000)::int)"))
-  consultation_id   String
-  patient_user_id   String
-  issued_by_user_id String?
-  issue_date        DateTime
-  valid_until       DateTime
-  status            MedcertStatus
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  consultation Consultation @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
-  patient      Users        @relation("PatientCertificates", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
-  issuedBy     Users?       @relation("IssuedCertificates", fields: [issued_by_user_id], references: [user_id], onDelete: SetNull)
 }
