@@ -102,33 +102,41 @@ export async function POST(req: Request) {
             }
 
             const htmlContent = `
-            <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
-                <div style="max-width: 480px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <div style="background-color: #16a34a; padding: 24px; text-align: center;">
-                    <div style="background-color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-                    <img src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
-                        alt="Clinic Shield Icon" width="36" height="36" />
-                    </div>
-                    <h1 style="color:#ffffff;font-size:22px;margin:0;">HNU Clinic</h1>
-                    <p style="color:#d1fae5;margin:4px 0 0;">Password Reset Code</p>
-                </div>
+                <div style="font-family: Arial, sans-serif; background-color: #111827; padding: 20px;">
+                    <div style="max-width: 480px; margin: auto; background: #1f2937; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
 
-                <div style="padding: 28px; text-align: center; color: #1f2937;">
-                    <p style="margin-top:0;">Hello, <strong>${fullName}</strong>,</p>
-                    <p>You requested to reset your password. Use this code:</p>
-
-                    <div style="background-color:#f0fdf4; border:1px dashed #16a34a; padding:14px 20px; border-radius:10px; display:inline-block; margin:20px 0;">
-                    <code style="font-size:28px; font-weight:bold; color:#15803d; letter-spacing:4px;">
-                        ${code}
-                    </code>
+                    <!-- Header -->
+                    <div style="background-color: #16a34a; padding: 36px 24px; text-align: center; position: relative;">
+                        <div style="width: 72px; height: 72px; background-color: #0f172a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                        <img 
+                            src="https://cdn-icons-png.flaticon.com/512/2966/2966485.png" 
+                            alt="Shield Icon" 
+                            width="40" height="40"
+                            style="display: block; margin: 0 auto;" 
+                        />
+                        </div>
+                        <h1 style="color:#ffffff; font-size:24px; font-weight:700; margin:0;">HNU Clinic</h1>
+                        <p style="color:#bbf7d0; margin:6px 0 0; font-size:15px;">Password Reset Code</p>
                     </div>
 
-                    <p>This code will expire in <strong>10 minutes</strong>.</p>
-                    <p style="margin-bottom:0;">If you didn’t request this, please ignore this message.</p>
+                    <!-- Body -->
+                    <div style="padding: 32px 24px; text-align: center; color: #e5e7eb;">
+                        <p style="margin-top:0;">Hello, <strong style="color:#ffffff;">${fullName}</strong>,</p>
+                        <p style="margin:10px 0;">You requested to reset your password. Use this code:</p>
+
+                        <div style="background-color:#064e3b; border:1px dashed #16a34a; padding:14px 24px; border-radius:10px; display:inline-block; margin:24px 0;">
+                        <code style="font-size:30px; font-weight:bold; color:#22c55e; letter-spacing:6px;">
+                            ${code.split("").join(" ")}
+                        </code>
+                        </div>
+
+                        <p style="color:#d1d5db; margin:6px 0;">This code will expire in <strong>10 minutes</strong>.</p>
+                        <p style="color:#9ca3af; margin-bottom:0;">If you didn’t request this, please ignore this message.</p>
+                    </div>
+
+                    </div>
                 </div>
-                </div>
-            </div>
-            `;
+                `;
 
             // 📨 Send email with retry logic
             try {
