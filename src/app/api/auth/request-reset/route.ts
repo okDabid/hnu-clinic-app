@@ -15,6 +15,8 @@ export async function POST(req: Request) {
             );
         }
 
+        console.log("⚙️ Starting password reset for:", contact);
+
         // 🔍 Find user by email or phone
         const user = await prisma.users.findFirst({
             where: {
@@ -75,7 +77,6 @@ export async function POST(req: Request) {
                 );
             }
 
-            // ✅ Use SMTP for Gmail (works better on Vercel)
             const transporter = nodemailer.createTransport({
                 host: "smtp.gmail.com",
                 port: 465,
@@ -86,7 +87,10 @@ export async function POST(req: Request) {
                 },
             });
 
-            await transporter.verify().then(() => console.log("✅ Email transporter ready")).catch(console.error);
+            await transporter
+                .verify()
+                .then(() => console.log("✅ Email transporter ready"))
+                .catch(console.error);
 
             const htmlContent = `
         <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
@@ -102,7 +106,9 @@ export async function POST(req: Request) {
               <p>Hello, ${fullName},</p>
               <p>You requested to reset your password. Use this code:</p>
               <div style="background-color:#f0fdf4;border:1px dashed #16a34a;padding:12px;border-radius:8px;margin:20px auto;width:fit-content;">
-                <code style="font-size:26px;font-weight:bold;color:#15803d;letter-spacing:3px;background:#f0fdf4;padding:6px 10px;border-radius:8px;">${code.split('').join(' ')}</code>
+                <code style="font-size:26px;font-weight:bold;color:#15803d;letter-spacing:3px;background:#f0fdf4;padding:6px 10px;border-radius:8px;">${code
+                    .split("")
+                    .join(" ")}</code>
               </div>
               <p>This code will expire in <strong>10 minutes</strong>.</p>
               <p>If you didn’t request this, please ignore this message.</p>
@@ -118,7 +124,6 @@ export async function POST(req: Request) {
                     subject: "Password Reset Code",
                     html: htmlContent,
                 });
-
                 console.log("📧 Email sent:", info.messageId);
             } catch (err) {
                 console.error("❌ Email send failed:", err);
@@ -185,13 +190,12 @@ export async function POST(req: Request) {
             }
         }
 
-        // ✅ Success
         return NextResponse.json({
             success: true,
             message: "Reset code sent successfully.",
         });
     } catch (error: unknown) {
-        console.error("REQUEST-RESET ERROR:", error);
+        console.error("REQUEST-RESET ERROR DETAILS:", error);
         return NextResponse.json(
             {
                 error: "Internal server error.",
