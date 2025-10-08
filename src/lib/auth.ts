@@ -5,6 +5,7 @@ import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
+import { withDb } from "@/lib/withDb";
 
 // --- Extend next-auth types ---
 declare module "next-auth" {
@@ -51,7 +52,7 @@ interface AppSession extends Session {
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
-            id: "credentials", // ✅ Explicitly set ID (important for /callback/credentials)
+            id: "credentials",
             name: "Credentials",
             credentials: {
                 id: { label: "ID", type: "text" },
@@ -64,32 +65,32 @@ export const authOptions: NextAuthOptions = {
                 const id = String(credentials.id || "").trim();
                 const password = String(credentials.password || "");
                 const roleStr = String(credentials.role || "").toUpperCase();
-
                 if (!Object.values(Role).includes(roleStr as Role)) {
                     throw new Error("Invalid role provided.");
                 }
-
                 const role = roleStr as Role;
 
-                // 🔍 Find the user in the DB
-                const user = await prisma.users.findFirst({
-                    where: {
-                        role,
-                        OR: [
-                            { username: id },
-                            { student: { is: { student_id: id } } },
-                            { employee: { is: { employee_id: id } } },
-                        ],
-                    },
-                    select: {
-                        user_id: true,
-                        password: true,
-                        role: true,
-                        status: true,
-                        student: { select: { fname: true, lname: true } },
-                        employee: { select: { fname: true, lname: true } },
-                    },
-                });
+                // ✅ wrap the Prisma call so a dropped socket is reconnected
+                const user = await withDb(() =>
+                    prisma.users.findFirst({
+                        where: {
+                            role,
+                            OR: [
+                                { username: id },
+                                { student: { is: { student_id: id } } },
+                                { employee: { is: { employee_id: id } } },
+                            ],
+                        },
+                        select: {
+                            user_id: true,
+                            password: true,
+                            role: true,
+                            status: true,
+                            student: { select: { fname: true, lname: true } },
+                            employee: { select: { fname: true, lname: true } },
+                        },
+                    })
+                );
 
                 if (!user) throw new Error("No account found with these credentials.");
                 if (user.status === AccountStatus.Inactive) {
@@ -113,10 +114,8 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
 
-    // --- Sessions ---
-    session: { strategy: "jwt" },
+    // …
 
-    // --- JWT + Session callbacks ---
     callbacks: {
         async jwt({ token, user }): Promise<AppJWT> {
             if (user) {
@@ -130,12 +129,14 @@ export const authOptions: NextAuthOptions = {
                 const now = Date.now();
                 const lastChecked = (token as AppJWT).lastChecked ?? 0;
 
-                // Refresh every 5 minutes
                 if (now - lastChecked > 5 * 60 * 1000) {
-                    const dbUser = await prisma.users.findUnique({
-                        where: { user_id: token.id },
-                        select: { status: true },
-                    });
+                    // ✅ also wrap any background DB reads
+                    const dbUser = await withDb(() =>
+                        prisma.users.findUnique({
+                            where: { user_id: token.id as string },
+                            select: { status: true },
+                        })
+                    );
                     token.status = dbUser?.status ?? AccountStatus.Inactive;
                     (token as AppJWT).lastChecked = now;
                 }
@@ -155,12 +156,6 @@ export const authOptions: NextAuthOptions = {
         },
     },
 
-    // --- Pages ---
-    pages: {
-        signIn: "/login",
-        error: "/login",
-    },
-
-    // --- Secret (required in production) ---
+    pages: { signIn: "/login", error: "/login" },
     secret: process.env.NEXTAUTH_SECRET,
 };
