@@ -109,7 +109,7 @@ export async function POST(req: Request) {
                     <div style="background-color: #16a34a; padding: 36px 24px; text-align: center; position: relative;">
                         <div style="width: 72px; height: 72px; background-color: #0f172a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                         <img 
-                            src="https://cdn-icons-png.flaticon.com/512/2966/2966485.png" 
+                            src="https://hnu-clinic-app.vercel.app/clinic-illustration.png" 
                             alt="Shield Icon" 
                             width="40" height="40"
                             style="display: block; margin: 0 auto;" 
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
 
                         <div style="background-color:#064e3b; border:1px dashed #16a34a; padding:14px 24px; border-radius:10px; display:inline-block; margin:24px 0;">
                         <code style="font-size:30px; font-weight:bold; color:#22c55e; letter-spacing:6px;">
-                            ${code.split("").join(" ")}
+                            ${code}
                         </code>
                         </div>
 
