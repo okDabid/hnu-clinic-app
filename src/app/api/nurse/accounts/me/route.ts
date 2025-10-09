@@ -61,7 +61,10 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
     if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
 
-    // ✅ Convert "A+" → enum (A_POS)
+    // ✅ Always update email
+    if (typeof raw.email === "string") data.email = raw.email.trim();
+
+    // ✅ Convert "A+" → enum
     if (typeof raw.bloodtype === "string") {
         const mapped =
             bloodTypeMap[raw.bloodtype] ||
@@ -95,6 +98,7 @@ export async function GET() {
         const profile = user.employee
             ? {
                 ...user.employee,
+                email: user.employee.email || "",
                 bloodtype:
                     user.employee.bloodtype && typeof user.employee.bloodtype === "string"
                         ? bloodTypeEnumMap[user.employee.bloodtype] || user.employee.bloodtype
@@ -146,10 +150,12 @@ export async function PUT(req: Request) {
             data,
         });
 
+        // ✅ Always return email as a string
         return NextResponse.json({
             success: true,
             profile: {
                 ...updated,
+                email: updated.email || "",
                 bloodtype: updated.bloodtype
                     ? bloodTypeEnumMap[updated.bloodtype] || updated.bloodtype
                     : null,
