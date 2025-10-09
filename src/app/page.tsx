@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Loader2 } from "lucide-react";
 
 // Lazy load lucide icons
 const CalendarDays = dynamic(() => import("lucide-react").then(m => m.CalendarDays), { ssr: false });
@@ -18,12 +19,10 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setFeedback("");
 
     try {
       const res = await fetch("/api/contact", {
@@ -35,13 +34,22 @@ export default function HomePage() {
       const data = await res.json();
 
       if (res.ok) {
-        setFeedback("✅ Message sent successfully!");
+        toast.success("✅ Message sent successfully!", {
+          description: "Thank you for contacting HNU Clinic. We'll get back to you soon.",
+          duration: 5000,
+        });
         setForm({ name: "", email: "", message: "" });
       } else {
-        setFeedback(`❌ ${data.error || "Something went wrong"}`);
+        toast.error("❌ Failed to send message", {
+          description: data.error || "Something went wrong. Please try again.",
+          duration: 5000,
+        });
       }
     } catch {
-      setFeedback("❌ Failed to send message. Please try again later.");
+      toast.error("❌ Network Error", {
+        description: "Unable to send message. Please check your connection and try again.",
+        duration: 5000,
+      });
     } finally {
       setLoading(false);
     }
@@ -203,14 +211,18 @@ export default function HomePage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full p-4 md:p-6 bg-green-600 hover:bg-green-700"
+              className="w-full p-4 md:p-6 bg-green-600 hover:bg-green-700 flex items-center justify-center"
             >
-              {loading ? "Sending..." : "Send Message"}
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin w-5 h-5 mr-2 text-white" />
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
+              )}
             </Button>
           </form>
-          {feedback && (
-            <p className="text-center text-sm text-gray-700 mt-4">{feedback}</p>
-          )}
         </div>
       </section>
 
