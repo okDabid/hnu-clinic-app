@@ -13,6 +13,36 @@ import { Menu, X } from "lucide-react";
 const CalendarDays = dynamic(() => import("lucide-react").then(m => m.CalendarDays), { ssr: false });
 const ClipboardList = dynamic(() => import("lucide-react").then(m => m.ClipboardList), { ssr: false });
 const Stethoscope = dynamic(() => import("lucide-react").then(m => m.Stethoscope), { ssr: false });
+const [form, setForm] = useState({ name: "", email: "", message: "" });
+const [loading, setLoading] = useState(false);
+const [feedback, setFeedback] = useState("");
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setFeedback("");
+
+  try {
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setFeedback("✅ Message sent successfully!");
+      setForm({ name: "", email: "", message: "" });
+    } else {
+      setFeedback(`❌ ${data.error || "Something went wrong"}`);
+    }
+  } catch {
+    setFeedback("❌ Failed to send message. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -154,10 +184,33 @@ export default function HomePage() {
           <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 text-green-600">
             Get in Touch
           </h3>
-          <Input placeholder="Your Name" className="p-4 md:p-6" />
-          <Input placeholder="Your Email" className="p-4 md:p-6" />
-          <Input placeholder="Message" className="p-4 md:p-6" />
-          <Button className="w-full p-4 md:p-6 bg-green-600 hover:bg-green-700">Send Message</Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              placeholder="Your Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            <Input
+              placeholder="Your Email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+            <Input
+              placeholder="Message"
+              value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })}
+            />
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full p-4 md:p-6 bg-green-600 hover:bg-green-700"
+            >
+              {loading ? "Sending..." : "Send Message"}
+            </Button>
+          </form>
+          {feedback && (
+            <p className="text-center text-sm text-gray-700 mt-4">{feedback}</p>
+          )}
         </div>
       </section>
 
