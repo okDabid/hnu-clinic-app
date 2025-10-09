@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         </div>
 
         <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 20px;">
-          This message was sent automatically from the <strong>HNU Clinic Capstone Project</strong> website.
+          This message was sent from the <strong>HNU Clinic Capstone Project</strong> website.
         </p>
       </div>
     `;
