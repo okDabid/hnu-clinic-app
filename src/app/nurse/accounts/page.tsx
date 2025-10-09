@@ -165,7 +165,7 @@ export default function NurseAccountsPage() {
 
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    const [originalProfile, setOriginalProfile] = useState<any>(null);
+    const [originalProfile, setOriginalProfile] = useState<Profile | null>(null);
 
     const [tempDOB, setTempDOB] = useState(""); // temporary holding value
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
