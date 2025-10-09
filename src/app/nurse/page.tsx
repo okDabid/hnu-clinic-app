@@ -30,6 +30,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
+
 export default function NurseDashboardPage() {
     const { data: session } = useSession();
     const [menuOpen] = useState(false);

@@ -73,6 +73,10 @@ type Clinic = {
     clinic_name: string;
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 export default function NurseInventoryPage() {
     const [menuOpen] = useState(false);
     const [items, setItems] = useState<InventoryItem[]>([]);

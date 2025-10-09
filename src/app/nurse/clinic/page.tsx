@@ -48,6 +48,11 @@ type Clinic = {
     clinic_contactno: string;
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
+
 export default function NurseClinicPage() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [clinics, setClinics] = useState<Clinic[]>([]);
