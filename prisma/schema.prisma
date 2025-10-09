@@ -48,7 +48,7 @@ model Student {
   fname                String
   mname                String?
   lname                String
-  date_of_birth        DateTime
+  date_of_birth        DateTime?
   gender               Gender
   program              String?
   contactno            String?       @unique
@@ -73,7 +73,7 @@ model Employee {
   fname                String
   mname                String?
   lname                String
-  date_of_birth        DateTime
+  date_of_birth        DateTime?
   gender               Gender
   contactno            String?       @unique
   address              String?
