@@ -14,9 +14,9 @@ export async function POST(req: Request) {
         console.log("Resend key:", process.env.RESEND_API_KEY ? "Loaded ✅" : "❌ Missing");
 
         await resend.emails.send({
-            from: "HNU Clinic <onboarding@resend.dev>", // ✅ verified sender
-            to: "hnucliniccapstone@gmail.com",           // ✅ your receiving inbox
-            replyTo: email,                              // ✅ for direct replies
+            from: "onboarding@resend.dev", // ✅ must match allowed sender
+            to: "hnucliniccapstone@gmail.com", // ✅ your inbox
+            replyTo: email,
             subject: `New message from ${name}`,
             html: `
         <div style="font-family:sans-serif;line-height:1.5">
