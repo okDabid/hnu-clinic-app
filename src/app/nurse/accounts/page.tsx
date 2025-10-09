@@ -242,6 +242,7 @@ export default function NurseAccountsPage() {
                 lname: data.profile?.lname || "",
                 date_of_birth: data.profile?.date_of_birth || "",
                 contactno: data.profile?.contactno || "",
+                email: data.profile?.email || "",
                 address: data.profile?.address || "",
                 bloodtype: bloodTypeValue,
                 allergies: data.profile?.allergies || "",
