@@ -34,7 +34,7 @@ export default function HomePage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success("✅ Message sent successfully!", {
+        toast.success("Message sent successfully!", {
           description: "Thank you for contacting HNU Clinic. We'll get back to you soon.",
           duration: 5000,
         });
