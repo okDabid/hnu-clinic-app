@@ -13,6 +13,7 @@ export async function middleware(req: NextRequest) {
         "/reset-password",
         "/verify-reset",
         "/api/auth",
+        "/api/contact",
     ];
 
     if (publicPaths.some((path) => pathname.startsWith(path))) {

@@ -102,43 +102,45 @@ export async function POST(req: Request) {
             }
 
             const htmlContent = `
-                <div style="font-family: Arial, sans-serif; background-color: #f7fafc; padding: 20px;">
-                    <div style="max-width: 480px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-
+                <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
                     <!-- Header -->
-                    <div style="background-color: #16a34a; padding: 40px 20px 32px; text-align: center; border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                        <table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin: 0 auto 16px;">
-                        <tr>
-                            <td align="center" valign="middle" width="80" height="80" style="background: #ffffff; border-radius: 50%;">
-                            <img 
-                                src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
-                                alt="HNU Clinic Logo"
-                                width="44" 
-                                height="44"
-                                style="display:block; margin:auto;"
-                            />
-                            </td>
-                        </tr>
-                        </table>
-                        <h1 style="color:#ffffff;font-size:22px;margin:0;font-weight:700;">HNU Clinic</h1>
-                        <p style="color:#d1fae5;margin:6px 0 0;font-size:15px;">Password Reset Code</p>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="display: inline-block; background-color: #ffffff; border-radius: 50%; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <img
+                        src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
+                        alt="HNU Clinic Logo"
+                        width="48"
+                        height="48"
+                        style="display: block; margin: auto;"
+                        />
+                    </div>
+                    <h1 style="color: #16a34a; font-size: 22px; margin: 12px 0 4px; font-weight: 700;">HNU Clinic</h1>
+                    <p style="color: #065f46; margin: 0; font-size: 14px;">Password Reset Request</p>
                     </div>
 
                     <!-- Body -->
-                    <div style="padding:28px;text-align:center;color:#1f2937;">
-                        <p>Hello, ${fullName},</p>
-                        <p>You requested to reset your password. Use this code:</p>
+                    <div style="background-color: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #d1fae5; text-align: center; color: #065f46;">
+                    <p style="font-size: 16px;">Hello, <strong>${fullName}</strong>,</p>
+                    <p style="font-size: 15px; color: #065f46;">
+                        You requested to reset your password. Please use the code below to proceed:
+                    </p>
 
-                        <div style="background-color:#f0fdf4; border:1px dashed #16a34a; padding:12px 20px; border-radius:8px; margin:20px auto; width:fit-content;">
-                        <code style="font-size:26px; font-weight:bold; color:#15803d; letter-spacing:3px;">
-                            ${code.split("").join(" ")}
+                    <div style="background-color: #ecfdf5; border: 1px dashed #10b981; padding: 14px 24px; border-radius: 10px; margin: 20px auto; display: inline-block;">
+                        <code style="font-size: 26px; font-weight: bold; color: #15803d; letter-spacing: 3px;">
+                        ${code.split("").join(" ")}
                         </code>
-                        </div>
+                    </div>
 
-                        <p>This code will expire in <strong>10 minutes</strong>.</p>
-                        <p>If you didn’t request this, please ignore this message.</p>
+                    <p style="font-size: 15px; color: #065f46;">This code will expire in <strong>10 minutes</strong>.</p>
+                    <p style="font-size: 14px; color: #065f46;">
+                        If you didn’t request this, please ignore this email.
+                    </p>
                     </div>
-                    </div>
+
+                    <!-- Footer -->
+                    <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 20px;">
+                    This message was automatically sent from the <strong>HNU Clinic Capstone Project</strong> website.
+                    </p>
                 </div>
                 `;
 

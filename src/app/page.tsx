@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Loader2 } from "lucide-react";
 
 // Lazy load lucide icons
 const CalendarDays = dynamic(() => import("lucide-react").then(m => m.CalendarDays), { ssr: false });
@@ -16,6 +17,43 @@ const Stethoscope = dynamic(() => import("lucide-react").then(m => m.Stethoscope
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Message sent successfully!", {
+          description: "Thank you for contacting HNU Clinic. We'll get back to you soon.",
+          duration: 5000,
+        });
+        setForm({ name: "", email: "", message: "" });
+      } else {
+        toast.error("❌ Failed to send message", {
+          description: data.error || "Something went wrong. Please try again.",
+          duration: 5000,
+        });
+      }
+    } catch {
+      toast.error("❌ Network Error", {
+        description: "Unable to send message. Please check your connection and try again.",
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-green-50">
@@ -154,10 +192,37 @@ export default function HomePage() {
           <h3 className="text-2xl md:text-3xl font-bold text-center mb-8 text-green-600">
             Get in Touch
           </h3>
-          <Input placeholder="Your Name" className="p-4 md:p-6" />
-          <Input placeholder="Your Email" className="p-4 md:p-6" />
-          <Input placeholder="Message" className="p-4 md:p-6" />
-          <Button className="w-full p-4 md:p-6 bg-green-600 hover:bg-green-700">Send Message</Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              placeholder="Your Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            <Input
+              placeholder="Your Email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+            <Input
+              placeholder="Message"
+              value={form.message}
+              onChange={(e) => setForm({ ...form, message: e.target.value })}
+            />
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full p-4 md:p-6 bg-green-600 hover:bg-green-700 flex items-center justify-center"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin w-5 h-5 mr-2 text-white" />
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
+              )}
+            </Button>
+          </form>
         </div>
       </section>
 
