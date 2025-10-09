@@ -12,18 +12,18 @@ export async function POST(req: Request) {
         }
 
         await resend.emails.send({
-            from: "HNU Clinic",
+            from: "HNU Clinic <onboarding@resend.dev>",
             to: "hnucliniccapstone@gmail.com",
-            replyTo: email,
+            replyTo: email, // ✅ correct for SDK
             subject: `New message from ${name}`,
             text: `
-                You received a new message from the HNU Clinic contact form.
+        You received a new message from the HNU Clinic contact form.
 
-                Name: ${name}
-                Email: ${email}
-                Message:
-                ${message}
-            `,
+        Name: ${name}
+        Email: ${email}
+        Message:
+        ${message}
+      `,
         });
 
         return NextResponse.json({
