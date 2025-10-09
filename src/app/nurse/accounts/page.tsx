@@ -165,6 +165,11 @@ export default function NurseAccountsPage() {
 
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+    const [originalProfile, setOriginalProfile] = useState<any>(null);
+
+    const [tempDOB, setTempDOB] = useState(""); // temporary holding value
+    const [showDOBConfirm, setShowDOBConfirm] = useState(false);
+
     async function handleLogout() {
         try {
             setIsLoggingOut(true);
@@ -232,7 +237,7 @@ export default function NurseAccountsPage() {
                     ? bloodTypeEnumMap[data.profile.bloodtype] || data.profile.bloodtype
                     : "";
 
-            setProfile({
+            const newProfile = {
                 user_id: data.accountId,
                 username: data.username,
                 role: data.role,
@@ -250,7 +255,11 @@ export default function NurseAccountsPage() {
                 emergencyco_name: data.profile?.emergencyco_name || "",
                 emergencyco_num: data.profile?.emergencyco_num || "",
                 emergencyco_relation: data.profile?.emergencyco_relation || "",
-            });
+            };
+
+            // ✅ Save to both profile states
+            setProfile(newProfile);
+            setOriginalProfile(newProfile); // store the original snapshot for DOB lock
         } catch (err) {
             console.error("Failed to load profile:", err);
             toast.error("Failed to load profile");
@@ -338,6 +347,18 @@ export default function NurseAccountsPage() {
     // 🔹 Update own profile
     async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+
+        if (!profile) {
+            toast.error("Profile not loaded yet");
+            return;
+        }
+
+        // 🧩 If user is trying to set DOB for the first time but hasn't confirmed yet
+        if (!profile.date_of_birth && tempDOB) {
+            setShowDOBConfirm(true);
+            return;
+        }
+
         try {
             setProfileLoading(true);
 
@@ -345,6 +366,11 @@ export default function NurseAccountsPage() {
                 ...profile,
                 bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
             };
+
+            // 🔒 Prevent DOB modification if it was already set
+            if (originalProfile?.date_of_birth) {
+                payload.date_of_birth = originalProfile.date_of_birth;
+            }
 
             const res = await fetch("/api/nurse/accounts/me", {
                 method: "PUT",
@@ -357,7 +383,7 @@ export default function NurseAccountsPage() {
                 toast.error(data.error);
             } else {
                 toast.success("Profile updated!");
-                loadProfile();
+                await loadProfile(); // reload with fresh data
             }
         } catch {
             toast.error("Failed to update profile");
@@ -365,6 +391,7 @@ export default function NurseAccountsPage() {
             setProfileLoading(false);
         }
     }
+
 
     // 🔹 Toggle status
     async function handleToggle(user_id: string, current: "Active" | "Inactive") {
@@ -656,11 +683,90 @@ export default function NurseAccountsPage() {
                                         </div>
                                         <div>
                                             <Label className="block mb-1 font-medium">Date of Birth</Label>
-                                            <Input
-                                                value={profile.date_of_birth?.slice(0, 10) || ""}
-                                                disabled
-                                            />
+
+                                            {/* If already set → disable input */}
+                                            {profile.date_of_birth ? (
+                                                <Input
+                                                    type="date"
+                                                    value={profile.date_of_birth?.slice(0, 10) || ""}
+                                                    disabled
+                                                />
+                                            ) : (
+                                                <>
+                                                    <Input
+                                                        type="date"
+                                                        value={tempDOB}
+                                                        onChange={(e) => setTempDOB(e.target.value)}
+                                                    />
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        You can only set this once. After saving, hit enter key.
+                                                    </p>
+
+                                                    {/* 🔒 Confirmation Dialog (shown only when user saves) */}
+                                                    <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
+                                                        <AlertDialogContent className="max-w-sm sm:max-w-md">
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    You are about to set your Date of Birth to{" "}
+                                                                    <span className="font-semibold text-green-700">{tempDOB}</span>.
+                                                                    <br />
+                                                                    This action can only be done once and cannot be changed later.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter className="mt-4">
+                                                                <AlertDialogCancel
+                                                                    onClick={() => {
+                                                                        setTempDOB("");
+                                                                        setShowDOBConfirm(false);
+                                                                    }}
+                                                                >
+                                                                    Cancel
+                                                                </AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    className="bg-green-600 hover:bg-green-700"
+                                                                    onClick={async () => {
+                                                                        setProfile({ ...profile, date_of_birth: tempDOB });
+                                                                        setShowDOBConfirm(false);
+
+                                                                        // ✅ Immediately save to the DB
+                                                                        try {
+                                                                            setProfileLoading(true);
+                                                                            const payload = {
+                                                                                ...profile,
+                                                                                date_of_birth: tempDOB,
+                                                                                bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                                                                            };
+
+                                                                            const res = await fetch("/api/nurse/accounts/me", {
+                                                                                method: "PUT",
+                                                                                headers: { "Content-Type": "application/json" },
+                                                                                body: JSON.stringify({ profile: payload }),
+                                                                            });
+
+                                                                            const data = await res.json();
+                                                                            if (data.error) {
+                                                                                toast.error(data.error);
+                                                                            } else {
+                                                                                toast.success("Date of Birth saved!");
+                                                                                await loadProfile(); // Refresh with updated DOB
+                                                                            }
+                                                                        } catch {
+                                                                            toast.error("Failed to save Date of Birth");
+                                                                        } finally {
+                                                                            setProfileLoading(false);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Confirm
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </>
+                                            )}
                                         </div>
+
                                     </div>
 
                                     {/* Personal Info */}
@@ -864,7 +970,7 @@ export default function NurseAccountsPage() {
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input type="date" name="date_of_birth" required /></div>
+                                    <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input type="date" name="date_of_birth" /></div>
                                     <div>
                                         <Label className="block mb-1 font-medium">Gender</Label>
                                         <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>

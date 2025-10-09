@@ -33,6 +33,8 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_NEG: "O-",
 };
 
+
+
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
@@ -70,7 +72,6 @@ export async function POST(req: Request) {
             fname: payload.fname,
             mname: payload.mname,
             lname: payload.lname,
-            date_of_birth: new Date(payload.date_of_birth),
             gender: payload.gender as Gender,
             bloodtype: bloodTypeMap[payload.bloodtype] || null,
             address: payload.address ?? null,
