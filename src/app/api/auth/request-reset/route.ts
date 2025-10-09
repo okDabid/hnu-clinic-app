@@ -179,6 +179,14 @@ export async function POST(req: Request) {
                 );
             }
 
+            if (typeof contact !== "string") {
+                return NextResponse.json(
+                    { error: "Invalid contact type." },
+                    { status: 400 }
+                );
+            }
+
+            // 🧹 Normalize phone number (Philippine format)
             let smsNumber = contact.trim();
             if (/^09\d{9}$/.test(smsNumber)) smsNumber = "+63" + smsNumber.slice(1);
             else if (/^63\d{10}$/.test(smsNumber)) smsNumber = "+" + smsNumber;
@@ -192,26 +200,26 @@ export async function POST(req: Request) {
 
             console.log("📞 Sending SMS to:", smsNumber);
 
-            const params = new URLSearchParams({
+            const payload = {
                 apikey: API_KEY,
                 number: smsNumber,
                 message: `Your HNU Clinic password reset code is ${code}. Valid for 10 minutes.`,
                 sendername: SENDER_NAME,
-            });
+            };
 
             try {
                 const resp = await fetch("https://api.semaphore.co/api/v4/messages", {
                     method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: params.toString(),
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
                 });
 
-                const resultText = await resp.text();
-                console.log("📩 Semaphore API response:", resultText);
+                const result = await resp.json().catch(() => ({}));
+                console.log("📩 Semaphore API response:", result);
 
-                if (!resp.ok || resultText.includes('"status":"Failed"')) {
+                if (!resp.ok || result.status === "Failed") {
                     return NextResponse.json(
-                        { error: "Failed to send SMS.", details: resultText },
+                        { error: "Failed to send SMS.", details: result },
                         { status: 502 }
                     );
                 }
