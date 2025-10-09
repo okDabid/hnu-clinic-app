@@ -232,21 +232,47 @@ export async function PUT(req: Request) {
         if (user.role !== Role.PATIENT)
             return NextResponse.json({ error: "Not a patient" }, { status: 403 });
 
-        if (user.student) {
+        // 🛡️ 1. Detect if DOB is already set and prevent changes
+        const isStudent = Boolean(user.student);
+        const isEmployee = Boolean(user.employee);
+        const existingProfile = user.student ?? user.employee;
+
+        const incomingDOB = toDate(profile.date_of_birth);
+        const existingDOB = existingProfile?.date_of_birth ?? null;
+
+        if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
+            return NextResponse.json(
+                { error: "Date of birth cannot be changed once set." },
+                { status: 400 }
+            );
+        }
+
+        // 🧩 2. Build proper update input (like before)
+        if (isStudent) {
             const data = buildStudentUpdateInput(profile);
+
+            // Ensure we don't override DOB if already set
+            if (existingDOB) delete data.date_of_birth;
+
             const updated = await prisma.student.update({
                 where: { user_id: session.user.id },
                 data,
             });
+
             return NextResponse.json({ success: true, profile: updated, type: "student" });
         }
 
-        if (user.employee) {
+        if (isEmployee) {
             const data = buildEmployeeUpdateInput(profile);
+
+            // Ensure we don't override DOB if already set
+            if (existingDOB) delete data.date_of_birth;
+
             const updated = await prisma.employee.update({
                 where: { user_id: session.user.id },
                 data,
             });
+
             return NextResponse.json({ success: true, profile: updated, type: "employee" });
         }
 
@@ -262,3 +288,4 @@ export async function PUT(req: Request) {
         );
     }
 }
+
