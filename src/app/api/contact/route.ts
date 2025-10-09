@@ -17,13 +17,13 @@ export async function POST(req: Request) {
             replyTo: email,
             subject: `New message from ${name}`,
             text: `
-        You received a new message from the HNU Clinic contact form.
+                You received a new message from the HNU Clinic contact form.
 
-        Name: ${name}
-        Email: ${email}
-        Message:
-        ${message}
-      `,
+                Name: ${name}
+                Email: ${email}
+                Message:
+                ${message}
+            `,
         });
 
         return NextResponse.json({
