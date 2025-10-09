@@ -139,11 +139,6 @@ const reverseBloodTypeEnumMap = Object.fromEntries(
     Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
 );
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
-
-
 export default function NurseAccountsPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [search, setSearch] = useState("");

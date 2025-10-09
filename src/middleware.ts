@@ -6,9 +6,8 @@ import { AccountStatus } from "@prisma/client";
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // ✅ Allow all public and auth routes without token
+    // ⛔️ Allow all public and auth routes without token
     const publicPaths = [
-        "/",
         "/login",
         "/forgot-password",
         "/reset-password",
@@ -26,18 +25,17 @@ export async function middleware(req: NextRequest) {
 
     // ⛔️ No token → redirect to login page
     if (!token) {
+        // For API routes, return 401 JSON instead of redirect
         if (pathname.startsWith("/api")) {
             return NextResponse.json(
                 { error: "Unauthorized: no session token" },
-                { status: 401, headers: { "Cache-Control": "no-store" } }
+                { status: 401 }
             );
         }
-
-        const res = NextResponse.redirect(new URL("/login", req.url));
-        res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-        return res;
+        return NextResponse.redirect(new URL("/login", req.url));
     }
 
+    // ✅ If token exists
     const role = token.role as string | undefined;
     const status = token.status as AccountStatus | undefined;
 
@@ -46,13 +44,10 @@ export async function middleware(req: NextRequest) {
         if (pathname.startsWith("/api")) {
             return NextResponse.json(
                 { error: "Account inactive. Contact admin." },
-                { status: 403, headers: { "Cache-Control": "no-store" } }
+                { status: 403 }
             );
         }
-
-        const res = NextResponse.redirect(new URL("/login?error=inactive", req.url));
-        res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-        return res;
+        return NextResponse.redirect(new URL("/login?error=inactive", req.url));
     }
 
     // 🔐 Role-based route guards
@@ -69,20 +64,15 @@ export async function middleware(req: NextRequest) {
             if (pathname.startsWith("/api")) {
                 return NextResponse.json(
                     { error: "Unauthorized: insufficient role" },
-                    { status: 403, headers: { "Cache-Control": "no-store" } }
+                    { status: 403 }
                 );
             }
-
-            const res = NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
-            res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-            return res;
+            return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
         }
     }
 
     // ✅ Allow if all checks pass
-    const res = NextResponse.next();
-    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-    return res;
+    return NextResponse.next();
 }
 
 // ✅ Apply only to protected routes
