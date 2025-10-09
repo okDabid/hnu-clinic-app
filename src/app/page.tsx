@@ -13,39 +13,39 @@ import { Menu, X } from "lucide-react";
 const CalendarDays = dynamic(() => import("lucide-react").then(m => m.CalendarDays), { ssr: false });
 const ClipboardList = dynamic(() => import("lucide-react").then(m => m.ClipboardList), { ssr: false });
 const Stethoscope = dynamic(() => import("lucide-react").then(m => m.Stethoscope), { ssr: false });
-const [form, setForm] = useState({ name: "", email: "", message: "" });
-const [loading, setLoading] = useState(false);
-const [feedback, setFeedback] = useState("");
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setFeedback("");
-
-  try {
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      setFeedback("✅ Message sent successfully!");
-      setForm({ name: "", email: "", message: "" });
-    } else {
-      setFeedback(`❌ ${data.error || "Something went wrong"}`);
-    }
-  } catch {
-    setFeedback("❌ Failed to send message. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setFeedback("");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setFeedback("✅ Message sent successfully!");
+        setForm({ name: "", email: "", message: "" });
+      } else {
+        setFeedback(`❌ ${data.error || "Something went wrong"}`);
+      }
+    } catch {
+      setFeedback("❌ Failed to send message. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-green-50">
