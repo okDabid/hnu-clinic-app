@@ -39,6 +39,17 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -192,6 +203,10 @@ export default function PatientAccountPage() {
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
     const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+
+    const [tempDOB, setTempDOB] = useState("");
+    const [showDOBConfirm, setShowDOBConfirm] = useState(false);
+
 
     const getYearLevelOptions = (dept: string, program?: string) => {
         if (dept === "Basic Education Department") {
@@ -587,7 +602,98 @@ export default function PatientAccountPage() {
                                         <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.username} disabled /></div>
                                         <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
                                         <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
-                                        <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input value={profile.date_of_birth?.slice(0, 10) || ""} disabled /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Date of Birth</Label>
+
+                                            {/* If already set → disable input */}
+                                            {profile.date_of_birth ? (
+                                                <Input
+                                                    type="date"
+                                                    value={profile.date_of_birth?.slice(0, 10) || ""}
+                                                    disabled
+                                                />
+                                            ) : (
+                                                <>
+                                                    <Input
+                                                        type="date"
+                                                        value={tempDOB}
+                                                        onChange={(e) => setTempDOB(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter") {
+                                                                e.preventDefault();
+                                                                setShowDOBConfirm(true);
+                                                            }
+                                                        }}
+                                                    />
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        You can only set this once. After saving, hit enter key.
+                                                    </p>
+
+                                                    {/* 🔒 Confirmation Dialog (only shows when user confirms) */}
+                                                    <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
+                                                        <AlertDialogContent className="max-w-sm sm:max-w-md">
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    You are about to set your Date of Birth to{" "}
+                                                                    <span className="font-semibold text-green-700">{tempDOB}</span>.
+                                                                    <br />
+                                                                    This action can only be done once and cannot be changed later.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter className="mt-4">
+                                                                <AlertDialogCancel
+                                                                    onClick={() => {
+                                                                        setTempDOB("");
+                                                                        setShowDOBConfirm(false);
+                                                                    }}
+                                                                >
+                                                                    Cancel
+                                                                </AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    className="bg-green-600 hover:bg-green-700"
+                                                                    onClick={async () => {
+                                                                        setProfile({ ...profile, date_of_birth: tempDOB });
+                                                                        setShowDOBConfirm(false);
+
+                                                                        // ✅ Immediately save to the DB
+                                                                        try {
+                                                                            setProfileLoading(true);
+                                                                            const payload = {
+                                                                                ...profile,
+                                                                                date_of_birth: tempDOB,
+                                                                                bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                                                                            };
+
+                                                                            const res = await fetch("/api/patient/account/me", {
+                                                                                method: "PUT",
+                                                                                headers: { "Content-Type": "application/json" },
+                                                                                body: JSON.stringify({ profile: payload }),
+                                                                            });
+
+                                                                            const data = await res.json();
+                                                                            if (data.error) {
+                                                                                toast.error(data.error);
+                                                                            } else {
+                                                                                toast.success("Date of Birth saved!");
+                                                                                await loadProfile(); // Refresh with updated DOB
+                                                                            }
+                                                                        } catch {
+                                                                            toast.error("Failed to save Date of Birth");
+                                                                        } finally {
+                                                                            setProfileLoading(false);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Confirm
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </>
+                                            )}
+                                        </div>
+
                                         <div><Label className="block mb-1 font-medium">Gender</Label><Input value={profile.gender || ""} disabled /></div>
                                     </div>
 
