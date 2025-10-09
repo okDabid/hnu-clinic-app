@@ -117,14 +117,16 @@ export default function LearnMorePage() {
                         reliability, scalability, and smooth user experience.
                     </p>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-10 items-center justify-center">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 gap-10 items-center justify-center">
                         {[
                             { name: "Next.js", logo: "/logos/nextjs.svg" },
-                            { name: "Tailwind CSS", logo: "/logos/tailwind.svg" },
+                            { name: "Vercel", logo: "/logos/vercel.svg" },
                             { name: "TypeScript", logo: "/logos/typescript.svg" },
+                            { name: "Tailwind CSS", logo: "/logos/tailwind.svg" },
                             { name: "ShadCN/UI", logo: "/logos/shadcn.svg" },
                             { name: "Lucide Icons", logo: "/logos/lucide.svg" },
-                            { name: "Vercel", logo: "/logos/vercel.svg" },
+                            { name: "NextAuth", logo: "/logos/nextauth.svg" },
+                            { name: "Zod", logo: "/logos/zod.svg" },
                         ].map((tech) => (
                             <div
                                 key={tech.name}
