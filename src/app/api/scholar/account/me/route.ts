@@ -22,8 +22,6 @@ function mapDepartment(val?: string | null): Department | undefined {
             Department.ENGINEERING_AND_COMPUTER_STUDIES,
         "College of Health Sciences": Department.HEALTH_SCIENCES,
         "College of Law": Department.LAW,
-
-        // Accept raw enum strings as well (defensive)
         EDUCATION: Department.EDUCATION,
         ARTS_AND_SCIENCES: Department.ARTS_AND_SCIENCES,
         BUSINESS_AND_ACCOUNTANCY: Department.BUSINESS_AND_ACCOUNTANCY,
@@ -42,8 +40,6 @@ function mapYearLevel(val?: string | null): YearLevel | undefined {
         "3rd Year": YearLevel.THIRD_YEAR,
         "4th Year": YearLevel.FOURTH_YEAR,
         "5th Year": YearLevel.FIFTH_YEAR,
-
-        // Accept raw enum strings as well (defensive)
         FIRST_YEAR: YearLevel.FIRST_YEAR,
         SECOND_YEAR: YearLevel.SECOND_YEAR,
         THIRD_YEAR: YearLevel.THIRD_YEAR,
@@ -64,8 +60,6 @@ function mapBloodType(val?: string | null): BloodType | undefined {
         "AB-": BloodType.AB_NEG,
         "O+": BloodType.O_POS,
         "O-": BloodType.O_NEG,
-
-        // Accept raw enum strings as well (defensive)
         A_POS: BloodType.A_POS,
         A_NEG: BloodType.A_NEG,
         B_POS: BloodType.B_POS,
@@ -139,7 +133,7 @@ export async function GET() {
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: { student: true }, // scholar = student profile
+            include: { student: true },
         });
 
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -174,7 +168,7 @@ export async function PUT(req: Request) {
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            include: { student: true }, // scholar = student
+            include: { student: true },
         });
 
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -191,6 +185,7 @@ export async function PUT(req: Request) {
         // 🔒 Prevent changing DOB once set
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existingProfile.date_of_birth ?? null;
+
         if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
             return NextResponse.json(
                 { error: "Date of birth cannot be changed once set." },
@@ -198,9 +193,11 @@ export async function PUT(req: Request) {
             );
         }
 
-        // 🧱 Build update data
+        // 🧱 Build update data (without using any)
         const data = buildStudentUpdateInput(profile);
-        if (existingDOB) delete (data as any).date_of_birth;
+        if (existingDOB && "date_of_birth" in data) {
+            delete data.date_of_birth;
+        }
 
         const updated = await prisma.student.update({
             where: { user_id: session.user.id },
