@@ -1,12 +1,13 @@
+// src/lib/withDb.ts
 import { prisma } from "@/lib/prisma";
 
 /**
- * Runs a Prisma op with a safe (re)connect if the socket was closed.
- * Retries once on known connection-closed errors.
+ * Runs a Prisma operation safely, reconnecting only when needed.
+ * Avoids redundant $connect() calls to prevent cold-start delays.
  */
 export async function withDb<T>(op: () => Promise<T>): Promise<T> {
     try {
-        await prisma.$connect();          // ensure a live socket on cold start
+        // ✅ Prisma auto-connects lazily, so no need to call $connect() every time
         return await op();
     } catch (e: unknown) {
         const err = e instanceof Error ? e : new Error(String(e));
@@ -16,13 +17,15 @@ export async function withDb<T>(op: () => Promise<T>): Promise<T> {
         const isConnDrop =
             msg.includes("Server has closed the connection") ||
             code === "P1001" || // can't reach DB
-            code === "P1009";   // database is not reachable / closed
+            code === "P1009";   // database not reachable
 
         if (isConnDrop) {
+            console.warn("⚠️ Prisma connection dropped — reconnecting...");
             try { await prisma.$disconnect(); } catch { }
-            await prisma.$connect();        // re-open socket
-            return await op();              // retry once
+            await prisma.$connect();
+            return await op();
         }
+
         throw err;
     }
 }

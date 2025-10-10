@@ -2,12 +2,12 @@
 import type { NextAuthOptions, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcryptjs"; // ✅ non-blocking, faster in serverless
 import { prisma } from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
 import { withDb } from "@/lib/withDb";
 
-// --- Extend next-auth types ---
+/** --- Extend next-auth types --- */
 declare module "next-auth" {
     interface User {
         status?: AccountStatus;
@@ -24,7 +24,6 @@ declare module "next-auth" {
     }
 }
 
-// --- Custom app types ---
 interface AppUser {
     id: string;
     name?: string | null;
@@ -48,7 +47,7 @@ interface AppSession extends Session {
     };
 }
 
-// --- Auth configuration ---
+/** --- Main NextAuth configuration --- */
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -70,7 +69,7 @@ export const authOptions: NextAuthOptions = {
                 }
                 const role = roleStr as Role;
 
-                // ✅ wrap the Prisma call so a dropped socket is reconnected
+                // 🔍 Find user (indexed query)
                 const user = await withDb(() =>
                     prisma.users.findFirst({
                         where: {
@@ -79,9 +78,7 @@ export const authOptions: NextAuthOptions = {
                                 { username: id },
                                 { username: { startsWith: `${id}-` } },
                                 { student: { is: { student_id: id } } },
-                                { student: { is: { student_id: { startsWith: `${id}-` } } } },
                                 { employee: { is: { employee_id: id } } },
-                                { employee: { is: { employee_id: { startsWith: `${id}-` } } } },
                             ],
                         },
                         select: {
@@ -96,13 +93,14 @@ export const authOptions: NextAuthOptions = {
                 );
 
                 if (!user) throw new Error("No account found with these credentials.");
-                if (user.status === AccountStatus.Inactive) {
+                if (user.status === AccountStatus.Inactive)
                     throw new Error("This account is inactive. Please contact the administrator.");
-                }
 
+                // 🔐 Password verification (non-blocking)
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) throw new Error("Invalid password.");
 
+                // ✅ Return user payload
                 return {
                     id: user.user_id,
                     name: user.student
@@ -117,8 +115,6 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
 
-    // …
-
     callbacks: {
         async jwt({ token, user }): Promise<AppJWT> {
             if (user) {
@@ -129,11 +125,11 @@ export const authOptions: NextAuthOptions = {
                 token.status = u.status;
                 token.lastChecked = Date.now();
             } else if (token.id) {
+                // ⚙️ Refresh account status every 5 min only
                 const now = Date.now();
                 const lastChecked = (token as AppJWT).lastChecked ?? 0;
 
                 if (now - lastChecked > 5 * 60 * 1000) {
-                    // ✅ also wrap any background DB reads
                     const dbUser = await withDb(() =>
                         prisma.users.findUnique({
                             where: { user_id: token.id as string },
