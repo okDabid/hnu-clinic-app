@@ -58,21 +58,26 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-green-50">
       {/* Header */}
-      <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-4">
+      <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-gray-100/70">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-2.5">
           {/* Logo + Title */}
-          <div className="flex items-center gap-3">
-            <Link href="/">
+          <div className="flex items-center gap-1">
+            <Link
+              href="/"
+              className="flex items-center gap-1 hover:opacity-90 transition-opacity"
+            >
               <Image
                 src="/clinic-illustration.svg"
-                alt="logo"
+                alt="HNU Clinic logo"
                 width={48}
                 height={48}
                 priority
                 className="md:w-14 md:h-14"
               />
+              <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none">
+                HNU Clinic
+              </h1>
             </Link>
-            <h1 className="text-lg md:text-2xl font-bold text-green-600">HNU Clinic</h1>
           </div>
 
           {/* Desktop Nav */}

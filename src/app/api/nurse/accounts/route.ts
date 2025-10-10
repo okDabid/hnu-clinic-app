@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
-import { Prisma, Gender, BloodType } from "@prisma/client";
+import {
+    Prisma,
+    Gender,
+    BloodType,
+    Department,
+    Role,
+    AccountStatus,
+} from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -33,37 +40,72 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_NEG: "O-",
 };
 
+// ---------------- UNIQUE ID HELPERS ----------------
+async function ensureUniqueUsername(base: string): Promise<string> {
+    let candidate = base;
+    let n = 1;
+    while (await prisma.users.findUnique({ where: { username: candidate } })) {
+        candidate = `${base}-${n++}`;
+    }
+    return candidate;
+}
 
+async function ensureUniqueStudentId(value: string): Promise<string> {
+    let id = value;
+    let n = 1;
+    while (await prisma.student.findUnique({ where: { student_id: id } })) {
+        id = `${value}-${n++}`;
+    }
+    return id;
+}
+
+async function ensureUniqueEmployeeId(value: string): Promise<string> {
+    let id = value;
+    let n = 1;
+    while (await prisma.employee.findUnique({ where: { employee_id: id } })) {
+        id = `${value}-${n++}`;
+    }
+    return id;
+}
 
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
-        const payload = await req.json();
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
-        const plainPassword = generatePassword();
-        const hashedPassword = await bcrypt.hash(plainPassword, 10);
+        const payload = await req.json();
+        const roleEnum = payload.role as Role;
 
         // Determine username
         let username: string;
-        if (payload.role === "NURSE" || payload.role === "DOCTOR") {
+        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
             username = payload.employee_id;
-        } else if (payload.role === "PATIENT" && payload.patientType === "student") {
+        } else if (roleEnum === Role.PATIENT && payload.patientType === "student") {
             username = payload.student_id;
-        } else if (payload.role === "PATIENT" && payload.patientType === "employee") {
+        } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
             username = payload.employee_id;
-        } else if (payload.role === "SCHOLAR") {
+        } else if (roleEnum === Role.SCHOLAR) {
             username = payload.school_id;
         } else {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
 
-        // ✅ Create user (no email or phone in Users)
+        const finalUsername = await ensureUniqueUsername(username);
+
+        // Generate password
+        const plainPassword = generatePassword();
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+        // ✅ Create user safely
         const newUser = await prisma.users.create({
             data: {
-                username,
+                username: finalUsername,
                 password: hashedPassword,
-                role: payload.role,
-                status: "Active",
+                role: roleEnum,
+                status: AccountStatus.Active,
             },
         });
 
@@ -80,17 +122,22 @@ export async function POST(req: Request) {
             emergencyco_name: payload.emergencyco_name ?? null,
             emergencyco_num: payload.emergencyco_num ?? null,
             emergencyco_relation: payload.emergencyco_relation ?? null,
-            email: payload.email?.trim() || null,     // ✅ now stored here
-            contactno: payload.phone?.trim() || null, // ✅ now stored here
+            email: payload.email?.trim() || null,
+            contactno: payload.phone?.trim() || null,
+            date_of_birth: payload.date_of_birth ? new Date(payload.date_of_birth) : null,
         };
 
         // Create profile based on role
-        if (payload.role === "PATIENT" && payload.patientType === "student") {
+        if (roleEnum === Role.PATIENT && payload.patientType === "student") {
+            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: payload.student_id,
-                    department: payload.department ?? null,
+                    student_id: uniqueStudentId,
+                    department:
+                        payload.department && Object.values(Department).includes(payload.department)
+                            ? (payload.department as Department)
+                            : null,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
                     ...sharedProfileData,
@@ -98,32 +145,38 @@ export async function POST(req: Request) {
             });
         }
 
-        if (payload.role === "PATIENT" && payload.patientType === "employee") {
+        if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
+            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
-                    employee_id: payload.employee_id,
+                    employee_id: uniqueEmployeeId,
                     ...sharedProfileData,
                 },
             });
         }
 
-        if (payload.role === "NURSE" || payload.role === "DOCTOR") {
+        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
+            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
-                    employee_id: payload.employee_id,
+                    employee_id: uniqueEmployeeId,
                     ...sharedProfileData,
                 },
             });
         }
 
-        if (payload.role === "SCHOLAR") {
+        if (roleEnum === Role.SCHOLAR) {
+            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: payload.school_id,
-                    department: payload.department ?? null,
+                    student_id: uniqueStudentId,
+                    department:
+                        payload.department && Object.values(Department).includes(payload.department)
+                            ? (payload.department as Department)
+                            : null,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
                     ...sharedProfileData,
@@ -131,13 +184,21 @@ export async function POST(req: Request) {
             });
         }
 
-        // Return generated credentials
         return NextResponse.json({
-            id: username,
+            id: username.replace(/-\d+$/, ""), // 👈 hide "-1" etc. from response
             password: plainPassword,
         });
     } catch (err) {
         console.error("[POST /api/nurse/accounts]", err);
+
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+            const field = (err.meta?.target as string[])?.[0] ?? "field";
+            return NextResponse.json(
+                { error: `Duplicate ${field} — please use a unique value.` },
+                { status: 400 }
+            );
+        }
+
         return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
     }
 }
@@ -150,14 +211,17 @@ export async function GET() {
         });
 
         const formatted = users.map((u) => {
-            let displayId = u.username;
+            let displayId = u.username.replace(/-\d+$/, ""); // 👈 hide "-1" in UI
 
-            if (u.role === "PATIENT") {
-                displayId = u.student?.student_id ?? u.employee?.employee_id ?? u.username;
-            } else if (u.role === "NURSE" || u.role === "DOCTOR") {
-                displayId = u.employee?.employee_id ?? u.username;
-            } else if (u.role === "SCHOLAR") {
-                displayId = u.student?.student_id ?? u.username;
+            if (u.role === Role.PATIENT) {
+                displayId =
+                    u.student?.student_id?.replace(/-\d+$/, "") ??
+                    u.employee?.employee_id?.replace(/-\d+$/, "") ??
+                    u.username.replace(/-\d+$/, "");
+            } else if (u.role === Role.NURSE || u.role === Role.DOCTOR) {
+                displayId = u.employee?.employee_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
+            } else if (u.role === Role.SCHOLAR) {
+                displayId = u.student?.student_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
             }
 
             const fullName =
@@ -176,8 +240,8 @@ export async function GET() {
                 role: u.role,
                 status: u.status,
                 fullName,
-                email: u.student?.email ?? u.employee?.email ?? null, // ✅ pulled from sub-tables
-                contactno: u.student?.contactno ?? u.employee?.contactno ?? null, // ✅ same here
+                email: u.student?.email ?? u.employee?.email ?? null,
+                contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,
             };
         });
@@ -186,89 +250,5 @@ export async function GET() {
     } catch (err) {
         console.error("[GET /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
-    }
-}
-
-// ---------------- UPDATE USER ----------------
-export async function PUT(req: Request) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        if (session.user.role !== "NURSE" && session.user.role !== "ADMIN") {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
-        const { user_id, newStatus, profile } = await req.json();
-
-        if (newStatus && session.user.id === user_id) {
-            return NextResponse.json({ error: "You cannot deactivate your own account." }, { status: 400 });
-        }
-
-        if (newStatus) {
-            if (!["Active", "Inactive"].includes(newStatus)) {
-                return NextResponse.json({ error: "Invalid status" }, { status: 400 });
-            }
-
-            await prisma.users.update({
-                where: { user_id },
-                data: { status: newStatus },
-            });
-        }
-
-        if (profile) {
-            const user = await prisma.users.findUnique({
-                where: { user_id },
-                include: { student: true, employee: true },
-            });
-
-            if (!user) {
-                return NextResponse.json({ error: "User not found" }, { status: 404 });
-            }
-
-            const normalizeProfile = <T extends Prisma.StudentUpdateInput | Prisma.EmployeeUpdateInput>(
-                raw: Record<string, unknown>,
-                allowed: readonly string[]
-            ): Partial<T> => {
-                const safe: Partial<T> = {};
-                for (const [key, value] of Object.entries(raw)) {
-                    if (!allowed.includes(key)) continue;
-                    if (key === "date_of_birth" && typeof value === "string") {
-                        (safe as Record<string, unknown>)[key] = new Date(value);
-                    } else if (key === "gender" && (value === "Male" || value === "Female")) {
-                        (safe as Record<string, unknown>)[key] = value as Gender;
-                    } else if (key === "bloodtype" && typeof value === "string") {
-                        (safe as Record<string, unknown>)[key] = bloodTypeMap[value] || (value as BloodType);
-                    } else {
-                        (safe as Record<string, unknown>)[key] = value;
-                    }
-                }
-                return safe;
-            };
-
-            const allowedFields = [
-                "fname", "mname", "lname", "contactno", "email", "address",
-                "bloodtype", "allergies", "medical_cond",
-                "emergencyco_name", "emergencyco_num", "emergencyco_relation",
-                "date_of_birth", "gender",
-            ] as const;
-
-            if ((user.role === "PATIENT" || user.role === "SCHOLAR") && user.student) {
-                const safeProfile = normalizeProfile<Prisma.StudentUpdateInput>(profile, allowedFields);
-                await prisma.student.update({ where: { user_id }, data: safeProfile });
-            }
-
-            if ((user.role === "NURSE" || user.role === "DOCTOR" || user.role === "PATIENT") && user.employee) {
-                const safeProfile = normalizeProfile<Prisma.EmployeeUpdateInput>(profile, allowedFields);
-                await prisma.employee.update({ where: { user_id }, data: safeProfile });
-            }
-        }
-
-        return NextResponse.json({ success: true });
-    } catch (err) {
-        console.error("[PUT /api/nurse/accounts] ERROR:", err);
-        return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 }

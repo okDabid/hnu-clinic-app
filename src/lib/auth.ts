@@ -77,8 +77,11 @@ export const authOptions: NextAuthOptions = {
                             role,
                             OR: [
                                 { username: id },
+                                { username: { startsWith: `${id}-` } },
                                 { student: { is: { student_id: id } } },
+                                { student: { is: { student_id: { startsWith: `${id}-` } } } },
                                 { employee: { is: { employee_id: id } } },
+                                { employee: { is: { employee_id: { startsWith: `${id}-` } } } },
                             ],
                         },
                         select: {
