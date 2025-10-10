@@ -397,17 +397,29 @@ export default function NurseAccountsPage() {
     async function handleToggle(user_id: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
         try {
-            await fetch("/api/nurse/accounts", {
+            const res = await fetch("/api/nurse/accounts", {
                 method: "PUT",
                 body: JSON.stringify({ user_id, newStatus }),
                 headers: { "Content-Type": "application/json" },
             });
-            toast.success(`User ${newStatus}`, { position: "top-center" });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                // ❌ Backend returned an error (e.g., 403)
+                toast.error(data.error || "Failed to update user status", { position: "top-center" });
+                return;
+            }
+
+            // ✅ Successful update
+            toast.success(data.message || `User ${newStatus}`, { position: "top-center" });
             loadUsers();
-        } catch {
+        } catch (err) {
+            console.error("Error toggling user:", err);
             toast.error("Failed to update user status", { position: "top-center" });
         }
     }
+
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 

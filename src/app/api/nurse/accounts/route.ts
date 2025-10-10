@@ -252,3 +252,62 @@ export async function GET() {
         return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
 }
+
+// ---------------- UPDATE USER STATUS (Activate / Deactivate) ----------------
+export async function PUT(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { user_id, newStatus } = await req.json();
+
+        if (!user_id || (newStatus !== "Active" && newStatus !== "Inactive")) {
+            return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+        }
+
+        // Prevent self-deactivation
+        const currentUser = await prisma.users.findUnique({
+            where: { user_id: session.user.id },
+            select: { user_id: true },
+        });
+
+        if (currentUser && currentUser.user_id === user_id) {
+            return NextResponse.json(
+                { error: "You cannot deactivate your own account." },
+                { status: 403 }
+            );
+        }
+
+        // Check if target exists
+        const target = await prisma.users.findUnique({
+            where: { user_id },
+            select: { status: true },
+        });
+
+        if (!target) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        if (target.status === newStatus) {
+            return NextResponse.json({ message: "No changes made." }, { status: 200 });
+        }
+
+        // Update user status
+        await prisma.users.update({
+            where: { user_id },
+            data: { status: newStatus },
+        });
+
+        return NextResponse.json({
+            message: `User ${newStatus === "Active" ? "activated" : "deactivated"} successfully.`,
+        });
+    } catch (err) {
+        console.error("[PUT /api/nurse/accounts]", err);
+        return NextResponse.json(
+            { error: "Failed to update account status" },
+            { status: 500 }
+        );
+    }
+}
