@@ -271,9 +271,9 @@ export default function DoctorAccountPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
+            <main className="flex-1 flex flex-col">
                 {/* Header */}
-                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
+                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-lg sm:text-xl font-bold text-green-600">Account Management</h2>
                     {/* Mobile Menu */}
                     <div className="md:hidden">
