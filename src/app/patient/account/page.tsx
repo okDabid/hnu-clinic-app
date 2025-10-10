@@ -598,8 +598,13 @@ export default function PatientAccountPage() {
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     {/* Uneditable Fields */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label className="block mb-1 font-medium">Username</Label><Input value={profile.user_id} disabled /></div>
-                                        <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.username} disabled /></div>
+                                        <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.user_id} disabled /></div>
+                                        <div>
+                                            <Label className="block mb-1 font-medium">
+                                                {profileType === "student" ? "School ID" : profileType === "employee" ? "Employee ID" : "ID"}
+                                            </Label>
+                                            <Input value={profile.username} disabled />
+                                        </div>
                                         <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
                                         <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
                                         <div>
