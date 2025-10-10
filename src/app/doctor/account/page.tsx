@@ -465,11 +465,11 @@ export default function DoctorAccountPage() {
                                     {/* Basic Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label className="block mb-1 font-medium">Username</Label>
+                                            <Label className="block mb-1 font-medium">User ID</Label>
                                             <Input value={profile.user_id} disabled />
                                         </div>
                                         <div>
-                                            <Label className="block mb-1 font-medium">User ID</Label>
+                                            <Label className="block mb-1 font-medium">Employee ID</Label>
                                             <Input value={profile.username} disabled />
                                         </div>
                                         <div>
