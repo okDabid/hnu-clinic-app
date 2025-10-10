@@ -44,12 +44,12 @@ model Users {
 model Student {
   stud_user_id         String        @id @default(dbgenerated("concat('STUD_', (floor((random() * (1000000)::double precision)))::integer)"))
   user_id              String        @unique
-  student_id           String
+  student_id           String        @unique
   fname                String
   mname                String?
   lname                String
   date_of_birth        DateTime?
-  gender               Gender
+  gender               Gender?
   program              String?
   contactno            String?       @unique
   address              String?
@@ -69,12 +69,12 @@ model Student {
 model Employee {
   emp_id               String        @id @default(dbgenerated("concat('EMP_', (floor((random() * (1000000)::double precision)))::integer)"))
   user_id              String        @unique
-  employee_id          String
+  employee_id          String        @unique
   fname                String
   mname                String?
   lname                String
   date_of_birth        DateTime?
-  gender               Gender
+  gender               Gender?
   contactno            String?       @unique
   address              String?
   allergies            String?
