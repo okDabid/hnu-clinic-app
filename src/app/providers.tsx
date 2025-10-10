@@ -26,7 +26,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         if (params.has("logout") && params.get("logout") === "success") {
             toast.success("You have been logged out successfully.", {
                 position: "top-center",
-                duration: 6000,
+                duration: 2500,
             });
             params.delete("logout");
             window.history.replaceState({}, "", url.toString());
@@ -35,7 +35,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         if (params.has("login") && params.get("login") === "success") {
             toast.success("Welcome!", {
                 position: "top-center",
-                duration: 6000,
+                duration: 2500,
             });
             params.delete("login");
             window.history.replaceState({}, "", url.toString());
