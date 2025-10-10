@@ -179,24 +179,43 @@ export default function NurseAccountsPage() {
         }
     }
 
-    // 🔹 Fetch users
+    // 🔹 Fetch users (deduplicated but allows same visible ID across different roles)
     async function loadUsers() {
         try {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
             const data = await res.json();
 
-            // Normalize API response shape to match frontend expectations
-            const usersData = (Array.isArray(data) ? data : []).map((u) => ({
-                user_id: u.user_id || u.accountId || u.id || "N/A",
-                accountId: u.accountId || u.user_id || "N/A",
-                role: u.role || "Unknown",
-                status: u.status || "Inactive",
-                fullName:
-                    u.fullName ||
-                    [u.fname, u.mname, u.lname].filter(Boolean).join(" ") ||
-                    "Unnamed",
-            }));
+            if (!Array.isArray(data)) {
+                setUsers([]);
+                return;
+            }
 
+            // ✅ Deduplicate by combo of accountId + role (unique user in DB)
+            const seen = new Set<string>();
+            const usersData: User[] = [];
+
+            for (const u of data) {
+                const accountId = u.accountId || u.user_id || "N/A";
+                const role = u.role || "Unknown";
+                const dedupKey = `${accountId}-${role}`; // 👈 ensures same ID but diff role are unique
+
+                if (!seen.has(dedupKey)) {
+                    seen.add(dedupKey);
+
+                    usersData.push({
+                        user_id: u.user_id || u.accountId || u.id || "N/A", // displayable ID (may be same across roles)
+                        accountId,
+                        role,
+                        status: u.status || "Inactive",
+                        fullName:
+                            u.fullName ||
+                            [u.fname, u.mname, u.lname].filter(Boolean).join(" ") ||
+                            "Unnamed",
+                    });
+                }
+            }
+
+            // ✅ Sort by role then ID
             const sorted = orderBy(
                 usersData,
                 [
@@ -215,6 +234,7 @@ export default function NurseAccountsPage() {
             toast.error("Failed to load users", { position: "top-center" });
         }
     }
+
 
     // 🔹 Fetch own profile
     const loadProfile = useCallback(async () => {
@@ -397,17 +417,29 @@ export default function NurseAccountsPage() {
     async function handleToggle(user_id: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
         try {
-            await fetch("/api/nurse/accounts", {
+            const res = await fetch("/api/nurse/accounts", {
                 method: "PUT",
                 body: JSON.stringify({ user_id, newStatus }),
                 headers: { "Content-Type": "application/json" },
             });
-            toast.success(`User ${newStatus}`, { position: "top-center" });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                // ❌ Backend returned an error (e.g., 403)
+                toast.error(data.error || "Failed to update user status", { position: "top-center" });
+                return;
+            }
+
+            // ✅ Successful update
+            toast.success(data.message || `User ${newStatus}`, { position: "top-center" });
             loadUsers();
-        } catch {
+        } catch (err) {
+            console.error("Error toggling user:", err);
             toast.error("Failed to update user status", { position: "top-center" });
         }
     }
+
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -1038,7 +1070,7 @@ export default function NurseAccountsPage() {
                                             filteredUsers
                                                 .slice((currentPage - 1) * 8, currentPage * 8)
                                                 .map((user) => (
-                                                    <TableRow key={user.user_id} className="hover:bg-green-50 transition">
+                                                    <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-green-50 transition">
                                                         <TableCell className="whitespace-nowrap text-xs sm:text-sm">{user.user_id}</TableCell>
                                                         <TableCell>{user.role}</TableCell>
                                                         <TableCell>{user.fullName}</TableCell>
