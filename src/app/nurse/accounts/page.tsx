@@ -698,8 +698,17 @@ export default function NurseAccountsPage() {
                                                         value={tempDOB}
                                                         onChange={(e) => setTempDOB(e.target.value)}
                                                     />
+                                                    {tempDOB && (
+                                                        <Button
+                                                            type="button"
+                                                            className="mt-2 bg-green-600 hover:bg-green-700 text-white text-sm"
+                                                            onClick={() => setShowDOBConfirm(true)}
+                                                        >
+                                                            Confirm Date
+                                                        </Button>
+                                                    )}
                                                     <p className="text-xs text-gray-500 mt-1">
-                                                        You can only set this once. After saving, hit enter key.
+                                                        You can only set this once. Once saved, it cannot be changed.
                                                     </p>
 
                                                     {/* 🔒 Confirmation Dialog (shown only when user saves) */}
