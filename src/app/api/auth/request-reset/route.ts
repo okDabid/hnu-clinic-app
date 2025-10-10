@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import nodemailer from "nodemailer";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
     try {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
         console.log("⚙️ Starting password reset for:", contact);
 
-        // 🔍 Find the user by email or phone
+        // 🔍 Find user by email or phone
         const user = await prisma.users.findFirst({
             where: {
                 OR: [
@@ -49,121 +49,71 @@ export async function POST(req: Request) {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-        // 💾 Save token
-        await prisma.passwordResetToken.deleteMany({
-            where: { userId: user.user_id, contact },
-        });
+        // 💾 Atomic token handling with rate limit
+        await prisma.$transaction(async (tx) => {
+            const existing = await tx.passwordResetToken.findFirst({
+                where: { userId: user.user_id, expiresAt: { gt: new Date() } },
+            });
 
-        await prisma.passwordResetToken.create({
-            data: {
-                userId: user.user_id,
-                token: code,
-                contact,
-                type: contact.includes("@") ? "EMAIL" : "PHONE",
-                expiresAt,
-            },
+            if (existing) {
+                throw new Error("Reset already requested recently.");
+            }
+
+            await tx.passwordResetToken.deleteMany({
+                where: { userId: user.user_id, contact },
+            });
+
+            await tx.passwordResetToken.create({
+                data: {
+                    userId: user.user_id,
+                    token: code,
+                    contact,
+                    type: contact.includes("@") ? "EMAIL" : "PHONE",
+                    expiresAt,
+                },
+            });
         });
 
         // ✉️ EMAIL HANDLER
         if (contact.includes("@")) {
-            const EMAIL_USER = process.env.EMAIL_USER;
-            const EMAIL_PASS = process.env.EMAIL_PASS;
-
-            if (!EMAIL_USER || !EMAIL_PASS) {
-                console.error("❌ Missing EMAIL_USER or EMAIL_PASS in environment");
-                return NextResponse.json(
-                    { error: "Email service not configured." },
-                    { status: 500 }
-                );
-            }
-
-            // ✅ Gmail transporter (production-safe config)
-            const transporter = nodemailer.createTransport({
-                host: "smtp.gmail.com",
-                port: 587, // ✅ TLS port works on Vercel
-                secure: false, // STARTTLS instead of SSL
-                auth: {
-                    user: EMAIL_USER,
-                    pass: EMAIL_PASS,
-                },
-                tls: {
-                    rejectUnauthorized: false, // ✅ Prevent SSL errors on serverless
-                },
-            });
-
-            // ⏱ Set connection timeout (helps on Vercel)
-            transporter.set("timeout", 10000);
-
-            try {
-                await transporter.verify();
-                console.log("✅ Gmail transporter ready in production");
-            } catch (verifyErr) {
-                console.error("❌ Gmail transporter verification failed:", verifyErr);
-            }
-
             const htmlContent = `
-                <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
-                    <!-- Header -->
-                    <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="display: inline-block; background-color: #ffffff; border-radius: 50%; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <img
-                        src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
-                        alt="HNU Clinic Logo"
-                        width="48"
-                        height="48"
-                        style="display: block; margin: auto;"
-                        />
-                    </div>
-                    <h1 style="color: #16a34a; font-size: 22px; margin: 12px 0 4px; font-weight: 700;">HNU Clinic</h1>
-                    <p style="color: #065f46; margin: 0; font-size: 14px;">Password Reset Request</p>
-                    </div>
+        <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display: inline-block; background-color: #ffffff; border-radius: 50%; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+              <img
+                src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
+                alt="HNU Clinic Logo"
+                width="48"
+                height="48"
+                style="display: block; margin: auto;"
+              />
+            </div>
+            <h1 style="color: #16a34a; font-size: 22px; margin: 12px 0 4px; font-weight: 700;">HNU Clinic</h1>
+            <p style="color: #065f46; margin: 0; font-size: 14px;">Password Reset Request</p>
+          </div>
 
-                    <!-- Body -->
-                    <div style="background-color: #ffffff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #d1fae5; text-align: center; color: #065f46;">
-                    <p style="font-size: 16px;">Hello, <strong>${fullName}</strong>,</p>
-                    <p style="font-size: 15px; color: #065f46;">
-                        You requested to reset your password. Please use the code below to proceed:
-                    </p>
+          <div style="background-color: #ffffff; border-radius: 12px; padding: 20px; border: 1px solid #d1fae5; text-align: center; color: #065f46;">
+            <p style="font-size: 16px;">Hello, <strong>${fullName}</strong>,</p>
+            <p style="font-size: 15px;">You requested to reset your password. Please use the code below to proceed:</p>
+            <div style="background-color: #ecfdf5; border: 1px dashed #10b981; padding: 14px 24px; border-radius: 10px; margin: 20px auto; display: inline-block;">
+              <code style="font-size: 26px; font-weight: bold; color: #15803d; letter-spacing: 3px;">${code}</code>
+            </div>
+            <p style="font-size: 15px;">This code will expire in <strong>10 minutes</strong>.</p>
+            <p style="font-size: 14px;">If you didn’t request this, please ignore this email.</p>
+          </div>
 
-                    <div style="background-color: #ecfdf5; border: 1px dashed #10b981; padding: 14px 24px; border-radius: 10px; margin: 20px auto; display: inline-block;">
-                        <code style="font-size: 26px; font-weight: bold; color: #15803d; letter-spacing: 3px;">
-                        ${code.split("").join(" ")}
-                        </code>
-                    </div>
+          <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 20px;">
+            This message was automatically sent from the <strong>HNU Clinic Capstone Project</strong> website.
+          </p>
+        </div>
+      `;
 
-                    <p style="font-size: 15px; color: #065f46;">This code will expire in <strong>10 minutes</strong>.</p>
-                    <p style="font-size: 14px; color: #065f46;">
-                        If you didn’t request this, please ignore this email.
-                    </p>
-                    </div>
-
-                    <!-- Footer -->
-                    <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 20px;">
-                    This message was automatically sent from the <strong>HNU Clinic Capstone Project</strong> website.
-                    </p>
-                </div>
-                `;
-
-            // 📨 Send email with retry logic
-            try {
-                const info = await transporter.sendMail({
-                    from: `"HNU Clinic" <${EMAIL_USER}>`,
-                    to: contact,
-                    subject: "Password Reset Code",
-                    html: htmlContent,
-                });
-                console.log("📧 Email sent:", info.messageId);
-            } catch (err) {
-                console.error("❌ Email send failed, retrying once:", err);
-                await new Promise((res) => setTimeout(res, 2000)); // wait 2s and retry once
-                const info = await transporter.sendMail({
-                    from: `"HNU Clinic" <${EMAIL_USER}>`,
-                    to: contact,
-                    subject: "Password Reset Code",
-                    html: htmlContent,
-                });
-                console.log("📧 Email sent after retry:", info.messageId);
-            }
+            await sendEmail({
+                to: contact,
+                subject: "Password Reset Code",
+                html: htmlContent,
+                fromName: "HNU Clinic",
+            });
         }
 
         // 📱 SMS HANDLER (Semaphore)
@@ -223,7 +173,7 @@ export async function POST(req: Request) {
                         { status: 502 }
                     );
                 }
-            } catch (err) {
+            } catch (err: unknown) {
                 console.error("❌ SMS send failed:", err);
                 return NextResponse.json(
                     { error: "Failed to send SMS.", details: String(err) },
@@ -238,11 +188,21 @@ export async function POST(req: Request) {
         });
     } catch (error: unknown) {
         console.error("REQUEST-RESET ERROR DETAILS:", error);
+        const message =
+            error instanceof Error ? error.message : "Unknown error occurred";
+
+        if (message === "Reset already requested recently.") {
+            return NextResponse.json(
+                {
+                    error:
+                        "A reset code was already sent recently. Please try again later.",
+                },
+                { status: 429 }
+            );
+        }
+
         return NextResponse.json(
-            {
-                error: "Internal server error.",
-                details: error instanceof Error ? error.message : JSON.stringify(error),
-            },
+            { error: "Internal server error.", details: message },
             { status: 500 }
         );
     }
