@@ -93,7 +93,7 @@ export async function POST(req: Request) {
           </div>
 
           <div style="background-color: #ffffff; border-radius: 12px; padding: 20px; border: 1px solid #d1fae5; text-align: center; color: #065f46;">
-            <p style="font-size: 16px;">Hello, <strong>${fullName}</strong>,</p>
+            <p style="font-size: 16px;">Hello, <strong>${fullName}</strong>!</p>
             <p style="font-size: 15px;">You requested to reset your password. Please use the code below to proceed:</p>
             <div style="background-color: #ecfdf5; border: 1px dashed #10b981; padding: 14px 24px; border-radius: 10px; margin: 20px auto; display: inline-block;">
               <code style="font-size: 26px; font-weight: bold; color: #15803d; letter-spacing: 3px;">${code}</code>
