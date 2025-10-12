@@ -46,6 +46,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+import { format12Hour } from "@/lib/time";
+
 type Clinic = {
     clinic_id: string;
     clinic_name: string;
@@ -83,13 +85,6 @@ export default function DoctorConsultationPage() {
         }
     }
 
-    function toLocalTime(iso: string): string {
-        const date = new Date(iso);
-        const hours = date.getHours().toString().padStart(2, "0");
-        const mins = date.getMinutes().toString().padStart(2, "0");
-        return `${hours}:${mins}`;
-    }
-
     async function loadSlots() {
         try {
             setLoading(true);
@@ -106,7 +101,7 @@ export default function DoctorConsultationPage() {
 
     async function loadClinics() {
         try {
-            const res = await fetch("/api/clinics", { cache: "no-store" });
+            const res = await fetch("/api/meta/clinics", { cache: "no-store" });
             const data = await res.json();
             if (!data.error) setClinics(data);
         } catch {
@@ -347,9 +342,13 @@ export default function DoctorConsultationPage() {
                                         <TableBody>
                                             {slots.map((slot) => (
                                                 <TableRow key={slot.availability_id} className="hover:bg-green-50 transition">
-                                                    <TableCell>{slot.available_date.slice(0, 10)}</TableCell>
-                                                    <TableCell>{toLocalTime(slot.available_timestart)}</TableCell>
-                                                    <TableCell>{toLocalTime(slot.available_timeend)}</TableCell>
+                                                    <TableCell>
+                                                        {new Date(slot.available_date).toLocaleDateString("en-CA", {
+                                                            timeZone: "Asia/Manila",
+                                                        })}
+                                                    </TableCell>
+                                                    <TableCell>{format12Hour(slot.available_timestart)}</TableCell>
+                                                    <TableCell>{format12Hour(slot.available_timeend)}</TableCell>
                                                     <TableCell>{slot.clinic.clinic_name}</TableCell>
                                                     <TableCell className="text-right">
                                                         <Button
@@ -359,9 +358,16 @@ export default function DoctorConsultationPage() {
                                                                 setEditingSlot(slot);
                                                                 setFormData({
                                                                     clinic_id: slot.clinic.clinic_id,
-                                                                    available_date: slot.available_date.slice(0, 10),
-                                                                    available_timestart: toLocalTime(slot.available_timestart),
-                                                                    available_timeend: toLocalTime(slot.available_timeend),
+                                                                    available_date: new Date(slot.available_date).toLocaleDateString(
+                                                                        "en-CA",
+                                                                        { timeZone: "Asia/Manila" }
+                                                                    ),
+                                                                    available_timestart: new Date(slot.available_timestart)
+                                                                        .toISOString()
+                                                                        .slice(11, 16),
+                                                                    available_timeend: new Date(slot.available_timeend)
+                                                                        .toISOString()
+                                                                        .slice(11, 16),
                                                                 });
                                                                 setDialogOpen(true);
                                                             }}
@@ -373,6 +379,7 @@ export default function DoctorConsultationPage() {
                                                 </TableRow>
                                             ))}
                                         </TableBody>
+
                                     </Table>
                                 </div>
                             ) : (

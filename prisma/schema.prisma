@@ -140,6 +140,7 @@ model Appointment {
   appointment_date      DateTime
   appointment_timestart DateTime
   appointment_timeend   DateTime
+  remarks               String?
   service_type          ServiceType?
   status                AppointmentStatus
   createdAt             DateTime          @default(now())
