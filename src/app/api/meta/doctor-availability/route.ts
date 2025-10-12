@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
 
 /**
  * GET /api/meta/doctor-availability
  * Query params:
  *   - clinic_id
  *   - doctor_user_id
- *   - date (YYYY-MM-DD)
- * 
+ *   - date (YYYY-MM-DD, Manila)
+ *
  * Returns: Array of available time slots (30 mins each)
  */
 export async function GET(req: Request) {
@@ -18,22 +19,22 @@ export async function GET(req: Request) {
         const date = searchParams.get("date");
 
         if (!clinic_id || !doctor_user_id || !date) {
-            return NextResponse.json({ message: "Missing required parameters" }, { status: 400 });
+            return NextResponse.json(
+                { message: "Missing required parameters" },
+                { status: 400 }
+            );
         }
 
-        // Parse date range for that day
-        const dayStart = new Date(`${date}T00:00:00`);
-        const dayEnd = new Date(`${date}T23:59:59`);
+        // ✅ Manila-local day bounds (works in UTC prod)
+        const dayStart = startOfManilaDay(date);
+        const dayEnd = endOfManilaDay(date);
 
-        // 1️⃣ Get doctor’s availability for that date and clinic
+        // 1) Availabilities for that clinic/doctor on that Manila day
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 clinic_id,
                 doctor_user_id,
-                available_date: {
-                    gte: dayStart,
-                    lte: dayEnd,
-                },
+                available_date: { gte: dayStart, lte: dayEnd },
             },
             orderBy: { available_timestart: "asc" },
         });
@@ -42,14 +43,11 @@ export async function GET(req: Request) {
             return NextResponse.json({ slots: [] });
         }
 
-        // 2️⃣ Get existing appointments that block slots
+        // 2) Existing appointments that block slots (Manila day)
         const appointments = await prisma.appointment.findMany({
             where: {
                 doctor_user_id,
-                appointment_date: {
-                    gte: dayStart,
-                    lte: dayEnd,
-                },
+                appointment_timestart: { gte: dayStart, lte: dayEnd },
                 status: { in: ["Pending", "Approved"] },
             },
             select: {
@@ -58,20 +56,20 @@ export async function GET(req: Request) {
             },
         });
 
-        // Helper: check overlap between two ranges
-        const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) => {
-            return aStart < bEnd && bStart < aEnd;
-        };
+        const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
+            aStart < bEnd && bStart < aEnd;
 
-        // Helper: convert Date → HH:mm
-        const formatTime = (d: Date) => {
-            const hours = String(d.getHours()).padStart(2, "0");
-            const mins = String(d.getMinutes()).padStart(2, "0");
-            return `${hours}:${mins}`;
-        };
+        // ✅ Format to HH:mm in Manila
+        const fmtHHmmManila = (d: Date) =>
+            new Intl.DateTimeFormat("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+                timeZone: "Asia/Manila",
+            }).format(d);
 
-        // 3️⃣ Generate 30-minute slots within all available ranges
-        const SLOT_MIN = 15;
+        // 3) Generate 30-minute slots
+        const SLOT_MIN = 30;
         const slots: { start: string; end: string }[] = [];
 
         for (const avail of availabilities) {
@@ -81,15 +79,14 @@ export async function GET(req: Request) {
                 const next = new Date(current.getTime() + SLOT_MIN * 60 * 1000);
 
                 if (next <= avail.available_timeend) {
-                    // Check if this 30min block conflicts with an appointment
                     const isBlocked = appointments.some((appt) =>
                         overlaps(current, next, appt.appointment_timestart, appt.appointment_timeend)
                     );
 
                     if (!isBlocked) {
                         slots.push({
-                            start: formatTime(current),
-                            end: formatTime(next),
+                            start: fmtHHmmManila(current),
+                            end: fmtHHmmManila(next),
                         });
                     }
                 }

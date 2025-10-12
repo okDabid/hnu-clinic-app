@@ -3,10 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Role, Prisma } from "@prisma/client";
-import {
-    buildManilaDate,
-    startOfManilaDay,
-} from "@/lib/time";
+import { buildManilaDate, startOfManilaDay } from "@/lib/time";
 
 /**
  * ✅ GET — Fetch all consultation slots for logged-in doctor
@@ -31,10 +28,7 @@ export async function GET() {
             include: {
                 clinic: { select: { clinic_id: true, clinic_name: true } },
             },
-            orderBy: [
-                { available_date: "asc" },
-                { available_timestart: "asc" },
-            ],
+            orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
         });
 
         return NextResponse.json(slots);
@@ -91,7 +85,7 @@ export async function POST(req: Request) {
             data: {
                 doctor_user_id: doctor.user_id,
                 clinic_id,
-                available_date: buildManilaDate(available_date, "00:00"),
+                available_date: startOfManilaDay(available_date),
                 available_timestart: start,
                 available_timeend: end,
             },
@@ -137,25 +131,19 @@ export async function PUT(req: Request) {
         } = await req.json();
 
         if (!availability_id) {
-            return NextResponse.json(
-                { error: "Missing availability ID" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Missing availability ID" }, { status: 400 });
         }
 
         const updateData: Prisma.DoctorAvailabilityUpdateInput = {};
 
-        // Connect clinic relation if provided
         if (clinic_id) {
             updateData.clinic = { connect: { clinic_id } };
         }
 
-        // Update date
         if (available_date) {
             updateData.available_date = startOfManilaDay(available_date);
         }
 
-        // Update time range (use consistent Manila conversion)
         if (available_timestart && available_date) {
             updateData.available_timestart = buildManilaDate(available_date, available_timestart);
         }

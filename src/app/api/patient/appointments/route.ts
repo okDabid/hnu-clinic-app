@@ -2,18 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { rangesOverlap } from "@/lib/time";
-
-// 🕒 Helpers
-function buildManilaDate(date: string, time: string) {
-    return new Date(`${date}T${time}:00+08:00`);
-}
-function startOfManilaDay(date: string) {
-    return new Date(`${date}T00:00:00+08:00`);
-}
-function endOfManilaDay(date: string) {
-    return new Date(`${date}T23:59:59+08:00`);
-}
+import {
+    rangesOverlap,
+    buildManilaDate,
+    startOfManilaDay,
+    endOfManilaDay,
+} from "@/lib/time";
+import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
 
 export async function GET() {
     try {
@@ -39,7 +34,6 @@ export async function GET() {
         });
 
         const formatted = appointments.map((a) => {
-            // 🧾 pick best available doctor name
             const doctorName =
                 a.doctor?.employee?.fname && a.doctor?.employee?.lname
                     ? `${a.doctor.employee.fname} ${a.doctor.employee.lname}`
@@ -51,7 +45,9 @@ export async function GET() {
                 id: a.appointment_id,
                 clinic: a.clinic?.clinic_name ?? "-",
                 doctor: doctorName,
-                date: new Date(a.appointment_timestart).toLocaleDateString("en-CA", { timeZone: "Asia/Manila" }),
+                date: new Date(a.appointment_timestart).toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Manila",
+                }),
                 time: new Date(a.appointment_timestart).toLocaleTimeString("en-US", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -65,7 +61,10 @@ export async function GET() {
         return NextResponse.json(formatted);
     } catch (err) {
         console.error("[GET /api/patient/appointments]", err);
-        return NextResponse.json({ error: "Failed to fetch appointments" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Failed to fetch appointments" },
+            { status: 500 }
+        );
     }
 }
 
@@ -77,7 +76,8 @@ export async function POST(req: Request) {
 
         const patient_user_id = session.user.id as string;
         const body = await req.json();
-        const { clinic_id, doctor_user_id, service_type, date, time_start, time_end } = body || {};
+        const { clinic_id, doctor_user_id, service_type, date, time_start, time_end } =
+            body || {};
 
         if (!clinic_id || !doctor_user_id || !service_type || !date || !time_start || !time_end)
             return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
@@ -86,15 +86,15 @@ export async function POST(req: Request) {
         if (!clinic) return NextResponse.json({ message: "Clinic not found" }, { status: 404 });
 
         const doctor = await prisma.users.findUnique({ where: { user_id: doctor_user_id } });
-        if (!doctor || doctor.role !== "DOCTOR")
+        if (!doctor || doctor.role !== Role.DOCTOR)
             return NextResponse.json({ message: "Doctor not found" }, { status: 404 });
 
         // ✅ Build PH-local timestamps
-        const appointment_date = buildManilaDate(date, "00:00");
+        const appointment_date = startOfManilaDay(date);
         const appointment_timestart = buildManilaDate(date, time_start);
         const appointment_timeend = buildManilaDate(date, time_end);
-        const startOfDay = startOfManilaDay(date);
-        const endOfDay = endOfManilaDay(date);
+        const dayStart = startOfManilaDay(date);
+        const dayEnd = endOfManilaDay(date);
 
         if (!(appointment_timestart < appointment_timeend))
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
             where: {
                 doctor_user_id,
                 clinic_id,
-                available_date: { gte: startOfDay, lte: endOfDay },
+                available_date: { gte: dayStart, lte: dayEnd },
             },
         });
 
@@ -124,8 +124,8 @@ export async function POST(req: Request) {
         const existing = await prisma.appointment.findMany({
             where: {
                 doctor_user_id,
-                appointment_timestart: { gte: startOfDay, lte: endOfDay },
-                status: { in: ["Pending", "Approved"] },
+                appointment_timestart: { gte: dayStart, lte: dayEnd },
+                status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved] },
             },
         });
 
@@ -150,8 +150,8 @@ export async function POST(req: Request) {
                 appointment_date,
                 appointment_timestart,
                 appointment_timeend,
-                service_type,
-                status: "Pending",
+                service_type: service_type as ServiceType,
+                status: AppointmentStatus.Pending,
             },
         });
 
