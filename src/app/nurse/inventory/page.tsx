@@ -41,7 +41,7 @@ import {
     TableRow
 } from "@/components/ui/table";
 
-import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
@@ -197,11 +197,13 @@ export default function NurseInventoryPage() {
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
                 {/* Logo Section */}
-                <div className="flex items-center gap-2 mb-12">
-                    <img
+                <div className="flex items-center mb-12">
+                    <Image
                         src="/clinic-illustration.svg"
                         alt="clinic-logo"
-                        className="w-9 h-9 object-contain drop-shadow-sm"
+                        width={40}
+                        height={40}
+                        className="object-contain drop-shadow-sm"
                     />
                     <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
                         HNU Clinic
