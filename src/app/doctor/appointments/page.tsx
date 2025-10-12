@@ -17,6 +17,7 @@ import {
     Check,
     XCircle,
     Move,
+    MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -34,11 +35,9 @@ import {
     DialogTitle,
     DialogDescription,
     DialogFooter,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { format12Hour, formatTimeRange } from "@/lib/time";
 
 interface Appointment {
     id: string;
@@ -114,7 +113,10 @@ export default function DoctorAppointmentsPage() {
             toast.error("Please provide a reason");
             return;
         }
-        if (actionType === "move" && (!reason.trim() || !newDate || !newTimeStart || !newTimeEnd)) {
+        if (
+            actionType === "move" &&
+            (!reason.trim() || !newDate || !newTimeStart || !newTimeEnd)
+        ) {
             toast.error("Please complete all move fields");
             return;
         }
@@ -141,9 +143,7 @@ export default function DoctorAppointmentsPage() {
             } else if (actionType === "move") {
                 const updated = await res.json();
                 setAppointments((prev) =>
-                    prev.map((appt) =>
-                        appt.id === selectedAppt.id ? updated : appt
-                    )
+                    prev.map((appt) => (appt.id === selectedAppt.id ? updated : appt))
                 );
                 toast.success("Appointment moved");
             }
@@ -159,7 +159,7 @@ export default function DoctorAppointmentsPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-green-50">
+        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
             <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
                 <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
@@ -173,10 +173,7 @@ export default function DoctorAppointmentsPage() {
                     <Link href="/doctor/consultation" className="flex items-center gap-2 hover:text-green-600">
                         <Clock4 className="h-5 w-5" /> Consultation
                     </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-2 text-green-600 font-semibold"
-                    >
+                    <Link href="/doctor/appointments" className="flex items-center gap-2 text-green-600 font-semibold">
                         <CalendarDays className="h-5 w-5" /> Appointments
                     </Link>
                     <Link href="/doctor/patients" className="flex items-center gap-2 hover:text-green-600">
@@ -206,8 +203,13 @@ export default function DoctorAppointmentsPage() {
 
             {/* Main */}
             <main className="flex-1 flex flex-col">
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Manage Appointments</h2>
+                {/* Header */}
+                <header className="w-full bg-white shadow px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+                    <h2 className="text-lg sm:text-xl font-bold text-green-600">
+                        Manage Appointments
+                    </h2>
+
+                    {/* Mobile Menu */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -215,18 +217,30 @@ export default function DoctorAppointmentsPage() {
                                     {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                                 </Button>
                             </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild><Link href="/doctor">Dashboard</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/certificates">MedCerts</Link></DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
+                                    Logout
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
                 </header>
 
-                <section className="px-6 py-10 max-w-6xl mx-auto w-full">
-                    <Card className="shadow-lg rounded-2xl">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
+                {/* Appointments Section */}
+                <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col space-y-8">
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
+                        <CardHeader className="border-b">
+                            <CardTitle className="flex items-center gap-2 text-green-600 text-lg sm:text-xl">
                                 <CalendarDays className="w-6 h-6" /> All Scheduled Appointments
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-1 flex flex-col pt-4">
                             {loading ? (
                                 <div className="flex items-center justify-center py-10 text-gray-500">
                                     <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading appointments...
@@ -236,55 +250,59 @@ export default function DoctorAppointmentsPage() {
                                     No appointments found.
                                 </p>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full border border-gray-200 rounded-md">
+                                <div className="overflow-x-auto w-full">
+                                    <table className="min-w-full text-sm border border-gray-200 rounded-md">
                                         <thead className="bg-green-100 text-green-700">
                                             <tr>
                                                 <th className="px-4 py-2 text-left">Patient</th>
                                                 <th className="px-4 py-2 text-left">Date</th>
                                                 <th className="px-4 py-2 text-left">Time</th>
                                                 <th className="px-4 py-2 text-left">Status</th>
-                                                <th className="px-4 py-2 text-center">Actions</th>
+                                                <th className="px-4 py-2 text-center">Manage</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {appointments.map((appt) => (
-                                                <tr key={appt.id} className="border-t hover:bg-gray-50 transition">
+                                                <tr key={appt.id} className="border-t hover:bg-green-50 transition">
                                                     <td className="px-4 py-2">{appt.patientName}</td>
                                                     <td className="px-4 py-2">{appt.date}</td>
                                                     <td className="px-4 py-2">{appt.time}</td>
                                                     <td className="px-4 py-2 capitalize">{appt.status}</td>
-                                                    <td className="px-4 py-2 flex justify-center gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleApprove(appt.id)}
-                                                            disabled={appt.status.toLowerCase() === "approved"}
-                                                        >
-                                                            <Check className="w-4 h-4 mr-1" /> Approve
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => {
-                                                                setSelectedAppt(appt);
-                                                                setActionType("move");
-                                                                setDialogOpen(true);
-                                                            }}
-                                                        >
-                                                            <Move className="w-4 h-4 mr-1" /> Move
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="destructive"
-                                                            onClick={() => {
-                                                                setSelectedAppt(appt);
-                                                                setActionType("cancel");
-                                                                setDialogOpen(true);
-                                                            }}
-                                                        >
-                                                            <XCircle className="w-4 h-4 mr-1" /> Cancel
-                                                        </Button>
+                                                    <td className="px-4 py-2 text-center">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button size="sm" variant="outline" className="flex items-center gap-2">
+                                                                    <MoreHorizontal className="w-4 h-4" /> Manage
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-40">
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleApprove(appt.id)}
+                                                                    disabled={appt.status.toLowerCase() === "approved"}
+                                                                >
+                                                                    <Check className="w-4 h-4 mr-2 text-green-600" /> Approve
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={() => {
+                                                                        setSelectedAppt(appt);
+                                                                        setActionType("move");
+                                                                        setDialogOpen(true);
+                                                                    }}
+                                                                >
+                                                                    <Move className="w-4 h-4 mr-2 text-blue-600" /> Move
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={() => {
+                                                                        setSelectedAppt(appt);
+                                                                        setActionType("cancel");
+                                                                        setDialogOpen(true);
+                                                                    }}
+                                                                    className="text-red-600 focus:text-red-700"
+                                                                >
+                                                                    <XCircle className="w-4 h-4 mr-2 text-red-600" /> Cancel
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -296,13 +314,11 @@ export default function DoctorAppointmentsPage() {
                     </Card>
                 </section>
 
-                {/* Action Dialog */}
+                {/* Dialog */}
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogContent className="rounded-xl">
                         <DialogHeader>
-                            <DialogTitle className="capitalize">
-                                {actionType} Appointment
-                            </DialogTitle>
+                            <DialogTitle className="capitalize">{actionType} Appointment</DialogTitle>
                             <DialogDescription>
                                 {actionType === "cancel"
                                     ? "Please provide a reason for cancellation."
@@ -322,7 +338,7 @@ export default function DoctorAppointmentsPage() {
                                                 onChange={(e) => setNewDate(e.target.value)}
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <Label>Start Time</Label>
                                                 <Input
@@ -364,7 +380,8 @@ export default function DoctorAppointmentsPage() {
                     </DialogContent>
                 </Dialog>
 
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
+                {/* Footer */}
+                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
                     © {new Date().getFullYear()} HNU Clinic – Doctor Panel
                 </footer>
             </main>

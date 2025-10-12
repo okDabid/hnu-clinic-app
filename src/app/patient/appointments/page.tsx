@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { formatTimeRange } from "@/lib/time";
 
 type Clinic = { clinic_id: string; clinic_name: string };
-type Doctor = { user_id: string; name: string };
+type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
 type Slot = { start: string; end: string };
 type Appointment = {
     id: string;
@@ -57,7 +57,7 @@ export default function PatientAppointmentsPage() {
 
     const [clinicId, setClinicId] = useState("");
     const [doctorId, setDoctorId] = useState("");
-    const [serviceType, setServiceType] = useState<"Consultation" | "Dental" | "Assessment" | "Other">("Consultation");
+    const [serviceType, setServiceType] = useState<string>("");
     const [date, setDate] = useState<string>("");
     const [timeStart, setTimeStart] = useState<string>("");
 
@@ -100,7 +100,7 @@ export default function PatientAppointmentsPage() {
         (async () => {
             try {
                 setLoadingDoctors(true);
-                const params = new URLSearchParams({ clinic_id: clinicId, service_type: serviceType });
+                const params = new URLSearchParams({ clinic_id: clinicId });
                 const res = await fetch(`/api/meta/doctors?${params}`);
                 const data = await res.json();
                 setDoctors(data);
@@ -110,7 +110,7 @@ export default function PatientAppointmentsPage() {
                 setLoadingDoctors(false);
             }
         })();
-    }, [clinicId, serviceType]);
+    }, [clinicId]);
 
     // Load slots
     useEffect(() => {
@@ -134,14 +134,48 @@ export default function PatientAppointmentsPage() {
     }, [clinicId, doctorId, date]);
 
     const selectedSlot = useMemo(() => slots.find(s => s.start === timeStart), [slots, timeStart]);
+    const selectedDoctor = useMemo(() => doctors.find(d => d.user_id === doctorId) || null, [doctorId, doctors]);
 
-    // Submit appointment
+    // ✅ Dynamic service options: each label has a unique value
+    const availableServices = useMemo(() => {
+        if (!selectedDoctor?.specialization) return [];
+
+        if (selectedDoctor.specialization === "Physician") {
+            return [
+                { label: "Physical examinations", value: "Assessment-physical" },
+                { label: "Consultations", value: "Consultation-general" },
+                { label: "Medical certificate issuance", value: "Consultation-cert" },
+            ];
+        }
+
+        if (selectedDoctor.specialization === "Dentist") {
+            return [
+                { label: "Consultations and examinations", value: "Dental-consult" },
+                { label: "Oral prophylaxis", value: "Dental-cleaning" },
+                { label: "Tooth extractions", value: "Dental-extraction" },
+                { label: "Dental certificate issuance", value: "Dental-cert" },
+            ];
+        }
+
+        return [];
+    }, [selectedDoctor]);
+
+    // ✅ Convert unique UI value to enum-safe backend value
+    function getEnumValue(v: string): string {
+        if (v.startsWith("Consultation")) return "Consultation";
+        if (v.startsWith("Dental")) return "Dental";
+        if (v.startsWith("Assessment")) return "Assessment";
+        return "Other";
+    }
+
+    // ✅ Submit appointment
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!clinicId || !doctorId || !serviceType || !date || !selectedSlot) {
             toast.error("Please complete all fields");
             return;
         }
+
         try {
             setSubmitting(true);
             const res = await fetch("/api/patient/appointments", {
@@ -150,17 +184,21 @@ export default function PatientAppointmentsPage() {
                 body: JSON.stringify({
                     clinic_id: clinicId,
                     doctor_user_id: doctorId,
-                    service_type: serviceType,
+                    service_type: getEnumValue(serviceType),
                     date,
                     time_start: selectedSlot.start,
                     time_end: selectedSlot.end,
                 }),
             });
+
             if (!res.ok) throw new Error("Failed to create appointment");
+
             toast.success("Appointment request submitted! Status: Pending");
             loadAppointments();
+
             setClinicId("");
             setDoctorId("");
+            setServiceType("");
             setDate("");
             setTimeStart("");
             setSlots([]);
@@ -228,11 +266,9 @@ export default function PatientAppointmentsPage() {
 
             {/* Main */}
             <main className="flex-1 flex flex-col">
-                {/* ✅ HEADER WITH MENU BAR RESTORED */}
+                {/* Header */}
                 <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                     <h2 className="text-xl font-bold text-green-600">Book an Appointment</h2>
-
-                    {/* Mobile Menu */}
                     <div className="md:hidden">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -264,20 +300,6 @@ export default function PatientAppointmentsPage() {
                         </CardHeader>
                         <CardContent>
                             <form className="space-y-6" onSubmit={handleSubmit}>
-                                {/* Service Type */}
-                                <div className="grid gap-2">
-                                    <Label>Service Type</Label>
-                                    <Select value={serviceType} onValueChange={(v: any) => setServiceType(v)}>
-                                        <SelectTrigger><SelectValue placeholder="Select service type" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Consultation">Consultation</SelectItem>
-                                            <SelectItem value="Dental">Dental</SelectItem>
-                                            <SelectItem value="Assessment">Assessment</SelectItem>
-                                            <SelectItem value="Other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
                                 {/* Clinic */}
                                 <div className="grid gap-2">
                                     <Label>Clinic</Label>
@@ -304,7 +326,30 @@ export default function PatientAppointmentsPage() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             {doctors.map(d => (
-                                                <SelectItem key={d.user_id} value={d.user_id}>{d.name}</SelectItem>
+                                                <SelectItem key={d.user_id} value={d.user_id}>
+                                                    {d.name} ({d.specialization ?? "N/A"})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Service Type */}
+                                <div className="grid gap-2">
+                                    <Label>Service Type</Label>
+                                    <Select
+                                        value={serviceType}
+                                        onValueChange={setServiceType}
+                                        disabled={!selectedDoctor}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableServices.map((s) => (
+                                                <SelectItem key={s.value} value={s.value}>
+                                                    {s.label}
+                                                </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -359,7 +404,7 @@ export default function PatientAppointmentsPage() {
                     </Card>
                 </section>
 
-                {/* My Appointments Section */}
+                {/* My Appointments */}
                 <section className="px-6 py-10 max-w-5xl mx-auto w-full">
                     <Card className="shadow-lg rounded-2xl">
                         <CardHeader>

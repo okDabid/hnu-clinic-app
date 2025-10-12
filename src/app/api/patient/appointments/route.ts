@@ -69,8 +69,6 @@ export async function GET() {
     }
 }
 
-
-
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
