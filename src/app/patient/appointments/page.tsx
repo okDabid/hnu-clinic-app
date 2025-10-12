@@ -42,7 +42,6 @@ type Appointment = {
 };
 
 export default function PatientAppointmentsPage() {
-    const { data: session } = useSession();
     const [menuOpen, setMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 

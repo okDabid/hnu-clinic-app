@@ -46,7 +46,13 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import { format12Hour } from "@/lib/time";
+import {
+    format12Hour,
+    buildManilaDate,
+    startOfManilaDay,
+    toManilaDateString,
+    toManilaTimeString,
+} from "@/lib/time";
 
 type Clinic = {
     clinic_id: string;
@@ -358,16 +364,9 @@ export default function DoctorConsultationPage() {
                                                                 setEditingSlot(slot);
                                                                 setFormData({
                                                                     clinic_id: slot.clinic.clinic_id,
-                                                                    available_date: new Date(slot.available_date).toLocaleDateString(
-                                                                        "en-CA",
-                                                                        { timeZone: "Asia/Manila" }
-                                                                    ),
-                                                                    available_timestart: new Date(slot.available_timestart)
-                                                                        .toISOString()
-                                                                        .slice(11, 16),
-                                                                    available_timeend: new Date(slot.available_timeend)
-                                                                        .toISOString()
-                                                                        .slice(11, 16),
+                                                                    available_date: toManilaDateString(slot.available_date),
+                                                                    available_timestart: toManilaTimeString(slot.available_timestart),
+                                                                    available_timeend: toManilaTimeString(slot.available_timeend),
                                                                 });
                                                                 setDialogOpen(true);
                                                             }}

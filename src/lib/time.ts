@@ -52,3 +52,24 @@ export function formatTimeString12(time: string): string {
 export function formatTimeRange(start: string, end: string): string {
     return `${formatTimeString12(start)} – ${formatTimeString12(end)}`;
 }
+
+export function toManilaTimeString(dateStr: string): string {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Manila",
+    });
+}
+
+/**
+ * ✅ Convert UTC timestamp → Manila-local date string ("YYYY-MM-DD")
+ * e.g. "2025-10-12T16:00:00Z" → "2025-10-13"
+ */
+export function toManilaDateString(dateStr: string): string {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+}
