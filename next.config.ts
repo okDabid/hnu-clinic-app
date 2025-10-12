@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     "http://192.168.254.104:3000",
     "http://localhost:3000",
   ],
+  env: {
+    TZ: "Asia/Manila",
+  },
 };
 
 export default nextConfig;

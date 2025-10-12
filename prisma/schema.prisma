@@ -18,22 +18,23 @@ model Clinic {
 }
 
 model Users {
-  user_id             String               @id @unique @default(dbgenerated("concat('USER_', (floor((random() * (1000000)::double precision)))::integer)"))
-  username            String               @unique
+  user_id             String                @id @unique @default(dbgenerated("concat('USER_', (floor((random() * (1000000)::double precision)))::integer)"))
+  username            String                @unique
   password            String
-  status              AccountStatus        @default(Active)
+  status              AccountStatus         @default(Active)
   role                Role
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  appointmentsCreated Appointment[]        @relation("CreatedAppointments")
-  appointmentsDoctor  Appointment[]        @relation("DoctorAppointments")
-  appointmentsPatient Appointment[]        @relation("PatientAppointments")
-  consultationsDoctor Consultation[]       @relation("ConsultationDoctor")
-  consultationsNurse  Consultation[]       @relation("ConsultationNurse")
+  specialization      DoctorSpecialization?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  appointmentsCreated Appointment[]         @relation("CreatedAppointments")
+  appointmentsDoctor  Appointment[]         @relation("DoctorAppointments")
+  appointmentsPatient Appointment[]         @relation("PatientAppointments")
+  consultationsDoctor Consultation[]        @relation("ConsultationDoctor")
+  consultationsNurse  Consultation[]        @relation("ConsultationNurse")
   doctorAvail         DoctorAvailability[]
   employee            Employee?
-  medcertIssued       MedCert[]            @relation("IssuedCertificates")
-  medcertPatient      MedCert[]            @relation("PatientCertificates")
+  medcertIssued       MedCert[]             @relation("IssuedCertificates")
+  medcertPatient      MedCert[]             @relation("PatientCertificates")
   passwordResetTokens PasswordResetToken[]
   student             Student?
 
@@ -140,6 +141,7 @@ model Appointment {
   appointment_date      DateTime
   appointment_timestart DateTime
   appointment_timeend   DateTime
+  remarks               String?
   service_type          ServiceType?
   status                AppointmentStatus
   createdAt             DateTime          @default(now())
@@ -324,4 +326,9 @@ enum BloodType {
   AB_NEG
   O_POS
   O_NEG
+}
+
+enum DoctorSpecialization {
+  Physician
+  Dentist
 }

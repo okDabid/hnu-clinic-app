@@ -99,13 +99,21 @@ export async function POST(req: Request) {
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-        // ✅ Create user safely
+        // ✅ Create user safely (NOW includes specialization)
         const newUser = await prisma.users.create({
             data: {
                 username: finalUsername,
                 password: hashedPassword,
                 role: roleEnum,
                 status: AccountStatus.Active,
+                specialization:
+                    roleEnum === Role.DOCTOR
+                        ? payload.specialization === "Physician"
+                            ? "Physician"
+                            : payload.specialization === "Dentist"
+                                ? "Dentist"
+                                : null
+                        : null,
             },
         });
 
@@ -185,7 +193,7 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({
-            id: username.replace(/-\d+$/, ""), // 👈 hide "-1" etc. from response
+            id: username.replace(/-\d+$/, ""), // hide "-1" suffix if any
             password: plainPassword,
         });
     } catch (err) {
@@ -202,6 +210,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
     }
 }
+
 
 // ---------------- LIST USERS ----------------
 export async function GET() {

@@ -96,6 +96,7 @@ type CreateUserPayload = {
     student_id?: string | null;
     school_id?: string | null;
     patientType?: "student" | "employee" | null;
+    specialization?: "Physician" | "Dentist" | null;
 };
 
 type CreateUserResponse = {
@@ -169,6 +170,9 @@ export default function NurseAccountsPage() {
 
     const [tempDOB, setTempDOB] = useState(""); // temporary holding value
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
+
+    const [specialization, setSpecialization] = useState<"Physician" | "Dentist" | null>(null);
+
 
     async function handleLogout() {
         try {
@@ -325,6 +329,7 @@ export default function NurseAccountsPage() {
                     : null,
             school_id: role === "SCHOLAR" ? (formData.get("school_id") as string) : null,
             patientType: patientType || null,
+            specialization: role === "DOCTOR" ? specialization : null,
         };
 
         try {
@@ -965,13 +970,20 @@ export default function NurseAccountsPage() {
                     {/* Create User */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
                         <CardHeader className="border-b">
-                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">Create New User</CardTitle>
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                Create New User
+                            </CardTitle>
                         </CardHeader>
+
                         <CardContent className="pt-6">
                             <form onSubmit={handleSubmit} className="space-y-6">
+                                {/* Role Selection */}
                                 <div className="space-y-2">
                                     <Label className="block mb-1 font-medium">Role</Label>
-                                    <Select value={role} onValueChange={setRole}>
+                                    <Select
+                                        value={role}
+                                        onValueChange={(val) => setRole(val)}
+                                    >
                                         <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
@@ -982,15 +994,49 @@ export default function NurseAccountsPage() {
                                     </Select>
                                 </div>
 
-                                {role === "SCHOLAR" && <div className="space-y-2"><Label>School ID</Label><Input name="school_id" required /></div>}
-                                {(role === "NURSE" || role === "DOCTOR") && <div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>}
+                                {/* Doctor Specialization (Visible ONLY if role is DOCTOR) */}
+                                {role === "DOCTOR" && (
+                                    <div className="space-y-2">
+                                        <Label className="block mb-1 font-medium">Specialization</Label>
+                                        <Select
+                                            value={specialization ?? ""}
+                                            onValueChange={(val) =>
+                                                setSpecialization(val as "Physician" | "Dentist")
+                                            }
+                                        >
+                                            <SelectTrigger><SelectValue placeholder="Select specialization" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Physician">Physician</SelectItem>
+                                                <SelectItem value="Dentist">Dentist</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
 
+                                {/* School / Employee IDs */}
+                                {role === "SCHOLAR" && (
+                                    <div className="space-y-2">
+                                        <Label>School ID</Label>
+                                        <Input name="school_id" required />
+                                    </div>
+                                )}
+
+                                {(role === "NURSE" || role === "DOCTOR") && (
+                                    <div className="space-y-2">
+                                        <Label>Employee ID</Label>
+                                        <Input name="employee_id" required />
+                                    </div>
+                                )}
+
+                                {/* Patient type (student or employee) */}
                                 {role === "PATIENT" && (
                                     <div className="space-y-2">
                                         <Label className="block mb-1 font-medium">Patient Type</Label>
                                         <Select
                                             value={patientType}
-                                            onValueChange={(val) => setPatientType(val as "student" | "employee" | "")}
+                                            onValueChange={(val) =>
+                                                setPatientType(val as "student" | "employee" | "")
+                                            }
                                         >
                                             <SelectTrigger><SelectValue placeholder="Select patient type" /></SelectTrigger>
                                             <SelectContent>
@@ -1001,20 +1047,48 @@ export default function NurseAccountsPage() {
                                     </div>
                                 )}
 
-                                {role === "PATIENT" && patientType === "student" && <div className="space-y-2"><Label>Student ID</Label><Input name="student_id" required /></div>}
-                                {role === "PATIENT" && patientType === "employee" && <div className="space-y-2"><Label>Employee ID</Label><Input name="employee_id" required /></div>}
+                                {/* Student/Employee ID for patient */}
+                                {role === "PATIENT" && patientType === "student" && (
+                                    <div className="space-y-2">
+                                        <Label>Student ID</Label>
+                                        <Input name="student_id" required />
+                                    </div>
+                                )}
+                                {role === "PATIENT" && patientType === "employee" && (
+                                    <div className="space-y-2">
+                                        <Label>Employee ID</Label>
+                                        <Input name="employee_id" required />
+                                    </div>
+                                )}
 
+                                {/* Name Fields */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div><Label className="block mb-1 font-medium">First Name</Label><Input name="fname" required /></div>
-                                    <div><Label className="block mb-1 font-medium">Middle Name</Label><Input name="mname" /></div>
-                                    <div><Label className="block mb-1 font-medium">Last Name</Label><Input name="lname" required /></div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">First Name</Label>
+                                        <Input name="fname" required />
+                                    </div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Middle Name</Label>
+                                        <Input name="mname" />
+                                    </div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Last Name</Label>
+                                        <Input name="lname" required />
+                                    </div>
                                 </div>
 
+                                {/* DOB + Gender */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div><Label className="block mb-1 font-medium">Date of Birth</Label><Input type="date" name="date_of_birth" /></div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Date of Birth</Label>
+                                        <Input type="date" name="date_of_birth" />
+                                    </div>
                                     <div>
                                         <Label className="block mb-1 font-medium">Gender</Label>
-                                        <Select value={gender} onValueChange={(val) => setGender(val as "Male" | "Female")}>
+                                        <Select
+                                            value={gender}
+                                            onValueChange={(val) => setGender(val as "Male" | "Female")}
+                                        >
                                             <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="Male">Male</SelectItem>
@@ -1023,6 +1097,8 @@ export default function NurseAccountsPage() {
                                         </Select>
                                     </div>
                                 </div>
+
+                                {/* Submit */}
                                 <Button
                                     type="submit"
                                     className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
@@ -1034,6 +1110,7 @@ export default function NurseAccountsPage() {
                             </form>
                         </CardContent>
                     </Card>
+
 
                     {/* Manage Users */}
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
