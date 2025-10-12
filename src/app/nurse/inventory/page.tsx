@@ -195,32 +195,77 @@ export default function NurseInventoryPage() {
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
             {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
-                <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
-                <nav className="flex flex-col gap-4 text-gray-700">
-                    <Link href="/nurse" className="flex items-center gap-2 hover:text-green-600">
-                        <Home className="h-5 w-5" /> Dashboard
+            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
+                {/* Logo Section */}
+                <div className="flex items-center gap-2 mb-12">
+                    <img
+                        src="/clinic-illustration.svg"
+                        alt="clinic-logo"
+                        className="w-9 h-9 object-contain drop-shadow-sm"
+                    />
+                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
+                        HNU Clinic
+                    </h1>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex flex-col gap-2 text-gray-700">
+                    <Link
+                        href="/nurse"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
+                    >
+                        <Home className="h-5 w-5" />
+                        Dashboard
                     </Link>
-                    <Link href="/nurse/accounts" className="flex items-center gap-2 hover:text-green-600">
-                        <Users className="h-5 w-5" /> Accounts
+
+                    <Link
+                        href="/nurse/accounts"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
+                    >
+                        <Users className="h-5 w-5" />
+                        Accounts
                     </Link>
-                    <Link href="/nurse/inventory" className="flex items-center gap-2 text-green-600 font-semibold">
-                        <Package className="h-5 w-5" /> Inventory
+
+                    <Link
+                        href="/nurse/inventory"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
+                    >
+                        <Package className="h-5 w-5" />
+                        Inventory
                     </Link>
-                    <Link href="/nurse/clinic" className="flex items-center gap-2 hover:text-green-600">
-                        <ClipboardList className="h-5 w-5" /> Clinic
+
+                    <Link
+                        href="/nurse/clinic"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
+                    >
+                        <ClipboardList className="h-5 w-5" />
+                        Clinic
                     </Link>
-                    <Link href="/nurse/dispense" className="flex items-center gap-2 hover:text-green-600">
-                        <Pill className="h-5 w-5" /> Dispense
+
+                    <Link
+                        href="/nurse/dispense"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
+                    >
+                        <Pill className="h-5 w-5" />
+                        Dispense
                     </Link>
-                    <Link href="/nurse/records" className="flex items-center gap-2 hover:text-green-600">
-                        <ClipboardList className="h-5 w-5" /> Records
+
+                    <Link
+                        href="/nurse/records"
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
+                    >
+                        <ClipboardList className="h-5 w-5" />
+                        Records
                     </Link>
                 </nav>
-                <Separator className="my-6" />
+
+                {/* Spacer pushes logout to bottom */}
+                <div className="mt-8" />
+
+                {/* Logout Button */}
                 <Button
                     variant="default"
-                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                 >
