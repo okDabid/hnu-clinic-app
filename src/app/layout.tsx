@@ -2,6 +2,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import { Poppins, Inter } from "next/font/google";
 import Providers from "./providers";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="antialiased min-h-screen flex flex-col font-sans">
         <Providers>{children}</Providers>
+        <SpeedInsights />
       </body>
     </html>
   );
