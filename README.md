@@ -100,6 +100,7 @@ The app becomes available at [http://localhost:3000](http://localhost:3000).
 
 ## 📦 NPM Scripts
 | Script | Description 
+| --- | --- |
 | `npm run dev` | Start the Next.js development server. |
 | `npm run build` | Create an optimized production build. |
 | `npm run start` | Run the built Next.js server in production mode. |
