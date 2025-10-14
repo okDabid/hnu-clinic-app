@@ -1,76 +1,116 @@
 # HNU Clinic Health Record & Appointment System
 
-A role-based health record and appointment platform built with Next.js for the Holy Name University (HNU) clinic. The system delivers a responsive public landing page, secure authentication, and dedicated dashboards for patients, doctors, nurses, and working scholars to manage appointments, medical records, and inventory in one place.【F:src/app/page.tsx†L18-L126】【F:src/app/patient/page.tsx†L1-L120】【F:src/app/doctor/page.tsx†L1-L120】【F:src/app/nurse/page.tsx†L1-L123】【F:src/app/scholar/page.tsx†L1-L120】
+A role-based health record and appointment platform built with Next.js for the Holy Name University (HNU) clinic. The system delivers a responsive public landing page, secure authentication, and dedicated dashboards for patients, doctors, nurses, and working scholars to manage appointments, medical records, and inventory in one place.
 
-## 🧰 Tech Stack
-- **Next.js 15 (App Router) & React 19** for the full-stack application shell.【F:package.json†L6-L47】
-- **TypeScript** across the codebase for type safety.【F:tsconfig.json†L1-L17】
-- **Tailwind CSS 4** and shadcn/ui components for the design system.【F:package.json†L48-L79】【F:src/app/page.tsx†L51-L126】
-- **Prisma ORM + PostgreSQL** for data modeling and persistence.【F:prisma/schema.prisma†L1-L122】
-- **NextAuth** credential-based authentication with session management.【F:src/lib/auth.ts†L1-L120】
-- **Nodemailer & Semaphore SMS** integrations for email and SMS outreach.【F:src/app/api/contact/route.ts†L1-L96】【F:src/lib/sms.ts†L1-L22
+## ✨ Tech Stack at a Glance
+<p align="center">
+  <a href="https://nextjs.org" title="Next.js"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" alt="Next.js" height="48"></a>
+  <a href="https://vercel.com" title="Vercel"><img src="https://assets.vercel.com/image/upload/front/favicon/vercel/180x180.png" alt="Vercel" height="48"></a>
+  <a href="https://www.typescriptlang.org" title="TypeScript"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" alt="TypeScript" height="48"></a>
+  <a href="https://tailwindcss.com" title="Tailwind CSS"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg" alt="Tailwind CSS" height="48"></a>
+  <a href="https://ui.shadcn.com" title="shadcn/ui"><img src="https://avatars.githubusercontent.com/u/139895814?s=200&v=4" alt="shadcn/ui" height="48"></a>
+  <a href="https://lucide.dev" title="Lucide Icons"><img src="https://avatars.githubusercontent.com/u/113062692?s=200&v=4" alt="Lucide" height="48"></a>
+  <a href="https://next-auth.js.org" title="NextAuth"><img src="https://next-auth.js.org/img/logo/logo-sm.png" alt="NextAuth" height="48"></a>
+  <a href="https://zod.dev" title="Zod"><img src="https://raw.githubusercontent.com/colinhacks/zod/master/logo.svg" alt="Zod" height="48"></a>
+</p>
 
-## 🌟 Key Features
-- **👥 Role-specific dashboards**: dedicated navigation, shortcuts, and workflows for patients, doctors, nurses, and scholars to manage their tasks efficiently.【F:src/app/patient/page.tsx†L28-L119】【F:src/app/doctor/page.tsx†L26-L119】【F:src/app/nurse/page.tsx†L24-L124】【F:src/app/scholar/page.tsx†L24-L117】
-- **📅 Appointment scheduling & availability checks**: patients can request visits that respect doctor availability, time conflicts, and clinic locations before creating bookings.【F:src/app/patient/appointments/page.tsx†L44-L463】【F:src/app/api/patient/appointments/route.ts†L1-L128】
-- **🗂️ Health records & consultations**: medical staff can log consultations, generate certificates, and dispense medications tied to inventory batches.【F:src/app/nurse/records/page.tsx†L132-L537】【F:src/app/doctor/consultation/page.tsx†L55-L392】【F:prisma/schema.prisma†L122-L222】
-- **💊 Inventory & dispensing management**: nurses track medicine stock, replenishments, and dispensing events across clinics with filtering and status tracking.【F:src/app/nurse/inventory/page.tsx†L71-L573】【F:prisma/schema.prisma†L123-L204】
-- **🔐 Secure authentication**: credential-based sign-in, session persistence, and role-aware authorization built on NextAuth and Prisma.【F:src/lib/auth.ts†L35-L120】【F:src/middleware.ts†L1-L27】
-- **✉️ Branded communications**: contact form emails and password reset flows deliver HTML-styled messages and optional SMS confirmations.【F:src/app/api/contact/route.ts†L1-L96】【F:src/app/api/auth/request-reset/route.ts†L64-L166】
+- **Next.js 15 (App Router) + React 19** orchestrate routing, server actions, streaming layouts, and client transitions throughout `src/app`.
+- **Vercel-ready configuration** is optimized for deployment with `@vercel/speed-insights` hooked in `src/app/layout.tsx` for runtime analytics.
+- **TypeScript-first codebase** (see `tsconfig.json`) covers UI, API handlers, and Prisma models for static safety.
+- **Tailwind CSS v4** powers responsive styling, complemented by **shadcn/ui** components in `src/components/ui` for consistent theming and Radix-powered interactions.
+- **Lucide React icons** provide the iconography across dashboards and shared components.
+- **NextAuth Credentials provider** (configured in `src/lib/auth.ts`) manages secure role-aware authentication.
+- **Zod schemas** validate API payloads, hardening endpoints such as `src/app/api/nurse/accounts/password/route.ts`.
+
+## 🏥 Platform Overview
+- **Public landing experience:** `src/app/page.tsx` serves a marketing page with contact form handling (`src/app/api/contact/route.ts`) and responsive navigation built on shadcn/ui primitives.
+- **Authentication flow:** `src/app/login` hosts a multi-role credential sign-in backed by NextAuth’s session provider in `src/app/providers.tsx`, automatic toast notifications, and middleware enforcement (`src/middleware.ts`).
+- **Role-specific dashboards:**
+  - `src/app/patient` enables appointment booking (`appointments/page.tsx`), profile management, and visit tracking.
+  - `src/app/doctor` centralizes consultation management, appointment queues, and account tools.
+  - `src/app/nurse` covers clinic assignments, stock auditing (`inventory/page.tsx`), dispensing, records, and account administration.
+  - `src/app/scholar` aggregates scholar tasks and account preferences.
+- **Operational APIs:** the `src/app/api` tree encapsulates contact messaging, SMS notifications, password resets, appointment workflows, and meta lookups for clinics, doctors, and availability.
+- **Shared foundations:** `src/lib` holds Prisma accessors, NextAuth configuration, email/SMS utilities, and helper functions reused in UI and API layers.
+
+## 🔐 Authentication & Validation
+- **NextAuth Credentials strategy** verifies users against Prisma via `authorize`, encodes role and status claims into JWT callbacks, and injects them into the session object for client-side gating (`src/lib/auth.ts`).
+- **Global session handling** inside `src/app/providers.tsx` displays toast feedback, logs out deactivated accounts, and wraps the app with `<SessionProvider>`.
+- **Zod-powered request guards** enforce payload integrity for sensitive endpoints (password updates, record mutations) ensuring consistent error messaging and avoiding malformed writes.
+
+## 📊 Data & Persistence Layer
+- `prisma/schema.prisma` models clinics, users, patients, employees, appointments, consultations, medication inventory, dispensing batches, and password reset tokens with referential actions that cascade or restrict deletes as needed.
+- `prisma/migrations/` stores versioned SQL migrations. Run `npx prisma migrate dev` to apply schema changes locally.
+- Database access is centralized through `src/lib/prisma.ts`, which reuses a singleton Prisma client outside production to avoid connection churn.
+
+## 🎨 UI System
+- Tailwind utility classes drive layout and typography (`src/app/globals.css`), while reusable shadcn/ui wrappers (e.g., `Button`, `Card`, `DropdownMenu`) live in `src/components/ui` for consistent theming.
+- Lucide icons are lazily loaded when appropriate (`dynamic()` usage in `src/app/page.tsx`) to keep bundles slim while delivering accessible vector graphics.
+- Layout-level fonts and analytics live in `src/app/layout.tsx`, composing Google Fonts via `next/font` and embedding Vercel Speed Insights.
+
+## 🗂️ Directory Guide
+```
+src/
+├─ app/                # App Router routes, role dashboards, and API endpoints
+│  ├─ api/             # Route handlers for auth, appointments, notifications, and metadata
+│  ├─ (role folders)   # Pages for patient, doctor, nurse, scholar, login, landing, about, etc.
+│  ├─ layout.tsx       # Root metadata, fonts, analytics, and provider wrapper
+│  └─ providers.tsx    # Global NextAuth + toast providers
+├─ components/         # shadcn/ui-derived primitives and composite widgets
+├─ hooks/              # Reusable React hooks for data fetching and UX helpers
+├─ lib/                # Auth, Prisma, email, SMS, time utilities, and shared helpers
+├─ types/              # Shared TypeScript enums and domain types
+prisma/
+├─ schema.prisma       # Data model definitions
+└─ migrations/         # Generated SQL migrations per schema change
+```
+
+## 🔧 Environment Variables
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
+| `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
+| `EMAIL_USER`, `EMAIL_PASS` | SMTP credentials for contact emails (`src/app/api/contact/route.ts`, `src/lib/email.ts`). |
+| `SEMAPHORE_API_KEY`, `SEMAPHORE_SENDER`, `SEMAPHORE_SENDER_NAME` | Semaphore SMS API credentials for notifications (`src/lib/sms.ts`, `src/app/api/auth/request-reset/route.ts`, `src/app/api/sms/send/route.ts`). |
+| `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
+| `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
+
+Create a `.env` file with the variables above before running the app.
 
 ## 🚀 Getting Started
-1. **Clone & install**
+1. **Install dependencies**
    ```bash
-   git clone <repository>
-   cd hnu-clinic-app
-   npm install
-   ```
-2. **Generate Prisma client**
+
+2. **Generate the Prisma client**
    ```bash
    npx prisma generate
    ```
-3. **Apply migrations & seed data**
+3. **Apply database migrations**
    ```bash
    npx prisma migrate dev
    ```
-4. **Start the development server**
+
+4. **Run the development server**
    ```bash
    npm run dev
    ```
-   The app will be available at [http://localhost:3000](http://localhost:3000).
 
-   ## 🔑 Environment Variables
-Create a `.env` file and supply the following values:
-
-Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string used by Prisma.|【F:prisma/schema.prisma†L5-L12】
-| `NEXTAUTH_SECRET` | Secret key for signing NextAuth JWTs and sessions.|【F:src/lib/auth.ts†L110-L120】
-| `EMAIL_USER`, `EMAIL_PASS` | SMTP credentials for sending contact form and notification emails.|【F:src/app/api/contact/route.ts†L24-L78】
-| `SEMAPHORE_API_KEY`, `SEMAPHORE_SENDER`, `SEMAPHORE_SENDER_NAME` | Credentials for Semaphore SMS notifications and password resets.|【F:src/lib/sms.ts†L1-L22】【F:src/app/api/auth/request-reset/route.ts†L121-L159】【F:src/app/api/sms/send/route.ts†L10-L36】
-| `NEXT_PUBLIC_APP_URL` | Public base URL used by server actions when calling internal APIs (defaults to `http://localhost:3000`).|【F:src/app/nurse/actions.ts†L1-L43】
-
-
-## 📁 Project Structure
-```
-src/
-├─ app/                # App Router routes, role dashboards, and API handlers
-├─ components/         # Reusable UI primitives and layout components
-├─ hooks/              # Client-side hooks for data fetching and utilities
-├─ lib/                # Auth, Prisma client, email/SMS helpers, and utilities
-├─ types/              # Shared TypeScript declarations and enums
-prisma/
-├─ schema.prisma       # Data model definitions
-└─ migrations/         # Versioned SQL migrations
-```
+The app becomes available at [http://localhost:3000](http://localhost:3000).
 
 ## 📦 NPM Scripts
-- `npm run dev` – start the development server.【F:package.json†L7-L16】
-- `npm run build` – create an optimized production build.【F:package.json†L7-L16】
-- `npm run start` – run the production server after building.【F:package.json†L7-L16】
-- `npm run lint` – lint the project with ESLint.【F:package.json†L7-L16】
+| Script | Description 
+| `npm run dev` | Start the Next.js development server. |
+| `npm run build` | Create an optimized production build. |
+| `npm run start` | Run the built Next.js server in production mode. |
+| `npm run lint` | Lint the project with ESLint. |
 
-## 🧭 Additional Notes
-- Prisma generates clients automatically after installing dependencies via the `postinstall` script (`prisma generate`).【F:package.json†L7-L16】
-- Authentication-protected routes rely on NextAuth middleware; ensure cookies/domains are configured when deploying.【F:src/middleware.ts†L1-L27】
-- Email and SMS integrations require valid credentials in production environments to avoid runtime failures.【F:src/app/api/contact/route.ts†L24-L78】【F:src/lib/sms.ts†L1-L22】
+## 📤 Deployment Notes
+- The project targets Vercel; analytics are already enabled through `@vercel/speed-insights` in the root layout.
+- Prisma uses pooled connections. Ensure the production database connection string matches Vercel environment settings and consider [Accelerate](https://www.prisma.io/data-platform/accelerate) if deploying to serverless regions (supported via `@prisma/extension-accelerate`).
+- Set environment variables in the hosting dashboard (Vercel or alternative) before promotion to production.
+
+## 🤝 Contributing & Development Tips
+- Keep feature work type-safe by extending `src/types` and updating Zod schemas alongside Prisma models when domain rules change.
+- Prefer utilities in `src/lib` (e.g., `withDb`, `sms`, `email`) rather than duplicating infrastructure code.
+- When adding UI, compose from existing shadcn/ui primitives and Tailwind design tokens for consistency.
+
