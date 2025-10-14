@@ -77,27 +77,6 @@ prisma/
 
 Create a `.env` file with the variables above before running the app.
 
-## 🚀 Getting Started
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
-2. **Generate the Prisma client**
-   ```bash
-   npx prisma generate
-   ```
-3. **Apply database migrations**
-   ```bash
-   npx prisma migrate dev
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-
-The app becomes available at [http://localhost:3000](http://localhost:3000).
-
 ## 📦 NPM Scripts
 | Script | Description 
 | --- | --- |
@@ -110,9 +89,3 @@ The app becomes available at [http://localhost:3000](http://localhost:3000).
 - The project targets Vercel; analytics are already enabled through `@vercel/speed-insights` in the root layout.
 - Prisma uses pooled connections. Ensure the production database connection string matches Vercel environment settings and consider [Accelerate](https://www.prisma.io/data-platform/accelerate) if deploying to serverless regions (supported via `@prisma/extension-accelerate`).
 - Set environment variables in the hosting dashboard (Vercel or alternative) before promotion to production.
-
-## 🤝 Contributing & Development Tips
-- Keep feature work type-safe by extending `src/types` and updating Zod schemas alongside Prisma models when domain rules change.
-- Prefer utilities in `src/lib` (e.g., `withDb`, `sms`, `email`) rather than duplicating infrastructure code.
-- When adding UI, compose from existing shadcn/ui primitives and Tailwind design tokens for consistency.
-
