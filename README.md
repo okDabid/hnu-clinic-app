@@ -7,7 +7,7 @@ A role-based health record and appointment platform built with Next.js for the H
   <a href="https://nextjs.org" title="Next.js"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg" alt="Next.js" height="48"></a>
   <a href="https://vercel.com" title="Vercel"><img src="https://assets.vercel.com/image/upload/front/favicon/vercel/180x180.png" alt="Vercel" height="48"></a>
   <a href="https://www.typescriptlang.org" title="TypeScript"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" alt="TypeScript" height="48"></a>
-  <a href="https://tailwindcss.com" title="Tailwind CSS"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg" alt="Tailwind CSS" height="48"></a>
+  <a href="https://tailwindcss.com" title="Tailwind CSS"><img src="https://github.com/devicons/devicon/blob/master/icons/tailwindcss/tailwindcss-original.svg" alt="Tailwind CSS" height="48"></a>
   <a href="https://ui.shadcn.com" title="shadcn/ui"><img src="https://avatars.githubusercontent.com/u/139895814?s=200&v=4" alt="shadcn/ui" height="48"></a>
   <a href="https://lucide.dev" title="Lucide Icons"><img src="https://avatars.githubusercontent.com/u/113062692?s=200&v=4" alt="Lucide" height="48"></a>
   <a href="https://next-auth.js.org" title="NextAuth"><img src="https://next-auth.js.org/img/logo/logo-sm.png" alt="NextAuth" height="48"></a>
@@ -80,7 +80,8 @@ Create a `.env` file with the variables above before running the app.
 ## 🚀 Getting Started
 1. **Install dependencies**
    ```bash
-
+   npm install
+   ```
 2. **Generate the Prisma client**
    ```bash
    npx prisma generate
