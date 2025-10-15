@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import {
@@ -12,6 +12,7 @@ import {
     Pill,
     Search,
     Loader2,
+    Stethoscope,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -52,13 +53,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { formatManilaDateTime } from "@/lib/time";
+import { BLOOD_TYPES } from "@/lib/patient-records-update";
 
 type PatientRecord = {
     id: string;
     patientId: string;
     fullName: string;
     patientType: "Student" | "Employee";
-    gender: string;
+    gender: string | null;
     date_of_birth: string | null;
     status: string;
     appointment_id: string | null;
@@ -79,6 +81,28 @@ type PatientRecord = {
         id: string;
         timestart: string | null;
         timeend: string | null;
+        doctor: {
+            id: string;
+            username: string;
+            fullName: string | null;
+        } | null;
+        consultation: {
+            id: string;
+            reason_of_visit: string | null;
+            findings: string | null;
+            diagnosis: string | null;
+            updatedAt: string | null;
+            doctor: {
+                id: string;
+                username: string;
+                fullName: string | null;
+            } | null;
+            nurse: {
+                id: string;
+                username: string;
+                fullName: string | null;
+            } | null;
+        } | null;
     } | null;
 };
 
@@ -114,6 +138,27 @@ function formatAppointmentWindow(
     return start || "";
 }
 
+const bloodTypeLabels: Record<(typeof BLOOD_TYPES)[number], string> = {
+    A_POS: "A+",
+    A_NEG: "A-",
+    B_POS: "B+",
+    B_NEG: "B-",
+    AB_POS: "AB+",
+    AB_NEG: "AB-",
+    O_POS: "O+",
+    O_NEG: "O-",
+};
+
+function formatBloodType(value: string | null | undefined) {
+    if (!value) return "—";
+    return bloodTypeLabels[value as (typeof BLOOD_TYPES)[number]] ?? value;
+}
+
+function formatStaffName(staff?: { fullName: string | null; username: string } | null) {
+    if (!staff) return "—";
+    return staff.fullName || staff.username || "—";
+}
+
 export default function NurseRecordsPage() {
     const { data: session } = useSession();
     const [menuOpen, setMenuOpen] = useState(false);
@@ -136,7 +181,7 @@ export default function NurseRecordsPage() {
         }
     }
 
-    async function loadRecords() {
+    const loadRecords = useCallback(async () => {
         try {
             setLoadingRecords(true);
             const res = await fetch("/api/nurse/records", { cache: "no-store" });
@@ -148,23 +193,29 @@ export default function NurseRecordsPage() {
         } finally {
             setLoadingRecords(false);
         }
-    }
+    }, []);
+
 
     useEffect(() => {
         loadRecords();
-    }, []);
+    }, [loadRecords]);
 
-    const filtered = records.filter((r) => {
-        const matchesSearch =
-            r.fullName.toLowerCase().includes(search.toLowerCase()) ||
-            r.patientId.toLowerCase().includes(search.toLowerCase()) ||
-            r.patientType.toLowerCase().includes(search.toLowerCase());
+    const filtered = useMemo(() => {
+        const term = search.toLowerCase();
+        return records.filter((r) => {
+            const matchesSearch =
+                r.fullName.toLowerCase().includes(term) ||
+                r.patientId.toLowerCase().includes(term) ||
+                r.patientType.toLowerCase().includes(term) ||
+                (r.department ?? "").toLowerCase().includes(term) ||
+                (r.program ?? "").toLowerCase().includes(term);
 
-        const matchesStatus = statusFilter === "All" || r.status === statusFilter;
-        const matchesType = typeFilter === "All" || r.patientType === typeFilter;
+            const matchesStatus = statusFilter === "All" || r.status === statusFilter;
+            const matchesType = typeFilter === "All" || r.patientType === typeFilter;
 
-        return matchesSearch && matchesStatus && matchesType;
-    });
+            return matchesSearch && matchesStatus && matchesType;
+        });
+    }, [records, search, statusFilter, typeFilter]);
 
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
@@ -338,7 +389,7 @@ export default function NurseRecordsPage() {
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto flex-1">
-                                    <Table>
+                                    <Table className="min-w-[900px] text-sm">
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead>Patient ID</TableHead>
@@ -347,6 +398,8 @@ export default function NurseRecordsPage() {
                                                 <TableHead>Gender</TableHead>
                                                 <TableHead>DOB</TableHead>
                                                 <TableHead>Status</TableHead>
+                                                <TableHead className="min-w-[160px]">Department / Program</TableHead>
+                                                <TableHead>Latest Appointment</TableHead>
                                                 <TableHead>Action</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -357,11 +410,41 @@ export default function NurseRecordsPage() {
                                                         <TableCell>{r.patientId}</TableCell>
                                                         <TableCell>{r.fullName}</TableCell>
                                                         <TableCell>{r.patientType}</TableCell>
-                                                        <TableCell>{r.gender}</TableCell>
+                                                        <TableCell>{r.gender || "—"}</TableCell>
                                                         <TableCell>{formatDateOnly(r.date_of_birth)}</TableCell>
                                                         <TableCell>{r.status}</TableCell>
+                                                        <TableCell className="whitespace-pre-wrap text-muted-foreground">
+                                                            {r.patientType === "Student" ? (
+                                                                <>
+                                                                    <span className="block font-medium text-foreground">
+                                                                        {r.department || "—"}
+                                                                    </span>
+                                                                    <span className="block">
+                                                                        {r.program || "—"}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                "—"
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="whitespace-pre-wrap">
+                                                            {r.latestAppointment?.timestart ? (
+                                                                <>
+                                                                    <span className="block">
+                                                                        {formatAppointmentWindow(r.latestAppointment)}
+                                                                    </span>
+                                                                    <span className="block text-xs text-muted-foreground">
+                                                                        Doctor: {formatStaffName(r.latestAppointment.doctor)}
+                                                                    </span>
+                                                                    <span className="block text-xs text-muted-foreground">
+                                                                        Nurse: {formatStaffName(r.latestAppointment.consultation?.nurse)}
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                "—"
+                                                            )}
+                                                        </TableCell>
                                                         <TableCell>
-                                                            {/* Dialog for managing record */}
                                                             <Dialog>
                                                                 <DialogTrigger asChild>
                                                                     <Button
@@ -380,42 +463,75 @@ export default function NurseRecordsPage() {
                                                                     </DialogHeader>
 
                                                                     {/* Tabs for clarity */}
-                                                                    <Tabs defaultValue="details">
-                                                                        <TabsList className="grid grid-cols-3 gap-2">
+                                                                    <Tabs defaultValue="details" className="space-y-4">
+                                                                        <TabsList className="flex flex-wrap gap-2">
                                                                             <TabsTrigger value="details">Details</TabsTrigger>
                                                                             <TabsTrigger value="update">Update Info</TabsTrigger>
                                                                             <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
                                                                         </TabsList>
 
                                                                         {/* 🧍 DETAILS TAB */}
-                                                                        <TabsContent value="details" className="space-y-2">
-                                                                            <p><strong>Patient ID:</strong> {r.patientId}</p>
-                                                                            <p><strong>Gender:</strong> {r.gender}</p>
-                                                                            <p><strong>DOB:</strong> {formatDateOnly(r.date_of_birth)}</p>
-                                                                            <p><strong>Status:</strong> {r.status}</p>
-                                                                            <p><strong>Contact:</strong> {r.contactno || "—"}</p>
-                                                                            <p><strong>Address:</strong> {r.address || "—"}</p>
-                                                                            <p><strong>Blood Type:</strong> {r.bloodtype || "—"}</p>
-                                                                            <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
-                                                                            <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
-                                                                            <p>
-                                                                                <strong>Emergency:</strong>{" "}
-                                                                                {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) -{" "}
-                                                                                {r.emergency?.num || "—"}
-                                                                            </p>
-                                                                            {r.latestAppointment?.timestart && (
+                                                                        <TabsContent value="details" className="space-y-4">
+                                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                                                                <p><strong>Patient ID:</strong> {r.patientId}</p>
+                                                                                <p><strong>Status:</strong> {r.status}</p>
+                                                                                <p><strong>Gender:</strong> {r.gender || "—"}</p>
+                                                                                <p><strong>DOB:</strong> {formatDateOnly(r.date_of_birth)}</p>
+                                                                                <p><strong>Contact:</strong> {r.contactno || "—"}</p>
+                                                                                <p><strong>Address:</strong> {r.address || "—"}</p>
+                                                                                <p><strong>Blood Type:</strong> {formatBloodType(r.bloodtype)}</p>
+                                                                                <p><strong>Allergies:</strong> {r.allergies || "—"}</p>
+                                                                                <p><strong>Medical Conditions:</strong> {r.medical_cond || "—"}</p>
                                                                                 <p>
-                                                                                    <strong>Latest Appointment:</strong>{" "}
-                                                                                    {formatAppointmentWindow(r.latestAppointment)}
+                                                                                    <strong>Emergency:</strong>{" "}
+                                                                                    {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) – {r.emergency?.num || "—"}
                                                                                 </p>
-                                                                            )}
-                                                                            {r.patientType === "Student" && (
-                                                                                <>
-                                                                                    <p><strong>Department:</strong> {r.department || "—"}</p>
-                                                                                    <p><strong>Program:</strong> {r.program || "—"}</p>
-                                                                                    <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
-                                                                                </>
-                                                                            )}
+                                                                                {r.patientType === "Student" && (
+                                                                                    <>
+                                                                                        <p><strong>Department:</strong> {r.department || "—"}</p>
+                                                                                        <p><strong>Program:</strong> {r.program || "—"}</p>
+                                                                                        <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
+                                                                                    </>
+                                                                                )}
+                                                                            </div>
+
+                                                                            <Separator />
+
+                                                                            <div className="space-y-3 text-sm">
+                                                                                <h4 className="font-semibold text-green-600 flex items-center gap-2">
+                                                                                    <Stethoscope className="h-4 w-4" /> Latest Appointment
+                                                                                </h4>
+                                                                                {r.latestAppointment?.timestart ? (
+                                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                                                        <p>
+                                                                                            <strong>Schedule:</strong> {formatAppointmentWindow(r.latestAppointment)}
+                                                                                        </p>
+                                                                                        <p>
+                                                                                            <strong>Doctor:</strong> {formatStaffName(r.latestAppointment.doctor)}
+                                                                                        </p>
+                                                                                        <p>
+                                                                                            <strong>Nurse:</strong> {formatStaffName(r.latestAppointment.consultation?.nurse)}
+                                                                                        </p>
+                                                                                        <p>
+                                                                                            <strong>Appointment ID:</strong> {r.latestAppointment.id}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <p className="text-muted-foreground">No recent appointment on file.</p>
+                                                                                )}
+
+                                                                                {r.latestAppointment?.consultation && (
+                                                                                    <div className="rounded-md border bg-muted/40 p-3 space-y-1">
+                                                                                        <p className="text-sm font-semibold text-green-600">Consultation Notes</p>
+                                                                                        <p><strong>Reason:</strong> {r.latestAppointment.consultation.reason_of_visit || "—"}</p>
+                                                                                        <p><strong>Findings:</strong> {r.latestAppointment.consultation.findings || "—"}</p>
+                                                                                        <p><strong>Diagnosis:</strong> {r.latestAppointment.consultation.diagnosis || "—"}</p>
+                                                                                        <p className="text-xs text-muted-foreground">
+                                                                                            Updated by {formatStaffName(r.latestAppointment.consultation.doctor)} on {formatManilaDateTime(r.latestAppointment.consultation.updatedAt) || "—"}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
                                                                         </TabsContent>
 
                                                                         {/* 🩺 UPDATE INFO TAB */}
@@ -527,6 +643,7 @@ export default function NurseRecordsPage() {
                                                                                         if (res.ok) {
                                                                                             toast.success("Consultation notes saved");
                                                                                             form.reset();
+                                                                                            await loadRecords();
                                                                                         } else {
                                                                                             const error = await res.json().catch(() => null);
                                                                                             toast.error(error?.error ?? "Failed to save consultation");
@@ -544,15 +661,27 @@ export default function NurseRecordsPage() {
                                                                                 )}
                                                                                 <div>
                                                                                     <Label className="block mb-1 font-medium" htmlFor="reason_of_visit">Reason of Visit</Label>
-                                                                                    <Input id="reason_of_visit" name="reason_of_visit" />
+                                                                                    <Input
+                                                                                        id="reason_of_visit"
+                                                                                        name="reason_of_visit"
+                                                                                        defaultValue={r.latestAppointment?.consultation?.reason_of_visit || ""}
+                                                                                    />
                                                                                 </div>
                                                                                 <div>
                                                                                     <Label className="block mb-1 font-medium" htmlFor="findings">Findings</Label>
-                                                                                    <Input id="findings" name="findings" />
+                                                                                    <Input
+                                                                                        id="findings"
+                                                                                        name="findings"
+                                                                                        defaultValue={r.latestAppointment?.consultation?.findings || ""}
+                                                                                    />
                                                                                 </div>
                                                                                 <div>
                                                                                     <Label className="block mb-1 font-medium" htmlFor="diagnosis">Diagnosis</Label>
-                                                                                    <Input id="diagnosis" name="diagnosis" />
+                                                                                    <Input
+                                                                                        id="diagnosis"
+                                                                                        name="diagnosis"
+                                                                                        defaultValue={r.latestAppointment?.consultation?.diagnosis || ""}
+                                                                                    />
                                                                                 </div>
                                                                                 <Button
                                                                                     type="submit"
@@ -582,7 +711,7 @@ export default function NurseRecordsPage() {
                                             ) : (
                                                 <TableRow>
                                                     <TableCell
-                                                        colSpan={7}
+                                                        colSpan={9}
                                                         className="text-center text-gray-500 py-6"
                                                     >
                                                         No patient records found

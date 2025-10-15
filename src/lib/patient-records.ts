@@ -1,6 +1,22 @@
 import { prisma } from "@/lib/prisma";
 import { AppointmentStatus } from "@prisma/client";
 
+type StaffSummary = {
+    id: string;
+    username: string;
+    fullName: string | null;
+};
+
+type ConsultationSummary = {
+    id: string;
+    reason_of_visit: string | null;
+    findings: string | null;
+    diagnosis: string | null;
+    updatedAt: string | null;
+    doctor: StaffSummary | null;
+    nurse: StaffSummary | null;
+};
+
 export type PatientRecordEntry = {
     id: string;
     patientId: string;
@@ -27,12 +43,33 @@ export type PatientRecordEntry = {
         id: string;
         timestart: string | null;
         timeend: string | null;
+        doctor: StaffSummary | null;
+        consultation: ConsultationSummary | null;
     } | null;
 };
 
 function normalizeName(fname?: string | null, mname?: string | null, lname?: string | null) {
     const nameParts = [fname, mname, lname].filter(Boolean);
     return nameParts.join(" ");
+}
+
+function buildStaffSummary(
+    user?: {
+        user_id: string;
+        username: string;
+        employee?: { fname: string | null; mname: string | null; lname: string | null } | null;
+    } | null
+): StaffSummary | null {
+    if (!user) return null;
+    const fullName = user.employee
+        ? normalizeName(user.employee.fname, user.employee.mname, user.employee.lname)
+        : null;
+
+    return {
+        id: user.user_id,
+        username: user.username,
+        fullName: fullName && fullName.length > 0 ? fullName : user.username,
+    };
 }
 
 export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
@@ -46,6 +83,42 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
             appointment_id: true,
             appointment_timestart: true,
             appointment_timeend: true,
+            doctor: {
+                select: {
+                    user_id: true,
+                    username: true,
+                    employee: {
+                        select: { fname: true, mname: true, lname: true },
+                    },
+                },
+            },
+            consultation: {
+                select: {
+                    consultation_id: true,
+                    reason_of_visit: true,
+                    findings: true,
+                    diagnosis: true,
+                    updatedAt: true,
+                    doctor: {
+                        select: {
+                            user_id: true,
+                            username: true,
+                            employee: {
+                                select: { fname: true, mname: true, lname: true },
+                            },
+                        },
+                    },
+                    nurse: {
+                        select: {
+                            user_id: true,
+                            username: true,
+                            employee: {
+                                select: { fname: true, mname: true, lname: true },
+                            },
+                        },
+                    },
+                },
+            },
         },
     };
 
@@ -107,6 +180,18 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
                     id: appointment.appointment_id,
                     timestart: appointment.appointment_timestart?.toISOString() ?? null,
                     timeend: appointment.appointment_timeend?.toISOString() ?? null,
+                    doctor: buildStaffSummary(appointment.doctor),
+                    consultation: appointment.consultation
+                        ? {
+                            id: appointment.consultation.consultation_id,
+                            reason_of_visit: appointment.consultation.reason_of_visit ?? null,
+                            findings: appointment.consultation.findings ?? null,
+                            diagnosis: appointment.consultation.diagnosis ?? null,
+                            updatedAt: appointment.consultation.updatedAt?.toISOString() ?? null,
+                            doctor: buildStaffSummary(appointment.consultation.doctor),
+                            nurse: buildStaffSummary(appointment.consultation.nurse),
+                        }
+                        : null,
                 }
                 : null,
         };
@@ -138,6 +223,18 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
                     id: appointment.appointment_id,
                     timestart: appointment.appointment_timestart?.toISOString() ?? null,
                     timeend: appointment.appointment_timeend?.toISOString() ?? null,
+                    doctor: buildStaffSummary(appointment.doctor),
+                    consultation: appointment.consultation
+                        ? {
+                            id: appointment.consultation.consultation_id,
+                            reason_of_visit: appointment.consultation.reason_of_visit ?? null,
+                            findings: appointment.consultation.findings ?? null,
+                            diagnosis: appointment.consultation.diagnosis ?? null,
+                            updatedAt: appointment.consultation.updatedAt?.toISOString() ?? null,
+                            doctor: buildStaffSummary(appointment.consultation.doctor),
+                            nurse: buildStaffSummary(appointment.consultation.nurse),
+                        }
+                        : null,
                 }
                 : null,
         };
