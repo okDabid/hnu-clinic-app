@@ -36,6 +36,8 @@ export async function GET() {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
+        const now = new Date();
+
         const [dispenses, consultations, medicines] = await Promise.all([
             listDispenses(),
             prisma.consultation.findMany({
@@ -57,7 +59,15 @@ export async function GET() {
                 orderBy: { createdAt: "desc" },
             }),
             prisma.medInventory.findMany({
-                include: { clinic: { select: { clinic_name: true } } },
+                include: {
+                    clinic: { select: { clinic_name: true } },
+                    replenishments: {
+                        where: {
+                            remaining_qty: { gt: 0 },
+                            expiry_date: { gte: now },
+                        },
+                    },
+                },
                 orderBy: { item_name: "asc" },
             }),
         ]);
@@ -71,12 +81,21 @@ export async function GET() {
                 appointmentDate: c.appointment?.appointment_date ?? null,
             }));
 
-        const medicineOptions = medicines.map((m) => ({
-            med_id: m.med_id,
-            item_name: m.item_name,
-            clinicName: m.clinic.clinic_name,
-            quantity: m.quantity,
-        }));
+        const medicineOptions = medicines
+            .map((m) => {
+                const availableQty = m.replenishments.reduce(
+                    (total, batch) => total + batch.remaining_qty,
+                    0
+                );
+
+                return {
+                    med_id: m.med_id,
+                    item_name: m.item_name,
+                    clinicName: m.clinic.clinic_name,
+                    quantity: availableQty,
+                };
+            })
+            .filter((m) => m.quantity > 0);
 
         return NextResponse.json({
             dispenses,

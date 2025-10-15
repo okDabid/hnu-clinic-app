@@ -65,11 +65,16 @@ export async function recordDispense({
         throw new DispenseError("Quantity must be a positive number", 400);
     }
 
+    const now = new Date();
+
     const med = await prisma.medInventory.findUnique({
         where: { med_id },
         include: {
             replenishments: {
-                where: { remaining_qty: { gt: 0 } },
+                where: {
+                    remaining_qty: { gt: 0 },
+                    expiry_date: { gte: now },
+                },
                 orderBy: { expiry_date: "asc" },
             },
         },
@@ -79,8 +84,13 @@ export async function recordDispense({
         throw new DispenseError("Medicine not found", 404);
     }
 
-    if (med.quantity < qtyNeeded) {
-        throw new DispenseError("Not enough stock available", 400);
+    const availableQty = med.replenishments.reduce(
+        (total, batch) => total + batch.remaining_qty,
+        0
+    );
+
+    if (availableQty < qtyNeeded) {
+        throw new DispenseError("Not enough non-expired stock available", 400);
     }
 
     let qtyToDeduct = qtyNeeded;
@@ -108,7 +118,7 @@ export async function recordDispense({
     }
 
     if (qtyToDeduct > 0) {
-        throw new DispenseError("Insufficient stock after batch allocation", 400);
+        throw new DispenseError("Insufficient unexpired stock after batch allocation", 400);
     }
 
     const transactionOps = [

@@ -9,7 +9,30 @@ export async function GET() {
 
         const expiredReplenishments = await prisma.replenishment.findMany({
             where: { expiry_date: { lt: now }, remaining_qty: { gt: 0 } },
+            include: {
+                med: {
+                    select: {
+                        med_id: true,
+                        item_name: true,
+                        category: true,
+                        item_type: true,
+                        strength: true,
+                        unit: true,
+                        clinic: { select: { clinic_name: true, clinic_location: true } },
+                    },
+                },
+            },
         });
+
+        const newlyArchived = new Map(
+            expiredReplenishments.map((rep) => [
+                rep.replenishment_id,
+                {
+                    quantity_archived: rep.remaining_qty,
+                    archivedAt: now.toISOString(),
+                },
+            ])
+        );
 
         let totalExpiredDeducted = 0;
 
@@ -31,31 +54,82 @@ export async function GET() {
             await prisma.$transaction(ops);
         }
 
-        const inventory = await prisma.medInventory.findMany({
-            include: {
-                clinic: { select: { clinic_name: true, clinic_location: true } },
-                replenishments: { orderBy: { expiry_date: "asc" } },
-            },
-        });
-
-        const result = inventory.map((item) => ({
-            ...item,
-            replenishments: item.replenishments.map((r) => {
-                const isExpired = r.expiry_date < now;
-                const daysLeft = Math.ceil((r.expiry_date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                return {
-                    ...r,
-                    status: isExpired
-                        ? "Expired"
-                        : daysLeft <= 30
-                            ? "Expiring Soon"
-                            : "Valid",
-                    daysLeft,
-                };
+        const [inventory, archivedReplenishments] = await Promise.all([
+            prisma.medInventory.findMany({
+                include: {
+                    clinic: { select: { clinic_name: true, clinic_location: true } },
+                    replenishments: { orderBy: { expiry_date: "asc" } },
+                },
             }),
+            prisma.replenishment.findMany({
+                where: { expiry_date: { lt: now } },
+                include: {
+                    med: {
+                        select: {
+                            med_id: true,
+                            item_name: true,
+                            category: true,
+                            item_type: true,
+                            strength: true,
+                            unit: true,
+                            clinic: { select: { clinic_name: true, clinic_location: true } },
+                        },
+                    },
+                },
+                orderBy: { expiry_date: "desc" },
+            }),
+        ]);
+
+        const archived = archivedReplenishments.map((rep) => ({
+            replenishment_id: rep.replenishment_id,
+            med_id: rep.med_id,
+            item_name: rep.med?.item_name ?? "",
+            category: rep.med?.category ?? null,
+            item_type: rep.med?.item_type ?? null,
+            strength: rep.med?.strength ?? null,
+            unit: rep.med?.unit ?? null,
+            clinic: rep.med?.clinic
+                ? {
+                    clinic_name: rep.med.clinic.clinic_name,
+                    clinic_location: rep.med.clinic.clinic_location,
+                }
+                : null,
+            expiry_date: rep.expiry_date,
+            quantity_archived: newlyArchived.get(rep.replenishment_id)?.quantity_archived ?? 0,
+            archivedAt: newlyArchived.get(rep.replenishment_id)?.archivedAt ?? rep.expiry_date.toISOString(),
         }));
 
-        return NextResponse.json({ inventory: result, expiredDeducted: totalExpiredDeducted });
+        const archivedByMed = archived.reduce<Record<string, typeof archived[number][]>>((acc, rep) => {
+            if (!acc[rep.med_id]) acc[rep.med_id] = [];
+            acc[rep.med_id].push(rep);
+            return acc;
+        }, {});
+
+        const result = inventory.map((item) => {
+            const activeReplenishments = item.replenishments
+                .filter((r) => r.expiry_date >= now && r.remaining_qty > 0)
+                .map((r) => {
+                    const daysLeft = Math.ceil((r.expiry_date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                    return {
+                        ...r,
+                        status:
+                            daysLeft < 0
+                                ? "Expired"
+                                : daysLeft <= 30
+                                    ? "Expiring Soon"
+                                    : "Valid",
+                        daysLeft,
+                    };
+                });
+
+            return {
+                ...item,
+                replenishments: activeReplenishments,
+                archivedReplenishments: archivedByMed[item.med_id] ?? [],
+            };
+        });
+
+        return NextResponse.json({ inventory: result, archived, expiredDeducted: totalExpiredDeducted });
     } catch (err) {
         console.error("GET /api/nurse/inventory error:", err);
         return NextResponse.json({ error: "Failed to load inventory" }, { status: 500 });

@@ -57,6 +57,20 @@ import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 
 // ✅ Types
+type ArchivedReplenishment = {
+    replenishment_id: string;
+    med_id: string;
+    item_name: string;
+    category: string | null;
+    item_type?: string | null;
+    strength?: number | null;
+    unit?: string | null;
+    clinic: { clinic_name: string; clinic_location?: string } | null;
+    quantity_archived: number;
+    expiry_date: string;
+    archivedAt: string;
+};
+
 type InventoryItem = {
     med_id: string;
     item_name: string;
@@ -65,8 +79,9 @@ type InventoryItem = {
     item_type?: string;
     strength?: number;
     unit?: string;
-    clinic: { clinic_name: string };
-    replenishments: { expiry_date: string; remaining_qty: number }[];
+    clinic: { clinic_name: string; clinic_location?: string };
+    replenishments: { expiry_date: string; remaining_qty: number; status: string; daysLeft: number }[];
+    archivedReplenishments: ArchivedReplenishment[];
 };
 
 type Clinic = {
@@ -77,6 +92,7 @@ type Clinic = {
 export default function NurseInventoryPage() {
     const [menuOpen] = useState(false);
     const [items, setItems] = useState<InventoryItem[]>([]);
+    const [archivedBatches, setArchivedBatches] = useState<ArchivedReplenishment[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [units, setUnits] = useState<string[]>([]);
@@ -113,6 +129,7 @@ export default function NurseInventoryPage() {
             }
 
             setItems(data.inventory);
+            setArchivedBatches(data.archived ?? []);
 
             if (data.expiredDeducted > 0) {
                 toast.warning(`Auto-deducted ${data.expiredDeducted} expired units from stock.`, {
@@ -157,17 +174,18 @@ export default function NurseInventoryPage() {
     }, []);
 
     // ✅ Status checker
-    const getStatus = (expiry: string | undefined) => {
-        if (!expiry) return { text: "No expiry", color: "bg-gray-100 text-gray-600 border-gray-200" };
-        const today = new Date();
-        const expDate = new Date(expiry);
-        const diff = expDate.getTime() - today.getTime();
-        const daysLeft = diff / (1000 * 60 * 60 * 24);
-
-        if (daysLeft < 0) return { text: "Expired", color: "bg-red-100 text-red-700 border-red-200" };
-        if (daysLeft < 9) return { text: "Expiring Very Soon", color: "bg-orange-100 text-orange-700 border-orange-200" };
-        if (daysLeft < 30) return { text: "Expiring Soon", color: "bg-yellow-100 text-yellow-700 border-yellow-200" };
-        return { text: "Valid", color: "bg-green-100 text-green-700 border-green-200" };
+    const getBadgeStyles = (status: string) => {
+        switch (status) {
+            case "Expired":
+                return "bg-red-100 text-red-700 border-red-200";
+            case "Expiring Very Soon":
+                return "bg-orange-100 text-orange-700 border-orange-200";
+            case "Expiring Soon":
+                return "bg-yellow-100 text-yellow-700 border-yellow-200";
+            case "Valid":
+            default:
+                return "bg-green-100 text-green-700 border-green-200";
+        }
     };
 
     // ✅ Apply filters
@@ -181,14 +199,13 @@ export default function NurseInventoryPage() {
 
         const matchesStatus =
             statusFilter === "All" ||
-            (statusFilter === "Expired" &&
-                i.replenishments.some((r) => getStatus(r.expiry_date).text === "Expired")) ||
+            (statusFilter === "Expired" && i.archivedReplenishments.length > 0) ||
             (statusFilter === "Expiring Very Soon" &&
-                i.replenishments.some((r) => getStatus(r.expiry_date).text === "Expiring Very Soon")) ||
+                i.replenishments.some((r) => r.status === "Expiring Very Soon")) ||
             (statusFilter === "Expiring Soon" &&
-                i.replenishments.some((r) => getStatus(r.expiry_date).text === "Expiring Soon")) ||
+                i.replenishments.some((r) => r.status === "Expiring Soon")) ||
             (statusFilter === "Valid" &&
-                i.replenishments.some((r) => getStatus(r.expiry_date).text === "Valid"));
+                i.replenishments.some((r) => r.status === "Valid"));
 
         return matchesSearch && matchesClinic && matchesStatus;
     });
@@ -524,32 +541,40 @@ export default function NurseInventoryPage() {
                                                         <TableCell>{item.quantity}</TableCell>
                                                         <TableCell>
                                                             <div className="space-y-1">
-                                                                {item.replenishments.map((rep, idx) => {
-                                                                    const status = getStatus(rep.expiry_date);
-                                                                    const daysLeft = Math.ceil(
-                                                                        (new Date(rep.expiry_date).getTime() -
-                                                                            new Date().getTime()) /
-                                                                        (1000 * 60 * 60 * 24)
-                                                                    );
-                                                                    return (
+                                                                {item.replenishments.length > 0 ? (
+                                                                    item.replenishments.map((rep, idx) => (
                                                                         <div
                                                                             key={idx}
-                                                                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 shadow-sm"
+                                                                            className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 shadow-sm"
                                                                         >
-                                                                            <span className="font-medium text-gray-800">
-                                                                                {new Date(rep.expiry_date).toLocaleDateString()}
-                                                                            </span>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <Badge variant="outline" className={status.color}>
-                                                                                    {status.text}
-                                                                                </Badge>
-                                                                                <span className="text-sm text-gray-600">
-                                                                                    ({daysLeft} days left)
-                                                                                </span>
+                                                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="font-medium text-gray-800">
+                                                                                        {new Date(rep.expiry_date).toLocaleDateString()}
+                                                                                    </span>
+                                                                                    <span className="text-xs text-gray-500">
+                                                                                        Qty left: {rep.remaining_qty}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Badge variant="outline" className={getBadgeStyles(rep.status)}>
+                                                                                        {rep.status}
+                                                                                    </Badge>
+                                                                                    <span className="text-sm text-gray-600">
+                                                                                        {rep.daysLeft >= 0
+                                                                                            ? `(${rep.daysLeft} day${rep.daysLeft === 1 ? "" : "s"} left)`
+                                                                                            : "Expired"}
+                                                                                    </span>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
-                                                                    );
-                                                                })}
+                                                                    ))
+                                                                ) : (
+                                                                    <div className="rounded-lg border border-dashed border-gray-300 bg-white p-3 text-sm text-gray-500">
+                                                                        All batches for this item are archived or expired.
+                                                                    </div>
+                                                                )}
+
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
@@ -565,6 +590,59 @@ export default function NurseInventoryPage() {
                                     </Table>
                                 </div>
                             )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
+                        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                Archived (Expired) Batches
+                            </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="flex-1 flex flex-col">
+                            <div className="overflow-x-auto">
+                                <Table className="min-w-[860px]">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Clinic</TableHead>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead>Category</TableHead>
+                                            <TableHead>Item Type</TableHead>
+                                            <TableHead>Strength</TableHead>
+                                            <TableHead>Quantity Archived</TableHead>
+                                            <TableHead>Expiry Date</TableHead>
+                                            <TableHead>Archived On</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {archivedBatches.length > 0 ? (
+                                            archivedBatches.map((batch) => (
+                                                <TableRow key={batch.replenishment_id} className="hover:bg-green-50">
+                                                    <TableCell>{batch.clinic?.clinic_name ?? "-"}</TableCell>
+                                                    <TableCell>{batch.item_name}</TableCell>
+                                                    <TableCell>{batch.category ?? "-"}</TableCell>
+                                                    <TableCell>{batch.item_type ?? "-"}</TableCell>
+                                                    <TableCell>
+                                                        {batch.strength ? `${batch.strength} ${batch.unit ?? ""}` : "-"}
+                                                    </TableCell>
+                                                    <TableCell>{batch.quantity_archived}</TableCell>
+                                                    <TableCell>
+                                                        {new Date(batch.expiry_date).toLocaleDateString()}
+                                                    </TableCell>
+                                                    <TableCell>{new Date(batch.archivedAt).toLocaleString()}</TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={8} className="text-center text-gray-500 py-6">
+                                                    No archived batches yet.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </section>
