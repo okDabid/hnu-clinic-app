@@ -150,11 +150,6 @@ const bloodTypeLabels: Record<(typeof BLOOD_TYPES)[number], string> = {
     O_NEG: "O-",
 };
 
-function formatBloodType(value: string | null | undefined) {
-    if (!value) return "—";
-    return bloodTypeLabels[value as (typeof BLOOD_TYPES)[number]] ?? value;
-}
-
 function formatStaffName(staff?: { fullName: string | null; username: string } | null) {
     if (!staff) return "—";
     return staff.fullName || staff.username || "—";
@@ -163,7 +158,6 @@ function formatStaffName(staff?: { fullName: string | null; username: string } |
 export default function DoctorPatientsPage() {
     const [menuOpen, setMenuOpen] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [loading, setLoading] = useState(true);
     const [records, setRecords] = useState<PatientRecord[]>([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
