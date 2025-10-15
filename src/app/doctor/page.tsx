@@ -14,6 +14,7 @@ import {
     Home,
     Loader2,
     Clock4,
+    Pill,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,12 @@ export default function DoctorDashboardPage() {
                         className="flex items-center gap-2 hover:text-green-600"
                     >
                         <CalendarDays className="h-5 w-5" /> Appointments
+                    </Link>
+                    <Link
+                        href="/doctor/dispense"
+                        className="flex items-center gap-2 hover:text-green-600"
+                    >
+                        <Pill className="h-5 w-5" /> Dispense
                     </Link>
                     <Link
                         href="/doctor/patients"
@@ -131,6 +138,9 @@ export default function DoctorDashboardPage() {
                                     <Link href="/doctor/appointments">Appointments</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
+                                    <Link href="/doctor/dispense">Dispense</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
                                     <Link href="/doctor/patients">Patients</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
@@ -152,7 +162,7 @@ export default function DoctorDashboardPage() {
                             Welcome, {fullName}
                         </h2>
                         <p className="text-gray-700 mt-2">
-                            Manage your account, consultations, appointments, and medical
+                            Manage your account, consultations, appointments, dispenses, and medical
                             certificates.
                         </p>
                     </div>
@@ -202,6 +212,21 @@ export default function DoctorDashboardPage() {
                             <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
                                 <li>Approve, move, or cancel appointments</li>
                                 <li>View all scheduled patients</li>
+                            </ul>
+                        </CardContent>
+                    </Card>
+
+                    {/* Dispense */}
+                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-600">
+                                <Pill className="w-6 h-6" /> Dispense
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <li>Record consultation-linked medicine usage</li>
+                                <li>Monitor inventory impact in real time</li>
                             </ul>
                         </CardContent>
                     </Card>

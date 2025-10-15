@@ -16,6 +16,7 @@ import {
     CalendarDays,
     ClipboardList,
     Clock4,
+    Pill,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -249,6 +250,9 @@ export default function DoctorAccountPage() {
                     <Link href="/doctor/appointments" className="flex items-center gap-2 hover:text-green-600">
                         <CalendarDays className="h-5 w-5" /> Appointments
                     </Link>
+                    <Link href="/doctor/dispense" className="flex items-center gap-2 hover:text-green-600">
+                        <Pill className="h-5 w-5" /> Dispense
+                    </Link>
                     <Link href="/doctor/patients" className="flex items-center gap-2 hover:text-green-600">
                         <ClipboardList className="h-5 w-5" /> Patients
                     </Link>
@@ -288,6 +292,7 @@ export default function DoctorAccountPage() {
                                 <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href="/doctor/dispense">Dispense</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
