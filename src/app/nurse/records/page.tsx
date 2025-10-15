@@ -149,6 +149,59 @@ const bloodTypeLabels: Record<(typeof BLOOD_TYPES)[number], string> = {
     O_NEG: "O-",
 };
 
+const departmentTypeLabels: Record<string, string> = {
+    EDUCATION: "College of Education",
+    ARTS_AND_SCIENCES: "College of Arts and Sciences",
+    BUSINESS_AND_ACCOUNTANCY: "College of Business and Accountancy",
+    ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
+    HEALTH_SCIENCES: "College of Health Sciences",
+    LAW: "College of Law",
+    BASIC_EDUCATION: "Basic Education Department",
+};
+
+const yearTypeLabels: Record<string, string> = {
+    FIRST_YEAR: "1st Year",
+    SECOND_YEAR: "2nd Year",
+    THIRD_YEAR: "3rd Year",
+    FOURTH_YEAR: "4th Year",
+    FIFTH_YEAR: "5th Year",
+    KINDERGARTEN: "Kindergarten",
+    ELEMENTARY: "Elementary",
+    JUNIOR_HIGH: "Junior High School",
+    SENIOR_HIGH: "Senior High School",
+};
+
+function humanizeEnumValue(value: string) {
+    const normalized = value.replace(/_/g, " ").trim();
+    return normalized
+        .split(" ")
+        .map((word) => {
+            if (word.length <= 3 && word === word.toUpperCase()) {
+                return word;
+            }
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join(" ");
+}
+
+function formatDeptTypes(value: string | null | undefined) {
+    if (!value) return "—";
+    if (departmentTypeLabels[value]) return departmentTypeLabels[value];
+    if (/^[A-Z0-9_]+$/.test(value)) {
+        return humanizeEnumValue(value);
+    }
+    return value;
+}
+
+function formatYearTypes(value: string | null | undefined) {
+    if (!value) return "—";
+    if (yearTypeLabels[value]) return yearTypeLabels[value];
+    if (/^[A-Z0-9_]+$/.test(value)) {
+        return humanizeEnumValue(value);
+    }
+    return value;
+}
+
 function formatBloodType(value: string | null | undefined) {
     if (!value) return "—";
     return bloodTypeLabels[value as (typeof BLOOD_TYPES)[number]] ?? value;
@@ -417,10 +470,10 @@ export default function NurseRecordsPage() {
                                                             {r.patientType === "Student" ? (
                                                                 <>
                                                                     <span className="block font-medium text-foreground">
-                                                                        {r.department || "—"}
+                                                                        {formatDeptTypes(r.department)}
                                                                     </span>
                                                                     <span className="block">
-                                                                        {r.program || "—"}
+                                                                        {formatDeptTypes(r.program)}
                                                                     </span>
                                                                 </>
                                                             ) : (
@@ -444,17 +497,17 @@ export default function NurseRecordsPage() {
                                                                 "—"
                                                             )}
                                                         </TableCell>
-                                                        <TableCell>
+                                                        <TableCell className="whitespace-nowrap min-w-[90px] sm:min-w-[110px]">
                                                             <Dialog>
                                                                 <DialogTrigger asChild>
                                                                     <Button
                                                                         size="sm"
-                                                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                                                        className="bg-green-600 hover:bg-green-700 text-white px-3 text-xs sm:text-sm"
                                                                     >
                                                                         Manage
                                                                     </Button>
                                                                 </DialogTrigger>
-                                                                <DialogContent className="max-w-2xl">
+                                                                <DialogContent className="max-w-2xl sm:max-w-2xl w-[95vw] sm:w-auto rounded-lg p-4 sm:p-6 max-h-[85vh] sm:max-h-none overflow-y-auto">
                                                                     <DialogHeader>
                                                                         <DialogTitle>{r.fullName}</DialogTitle>
                                                                         <DialogDescription>
@@ -488,9 +541,9 @@ export default function NurseRecordsPage() {
                                                                                 </p>
                                                                                 {r.patientType === "Student" && (
                                                                                     <>
-                                                                                        <p><strong>Department:</strong> {r.department || "—"}</p>
-                                                                                        <p><strong>Program:</strong> {r.program || "—"}</p>
-                                                                                        <p><strong>Year Level:</strong> {r.year_level || "—"}</p>
+                                                                                        <p><strong>Department:</strong> {formatDeptTypes(r.department)}</p>
+                                                                                        <p><strong>Program:</strong> {formatDeptTypes(r.program)}</p>
+                                                                                        <p><strong>Year Level:</strong> {formatYearTypes(r.year_level)}</p>
                                                                                     </>
                                                                                 )}
                                                                             </div>
