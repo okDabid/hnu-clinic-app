@@ -36,6 +36,28 @@ export async function PATCH(
                 return NextResponse.json({ error: "Invalid action" }, { status: 400 });
         }
 
+        const appointment = await prisma.appointment.findUnique({
+            where: { appointment_id: id },
+            include: {
+                consultation: { select: { consultation_id: true } },
+            },
+        });
+
+        if (!appointment) {
+            return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+        }
+
+        if (appointment.doctor_user_id !== session.user.id) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        if (action === "complete" && !appointment.consultation) {
+            return NextResponse.json(
+                { error: "Record the consultation before completing the appointment" },
+                { status: 400 }
+            );
+        }
+
         // ✅ Update appointment and include relations
         const updated = await prisma.appointment.update({
             where: { appointment_id: id },

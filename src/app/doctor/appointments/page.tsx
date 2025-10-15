@@ -10,6 +10,7 @@ import {
     User,
     CalendarDays,
     ClipboardList,
+    ClipboardCheck,
     FileText,
     Home,
     Loader2,
@@ -96,15 +97,40 @@ export default function DoctorAppointmentsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "approve" }),
             });
-            if (!res.ok) throw new Error("Approve failed");
+            const data = await res.json();
+            if (!res.ok) {
+                toast.error(data?.error ?? "Failed to approve");
+                return;
+            }
             toast.success("Appointment approved");
             setAppointments((prev) =>
-                prev.map((appt) =>
-                    appt.id === id ? { ...appt, status: "Approved" } : appt
-                )
+                prev.map((appt) => (appt.id === id ? data : appt))
             );
         } catch {
             toast.error("Failed to approve");
+        }
+    }
+
+    async function handleComplete(id: string) {
+        try {
+            const res = await fetch(`/api/doctor/appointments/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "complete" }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                toast.error(data?.error ?? "Failed to complete appointment");
+                return;
+            }
+
+            toast.success("Appointment marked as completed");
+            setAppointments((prev) =>
+                prev.map((appt) => (appt.id === id ? data : appt))
+            );
+        } catch {
+            toast.error("Failed to complete appointment");
         }
     }
 
@@ -267,50 +293,61 @@ export default function DoctorAppointmentsPage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {appointments.map((appt) => (
-                                                <tr key={appt.id} className="border-t hover:bg-green-50 transition">
-                                                    <td className="px-4 py-2">{appt.patientName}</td>
-                                                    <td className="px-4 py-2">{appt.date}</td>
-                                                    <td className="px-4 py-2">{appt.time}</td>
-                                                    <td className="px-4 py-2 capitalize">{appt.status}</td>
-                                                    <td className="px-4 py-2 text-center">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button size="sm" variant="outline" className="flex items-center gap-2">
-                                                                    <MoreHorizontal className="w-4 h-4" /> Manage
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-40">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => handleApprove(appt.id)}
-                                                                    disabled={appt.status.toLowerCase() === "approved"}
-                                                                >
-                                                                    <Check className="w-4 h-4 mr-2 text-green-600" /> Approve
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setSelectedAppt(appt);
-                                                                        setActionType("move");
-                                                                        setDialogOpen(true);
-                                                                    }}
-                                                                >
-                                                                    <Move className="w-4 h-4 mr-2 text-blue-600" /> Move
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setSelectedAppt(appt);
-                                                                        setActionType("cancel");
-                                                                        setDialogOpen(true);
-                                                                    }}
-                                                                    className="text-red-600 focus:text-red-700"
-                                                                >
-                                                                    <XCircle className="w-4 h-4 mr-2 text-red-600" /> Cancel
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {appointments.map((appt) => {
+                                                const statusLower = appt.status.toLowerCase();
+                                                return (
+                                                    <tr key={appt.id} className="border-t hover:bg-green-50 transition">
+                                                        <td className="px-4 py-2">{appt.patientName}</td>
+                                                        <td className="px-4 py-2">{appt.date}</td>
+                                                        <td className="px-4 py-2">{appt.time}</td>
+                                                        <td className="px-4 py-2 capitalize">{appt.status}</td>
+                                                        <td className="px-4 py-2 text-center">
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button size="sm" variant="outline" className="flex items-center gap-2">
+                                                                        <MoreHorizontal className="w-4 h-4" /> Manage
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-40 space-y-1">
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => handleApprove(appt.id)}
+                                                                        disabled={["approved", "completed"].includes(statusLower)}
+                                                                    >
+                                                                        <Check className="w-4 h-4 mr-2 text-green-600" /> Approve
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => handleComplete(appt.id)}
+                                                                        disabled={statusLower !== "approved"}
+                                                                    >
+                                                                        <ClipboardCheck className="w-4 h-4 mr-2 text-emerald-600" /> Complete
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setSelectedAppt(appt);
+                                                                            setActionType("move");
+                                                                            setDialogOpen(true);
+                                                                        }}
+                                                                        disabled={statusLower === "completed"}
+                                                                    >
+                                                                        <Move className="w-4 h-4 mr-2 text-blue-600" /> Move
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => {
+                                                                            setSelectedAppt(appt);
+                                                                            setActionType("cancel");
+                                                                            setDialogOpen(true);
+                                                                        }}
+                                                                        className="text-red-600 focus:text-red-700"
+                                                                        disabled={statusLower === "completed" || statusLower === "cancelled"}
+                                                                    >
+                                                                        <XCircle className="w-4 h-4 mr-2 text-red-600" /> Cancel
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>

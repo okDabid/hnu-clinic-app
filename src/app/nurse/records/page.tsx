@@ -60,6 +60,7 @@ type PatientRecord = {
     gender: string;
     date_of_birth: string;
     status: string;
+    appointment_id: string | null;
     department?: string | null;
     program?: string | null;
     year_level?: string | null;
@@ -448,11 +449,21 @@ export default function NurseRecordsPage() {
                                                                             <form
                                                                                 onSubmit={async (e) => {
                                                                                     e.preventDefault();
+                                                                                    if (!session?.user?.id) {
+                                                                                        toast.error("You must be signed in to save notes.");
+                                                                                        return;
+                                                                                    }
+
+                                                                                    if (!r.appointment_id) {
+                                                                                        toast.error("No scheduled appointment to attach these notes to.");
+                                                                                        return;
+                                                                                    }
                                                                                     setSavingData(true);
                                                                                     const form = e.currentTarget as HTMLFormElement;
+                                                                                    const nurseId = session.user.id;
                                                                                     const body = {
-                                                                                        appointment_id: null, // Replace when ready
-                                                                                        nurse_user_id: session?.user?.id,
+                                                                                        appointment_id: r.appointment_id,
+                                                                                        nurse_user_id: nurseId,
                                                                                         reason_of_visit: (
                                                                                             form.elements.namedItem("reason_of_visit") as HTMLInputElement
                                                                                         ).value,
@@ -464,23 +475,31 @@ export default function NurseRecordsPage() {
                                                                                         ).value,
                                                                                     };
 
-                                                                                    const res = await fetch(`/api/nurse/consultations`, {
-                                                                                        method: "POST",
-                                                                                        headers: { "Content-Type": "application/json" },
-                                                                                        body: JSON.stringify(body),
-                                                                                    });
+                                                                                    try {
+                                                                                        const res = await fetch(`/api/nurse/consultations`, {
+                                                                                            method: "POST",
+                                                                                            headers: { "Content-Type": "application/json" },
+                                                                                            body: JSON.stringify(body),
+                                                                                        });
 
-                                                                                    if (res.ok) {
-                                                                                        toast.success("Consultation notes saved");
-                                                                                        form.reset();
-                                                                                    } else {
-                                                                                        toast.error("Failed to save consultation");
+                                                                                        if (res.ok) {
+                                                                                            toast.success("Consultation notes saved");
+                                                                                            form.reset();
+                                                                                        } else {
+                                                                                            const error = await res.json().catch(() => null);
+                                                                                            toast.error(error?.error ?? "Failed to save consultation");
+                                                                                        }
+                                                                                    } finally {
+                                                                                        setSavingData(false);
                                                                                     }
-
-                                                                                    setSavingData(false);
                                                                                 }}
                                                                                 className="space-y-3"
                                                                             >
+                                                                                {!r.appointment_id && (
+                                                                                    <p className="text-sm text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                                                                        This patient has no active appointment. Schedule or approve an appointment to record consultation notes.
+                                                                                    </p>
+                                                                                )}
                                                                                 <div>
                                                                                     <Label className="block mb-1 font-medium" htmlFor="reason_of_visit">Reason of Visit</Label>
                                                                                     <Input id="reason_of_visit" name="reason_of_visit" />
@@ -495,7 +514,7 @@ export default function NurseRecordsPage() {
                                                                                 </div>
                                                                                 <Button
                                                                                     type="submit"
-                                                                                    disabled={savingData}
+                                                                                    disabled={savingData || !r.appointment_id}
                                                                                     className="bg-green-600 hover:bg-green-700 text-white"
                                                                                 >
                                                                                     {savingData ? (
@@ -503,6 +522,8 @@ export default function NurseRecordsPage() {
                                                                                             <Loader2 className="w-4 h-4 animate-spin" />
                                                                                             Saving...
                                                                                         </>
+                                                                                    ) : !r.appointment_id ? (
+                                                                                        "No appointment"
                                                                                     ) : (
                                                                                         "Save Notes"
                                                                                     )}

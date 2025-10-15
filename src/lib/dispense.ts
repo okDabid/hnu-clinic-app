@@ -84,13 +84,13 @@ export async function recordDispense({
         throw new DispenseError("Medicine not found", 404);
     }
 
-    if (med.replenishments.length === 0) {
-        throw new DispenseError("No unexpired stock available", 400);
-    }
+    const availableQty = med.replenishments.reduce(
+        (total, batch) => total + batch.remaining_qty,
+        0
+    );
 
-    const totalAvailable = med.replenishments.reduce((total, batch) => total + batch.remaining_qty, 0);
-    if (totalAvailable < qtyNeeded) {
-        throw new DispenseError("Not enough unexpired stock available", 400);
+    if (availableQty < qtyNeeded) {
+        throw new DispenseError("Not enough non-expired stock available", 400);
     }
 
     let qtyToDeduct = qtyNeeded;
@@ -118,7 +118,7 @@ export async function recordDispense({
     }
 
     if (qtyToDeduct > 0) {
-        throw new DispenseError("Insufficient stock after batch allocation", 400);
+        throw new DispenseError("Insufficient unexpired stock after batch allocation", 400);
     }
 
     const transactionOps = [
