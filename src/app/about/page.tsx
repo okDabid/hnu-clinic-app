@@ -4,17 +4,57 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Menu, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Menu,
+    X,
+    HeartPulse,
+    ShieldCheck,
+    GraduationCap,
+    UsersRound,
+    Sparkles,
+    Stethoscope,
+} from "lucide-react";
 
 export default function AboutPage() {
     const [menuOpen, setMenuOpen] = useState(false);
 
+    const navigation = [
+        { href: "/#features", label: "Features" },
+        { href: "/about", label: "About" },
+        { href: "/learn-more", label: "Learn More" },
+        { href: "/#contact", label: "Contact" },
+    ];
+
+    const leadership = [
+        {
+            name: "Shanna Kathleen M. Escalona, MD",
+            role: "Head, Health Services Department",
+            img: "/head-illustration.png",
+        },
+        {
+            name: "Lovella I. Calvelo, MD",
+            role: "School Physician",
+            img: "/physician-illustration.png",
+        },
+    ];
+
+    const dentists = [
+        { name: "Minette B. Barrete", role: "School Dentist", img: "/dentist1-illustration.png" },
+        { name: "Roche T. Pamaran", role: "School Dentist", img: "/dentist2-illustration.png" },
+    ];
+
+    const nurses = [
+        { name: "Cherly Marie B. Lagura, RN", role: "School Nurse", img: "/nurse1-illustration.png" },
+        { name: "Evangeline Y. Guieb, RN", role: "School Nurse", img: "/nurse2-illustration.png" },
+        { name: "Rhiza Rosario G. Magallones, RN", role: "School Nurse", img: "/nurse3-illustration.png" },
+    ];
+
     return (
-        <div className="flex flex-col min-h-screen bg-green-50">
+        <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
             {/* Header */}
-            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b">
-                <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-2.5">
+            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
+                <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
                     {/* Logo + Title */}
                     <div className="flex items-center gap-1">
                         <Link
@@ -36,18 +76,14 @@ export default function AboutPage() {
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-                        <Link href="/#features" className="text-gray-700 hover:text-green-600 transition">
-                            Features
-                        </Link>
-                        <Link href="/about" className="text-gray-700 hover:text-green-600 transition">
-                            About
-                        </Link>
-                        <Link href="/#contact" className="text-gray-700 hover:text-green-600 transition">
-                            Contact
-                        </Link>
+                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                        {navigation.map((item) => (
+                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                                {item.label}
+                            </Link>
+                        ))}
                         <Link href="/login">
-                            <Button className="bg-green-600 hover:bg-green-700">Login</Button>
+                            <Button className="bg-green-600 hover:bg-green-700 shadow-sm">Login</Button>
                         </Link>
                     </nav>
 
@@ -66,16 +102,12 @@ export default function AboutPage() {
 
                 {/* Mobile Dropdown Nav */}
                 {menuOpen && (
-                    <div className="flex flex-col gap-3 px-4 pb-4 md:hidden">
-                        <Link href="/#features" className="text-gray-700 hover:text-green-600 transition">
-                            Features
-                        </Link>
-                        <Link href="/about" className="text-gray-700 hover:text-green-600 transition">
-                            About
-                        </Link>
-                        <Link href="/#contact" className="text-gray-700 hover:text-green-600 transition">
-                            Contact
-                        </Link>
+                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95">
+                        {navigation.map((item) => (
+                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                                {item.label}
+                            </Link>
+                        ))}
                         <Link href="/login">
                             <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
                         </Link>
@@ -84,138 +116,201 @@ export default function AboutPage() {
             </header>
 
             {/* Hero Section */}
-            <section className="px-6 md:px-12 py-20 bg-gradient-to-br from-green-50 to-white text-center shadow-sm">
-                <div className="max-w-4xl mx-auto">
-                    <h1 className="text-3xl md:text-5xl font-bold text-green-600 mb-6">
-                        About HNU Clinic
-                    </h1>
-                    <p className="text-gray-700 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-                        HNU Clinic is committed to providing high-quality healthcare
-                        services for students, employees, and the wider community
-                        of Holy Name University. Our mission is to make healthcare
-                        accessible, efficient, and patient-centered through modern
-                        technology and compassionate care.
-                    </p>
+            <section className="relative overflow-hidden">
+                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50" />
+                <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-green-200/40 blur-3xl" />
+                <div className="max-w-6xl mx-auto px-6 md:px-12 py-20 md:py-24">
+                    <div className="max-w-3xl space-y-6 text-center md:text-left">
+                        <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                            Our Story
+                        </span>
+                        <h1 className="text-3xl md:text-5xl font-bold text-green-600 leading-tight">
+                            Caring for the Holy Name University community with compassion and technology.
+                        </h1>
+                        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                            HNU Clinic is the dedicated health partner for students, faculty, and staff. We blend professional expertise with digital tools that make every visit organized, respectful, and centered on well-being.
+                        </p>
+                    </div>
+                    <div className="mt-12 grid gap-4 sm:grid-cols-3">
+                        {[{
+                            title: "Integrated Services",
+                            description: "Medical, dental, and primary care working as one.",
+                        }, {
+                            title: "Collaborative Team",
+                            description: "Doctors, dentists, and nurses aligned for each patient.",
+                        }, {
+                            title: "Guided by Care",
+                            description: "Every interaction anchored in safety and respect.",
+                        }].map((item) => (
+                            <div key={item.title} className="rounded-2xl border border-green-100 bg-white/80 p-5 text-center shadow-sm">
+                                <p className="text-sm font-semibold text-green-600">{item.title}</p>
+                                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{item.description}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
             {/* Mission & Vision */}
-            <section className="px-6 md:px-12 py-20 bg-white">
-                <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                        <CardContent className="p-8">
-                            <h2 className="text-2xl font-semibold text-green-600 mb-4">
-                                Our Mission
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                To provide timely and reliable healthcare services through
-                                innovation, collaboration, and commitment to the well-being of
-                                our patients. We aim to empower students, employees, and the
-                                community to take charge of their health.
-                            </p>
-                        </CardContent>
-                    </Card>
+            <section className="px-6 md:px-12 py-20">
+                <div className="max-w-6xl mx-auto grid gap-8 md:grid-cols-2">
+                    {[
+                        {
+                            title: "Our Mission",
+                            description:
+                                "Provide timely, reliable care through innovation, collaboration, and a commitment to every patient’s well-being.",
+                            icon: HeartPulse,
+                        },
+                        {
+                            title: "Our Vision",
+                            description:
+                                "Be the trusted campus health partner delivering accessible, integrated, and forward-looking services for the HNU community.",
+                            icon: ShieldCheck,
+                        },
+                    ].map(({ title, description, icon: Icon }) => (
+                        <Card key={title} className="rounded-3xl border-green-100 shadow-lg hover:shadow-xl transition">
+                            <CardHeader className="flex flex-col gap-4">
+                                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600 shadow-sm">
+                                    <Icon className="h-6 w-6" />
+                                </span>
+                                <CardTitle className="text-2xl font-semibold text-green-700">{title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-0 text-gray-700 leading-relaxed">
+                                {description}
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </section>
 
-                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                        <CardContent className="p-8">
-                            <h2 className="text-2xl font-semibold text-green-600 mb-4">
-                                Our Vision
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                To be a trusted healthcare partner, fostering a healthier HNU
-                                community with accessible, integrated, and innovative healthcare
-                                solutions.
-                            </p>
-                        </CardContent>
-                    </Card>
+            {/* Values */}
+            <section className="px-6 md:px-12 py-20 bg-white/60">
+                <div className="max-w-6xl mx-auto text-center space-y-6">
+                    <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                        Our Pillars
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-bold text-green-600">How we deliver patient-centered care</h2>
+                    <p className="text-gray-600 max-w-3xl mx-auto">
+                        Every initiative at HNU Clinic is grounded in empathy, collaboration, and proactive wellness support for the campus.
+                    </p>
+                    <div className="grid gap-6 md:grid-cols-3">
+                        {[{
+                            title: "Compassionate Service",
+                            description: "Listening first and guiding patients with warmth and respect.",
+                            icon: Sparkles,
+                        }, {
+                            title: "Expert Guidance",
+                            description: "Empowering the community with clinical expertise and health education.",
+                            icon: GraduationCap,
+                        }, {
+                            title: "Coordinated Support",
+                            description: "Collaborating across disciplines to ensure continuous, safe care.",
+                            icon: UsersRound,
+                        }].map(({ title, description, icon: Icon }) => (
+                            <Card key={title} className="rounded-2xl border-green-100 shadow-md hover:shadow-lg transition">
+                                <CardHeader className="flex flex-col items-center gap-4 text-center">
+                                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600 shadow-sm">
+                                        <Icon className="h-6 w-6" />
+                                    </span>
+                                    <CardTitle className="text-xl font-semibold text-green-700">{title}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0 text-sm text-gray-600 leading-relaxed">
+                                    {description}
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
                 </div>
             </section>
 
             {/* Team Section */}
-            <section className="px-6 md:px-12 py-20 bg-green-50">
-                <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
-                        Health Services Department
-                    </h2>
-                    <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
-                        Our dedicated school doctors and nurses are here to
-                        provide compassionate care and reliable health services.
-                    </p>
+            <section className="px-6 md:px-12 py-20 bg-green-50/60">
+                <div className="max-w-6xl mx-auto space-y-12">
+                    <div className="text-center space-y-4">
+                        <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                            Health Services Department
+                        </span>
+                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">
+                            The team behind every HNU Clinic visit
+                        </h2>
+                        <p className="text-gray-600 max-w-2xl mx-auto">
+                            Our doctors, dentists, and nurses work side-by-side to deliver coordinated care and supportive guidance for the HNU community.
+                        </p>
+                    </div>
 
-                    <div className="space-y-16">
-                        {/* Head */}
-                        <div className="flex justify-center">
-                            <div className="flex flex-col items-center">
-                                <Image
-                                    src="/head-illustration.png"
-                                    alt="Head"
-                                    width={140}
-                                    height={140}
-                                    className="rounded-full mb-4 shadow-md"
-                                />
-                                <h3 className="font-semibold text-lg text-green-600">
-                                    Shanna Kathleen M. Escalona, MD
+                    <div className="space-y-12">
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between gap-4">
+                                <h3 className="text-xl font-semibold text-green-700 flex items-center gap-2">
+                                    <Stethoscope className="h-5 w-5" /> Clinic Leadership
                                 </h3>
-                                <p className="text-sm text-gray-600">Head, Health Services Department</p>
+                                <span className="hidden text-sm text-green-600 md:block">Guiding daily health operations</span>
+                            </div>
+                            <div className="grid gap-6 md:grid-cols-2">
+                                {leadership.map((member) => (
+                                    <Card key={member.name} className="rounded-2xl border-green-100 bg-white/90 shadow-md">
+                                        <CardContent className="flex items-center gap-4 p-6">
+                                            <Image
+                                                src={member.img}
+                                                alt={member.name}
+                                                width={96}
+                                                height={96}
+                                                className="h-24 w-24 rounded-full object-cover shadow"
+                                            />
+                                            <div className="space-y-1 text-left">
+                                                <p className="text-base font-semibold text-green-700">{member.name}</p>
+                                                <p className="text-sm text-gray-600">{member.role}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
                         </div>
 
-                        {/* School Physician */}
-                        <div className="flex justify-center">
-                            <div className="flex flex-col items-center">
-                                <Image
-                                    src="/physician-illustration.png"
-                                    alt="Physician"
-                                    width={120}
-                                    height={120}
-                                    className="rounded-full mb-4 shadow-md"
-                                />
-                                <h3 className="font-semibold text-lg text-green-600">
-                                    Lovella I. Calvelo, MD
-                                </h3>
-                                <p className="text-sm text-gray-600">School Physician</p>
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-semibold text-green-700">Dental Care</h3>
+                            <div className="grid gap-6 sm:grid-cols-2">
+                                {dentists.map((member) => (
+                                    <Card key={member.name} className="rounded-2xl border-green-100 bg-white/90 shadow-sm">
+                                        <CardContent className="flex flex-col items-center gap-4 p-6">
+                                            <Image
+                                                src={member.img}
+                                                alt={member.name}
+                                                width={110}
+                                                height={110}
+                                                className="h-24 w-24 rounded-full object-cover shadow"
+                                            />
+                                            <div className="text-center space-y-1">
+                                                <p className="text-base font-semibold text-green-700">{member.name}</p>
+                                                <p className="text-sm text-gray-600">{member.role}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Dentists */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-12 justify-center max-w-3xl mx-auto">
-                            {[
-                                { name: "Minette B. Barrete", role: "School Dentist", img: "/dentist1-illustration.png" },
-                                { name: "Roche T. Pamaran", role: "School Dentist", img: "/dentist2-illustration.png" },
-                            ].map((member) => (
-                                <div key={member.name} className="flex flex-col items-center">
-                                    <Image
-                                        src={member.img}
-                                        alt={member.name}
-                                        width={120}
-                                        height={120}
-                                        className="rounded-full mb-4 shadow-md"
-                                    />
-                                    <h3 className="font-semibold text-lg text-green-600">{member.name}</h3>
-                                    <p className="text-sm text-gray-600">{member.role}</p>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Nurses */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 justify-center max-w-5xl mx-auto">
-                            {[
-                                { name: "Cherly Marie B. Lagura, RN", role: "School Nurse", img: "/nurse1-illustration.png" },
-                                { name: "Evangeline Y. Guieb, RN", role: "School Nurse", img: "/nurse2-illustration.png" },
-                                { name: "Rhiza Rosario G. Magallones, RN", role: "School Nurse", img: "/nurse3-illustration.png" },
-                            ].map((member) => (
-                                <div key={member.name} className="flex flex-col items-center">
-                                    <Image
-                                        src={member.img}
-                                        alt={member.name}
-                                        width={120}
-                                        height={120}
-                                        className="rounded-full mb-4 shadow-md"
-                                    />
-                                    <h3 className="font-semibold text-lg text-green-600">{member.name}</h3>
-                                    <p className="text-sm text-gray-600">{member.role}</p>
-                                </div>
-                            ))}
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-semibold text-green-700">Nursing Team</h3>
+                            <div className="grid gap-6 sm:grid-cols-3">
+                                {nurses.map((member) => (
+                                    <Card key={member.name} className="rounded-2xl border-green-100 bg-white/90 shadow-sm">
+                                        <CardContent className="flex flex-col items-center gap-4 p-6">
+                                            <Image
+                                                src={member.img}
+                                                alt={member.name}
+                                                width={110}
+                                                height={110}
+                                                className="h-24 w-24 rounded-full object-cover shadow"
+                                            />
+                                            <div className="text-center space-y-1">
+                                                <p className="text-base font-semibold text-green-700">{member.name}</p>
+                                                <p className="text-sm text-gray-600">{member.role}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -224,61 +319,82 @@ export default function AboutPage() {
 
             {/* Services Section */}
             <section className="px-6 md:px-12 py-20 bg-white">
-                <div className="max-w-6xl mx-auto text-center">
-                    <h2 className="text-2xl md:text-3xl font-bold text-green-600 mb-6">
-                        Our Services
-                    </h2>
-                    <p className="text-gray-700 mb-12 max-w-2xl mx-auto">
-                        Healthcare services at HNU Clinic are delivered through three core programs:
-                    </p>
+                <div className="max-w-6xl mx-auto space-y-12">
+                    <div className="text-center space-y-4">
+                        <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                            Core Programs
+                        </span>
+                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">Services that support the HNU community</h2>
+                        <p className="text-gray-600 max-w-2xl mx-auto">
+                            Our multidisciplinary team delivers coordinated services that cover assessments, preventive care, and responsive support.
+                        </p>
+                    </div>
 
-                    <div className="grid md:grid-cols-3 gap-8 text-left">
-                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardContent className="p-8">
-                                <h3 className="text-xl font-semibold text-green-600 mb-4">
-                                    Health Assessment Program
-                                </h3>
-                                <ul className="list-disc list-inside text-gray-700 space-y-2">
-                                    <li>Physical examinations</li>
-                                    <li>Consultations</li>
-                                    <li>Medical certificate issuance</li>
-                                </ul>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardContent className="p-8">
-                                <h3 className="text-xl font-semibold text-green-600 mb-4">
-                                    Dental Program
-                                </h3>
-                                <ul className="list-disc list-inside text-gray-700 space-y-2">
-                                    <li>Consultations and examinations</li>
-                                    <li>Oral prophylaxis</li>
-                                    <li>Tooth extractions</li>
-                                    <li>Dental certificate issuance</li>
-                                </ul>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardContent className="p-8">
-                                <h3 className="text-xl font-semibold text-green-600 mb-4">
-                                    Primary Care Program
-                                </h3>
-                                <ul className="list-disc list-inside text-gray-700 space-y-2">
-                                    <li>Support for urgent medical needs</li>
-                                    <li>Care for minor injuries</li>
-                                    <li>Assistance with sudden illnesses</li>
-                                </ul>
-                            </CardContent>
-                        </Card>
+                    <div className="grid gap-8 md:grid-cols-3">
+                        {[{
+                            title: "Health Assessment Program",
+                            points: ["Physical examinations", "Consultations", "Medical certificate issuance"],
+                        }, {
+                            title: "Dental Program",
+                            points: ["Consultations and examinations", "Oral prophylaxis", "Tooth extractions", "Dental certificate issuance"],
+                        }, {
+                            title: "Primary Care Program",
+                            points: ["Support for urgent medical needs", "Care for minor injuries", "Assistance with sudden illnesses"],
+                        }].map((service) => (
+                            <Card key={service.title} className="rounded-3xl border-green-100 bg-white/90 shadow-lg hover:shadow-xl transition">
+                                <CardHeader>
+                                    <CardTitle className="text-xl font-semibold text-green-700">{service.title}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-sm text-gray-600 leading-relaxed">
+                                    <ul className="space-y-2">
+                                        {service.points.map((point) => (
+                                            <li key={point} className="flex items-start gap-2">
+                                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-green-500" />
+                                                <span>{point}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
                 </div>
             </section>
 
             {/* Footer */}
-            <footer className="bg-white py-6 text-center text-gray-600 text-sm md:text-base border-t">
-                © {new Date().getFullYear()} HNU Clinic Capstone Project
+            <footer className="bg-green-900 text-green-50">
+                <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 grid gap-8 md:grid-cols-3">
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">HNU Clinic</p>
+                        <p className="text-sm text-green-100 leading-relaxed">
+                            Dedicated to providing a safe and welcoming health experience for the Holy Name University community.
+                        </p>
+                    </div>
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">Quick Links</p>
+                        <ul className="space-y-2 text-sm text-green-100">
+                            {navigation.map((item) => (
+                                <li key={item.label}>
+                                    <Link href={item.href} className="hover:text-white transition">
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">Connect with Us</p>
+                        <p className="text-sm text-green-100 leading-relaxed">
+                            Reach out to the clinic staff for guidance on scheduling, records, or wellness programs tailored to campus needs.
+                        </p>
+                        <Link href="/learn-more" className="inline-flex text-sm text-white font-medium underline-offset-4 hover:underline">
+                            Learn more about the system
+                        </Link>
+                    </div>
+                </div>
+                <div className="border-t border-green-700/60 text-center py-4 text-xs text-green-200">
+                    © {new Date().getFullYear()} HNU Clinic Capstone Project
+                </div>
             </footer>
         </div>
     );
