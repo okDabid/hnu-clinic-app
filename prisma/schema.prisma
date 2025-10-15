@@ -179,6 +179,8 @@ model MedDispense {
   med_id          String
   consultation_id String
   quantity        Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
   dispenseBatches DispenseBatch[]
   consultation    Consultation    @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
   med             MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
