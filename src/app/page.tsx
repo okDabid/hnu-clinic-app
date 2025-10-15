@@ -137,7 +137,7 @@ export default function HomePage() {
             <span className="inline-flex items-center rounded-full bg-white shadow-sm border border-green-100 px-4 py-1 text-sm font-medium text-green-700">
               Comprehensive Care, Digitally Delivered
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold text-green-700 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-green-600 leading-tight">
               Manage health records, book visits, and stay connected to your care team.
             </h2>
             <p className="text-gray-700 text-base md:text-lg leading-relaxed">
@@ -185,7 +185,7 @@ export default function HomePage() {
       <section id="features" className="bg-white py-16 md:py-20 px-6 md:px-12">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <h3 className="text-2xl md:text-3xl font-bold text-green-700">Built for dependable clinic operations</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-green-600">Built for dependable clinic operations</h3>
             <p className="text-gray-600">
               HNU Clinic brings essential services together so patients and providers can focus on care—not coordination.
             </p>
@@ -214,7 +214,7 @@ export default function HomePage() {
               },
               {
                 title: "Coordinated Scheduling",
-                description: "Align clinic calendars, room availability, and staff assignments for efficient days.",
+                description: "Align clinic calendars and staff assignments for efficient days.",
                 icon: Clock,
               },
               {
@@ -243,7 +243,7 @@ export default function HomePage() {
       <section id="workflow" className="py-16 md:py-20 px-6 md:px-12">
         <div className="max-w-6xl mx-auto grid gap-12 md:grid-cols-2 items-center">
           <div className="space-y-6">
-            <h3 className="text-2xl md:text-3xl font-bold text-green-700">A trusted pathway from booking to follow-up</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-green-600">A trusted pathway from booking to follow-up</h3>
             <p className="text-gray-600 leading-relaxed">
               Whether it is an annual assessment or urgent visit, the HNU Clinic workflow keeps each step organized so patients receive timely attention and healthcare teams have the insight they need.
             </p>
@@ -268,7 +268,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <Clock className="w-5 h-5 mt-1" />
-                  <span>Real-time updates reduce waiting and keep appointments on schedule.</span>
+                  <span>Reduce waiting and keep appointments on schedule.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 mt-1" />
@@ -284,17 +284,18 @@ export default function HomePage() {
       <section id="contact" className="py-16 md:py-20 px-6 md:px-12">
         <div className="max-w-6xl mx-auto grid gap-12 md:grid-cols-[1.2fr_1fr] items-center">
           <div className="space-y-4 text-center md:text-left">
-            <h3 className="text-2xl md:text-3xl font-bold text-green-700">Let’s coordinate your next clinic visit</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-green-600">Let’s coordinate your next clinic visit</h3>
             <p className="text-gray-600 leading-relaxed">
               Share your details and our team will reach out with appointment options or answers to your questions. We’re here to support your wellness on campus.
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="rounded-xl border border-green-100 bg-white/80 p-4 text-left shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-green-500">Clinic Hours</p>
-                <p className="text-sm text-gray-700">Monday – Friday, 8:00 AM – 5:00 PM</p>
+                <p className="text-xs uppercase tracking-wide text-green-700">Clinic Hours</p>
+                <p className="text-sm text-gray-700">Monday – Friday, 7:30 AM – 8:00 PM</p>
+                <p className="text-sm text-gray-700">Saturday, 8:00 AM – 11:00 AM</p>
               </div>
               <div className="rounded-xl border border-green-100 bg-white/80 p-4 text-left shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-green-500">Location</p>
+                <p className="text-xs uppercase tracking-wide text-green-700">Location</p>
                 <p className="text-sm text-gray-700">Holy Name University campus clinic</p>
               </div>
             </div>

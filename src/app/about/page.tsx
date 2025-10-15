@@ -124,7 +124,7 @@ export default function AboutPage() {
                         <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
                             Our Story
                         </span>
-                        <h1 className="text-3xl md:text-5xl font-bold text-green-700 leading-tight">
+                        <h1 className="text-3xl md:text-5xl font-bold text-green-600 leading-tight">
                             Caring for the Holy Name University community with compassion and technology.
                         </h1>
                         <p className="text-gray-700 text-base md:text-lg leading-relaxed">
@@ -189,7 +189,7 @@ export default function AboutPage() {
                     <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
                         Our Pillars
                     </span>
-                    <h2 className="text-2xl md:text-3xl font-bold text-green-700">How we deliver patient-centered care</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold text-green-600">How we deliver patient-centered care</h2>
                     <p className="text-gray-600 max-w-3xl mx-auto">
                         Every initiative at HNU Clinic is grounded in empathy, collaboration, and proactive wellness support for the campus.
                     </p>
@@ -230,7 +230,7 @@ export default function AboutPage() {
                         <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
                             Health Services Department
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-700">
+                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">
                             The team behind every HNU Clinic visit
                         </h2>
                         <p className="text-gray-600 max-w-2xl mx-auto">
@@ -324,7 +324,7 @@ export default function AboutPage() {
                         <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
                             Core Programs
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-700">Services that support the HNU community</h2>
+                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">Services that support the HNU community</h2>
                         <p className="text-gray-600 max-w-2xl mx-auto">
                             Our multidisciplinary team delivers coordinated services that cover assessments, preventive care, and responsive support.
                         </p>

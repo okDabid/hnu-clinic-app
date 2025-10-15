@@ -170,7 +170,7 @@ export default function LearnMorePage() {
             <section className="px-6 md:px-12 py-16 md:py-20">
                 <div className="max-w-6xl mx-auto space-y-12">
                     <div className="text-center max-w-3xl mx-auto space-y-4">
-                        <h3 className="text-2xl md:text-3xl font-bold text-green-700">What the system delivers</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold text-green-600">What the system delivers</h3>
                         <p className="text-gray-600">
                             Purpose-built modules ensure everyone at HNU Clinic works from the same, up-to-date information while maintaining confidentiality.
                         </p>
@@ -198,7 +198,7 @@ export default function LearnMorePage() {
                 <div className="max-w-6xl mx-auto space-y-10">
                     <div className="text-center space-y-4">
                         <Code2 className="w-12 h-12 text-green-600 mx-auto" />
-                        <h3 className="text-2xl md:text-3xl font-bold text-green-700">Modern tools that power the experience</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold text-green-600">Modern tools that power the experience</h3>
                         <p className="text-gray-600 max-w-3xl mx-auto">
                             Our technology stack combines reliable frameworks and UI libraries to keep the platform scalable and intuitive.
                         </p>
@@ -235,7 +235,7 @@ export default function LearnMorePage() {
                         <span className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
                             <Workflow className="h-4 w-4" /> Workflow Snapshot
                         </span>
-                        <h3 className="text-2xl md:text-3xl font-bold text-green-700">How an appointment moves through the system</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold text-green-600">How an appointment moves through the system</h3>
                         <p className="text-gray-600 leading-relaxed">
                             A guided process keeps everyone aligned—from the moment a request is submitted to the final follow-up instructions documented by clinic staff.
                         </p>
@@ -276,7 +276,7 @@ export default function LearnMorePage() {
                 <div className="max-w-6xl mx-auto space-y-12">
                     <div className="text-center space-y-4">
                         <Users className="w-12 h-12 text-green-600 mx-auto" />
-                        <h3 className="text-2xl md:text-3xl font-bold text-green-700">Meet the developers</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold text-green-600">Meet the developers</h3>
                         <p className="text-gray-600 max-w-3xl mx-auto">
                             A collaborative team of HNU students engineered the platform, uniting backend reliability with intuitive user experiences.
                         </p>
@@ -327,7 +327,7 @@ export default function LearnMorePage() {
             {/* Call to action */}
             <section className="px-6 md:px-12 py-16">
                 <div className="max-w-5xl mx-auto rounded-3xl border border-green-200 bg-gradient-to-br from-green-100 via-white to-green-50 p-10 text-center shadow-lg">
-                    <h3 className="text-2xl md:text-3xl font-bold text-green-700">Ready to streamline clinic operations?</h3>
+                    <h3 className="text-2xl md:text-3xl font-bold text-green-600">Ready to streamline clinic operations?</h3>
                     <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
                         Log in to the HNU Clinic portal to manage appointments, update records, and keep your team aligned with the latest patient information.
                     </p>
