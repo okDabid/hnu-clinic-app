@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { formatTimeRange } from "@/lib/time";
+import Image from "next/image";
 
 type Clinic = { clinic_id: string; clinic_name: string };
 type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
@@ -230,36 +231,55 @@ export default function PatientAppointmentsPage() {
     return (
         <div className="flex min-h-screen bg-green-50">
             {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-lg p-6">
-                <h1 className="text-2xl font-bold text-green-600 mb-8">HNU Clinic</h1>
-                <nav className="flex flex-col gap-4 text-gray-700">
-                    <Link href="/patient" className="flex items-center gap-2 hover:text-green-600">
-                        <Home className="h-5 w-5" /> Dashboard
+            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
+                {/* Logo Section */}
+                <div className="flex items-center mb-12">
+                    <Image
+                        src="/clinic-illustration.svg"
+                        alt="clinic-logo"
+                        width={40}
+                        height={40}
+                        className="object-contain drop-shadow-sm"
+                    />
+                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
+                        HNU Clinic
+                    </h1>
+                </div>
+                <nav className="flex flex-col gap-2 text-gray-700">
+                    <Link href="/patient" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
+                        <Home className="h-5 w-5" />
+                        Dashboard
                     </Link>
-                    <Link href="/patient/account" className="flex items-center gap-2 hover:text-green-600">
-                        <User className="h-5 w-5" /> Account
+                    <Link href="/patient/account" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
+                        <User className="h-5 w-5" />
+                        Account
                     </Link>
-                    <Link href="/patient/appointments" className="flex items-center gap-2 text-green-600 font-semibold">
-                        <CalendarDays className="h-5 w-5" /> Appointments
+                    <Link href="/patient/appointments" className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200">
+                        <CalendarDays className="h-5 w-5" />
+                        Appointments
                     </Link>
-                    <Link href="/patient/services" className="flex items-center gap-2 hover:text-green-600">
-                        <ClipboardList className="h-5 w-5" /> Services
-                    </Link>
-                    <Link href="/patient/notifications" className="flex items-center gap-2 hover:text-green-600">
-                        <Bell className="h-5 w-5" /> Notifications
+                    <Link href="/patient/notifications" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
+                        <Bell className="h-5 w-5" />
+                        Notifications
                     </Link>
                 </nav>
-                <Separator className="my-6" />
+
+                <Separator className="my-8" />
+
                 <Button
-                    className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                    variant="default"
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
                     onClick={handleLogout}
                     disabled={isLoggingOut}
                 >
                     {isLoggingOut ? (
                         <>
-                            <Loader2 className="h-4 w-4 animate-spin" /> Logging out...
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Logging out...
                         </>
-                    ) : "Logout"}
+                    ) : (
+                        "Logout"
+                    )}
                 </Button>
             </aside>
 
@@ -279,7 +299,6 @@ export default function PatientAppointmentsPage() {
                                 <DropdownMenuItem asChild><Link href="/patient">Dashboard</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/patient/account">Account</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/patient/appointments">Appointments</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/patient/services">Services</Link></DropdownMenuItem>
                                 <DropdownMenuItem asChild><Link href="/patient/notifications">Notifications</Link></DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
                                     Logout

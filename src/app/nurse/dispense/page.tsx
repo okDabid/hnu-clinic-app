@@ -31,6 +31,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 
 // 🔹 Extend Dispense type to include batch usage
 type Dispense = {
@@ -152,7 +153,7 @@ export default function NurseDispensePage() {
                 </nav>
 
                 {/* Spacer pushes logout to bottom */}
-                <div className="mt-8" />
+                <Separator className="my-8" />
 
                 {/* Logout Button */}
                 <Button

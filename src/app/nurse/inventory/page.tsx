@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
 // ✅ Types
 type InventoryItem = {
@@ -262,7 +263,7 @@ export default function NurseInventoryPage() {
                 </nav>
 
                 {/* Spacer pushes logout to bottom */}
-                <div className="mt-8" />
+                <Separator className="my-8" />
 
                 {/* Logout Button */}
                 <Button

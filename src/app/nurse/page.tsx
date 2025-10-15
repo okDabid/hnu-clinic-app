@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import Image from "next/image";
+import { Separator } from "@/components/ui/separator";
 
 export default function NurseDashboardPage() {
     const { data: session } = useSession();
@@ -117,8 +118,7 @@ export default function NurseDashboardPage() {
                     </Link>
                 </nav>
 
-                {/* Spacer pushes logout to bottom */}
-                <div className="mt-8" />
+                <Separator className="my-8" />
 
                 {/* Logout Button */}
                 <Button

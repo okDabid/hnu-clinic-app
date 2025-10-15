@@ -40,6 +40,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
 type Clinic = {
     clinic_id: string;
@@ -200,7 +201,7 @@ export default function NurseClinicPage() {
                 </nav>
 
                 {/* Spacer pushes logout to bottom */}
-                <div className="mt-8" />
+                <Separator className="my-8" />
 
                 {/* Logout Button */}
                 <Button

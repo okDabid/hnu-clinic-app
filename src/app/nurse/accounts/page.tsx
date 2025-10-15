@@ -75,6 +75,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 
 // 🔹 Types aligned with API
 type User = {
@@ -518,7 +519,7 @@ export default function NurseAccountsPage() {
                 </nav>
 
                 {/* Spacer pushes logout to bottom */}
-                <div className="mt-8" />
+                <Separator className="my-8" />
 
                 {/* Logout Button */}
                 <Button

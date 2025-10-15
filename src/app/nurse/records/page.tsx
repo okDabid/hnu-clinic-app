@@ -50,6 +50,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
 type PatientRecord = {
     id: string;
@@ -196,7 +197,7 @@ export default function NurseRecordsPage() {
                 </nav>
 
                 {/* Spacer pushes logout to bottom */}
-                <div className="mt-8" />
+                <Separator className="my-8" />
 
                 {/* Logout Button */}
                 <Button
