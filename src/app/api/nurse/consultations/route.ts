@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { manilaNow } from "@/lib/time";
 
 export async function POST(req: Request) {
     try {
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
                 reason_of_visit: reason_of_visit ?? null,
                 findings: findings ?? null,
                 diagnosis: diagnosis ?? null,
+                createdAt: manilaNow(),
             },
         });
 

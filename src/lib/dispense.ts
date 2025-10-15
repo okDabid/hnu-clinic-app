@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { manilaNow } from "@/lib/time";
 
 export type DispenseWithRelations = Awaited<ReturnType<typeof listDispenses>>[number];
 
@@ -43,7 +44,7 @@ export async function listDispenses() {
                 },
             },
         },
-        orderBy: { dispense_id: "desc" },
+        orderBy: { createdAt: "desc" }
     });
 }
 
@@ -66,6 +67,7 @@ export async function recordDispense({
     }
 
     const now = new Date();
+    const timestamp = manilaNow();
 
     const med = await prisma.medInventory.findUnique({
         where: { med_id },
@@ -132,6 +134,7 @@ export async function recordDispense({
                 med_id,
                 consultation_id,
                 quantity: qtyNeeded,
+                createdAt: timestamp,
                 dispenseBatches: { create: batchRecords },
             },
             include: {

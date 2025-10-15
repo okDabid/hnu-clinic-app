@@ -78,7 +78,10 @@ export async function GET() {
                 consultation_id: c.consultation_id,
                 patientName: formatPatientName(c.appointment!.patient),
                 clinicName: c.appointment!.clinic.clinic_name,
-                appointmentDate: c.appointment?.appointment_date ?? null,
+                appointmentDate: c.appointment?.appointment_timestart
+                    ? c.appointment.appointment_timestart.toISOString()
+                    : null,
+                consultedAt: c.createdAt?.toISOString() ?? null,
             }));
 
         const medicineOptions = medicines

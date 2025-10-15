@@ -32,6 +32,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { formatManilaDateTime } from "@/lib/time";
 
 // 🔹 Extend Dispense type to include batch usage
 type Dispense = {
@@ -247,7 +248,7 @@ export default function NurseDispensePage() {
                                                         {d.consultation.nurse?.username || "—"}
                                                     </TableCell>
                                                     <TableCell>
-                                                        {new Date(d.createdAt).toLocaleString()}
+                                                        {formatManilaDateTime(d.createdAt) || "—"}
                                                     </TableCell>
                                                     <TableCell>
                                                         {d.dispenseBatches.length > 0 ? (

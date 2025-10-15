@@ -51,6 +51,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { formatManilaDateTime } from "@/lib/time";
 
 type PatientRecord = {
     id: string;
@@ -58,7 +59,7 @@ type PatientRecord = {
     fullName: string;
     patientType: "Student" | "Employee";
     gender: string;
-    date_of_birth: string;
+    date_of_birth: string | null;
     status: string;
     appointment_id: string | null;
     department?: string | null;
@@ -74,7 +75,44 @@ type PatientRecord = {
         num?: string | null;
         relation?: string | null;
     };
+    latestAppointment: {
+        id: string;
+        timestart: string | null;
+        timeend: string | null;
+    } | null;
 };
+
+function formatDateOnly(value: string | null | undefined) {
+    if (!value) return "—";
+    const formatted = formatManilaDateTime(value, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: undefined,
+        minute: undefined,
+    });
+    return formatted || "—";
+}
+
+function formatAppointmentWindow(
+    appointment: PatientRecord["latestAppointment"]
+): string {
+    if (!appointment?.timestart) return "";
+    const start = formatManilaDateTime(appointment.timestart);
+    const end = appointment.timeend
+        ? formatManilaDateTime(appointment.timeend, {
+            year: undefined,
+            month: undefined,
+            day: undefined,
+        })
+        : null;
+
+    if (start && end) {
+        return `${start} – ${end}`;
+    }
+
+    return start || "";
+}
 
 export default function NurseRecordsPage() {
     const { data: session } = useSession();
@@ -320,9 +358,7 @@ export default function NurseRecordsPage() {
                                                         <TableCell>{r.fullName}</TableCell>
                                                         <TableCell>{r.patientType}</TableCell>
                                                         <TableCell>{r.gender}</TableCell>
-                                                        <TableCell>
-                                                            {new Date(r.date_of_birth).toLocaleDateString()}
-                                                        </TableCell>
+                                                        <TableCell>{formatDateOnly(r.date_of_birth)}</TableCell>
                                                         <TableCell>{r.status}</TableCell>
                                                         <TableCell>
                                                             {/* Dialog for managing record */}
@@ -355,7 +391,7 @@ export default function NurseRecordsPage() {
                                                                         <TabsContent value="details" className="space-y-2">
                                                                             <p><strong>Patient ID:</strong> {r.patientId}</p>
                                                                             <p><strong>Gender:</strong> {r.gender}</p>
-                                                                            <p><strong>DOB:</strong> {new Date(r.date_of_birth).toLocaleDateString()}</p>
+                                                                            <p><strong>DOB:</strong> {formatDateOnly(r.date_of_birth)}</p>
                                                                             <p><strong>Status:</strong> {r.status}</p>
                                                                             <p><strong>Contact:</strong> {r.contactno || "—"}</p>
                                                                             <p><strong>Address:</strong> {r.address || "—"}</p>
@@ -367,6 +403,12 @@ export default function NurseRecordsPage() {
                                                                                 {r.emergency?.name || "—"} ({r.emergency?.relation || "—"}) -{" "}
                                                                                 {r.emergency?.num || "—"}
                                                                             </p>
+                                                                            {r.latestAppointment?.timestart && (
+                                                                                <p>
+                                                                                    <strong>Latest Appointment:</strong>{" "}
+                                                                                    {formatAppointmentWindow(r.latestAppointment)}
+                                                                                </p>
+                                                                            )}
                                                                             {r.patientType === "Student" && (
                                                                                 <>
                                                                                     <p><strong>Department:</strong> {r.department || "—"}</p>
@@ -454,7 +496,7 @@ export default function NurseRecordsPage() {
                                                                                         return;
                                                                                     }
 
-                                                                                    if (!r.appointment_id) {
+                                                                                    if (!r.latestAppointment?.id) {
                                                                                         toast.error("No scheduled appointment to attach these notes to.");
                                                                                         return;
                                                                                     }
@@ -462,7 +504,7 @@ export default function NurseRecordsPage() {
                                                                                     const form = e.currentTarget as HTMLFormElement;
                                                                                     const nurseId = session.user.id;
                                                                                     const body = {
-                                                                                        appointment_id: r.appointment_id,
+                                                                                        appointment_id: r.latestAppointment.id,
                                                                                         nurse_user_id: nurseId,
                                                                                         reason_of_visit: (
                                                                                             form.elements.namedItem("reason_of_visit") as HTMLInputElement
@@ -495,7 +537,7 @@ export default function NurseRecordsPage() {
                                                                                 }}
                                                                                 className="space-y-3"
                                                                             >
-                                                                                {!r.appointment_id && (
+                                                                                {!r.latestAppointment?.id && (
                                                                                     <p className="text-sm text-yellow-600 bg-yellow-50 border border-yellow-200 rounded-md p-3">
                                                                                         This patient has no active appointment. Schedule or approve an appointment to record consultation notes.
                                                                                     </p>
@@ -514,7 +556,7 @@ export default function NurseRecordsPage() {
                                                                                 </div>
                                                                                 <Button
                                                                                     type="submit"
-                                                                                    disabled={savingData || !r.appointment_id}
+                                                                                    disabled={savingData || !r.latestAppointment?.id}
                                                                                     className="bg-green-600 hover:bg-green-700 text-white"
                                                                                 >
                                                                                     {savingData ? (
@@ -522,7 +564,7 @@ export default function NurseRecordsPage() {
                                                                                             <Loader2 className="w-4 h-4 animate-spin" />
                                                                                             Saving...
                                                                                         </>
-                                                                                    ) : !r.appointment_id ? (
+                                                                                    ) : !r.latestAppointment?.id ? (
                                                                                         "No appointment"
                                                                                     ) : (
                                                                                         "Save Notes"

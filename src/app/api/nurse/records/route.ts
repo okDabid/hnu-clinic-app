@@ -1,100 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+
+import { fetchPatientRecords } from "@/lib/patient-records";
 
 export async function GET() {
     try {
-        // 🧑‍🎓 Student patients
-        const students = await prisma.student.findMany({
-            include: {
-                user: {
-                    select: {
-                        role: true,
-                        status: true,
-                        user_id: true,
-                        // ✅ Include latest appointment if exists
-                        appointmentsPatient: {
-                            where: {
-                                status: { in: ["Pending", "Approved", "Completed"] },
-                            },
-                            orderBy: { appointment_date: "desc" },
-                            take: 1,
-                            select: { appointment_id: true },
-                        },
-                    },
-                },
-            },
-            where: { user: { role: "PATIENT" } },
-        });
-
-        // 👩‍💼 Employee patients
-        const employees = await prisma.employee.findMany({
-            include: {
-                user: {
-                    select: {
-                        role: true,
-                        status: true,
-                        user_id: true,
-                        appointmentsPatient: {
-                            where: {
-                                status: { in: ["Pending", "Approved", "Completed"] },
-                            },
-                            orderBy: { appointment_date: "desc" },
-                            take: 1,
-                            select: { appointment_id: true },
-                        },
-                    },
-                },
-            },
-            where: { user: { role: "PATIENT" } },
-        });
-
-        // ✅ Combine and normalize output for frontend
-        const records = [
-            ...students.map((s) => ({
-                id: s.stud_user_id,
-                patientId: s.student_id,
-                fullName: `${s.fname} ${s.mname ? s.mname + " " : ""}${s.lname}`,
-                patientType: "Student",
-                gender: s.gender,
-                date_of_birth: s.date_of_birth ? s.date_of_birth.toISOString() : null,
-                department: s.department,
-                program: s.program,
-                year_level: s.year_level,
-                contactno: s.contactno,
-                address: s.address,
-                bloodtype: s.bloodtype,
-                allergies: s.allergies,
-                medical_cond: s.medical_cond,
-                emergency: {
-                    name: s.emergencyco_name,
-                    num: s.emergencyco_num,
-                    relation: s.emergencyco_relation,
-                },
-                status: s.user.status,
-                appointment_id: s.user.appointmentsPatient?.[0]?.appointment_id ?? null, // ✅ added
-            })),
-            ...employees.map((e) => ({
-                id: e.emp_id,
-                patientId: e.employee_id,
-                fullName: `${e.fname} ${e.mname ? e.mname + " " : ""}${e.lname}`,
-                patientType: "Employee",
-                gender: e.gender,
-                date_of_birth: e.date_of_birth ? e.date_of_birth.toISOString() : null,
-                contactno: e.contactno,
-                address: e.address,
-                bloodtype: e.bloodtype,
-                allergies: e.allergies,
-                medical_cond: e.medical_cond,
-                emergency: {
-                    name: e.emergencyco_name,
-                    num: e.emergencyco_num,
-                    relation: e.emergencyco_relation,
-                },
-                status: e.user.status,
-                appointment_id: e.user.appointmentsPatient?.[0]?.appointment_id ?? null, // ✅ added
-            })),
-        ];
-
+        const records = await fetchPatientRecords();
         return NextResponse.json(records);
     } catch (err) {
         console.error("[GET /api/nurse/records]", err);

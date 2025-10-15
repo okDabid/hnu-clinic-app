@@ -73,3 +73,63 @@ export function toManilaDateString(dateStr: string): string {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 }
+
+/**
+ * ✅ Return the current Date instance pinned to Manila local time
+ */
+export function manilaNow(): Date {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    });
+
+    const parts = formatter.formatToParts(new Date());
+    const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+    const year = lookup.year;
+    const month = lookup.month;
+    const day = lookup.day;
+    const hour = lookup.hour;
+    const minute = lookup.minute;
+    const second = lookup.second;
+
+    return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}+08:00`);
+}
+
+/**
+ * ✅ Format a date/time value into a Manila-localized string
+ */
+export function formatManilaDateTime(
+    value: string | Date | null | undefined,
+    options: Intl.DateTimeFormatOptions = {}
+): string {
+    if (!value) return "";
+    const date = typeof value === "string" ? new Date(value) : value;
+    if (Number.isNaN(date.getTime())) return "";
+
+    const baseOptions: Intl.DateTimeFormatOptions = {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+    };
+
+    const finalOptions = { ...baseOptions, ...options } as Intl.DateTimeFormatOptions;
+
+    for (const key of Object.keys(finalOptions) as (keyof Intl.DateTimeFormatOptions)[]) {
+        if (finalOptions[key] === undefined) {
+            delete finalOptions[key];
+        }
+    }
+
+    return date.toLocaleString("en-PH", finalOptions);
+}

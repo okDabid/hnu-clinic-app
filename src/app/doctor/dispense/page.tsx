@@ -43,6 +43,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { formatManilaDateTime } from "@/lib/time";
 
 type DispenseRecord = {
     dispense_id: string;
@@ -75,6 +76,7 @@ type ConsultationOption = {
     patientName: string;
     clinicName: string;
     appointmentDate: string | null;
+    consultedAt: string | null;
 };
 
 type MedicineOption = {
@@ -91,10 +93,24 @@ type DispenseResponse = {
     error?: string;
 };
 
-function formatDateTime(value: string | null | undefined) {
+function formatDateTime(
+    value: string | null | undefined,
+    options?: Intl.DateTimeFormatOptions
+) {
+    const formatted = formatManilaDateTime(value, options);
+    return formatted || "—";
+}
+
+function formatDate(value: string | null | undefined) {
     if (!value) return "—";
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleString();
+    const formatted = formatManilaDateTime(value, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: undefined,
+        minute: undefined,
+    });
+    return formatted || "—";
 }
 
 export default function DoctorDispensePage() {
@@ -310,8 +326,14 @@ export default function DoctorDispensePage() {
                                                                 {consultation.patientName}
                                                             </span>
                                                             <span className="text-xs text-muted-foreground">
-                                                                {consultation.clinicName} · {formatDateTime(consultation.appointmentDate)}
+                                                                {consultation.clinicName} · Appointment: {formatDateTime(consultation.appointmentDate)}
                                                             </span>
+                                                            {consultation.consultedAt && (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Consultation recorded: {formatDateTime(consultation.consultedAt)}
+                                                                </span>
+                                                            )}
+
                                                         </div>
                                                     </SelectItem>
                                                 ))
@@ -436,7 +458,7 @@ export default function DoctorDispensePage() {
                                                                     {d.dispenseBatches.map((batch) => (
                                                                         <li key={batch.id}>
                                                                             <span className="font-medium">{batch.quantity_used}</span>{" "}
-                                                                            used (Expiry: {formatDateTime(batch.replenishment.expiry_date)})
+                                                                            used (Expiry: {formatDate(batch.replenishment.expiry_date)}, Received: {formatDate(batch.replenishment.date_received)})
                                                                         </li>
                                                                     ))}
                                                                 </ul>
