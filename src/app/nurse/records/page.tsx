@@ -517,11 +517,13 @@ export default function NurseRecordsPage() {
 
                                                                     {/* Tabs for clarity */}
                                                                     <Tabs defaultValue="details" className="space-y-4">
-                                                                        <TabsList className="flex flex-wrap gap-2">
-                                                                            <TabsTrigger value="details">Details</TabsTrigger>
-                                                                            <TabsTrigger value="update">Update Info</TabsTrigger>
-                                                                            <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
-                                                                        </TabsList>
+                                                                        <div className="flex justify-center">
+                                                                            <TabsList className="flex flex-wrap gap-2">
+                                                                                <TabsTrigger value="details">Details</TabsTrigger>
+                                                                                <TabsTrigger value="update">Update Info</TabsTrigger>
+                                                                                <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
+                                                                            </TabsList>
+                                                                        </div>
 
                                                                         {/* 🧍 DETAILS TAB */}
                                                                         <TabsContent value="details" className="space-y-4">

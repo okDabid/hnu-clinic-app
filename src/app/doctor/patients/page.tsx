@@ -578,12 +578,13 @@ export default function DoctorPatientsPage() {
                                                                     </DialogDescription>
                                                                 </DialogHeader>
                                                                 <Tabs defaultValue="details" className="space-y-4">
-                                                                    <TabsList className="flex flex-wrap gap-2">
-                                                                        <TabsTrigger value="details">Details</TabsTrigger>
-                                                                        <TabsTrigger value="update">Update Info</TabsTrigger>
-                                                                        <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
-                                                                    </TabsList>
-
+                                                                    <div className="flex justify-center">
+                                                                        <TabsList className="flex flex-wrap gap-2">
+                                                                            <TabsTrigger value="details">Details</TabsTrigger>
+                                                                            <TabsTrigger value="update">Update Info</TabsTrigger>
+                                                                            <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
+                                                                        </TabsList>
+                                                                    </div>
                                                                     <TabsContent value="details" className="space-y-4">
                                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                                                                             <p><strong>Patient ID:</strong> {record.patientId}</p>
