@@ -311,7 +311,7 @@ export default function DoctorDispensePage() {
                                             setForm((prev) => ({ ...prev, consultation_id: value }))
                                         }
                                     >
-                                        <SelectTrigger className="w-full">
+                                        <SelectTrigger className="w-full min-h-[90px] rounded-lg border border-gray-300 px-4 py-3 text-base leading-relaxed whitespace-normal text-left">
                                             <SelectValue placeholder="Select consultation" />
                                         </SelectTrigger>
                                         <SelectContent>
