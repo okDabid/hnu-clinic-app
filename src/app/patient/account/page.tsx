@@ -10,7 +10,6 @@ import {
     Home,
     User,
     Loader2,
-    ClipboardList,
     CalendarDays,
     Bell,
     Eye,
