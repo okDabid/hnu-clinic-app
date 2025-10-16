@@ -1,29 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import {
     Bell,
     CheckCircle2,
     CalendarCheck,
-    CalendarDays,
-    Home,
-    Info,
-    Loader2,
     ClipboardCheck,
+    Info,
     Mail,
-    Menu,
-    User,
     XCircle,
-    X,
 } from "lucide-react";
 
+import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 
 const notificationHighlights = [
     {
@@ -76,186 +66,95 @@ const statusUpdates = [
 
 export default function PatientNotificationPage() {
     const { data: session } = useSession();
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [menuOpen, setMenuOpen] = useState(false);
 
     const fullName = session?.user?.name ?? "Patient";
 
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
+    const layoutTitle = "Notification center";
+    const layoutDescription = `${fullName}, stay on top of appointment approvals, updates, and reminders for your clinic visits.`;
 
     return (
-        <div className="flex min-h-screen bg-green-50">
-            {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">HNU Clinic</h1>
+        <PatientLayout
+            title={layoutTitle}
+            description={layoutDescription}
+            actions={
+                <div className="hidden items-center gap-2 rounded-xl border border-green-100 bg-white/80 px-4 py-2 text-xs font-semibold text-green-700 shadow-sm md:flex">
+                    <Bell className="h-4 w-4" />
+                    Real-time alerts
+                </div>
+            }
+        >
+            <div className="space-y-8">
+                <Card className="rounded-3xl border-green-100/80 bg-gradient-to-r from-green-100/80 via-white to-green-50/80 shadow-sm">
+                    <CardHeader className="space-y-2 text-center">
+                        <CardTitle className="text-3xl font-semibold text-green-700">Stay informed, stay prepared</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Hello <span className="font-semibold text-green-700">{fullName}</span>! Whenever your doctor approves, moves, or completes an appointment, we capture the update here so you never miss a step.
+                        </p>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-green-700">
+                        <span className="rounded-full bg-white/70 px-3 py-1">Email reminders</span>
+                        <span className="rounded-full bg-white/70 px-3 py-1">Portal notifications</span>
+                        <span className="rounded-full bg-white/70 px-3 py-1">Status explanations</span>
+                    </CardContent>
+                </Card>
+
+                <div className="grid gap-6 md:grid-cols-3">
+                    {notificationHighlights.map(({ icon: Icon, title, description }) => (
+                        <Card
+                            key={title}
+                            className="h-full rounded-3xl border-green-100/70 bg-white/90 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                        >
+                            <CardHeader className="flex flex-col items-start gap-3">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-600/10 text-green-700">
+                                    <Icon className="h-5 w-5" />
+                                </span>
+                                <CardTitle className="text-lg text-green-700">{title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-sm text-muted-foreground">{description}</CardContent>
+                        </Card>
+                    ))}
                 </div>
 
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link
-                        href="/patient"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Home className="h-5 w-5" /> Dashboard
-                    </Link>
-                    <Link
-                        href="/patient/account"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <User className="h-5 w-5" /> Account
-                    </Link>
-                    <Link
-                        href="/patient/appointments"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <CalendarDays className="h-5 w-5" /> Appointments
-                    </Link>
-                    <Link
-                        href="/patient/notification"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                        <Bell className="h-5 w-5" /> Notifications
-                    </Link>
-                </nav>
+                <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg text-green-700">How to follow up after an update</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm text-muted-foreground">
+                            <ul className="space-y-2">
+                                {followUpTips.map((tip) => (
+                                    <li key={tip} className="flex items-start gap-2 rounded-2xl bg-green-600/5 p-3">
+                                        <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-green-500" />
+                                        <span>{tip}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Button asChild variant="outline" className="mt-2 w-full rounded-xl border-green-200 text-green-700 hover:bg-green-100/60">
+                                <a href="/patient/appointments">Review appointments</a>
+                            </Button>
+                        </CardContent>
+                    </Card>
 
-                <Separator className="my-8" />
-
-                <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
-                </Button>
-            </aside>
-
-            {/* Main */}
-            <main className="flex-1 flex flex-col">
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Notification Center</h2>
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(prev => !prev)}>
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient">Dashboard</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient/account">Account</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient/appointments">Appointments</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/patient/notification">Notifications</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
-                                    Logout
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                <section className="px-6 py-10 bg-white shadow-sm">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">Stay Informed, Stay Prepared</h2>
-                        <p className="text-gray-700 mt-3 leading-relaxed">
-                            Hello <span className="font-semibold">{fullName}</span>! Whenever your doctor approves, cancels,
-                            completes, or moves an appointment, we notify you through email and highlight the change here in the
-                            portal. Keep an eye on this page for quick summaries and helpful tips after every update.
-                        </p>
-                    </div>
-                </section>
-
-                <section className="px-6 py-12 bg-green-50">
-                    <div className="grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">
-                        {notificationHighlights.map(({ icon: Icon, title, description }) => (
-                            <Card key={title} className="shadow-lg rounded-2xl border-green-100">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2 text-green-600">
-                                        <Icon className="w-6 h-6" /> {title}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </section>
-
-                <section className="px-6 py-12 bg-white">
-                    <div className="max-w-5xl mx-auto">
-                        <h3 className="text-xl md:text-2xl font-semibold text-green-700 text-center mb-8">
-                            What each appointment status means
-                        </h3>
-                        <div className="grid gap-6 md:grid-cols-3">
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg text-green-700">What each status means</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             {statusUpdates.map(({ icon: Icon, title, description }) => (
-                                <Card key={title} className="shadow-lg rounded-2xl border-green-100">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-green-600">
-                                            <Icon className="w-6 h-6" /> {title}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
-                                    </CardContent>
-                                </Card>
+                                <div key={title} className="flex gap-3 rounded-2xl border border-green-100/80 bg-green-600/5 p-3">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-green-700 shadow-sm">
+                                        <Icon className="h-4 w-4" />
+                                    </span>
+                                    <div className="space-y-1 text-sm">
+                                        <p className="font-semibold text-green-700">{title}</p>
+                                        <p className="text-muted-foreground">{description}</p>
+                                    </div>
+                                </div>
                             ))}
-                        </div>
-                    </div>
-                </section>
-
-                <section className="px-6 py-12 bg-white">
-                    <div className="max-w-3xl mx-auto">
-                        <Card className="shadow-lg rounded-2xl">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-green-600">
-                                    <Bell className="w-6 h-6" /> After You Receive a Notification
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <ul className="list-disc list-inside text-gray-700 space-y-3">
-                                    {followUpTips.map(tip => (
-                                        <li key={tip}>{tip}</li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </section>
-
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
-                    © {new Date().getFullYear()} HNU Clinic – Patient Notifications
-                </footer>
-            </main>
-        </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </PatientLayout>
     );
 }

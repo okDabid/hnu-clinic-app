@@ -1,31 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { signOut } from "next-auth/react";
 import {
-    Menu,
-    X,
-    Home,
-    User,
+    Ban,
     CalendarDays,
     ClipboardList,
-    Bell,
     Loader2,
-    Undo2,
-    Ban,
     Trash2,
+    Undo2,
 } from "lucide-react";
 
+import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -49,7 +36,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatTimeRange, manilaNow } from "@/lib/time";
-import Image from "next/image";
 
 type Clinic = { clinic_id: string; clinic_name: string };
 type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
@@ -91,9 +77,6 @@ function isoToInputDate(iso: string | null | undefined): string {
 }
 
 export default function PatientAppointmentsPage() {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-
     const minBookingDate = useMemo(() => computeMinBookingDate(), []);
 
     // Form state
@@ -127,15 +110,6 @@ export default function PatientAppointmentsPage() {
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
     const [cancelSubmitting, setCancelSubmitting] = useState(false);
-
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
 
     const canModifyAppointment = (appointment: Appointment) => {
         const allowedStatuses = ["Pending", "Approved", "Moved"];
@@ -294,6 +268,10 @@ export default function PatientAppointmentsPage() {
 
     const selectedSlot = useMemo(() => slots.find(s => s.start === timeStart), [slots, timeStart]);
     const selectedDoctor = useMemo(() => doctors.find(d => d.user_id === doctorId) || null, [doctorId, doctors]);
+    const selectedClinic = useMemo(
+        () => clinics.find((clinic) => clinic.clinic_id === clinicId) ?? null,
+        [clinics, clinicId]
+    );
     const selectedRescheduleSlot = useMemo(
         () => rescheduleSlots.find((s) => s.start === rescheduleTimeStart) ?? null,
         [rescheduleSlots, rescheduleTimeStart]
@@ -357,6 +335,11 @@ export default function PatientAppointmentsPage() {
 
         return [];
     }, [selectedDoctor]);
+
+    const selectedServiceLabel = useMemo(
+        () => availableServices.find((service) => service.value === serviceType)?.label ?? null,
+        [availableServices, serviceType]
+    );
 
     // ✅ Convert unique UI value to enum-safe backend value
     function getEnumValue(v: string): string {
@@ -436,341 +419,108 @@ export default function PatientAppointmentsPage() {
     }, []);
 
     return (
-        <div className="flex min-h-screen bg-green-50">
-            {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
+        <PatientLayout
+            title="Appointments"
+            description="Plan and manage your clinic visits — from booking a slot to tracking approvals and changes."
+            actions={
+                <div className="hidden items-center gap-3 rounded-2xl border border-green-100 bg-white/80 px-4 py-2 text-xs font-medium text-green-700 shadow-sm md:flex">
+                    <CalendarDays className="h-4 w-4" />
+                    Earliest booking: {minBookingDate}
                 </div>
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link href="/patient" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <Home className="h-5 w-5" />
-                        Dashboard
-                    </Link>
-                    <Link href="/patient/account" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <User className="h-5 w-5" />
-                        Account
-                    </Link>
-                    <Link href="/patient/appointments" className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200">
-                        <CalendarDays className="h-5 w-5" />
-                        Appointments
-                    </Link>
-                    <Link href="/patient/notification" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <Bell className="h-5 w-5" />
-                        Notifications
-                    </Link>
-                </nav>
+            }
+        >
+            <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+                <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <CardHeader className="space-y-2">
+                        <CardTitle className="flex items-center gap-3 text-xl text-green-700">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-600/10 text-green-700">
+                                <CalendarDays className="h-5 w-5" />
+                            </span>
+                            Request an appointment
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Choose the clinic, provider, and time that works for you. Appointments must be scheduled at least {MIN_BOOKING_LEAD_DAYS} days in advance.
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <form className="space-y-5" onSubmit={handleSubmit}>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Clinic</Label>
+                                <Select value={clinicId} onValueChange={setClinicId} disabled={loadingClinics}>
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {clinics.map((clinic) => (
+                                            <SelectItem key={clinic.clinic_id} value={clinic.clinic_id}>
+                                                {clinic.clinic_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                <Separator className="my-8" />
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Doctor</Label>
+                                <Select value={doctorId} onValueChange={setDoctorId} disabled={!clinicId || loadingDoctors}>
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {doctors.map((doctor) => (
+                                            <SelectItem key={doctor.user_id} value={doctor.user_id}>
+                                                {doctor.name} ({doctor.specialization ?? "N/A"})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
-                </Button>
-            </aside>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Service type</Label>
+                                <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableServices.map((service) => (
+                                            <SelectItem key={service.value} value={service.value}>
+                                                {service.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-            {/* Main */}
-            <main className="flex-1 flex flex-col">
-                {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Book an Appointment</h2>
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(prev => !prev)}>
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild><Link href="/patient">Dashboard</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/patient/account">Account</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/patient/appointments">Appointments</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/patient/notification">Notifications</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
-                                    Logout
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                {/* Booking Form */}
-                <section className="px-6 py-10 max-w-5xl mx-auto w-full">
-                    <Card className="shadow-lg rounded-2xl">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <CalendarDays className="w-6 h-6" /> Appointment Details
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form className="space-y-6" onSubmit={handleSubmit}>
-                                {/* Clinic */}
-                                <div className="grid gap-2">
-                                    <Label>Clinic</Label>
-                                    <Select value={clinicId} onValueChange={setClinicId} disabled={loadingClinics}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {clinics.map(c => (
-                                                <SelectItem key={c.clinic_id} value={c.clinic_id}>
-                                                    {c.clinic_name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* Doctor */}
-                                <div className="grid gap-2">
-                                    <Label>Doctor</Label>
-                                    <Select value={doctorId} onValueChange={setDoctorId} disabled={!clinicId || loadingDoctors}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={!clinicId ? "Select clinic first" : (loadingDoctors ? "Loading doctors..." : "Select doctor")} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {doctors.map(d => (
-                                                <SelectItem key={d.user_id} value={d.user_id}>
-                                                    {d.name} ({d.specialization ?? "N/A"})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* Service Type */}
-                                <div className="grid gap-2">
-                                    <Label>Service Type</Label>
-                                    <Select
-                                        value={serviceType}
-                                        onValueChange={setServiceType}
-                                        disabled={!selectedDoctor}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableServices.map((s) => (
-                                                <SelectItem key={s.value} value={s.value}>
-                                                    {s.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* Date */}
-                                <div className="grid gap-2">
-                                    <Label>Date</Label>
-                                    <Input
-                                        type="date"
-                                        value={date}
-                                        onChange={(e) => setDate(e.target.value)}
-                                        min={minBookingDate}
-                                    />
-                                </div>
-
-                                {/* Time Slot */}
-                                <div className="grid gap-2">
-                                    <Label>Time</Label>
-                                    <Select value={timeStart} onValueChange={setTimeStart} disabled={loadingSlots || !doctorId || !date}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={!doctorId || !date ? "Select doctor and date" : (loadingSlots ? "Loading slots..." : (slots.length ? "Select a time" : "No slots available"))} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {slots.map((s) => (
-                                                <SelectItem key={`${s.start}-${s.end}`} value={s.start}>
-                                                    {formatTimeRange(s.start, s.end)}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="pt-2">
-                                    <Button
-                                        type="submit"
-                                        className="bg-green-600 hover:bg-green-700"
-                                        disabled={submitting}
-                                    >
-                                        {submitting ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Submitting...
-                                            </>
-                                        ) : (
-                                            "Book Appointment"
-                                        )}
-                                    </Button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
-                </section>
-
-                {/* My Appointments */}
-                <section className="px-6 py-10 max-w-5xl mx-auto w-full">
-                    <Card className="shadow-lg rounded-2xl">
-                        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <ClipboardList className="w-6 h-6" /> My Appointments
-                            </CardTitle>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-2 self-start"
-                                onClick={handleClearAppointments}
-                                disabled={appointments.length === 0}
-                            >
-                                <Trash2 className="h-4 w-4" /> Clear appointments
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {loadingAppointments ? (
-                                <div className="flex justify-center py-6 text-gray-500">
-                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Loading appointments...
-                                </div>
-                            ) : appointments.length === 0 ? (
-                                <p className="text-gray-500 text-center py-4">No appointments yet.</p>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full text-sm border border-gray-200 rounded-md">
-                                        <thead className="bg-green-100 text-green-700">
-                                            <tr>
-                                                <th className="px-4 py-2 text-left">Clinic</th>
-                                                <th className="px-4 py-2 text-left">Doctor</th>
-                                                <th className="px-4 py-2 text-left">Date</th>
-                                                <th className="px-4 py-2 text-left">Time</th>
-                                                <th className="px-4 py-2 text-left">Status</th>
-                                                <th className="px-4 py-2 text-left">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {appointments.map((a) => (
-                                                <tr key={a.id} className="border-t hover:bg-green-50 transition">
-                                                    <td className="px-4 py-2">{a.clinic}</td>
-                                                    <td className="px-4 py-2">{a.doctor}</td>
-                                                    <td className="px-4 py-2">{a.date}</td>
-                                                    <td className="px-4 py-2">{a.time}</td>
-                                                    <td className="px-4 py-2 capitalize">{a.status}</td>
-                                                    <td className="px-4 py-2">
-                                                        {canModifyAppointment(a) ? (
-                                                            <div className="flex flex-wrap gap-2">
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() => openRescheduleDialog(a)}
-                                                                    disabled={rescheduling && rescheduleTarget?.id === a.id}
-                                                                    className="gap-2"
-                                                                >
-                                                                    {rescheduling && rescheduleTarget?.id === a.id ? (
-                                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                                    ) : (
-                                                                        <Undo2 className="h-3 w-3" />
-                                                                    )}
-                                                                    Reschedule
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="destructive"
-                                                                    onClick={() => openCancelDialog(a)}
-                                                                    disabled={cancelSubmitting && cancelTarget?.id === a.id}
-                                                                    className="gap-2"
-                                                                >
-                                                                    {cancelSubmitting && cancelTarget?.id === a.id ? (
-                                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                                    ) : (
-                                                                        <Ban className="h-3 w-3" />
-                                                                    )}
-                                                                    Cancel
-                                                                </Button>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-xs text-muted-foreground">No actions available</span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </section>
-
-                <Dialog open={rescheduleOpen} onOpenChange={(open) => { if (!open) closeRescheduleDialog(); }}>
-                    <DialogContent className="rounded-xl max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Reschedule appointment</DialogTitle>
-                            <DialogDescription>
-                                {rescheduleTarget
-                                    ? `Select a new slot for your appointment with ${rescheduleTarget.doctor}. Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`
-                                    : "Choose a new schedule for your appointment."}
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <form onSubmit={handleRescheduleSubmit} className="space-y-4">
-                            <div>
-                                <Label>Date</Label>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Date</Label>
                                 <Input
                                     type="date"
-                                    value={rescheduleDate}
-                                    onChange={(e) => setRescheduleDate(e.target.value)}
+                                    value={date}
+                                    onChange={(event) => setDate(event.target.value)}
                                     min={minBookingDate}
-                                    required
-                                    disabled={rescheduling}
+                                    className="rounded-xl border-green-200"
                                 />
                             </div>
 
-                            <div>
-                                <Label>Time</Label>
-                                <Select
-                                    value={rescheduleTimeStart}
-                                    onValueChange={setRescheduleTimeStart}
-                                    disabled={
-                                        !rescheduleTarget ||
-                                        loadingRescheduleSlots ||
-                                        rescheduling ||
-                                        rescheduleSlots.length === 0
-                                    }
-                                >
-                                    <SelectTrigger>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Preferred time</Label>
+                                <Select value={timeStart} onValueChange={setTimeStart} disabled={loadingSlots || !doctorId || !date}>
+                                    <SelectTrigger className="rounded-xl border-green-200">
                                         <SelectValue
                                             placeholder={
-                                                !rescheduleTarget
-                                                    ? "Select appointment"
-                                                    : loadingRescheduleSlots
+                                                !doctorId || !date
+                                                    ? "Select doctor and date"
+                                                    : loadingSlots
                                                         ? "Loading slots..."
-                                                        : rescheduleSlots.length
+                                                        : slots.length
                                                             ? "Select a time"
                                                             : "No slots available"
                                             }
                                         />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {rescheduleSlots.map((slot) => (
+                                        {slots.map((slot) => (
                                             <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
                                                 {formatTimeRange(slot.start, slot.end)}
                                             </SelectItem>
@@ -779,54 +529,302 @@ export default function PatientAppointmentsPage() {
                                 </Select>
                             </div>
 
-                            <DialogFooter>
+                            <div className="pt-1">
                                 <Button
                                     type="submit"
-                                    className="bg-green-600 hover:bg-green-700"
-                                    disabled={rescheduling || !rescheduleTarget || !selectedRescheduleSlot}
+                                    className="w-full rounded-xl bg-green-600 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 focus-visible:ring-green-500"
+                                    disabled={submitting}
                                 >
-                                    {rescheduling ? (
+                                    {submitting ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
                                         </>
                                     ) : (
-                                        "Confirm"
+                                        "Book appointment"
                                     )}
                                 </Button>
-                            </DialogFooter>
+                            </div>
                         </form>
-                    </DialogContent>
-                </Dialog>
+                    </CardContent>
+                </Card>
 
-                <AlertDialog open={cancelDialogOpen} onOpenChange={(open) => { if (!open) closeCancelDialog(); }}>
-                    <AlertDialogContent className="rounded-xl">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Cancel appointment?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {cancelTarget
-                                    ? `You are cancelling your appointment with ${cancelTarget.doctor} on ${cancelTarget.date} at ${cancelTarget.time}. This action cannot be undone.`
-                                    : "This action cannot be undone."}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel disabled={cancelSubmitting}>Keep appointment</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleCancelConfirm} disabled={cancelSubmitting} className="bg-red-600 hover:bg-red-700">
-                                {cancelSubmitting ? (
+                <div className="space-y-6">
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg text-green-700">Booking summary</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <dl className="space-y-3 text-sm text-muted-foreground">
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Clinic</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {selectedClinic ? selectedClinic.clinic_name : "Select a clinic to continue"}
+                                    </dd>
+                                </div>
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Doctor</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {selectedDoctor ? `${selectedDoctor.name} ${selectedDoctor.specialization ? `(${selectedDoctor.specialization})` : ""}` : "Choose a clinic and doctor"}
+                                    </dd>
+                                </div>
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Service</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {selectedServiceLabel ?? "Select a service type"}
+                                    </dd>
+                                </div>
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Schedule</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {date && selectedSlot ? (
+                                            <span>
+                                                {new Date(date).toLocaleDateString()} · {formatTimeRange(selectedSlot.start, selectedSlot.end)}
+                                            </span>
+                                        ) : (
+                                            "Choose a date and time"
+                                        )}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-3xl border-green-100/80 bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Important reminders</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm text-white/90">
+                            <p>Bring your clinic ID and arrive 10 minutes early for screening and verification.</p>
+                            <p>If you can no longer attend, submit a reschedule or cancellation so another patient can use the slot.</p>
+                            <p>Watch your notifications for approvals, movement updates, and doctor instructions.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </section>
+
+            <section className="space-y-4">
+                <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-3 text-xl text-green-700">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-600/10 text-green-700">
+                                    <ClipboardList className="h-5 w-5" />
+                                </span>
+                                Your appointment requests
+                            </CardTitle>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                Track approval status, reschedule upcoming visits, or cancel when plans change.
+                            </p>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-2 rounded-xl border border-red-100 bg-red-50/70 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed"
+                            onClick={handleClearAppointments}
+                            disabled={appointments.length === 0}
+                        >
+                            <Trash2 className="h-4 w-4" /> Clear view
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        {loadingAppointments ? (
+                            <div className="flex items-center justify-center rounded-3xl border border-dashed border-green-200 bg-green-50/60 py-10 text-sm text-green-700">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading appointments…
+                            </div>
+                        ) : appointments.length === 0 ? (
+                            <div className="rounded-3xl border border-dashed border-green-200 bg-green-50/60 p-8 text-center text-sm text-green-700">
+                                No appointment requests yet. Submit a booking to see it here.
+                            </div>
+                        ) : (
+                            <div className="overflow-hidden rounded-3xl border border-green-100">
+                                <table className="min-w-full text-sm">
+                                    <thead className="bg-green-600/10 text-xs font-semibold uppercase tracking-wide text-green-700">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left">Clinic</th>
+                                            <th className="px-4 py-3 text-left">Doctor</th>
+                                            <th className="px-4 py-3 text-left">Date</th>
+                                            <th className="px-4 py-3 text-left">Time</th>
+                                            <th className="px-4 py-3 text-left">Status</th>
+                                            <th className="px-4 py-3 text-left">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-green-100/80">
+                                        {appointments.map((appointment) => (
+                                            <tr key={appointment.id} className="bg-white/90">
+                                                <td className="px-4 py-3 font-medium text-green-800">{appointment.clinic}</td>
+                                                <td className="px-4 py-3 text-muted-foreground">{appointment.doctor}</td>
+                                                <td className="px-4 py-3 text-muted-foreground">{appointment.date}</td>
+                                                <td className="px-4 py-3 text-muted-foreground">{appointment.time}</td>
+                                                <td className="px-4 py-3">
+                                                    <span className="rounded-full bg-green-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-700">
+                                                        {appointment.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    {canModifyAppointment(appointment) ? (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => openRescheduleDialog(appointment)}
+                                                                disabled={rescheduling && rescheduleTarget?.id === appointment.id}
+                                                                className="gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/60"
+                                                            >
+                                                                {rescheduling && rescheduleTarget?.id === appointment.id ? (
+                                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                                ) : (
+                                                                    <Undo2 className="h-3 w-3" />
+                                                                )}
+                                                                Reschedule
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="destructive"
+                                                                onClick={() => openCancelDialog(appointment)}
+                                                                disabled={cancelSubmitting && cancelTarget?.id === appointment.id}
+                                                                className="gap-2 rounded-xl"
+                                                            >
+                                                                {cancelSubmitting && cancelTarget?.id === appointment.id ? (
+                                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                                ) : (
+                                                                    <Ban className="h-3 w-3" />
+                                                                )}
+                                                                Cancel
+                                                            </Button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground">No actions available</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </section>
+
+            <Dialog
+                open={rescheduleOpen}
+                onOpenChange={(open) => {
+                    if (!open) closeRescheduleDialog();
+                }}
+            >
+                <DialogContent className="max-w-md rounded-3xl border border-green-100/80 bg-white/95">
+                    <DialogHeader className="space-y-1">
+                        <DialogTitle className="text-lg font-semibold text-green-700">Reschedule appointment</DialogTitle>
+                        <DialogDescription>
+                            {rescheduleTarget
+                                ? `Select a new slot for your appointment with ${rescheduleTarget.doctor}. Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`
+                                : "Choose a new schedule for your appointment."}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleRescheduleSubmit} className="space-y-4 pt-2">
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-green-700">Date</Label>
+                            <Input
+                                type="date"
+                                value={rescheduleDate}
+                                onChange={(event) => setRescheduleDate(event.target.value)}
+                                min={minBookingDate}
+                                required
+                                disabled={rescheduling}
+                                className="rounded-xl border-green-200"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium text-green-700">Time</Label>
+                            <Select
+                                value={rescheduleTimeStart}
+                                onValueChange={setRescheduleTimeStart}
+                                disabled={
+                                    !rescheduleTarget ||
+                                    loadingRescheduleSlots ||
+                                    rescheduling ||
+                                    rescheduleSlots.length === 0
+                                }
+                            >
+                                <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectValue
+                                        placeholder={
+                                            !rescheduleTarget
+                                                ? "Select appointment"
+                                                : loadingRescheduleSlots
+                                                    ? "Loading slots..."
+                                                    : rescheduleSlots.length
+                                                        ? "Select a time"
+                                                        : "No slots available"
+                                        }
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {rescheduleSlots.map((slot) => (
+                                        <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
+                                            {formatTimeRange(slot.start, slot.end)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <DialogFooter>
+                            <Button
+                                type="submit"
+                                className="rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
+                                disabled={rescheduling || !rescheduleTarget || !selectedRescheduleSlot}
+                            >
+                                {rescheduling ? (
                                     <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cancelling...
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
                                     </>
                                 ) : (
-                                    "Cancel appointment"
+                                    "Confirm"
                                 )}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
-                    © {new Date().getFullYear()} HNU Clinic – Patient Panel
-                </footer>
-            </main>
-        </div>
+            <AlertDialog
+                open={cancelDialogOpen}
+                onOpenChange={(open) => {
+                    if (!open) closeCancelDialog();
+                }}
+            >
+                <AlertDialogContent className="max-w-md rounded-3xl border border-green-100/80 bg-white/95">
+                    <AlertDialogHeader className="space-y-1">
+                        <AlertDialogTitle className="text-lg font-semibold text-green-700">Cancel appointment?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {cancelTarget
+                                ? `You are cancelling your appointment with ${cancelTarget.doctor} on ${cancelTarget.date} at ${cancelTarget.time}. This action cannot be undone.`
+                                : "This action cannot be undone."}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="gap-2">
+                        <AlertDialogCancel className="rounded-xl border-green-200" disabled={cancelSubmitting}>
+                            Keep appointment
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleCancelConfirm}
+                            disabled={cancelSubmitting}
+                            className="rounded-xl bg-red-600 text-sm font-semibold hover:bg-red-700"
+                        >
+                            {cancelSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Cancelling...
+                                </>
+                            ) : (
+                                "Cancel appointment"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </PatientLayout>
     );
 }
