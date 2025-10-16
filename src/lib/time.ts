@@ -133,3 +133,56 @@ export function formatManilaDateTime(
 
     return date.toLocaleString("en-PH", finalOptions);
 }
+
+const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+/**
+ * ✅ Return the day-of-week index (0 = Sunday .. 6 = Saturday) for a Manila-local date
+ */
+export function manilaWeekdayIndex(date: Date): number {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        timeZone: "Asia/Manila",
+    });
+
+    const weekday = formatter.format(date);
+    return WEEKDAYS_SHORT.indexOf(weekday as (typeof WEEKDAYS_SHORT)[number]);
+}
+
+/**
+ * ✅ Add a number of calendar days to a Date using UTC math (stable for Manila)
+ */
+export function addManilaDays(date: Date, days: number): Date {
+    const copy = new Date(date.getTime());
+    copy.setUTCDate(copy.getUTCDate() + days);
+    return copy;
+}
+
+/**
+ * ✅ Format a Manila-local ISO date string (YYYY-MM-DD) from a Date instance
+ */
+export function toManilaISODate(date: Date): string {
+    return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+}
+
+/**
+ * ✅ Compute the Monday (start of week) for a Manila-local Date
+ */
+export function startOfManilaWeek(date: Date): Date {
+    const dayIndex = manilaWeekdayIndex(date);
+    const offset = (7 + 1 - dayIndex) % 7; // 1 = Monday
+    const monday = addManilaDays(date, -((7 - offset) % 7));
+    const iso = toManilaISODate(monday);
+    return startOfManilaDay(iso);
+}
+
+/**
+ * ✅ Get the next Monday relative to a Manila-local Date (if already Monday, returns same day)
+ */
+export function nextManilaMonday(date: Date): Date {
+    const dayIndex = manilaWeekdayIndex(date);
+    const offset = (7 + 1 - dayIndex) % 7;
+    const next = addManilaDays(date, offset);
+    const iso = toManilaISODate(next);
+    return startOfManilaDay(iso);
+}
