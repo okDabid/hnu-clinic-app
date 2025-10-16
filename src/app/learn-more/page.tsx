@@ -30,7 +30,7 @@ export default function LearnMorePage() {
     const highlights = [
         {
             title: "Unified Patient Profiles",
-            description: "All appointments, notes, and health records are consolidated into one secure dashboard for clinicians and staff.",
+            description: "All appointments, notes, and health records are consolidated into one secure dashboard for doctors and nurses.",
             icon: LayoutDashboard,
         },
         {
