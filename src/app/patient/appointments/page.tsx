@@ -12,6 +12,8 @@ import {
     ClipboardList,
     Bell,
     Loader2,
+    CalendarClock,
+    XCircle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,14 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatTimeRange } from "@/lib/time";
 import Image from "next/image";
@@ -36,10 +46,16 @@ type Slot = { start: string; end: string };
 type Appointment = {
     id: string;
     clinic: string;
+    clinic_id: string;
+    doctor_user_id: string;
     doctor: string;
     date: string;
+    date_raw: string;
     time: string;
+    time_start: string;
+    time_end: string;
     status: string;
+    service_type: string | null;
 };
 
 export default function PatientAppointmentsPage() {
@@ -64,6 +80,14 @@ export default function PatientAppointmentsPage() {
     // My appointments
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loadingAppointments, setLoadingAppointments] = useState(true);
+    const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+    const [rescheduleAppointment, setRescheduleAppointment] = useState<Appointment | null>(null);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleTimeStart, setRescheduleTimeStart] = useState("");
+    const [rescheduleSlots, setRescheduleSlots] = useState<Slot[]>([]);
+    const [loadingRescheduleSlots, setLoadingRescheduleSlots] = useState(false);
+    const [rescheduling, setRescheduling] = useState(false);
+    const [cancelingId, setCancelingId] = useState<string | null>(null);
 
     async function handleLogout() {
         try {
@@ -133,8 +157,21 @@ export default function PatientAppointmentsPage() {
         })();
     }, [clinicId, doctorId, date]);
 
-    const selectedSlot = useMemo(() => slots.find(s => s.start === timeStart), [slots, timeStart]);
-    const selectedDoctor = useMemo(() => doctors.find(d => d.user_id === doctorId) || null, [doctorId, doctors]);
+    const selectedSlot = useMemo(() => slots.find((s) => s.start === timeStart), [slots, timeStart]);
+    const selectedDoctor = useMemo(
+        () => doctors.find((d) => d.user_id === doctorId) || null,
+        [doctorId, doctors]
+    );
+    const selectedRescheduleSlot = useMemo(
+        () => rescheduleSlots.find((s) => s.start === rescheduleTimeStart),
+        [rescheduleSlots, rescheduleTimeStart]
+    );
+
+    const minBookingDate = useMemo(() => {
+        const now = new Date();
+        now.setDate(now.getDate() + 3);
+        return now.toISOString().slice(0, 10);
+    }, []);
 
     // ✅ Dynamic service options: each label has a unique value
     const availableServices = useMemo(() => {
@@ -191,7 +228,11 @@ export default function PatientAppointmentsPage() {
                 }),
             });
 
-            if (!res.ok) throw new Error("Failed to create appointment");
+            const data = await res.json();
+            if (!res.ok) {
+                toast.error(data?.message ?? "Unable to create appointment");
+                return;
+            }
 
             toast.success("Appointment request submitted! Status: Pending");
             loadAppointments();
@@ -227,6 +268,105 @@ export default function PatientAppointmentsPage() {
     useEffect(() => {
         loadAppointments();
     }, []);
+
+    useEffect(() => {
+        if (!rescheduleAppointment || !rescheduleDate) {
+            setRescheduleSlots([]);
+            return;
+        }
+
+        (async () => {
+            try {
+                setLoadingRescheduleSlots(true);
+                const params = new URLSearchParams({
+                    clinic_id: rescheduleAppointment.clinic_id,
+                    doctor_user_id: rescheduleAppointment.doctor_user_id,
+                    date: rescheduleDate,
+                });
+                const res = await fetch(`/api/meta/doctor-availability?${params}`);
+                const data = await res.json();
+                const slots = data?.slots || [];
+                setRescheduleSlots(slots);
+                if (slots.length > 0) {
+                    const hasCurrent = slots.some((slot: Slot) => slot.start === rescheduleTimeStart);
+                    if (!hasCurrent) {
+                        setRescheduleTimeStart(slots[0]?.start ?? "");
+                    }
+                } else {
+                    setRescheduleTimeStart("");
+                }
+            } catch {
+                toast.error("Failed to load slots for rescheduling");
+            } finally {
+                setLoadingRescheduleSlots(false);
+            }
+        })();
+    }, [rescheduleAppointment, rescheduleDate, rescheduleTimeStart]);
+
+    async function handleRescheduleSubmit(e: React.FormEvent) {
+        e.preventDefault();
+        if (!rescheduleAppointment || !rescheduleDate || !selectedRescheduleSlot) {
+            toast.error("Please select a new date and time");
+            return;
+        }
+
+        try {
+            setRescheduling(true);
+            const res = await fetch("/api/patient/appointments", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    appointment_id: rescheduleAppointment.id,
+                    date: rescheduleDate,
+                    time_start: selectedRescheduleSlot.start,
+                    time_end: selectedRescheduleSlot.end,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                toast.error(data?.message ?? "Unable to reschedule appointment");
+                return;
+            }
+
+            toast.success("Appointment rescheduled");
+            setRescheduleDialogOpen(false);
+            setRescheduleAppointment(null);
+            loadAppointments();
+        } catch {
+            toast.error("Unable to reschedule appointment");
+        } finally {
+            setRescheduling(false);
+        }
+    }
+
+    async function handleCancelAppointment(appointment: Appointment) {
+        if (!window.confirm("Cancel this appointment?")) {
+            return;
+        }
+
+        try {
+            setCancelingId(appointment.id);
+            const res = await fetch("/api/patient/appointments", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ appointment_id: appointment.id }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                toast.error(data?.message ?? "Unable to cancel appointment");
+                return;
+            }
+
+            toast.success(data?.message ?? "Appointment cancelled");
+            loadAppointments();
+        } catch {
+            toast.error("Unable to cancel appointment");
+        } finally {
+            setCancelingId(null);
+        }
+    }
 
     return (
         <div className="flex min-h-screen bg-green-50">
@@ -380,7 +520,7 @@ export default function PatientAppointmentsPage() {
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
-                                        min={new Date().toISOString().slice(0, 10)}
+                                        min={minBookingDate}
                                     />
                                 </div>
 
@@ -447,6 +587,7 @@ export default function PatientAppointmentsPage() {
                                                 <th className="px-4 py-2 text-left">Date</th>
                                                 <th className="px-4 py-2 text-left">Time</th>
                                                 <th className="px-4 py-2 text-left">Status</th>
+                                                <th className="px-4 py-2 text-left">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -457,6 +598,41 @@ export default function PatientAppointmentsPage() {
                                                     <td className="px-4 py-2">{a.date}</td>
                                                     <td className="px-4 py-2">{a.time}</td>
                                                     <td className="px-4 py-2 capitalize">{a.status}</td>
+                                                    <td className="px-4 py-2">
+                                                        {(["Pending", "Approved", "Moved"] as string[]).includes(a.status) ? (
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="border-green-200 text-green-700 hover:bg-green-50"
+                                                                    onClick={() => {
+                                                                        setRescheduleAppointment(a);
+                                                                        const initialDate =
+                                                                            a.date_raw && a.date_raw < minBookingDate
+                                                                                ? minBookingDate
+                                                                                : a.date_raw;
+                                                                        setRescheduleDate(initialDate);
+                                                                        setRescheduleTimeStart(a.time_start);
+                                                                        setRescheduleDialogOpen(true);
+                                                                    }}
+                                                                >
+                                                                    <CalendarClock className="w-4 h-4 mr-1" /> Reschedule
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="border-red-200 text-red-600 hover:bg-red-50"
+                                                                    onClick={() => handleCancelAppointment(a)}
+                                                                    disabled={cancelingId === a.id}
+                                                                >
+                                                                    <XCircle className="w-4 h-4 mr-1" />
+                                                                    {cancelingId === a.id ? "Cancelling..." : "Cancel"}
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400">—</span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -471,6 +647,73 @@ export default function PatientAppointmentsPage() {
                     © {new Date().getFullYear()} HNU Clinic – Patient Panel
                 </footer>
             </main>
+            <Dialog open={rescheduleDialogOpen} onOpenChange={(open) => {
+                setRescheduleDialogOpen(open);
+                if (!open) {
+                    setRescheduleAppointment(null);
+                    setRescheduleSlots([]);
+                    setRescheduleTimeStart("");
+                }
+            }}>
+                <DialogContent className="rounded-xl">
+                    <DialogHeader>
+                        <DialogTitle>Reschedule Appointment</DialogTitle>
+                        <DialogDescription>
+                            Choose a new date and time for your visit. Slots reflect the doctor&rsquo;s latest availability.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleRescheduleSubmit} className="space-y-4">
+                        <div>
+                            <Label>Date</Label>
+                            <Input
+                                type="date"
+                                value={rescheduleDate}
+                                onChange={(e) => setRescheduleDate(e.target.value)}
+                                min={minBookingDate}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <Label>Time</Label>
+                            <Select
+                                value={rescheduleTimeStart}
+                                onValueChange={setRescheduleTimeStart}
+                                disabled={loadingRescheduleSlots || rescheduleSlots.length === 0}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue
+                                        placeholder={
+                                            loadingRescheduleSlots
+                                                ? "Loading slots..."
+                                                : rescheduleSlots.length === 0
+                                                    ? "No slots available"
+                                                    : "Select a time"
+                                        }
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {rescheduleSlots.map((slot) => (
+                                        <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
+                                            {formatTimeRange(slot.start, slot.end)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={rescheduling}>
+                                {rescheduling ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Rescheduling...
+                                    </>
+                                ) : (
+                                    "Confirm Reschedule"
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
