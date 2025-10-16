@@ -53,6 +53,14 @@ export function formatTimeRange(start: string, end: string): string {
     return `${formatTimeString12(start)} – ${formatTimeString12(end)}`;
 }
 
+const manilaISOFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+});
+
+export function formatManilaISODate(date: Date): string {
+    return manilaISOFormatter.format(date);
+}
+
 export function toManilaTimeString(dateStr: string): string {
     if (!dateStr) return "";
     const date = new Date(dateStr);
