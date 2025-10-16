@@ -47,7 +47,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { formatTimeRange } from "@/lib/time";
+import { formatTimeRange, manilaNow } from "@/lib/time";
 import Image from "next/image";
 
 type Clinic = { clinic_id: string; clinic_name: string };
@@ -74,10 +74,12 @@ function toInputDate(date: Date): string {
     return adjusted.toISOString().split("T")[0];
 }
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 function computeMinBookingDate(): string {
-    const base = new Date();
-    base.setDate(base.getDate() + MIN_BOOKING_LEAD_DAYS);
-    return toInputDate(base);
+    const base = manilaNow();
+    const future = new Date(base.getTime() + MIN_BOOKING_LEAD_DAYS * DAY_IN_MS);
+    return toInputDate(future);
 }
 
 function isoToInputDate(iso: string | null | undefined): string {

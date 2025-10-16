@@ -9,7 +9,7 @@ import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
  *   - doctor_user_id
  *   - date (YYYY-MM-DD, Manila)
  *
- * Returns: Array of available time slots (30 mins each)
+ * Returns: Array of available time slots (15 mins each)
  */
 export async function GET(req: Request) {
     try {
@@ -68,8 +68,8 @@ export async function GET(req: Request) {
                 timeZone: "Asia/Manila",
             }).format(d);
 
-        // 3) Generate 30-minute slots
-        const SLOT_MIN = 30;
+        // 3) Generate 15-minute slots
+        const SLOT_MIN = 15;
         const slots: { start: string; end: string }[] = [];
 
         for (const avail of availabilities) {
