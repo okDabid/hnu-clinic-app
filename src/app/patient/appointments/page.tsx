@@ -636,7 +636,7 @@ export default function PatientAppointmentsPage() {
                                 No appointment requests yet. Submit a booking to see it here.
                             </div>
                         ) : (
-                            <div className="overflow-hidden rounded-3xl border border-green-100">
+                            <div className="overflow-x-auto rounded-3xl border border-green-100">
                                 <table className="min-w-full text-sm">
                                     <thead className="bg-green-600/10 text-xs font-semibold uppercase tracking-wide text-green-700">
                                         <tr>

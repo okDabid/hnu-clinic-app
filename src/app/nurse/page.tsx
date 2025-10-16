@@ -19,30 +19,12 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 
-const HIGHLIGHTS = [
-    {
-        label: "Active Accounts",
-        value: "128",
-        detail: "4 new this week",
-    },
-    {
-        label: "Low-stock Alerts",
-        value: "12",
-        detail: "2 require replenishment",
-    },
-    {
-        label: "Today’s Appointments",
-        value: "24",
-        detail: "First check-in at 8:00 AM",
-    },
-];
-
 const CAPABILITIES = [
     {
         title: "Accounts Management",
         icon: Users,
         items: [
-            "Create and onboard scholars, doctors, and admins",
+            "Create user accounts",
             "Update and verify credentials",
             "Activate or suspend access instantly",
         ],
@@ -87,18 +69,18 @@ const CAPABILITIES = [
 
 const QUICK_LINKS = [
     {
-        title: "Review Inventory",
+        title: "Manage Inventory",
         description: "Check stock levels and manage replenishment queues.",
         href: "/nurse/inventory",
     },
     {
-        title: "Manage Appointments",
-        description: "Coordinate daily schedules and clinic availability.",
+        title: "Manage Clinic",
+        description: "Coordinate with clinic location and availability.",
         href: "/nurse/clinic",
     },
     {
-        title: "Update Accounts",
-        description: "Onboard new staff and keep records current.",
+        title: "Manage Accounts",
+        description: "Create new users and keep records current.",
         href: "/nurse/accounts",
     },
 ];
@@ -130,22 +112,6 @@ export default function NurseDashboardPage() {
                             Keep the clinic running smoothly with quick visibility into patient appointments, supply levels,
                             and team coordination. Use the quick actions below to jump straight into critical workflows.
                         </p>
-                        <div className="grid gap-4 sm:grid-cols-3">
-                            {HIGHLIGHTS.map((highlight) => (
-                                <div
-                                    key={highlight.label}
-                                    className="rounded-2xl border border-green-100 bg-green-50/70 p-4 text-center shadow-sm"
-                                >
-                                    <p className="text-2xl font-semibold text-green-700">
-                                        {highlight.value}
-                                    </p>
-                                    <p className="text-xs font-medium uppercase tracking-wide text-green-500">
-                                        {highlight.label}
-                                    </p>
-                                    <p className="mt-1 text-xs text-muted-foreground">{highlight.detail}</p>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                     <div className="space-y-4 rounded-3xl border border-green-100 bg-green-50/60 p-6 shadow-sm">
                         <h4 className="text-lg font-semibold text-green-700">Quick actions</h4>
