@@ -1,25 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { signOut } from "next-auth/react";
-import Link from "next/link";
 import { toast } from "sonner";
 import {
-    Menu,
-    X,
-    Home,
-    User,
     Loader2,
     Cog,
     Eye,
     EyeOff,
-    CalendarDays,
-    ClipboardList,
-    Clock4,
-    Pill,
-    FileText,
 } from "lucide-react";
 
+import DoctorLayout from "@/components/patient/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,13 +19,6 @@ import {
     CardTitle,
     CardContent,
 } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import {
     Dialog,
     DialogContent,
@@ -64,8 +47,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-
-import Image from "next/image";
 
 type Profile = {
     user_id: string;
@@ -106,9 +87,6 @@ const reverseBloodTypeEnumMap = Object.fromEntries(
 export default function DoctorAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
-
-    const [menuOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
@@ -222,130 +200,25 @@ export default function DoctorAccountPage() {
         }
     }
 
-
-    // 🔹 Logout
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
-
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
-            {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
-                </div>
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link
-                        href="/doctor"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Home className="h-5 w-5" /> Dashboard
-                    </Link>
-                    <Link
-                        href="/doctor/account"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                        <User className="h-5 w-5" /> Account
-                    </Link>
-                    <Link
-                        href="/doctor/consultation"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Clock4 className="h-5 w-5" /> Consultation
-                    </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <CalendarDays className="h-5 w-5" /> Appointments
-                    </Link>
-                    <Link
-                        href="/doctor/dispense"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Pill className="h-5 w-5" /> Dispense
-                    </Link>
-                    <Link
-                        href="/doctor/patients"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <ClipboardList className="h-5 w-5" /> Patients
-                    </Link>
-                    <Link
-                        href="/doctor/certificates"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <FileText className="h-5 w-5" /> MedCerts
-                    </Link>
-                </nav>
-                <Separator className="my-8" />
-                <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
-                </Button>
-            </aside>
-
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col">
-                {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-lg sm:text-xl font-bold text-green-600">Account Management</h2>
-                    {/* Mobile Menu */}
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild><Link href="/doctor">Dashboard</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/dispense">Dispense</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                {/* Sections */}
-                <section className="px-4 sm:px-6 py-6 sm:py-8 space-y-10 w-full max-w-4xl mx-auto">
-                    {/* My Account */}
-                    {profile && (
-                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition mb-10">
-                            <CardHeader className="border-b flex items-center justify-between flex-wrap gap-3">
-                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">My Account</CardTitle>
+        <DoctorLayout
+            title="Account management"
+            description="Keep your clinic profile accurate, secure, and ready for seamless coordination."
+        >
+            <div className="mx-auto w-full max-w-4xl space-y-10">
+                {profile && (
+                        <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
+                            <CardHeader className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-100/70">
+                                <div className="space-y-1">
+                                    <CardTitle className="text-xl sm:text-2xl font-semibold text-emerald-700">
+                                        My account
+                                    </CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                        Update your personal details, emergency contacts, and credentials to keep clinic records current.
+                                    </p>
+                                </div>
 
                                 {/* Password Update Dialog */}
                                 <Dialog
@@ -358,15 +231,22 @@ export default function DoctorAccountPage() {
                                     }}
                                 >
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon" className="hover:bg-green-50">
-                                            <Cog className="h-5 w-5 text-green-600" />
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                                            aria-label="Update password"
+                                        >
+                                            <Cog className="h-5 w-5 text-emerald-600" />
                                         </Button>
                                     </DialogTrigger>
 
-                                    <DialogContent className="w-[95%] max-w-sm sm:max-w-md lg:max-w-lg rounded-xl">
+                                    <DialogContent className="w-[95%] max-w-sm sm:max-w-md lg:max-w-lg rounded-3xl border border-emerald-100 bg-white/95">
                                         <DialogHeader>
-                                            <DialogTitle className="text-lg sm:text-xl">Update Password</DialogTitle>
-                                            <DialogDescription className="text-sm sm:text-base">
+                                            <DialogTitle className="text-lg sm:text-xl font-semibold text-emerald-700">
+                                                Update password
+                                            </DialogTitle>
+                                            <DialogDescription className="text-sm text-muted-foreground sm:text-base">
                                                 Change your account password securely. Enter your current password and set a new one.
                                             </DialogDescription>
                                         </DialogHeader>
@@ -486,12 +366,12 @@ export default function DoctorAccountPage() {
                                                     ))}
                                                 </ul>
                                             )}
-                                            {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
+                                            {passwordMessage && <p className="text-sm text-emerald-600">{passwordMessage}</p>}
 
                                             <DialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-3">
                                                 <Button
                                                     type="submit"
-                                                    className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                                                    className="w-full sm:w-auto rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                                                     disabled={passwordLoading}
                                                 >
                                                     {passwordLoading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -504,7 +384,7 @@ export default function DoctorAccountPage() {
                             </CardHeader>
 
                             {/* Profile Form */}
-                            <CardContent className="pt-6">
+                            <CardContent className="space-y-6 pt-6 text-sm text-muted-foreground">
                                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                                     {/* Basic Info */}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -545,10 +425,10 @@ export default function DoctorAccountPage() {
                                                     {tempDOB && (
                                                         <Button
                                                             type="button"
-                                                            className="mt-2 bg-green-600 hover:bg-green-700 text-white text-sm"
+                                                            className="mt-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                                                             onClick={() => setShowDOBConfirm(true)}
                                                         >
-                                                            Confirm Date
+                                                            Confirm date
                                                         </Button>
                                                     )}
                                                     <p className="text-xs text-gray-500 mt-1">
@@ -562,7 +442,7 @@ export default function DoctorAccountPage() {
                                                                 <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
                                                                 <AlertDialogDescription>
                                                                     You are about to set your Date of Birth to{" "}
-                                                                    <span className="font-semibold text-green-700">{tempDOB}</span>.
+                                                                <span className="font-semibold text-emerald-700">{tempDOB}</span>.
                                                                     <br />
                                                                     This action can only be done once and cannot be changed later.
                                                                 </AlertDialogDescription>
@@ -578,7 +458,7 @@ export default function DoctorAccountPage() {
                                                                     Cancel
                                                                 </AlertDialogCancel>
                                                                 <AlertDialogAction
-                                                                    className="bg-green-600 hover:bg-green-700"
+                                                                className="bg-emerald-600 hover:bg-emerald-700"
                                                                     onClick={async () => {
                                                                         setProfile({ ...profile, date_of_birth: tempDOB });
                                                                         setShowDOBConfirm(false);
@@ -763,7 +643,7 @@ export default function DoctorAccountPage() {
 
                                     <Button
                                         type="submit"
-                                        className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base"
+                                        className="w-full sm:w-auto rounded-xl bg-emerald-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
@@ -774,13 +654,7 @@ export default function DoctorAccountPage() {
 
                         </Card>
                     )}
-                </section>
-
-                {/* Footer */}
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
-                    © {new Date().getFullYear()} HNU Clinic – Doctor Panel
-                </footer>
-            </main>
-        </div>
+            </div>
+        </DoctorLayout>
     );
 }

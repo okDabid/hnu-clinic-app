@@ -1,27 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import {
-    Menu,
-    X,
-    User,
     CalendarDays,
-    ClipboardList,
     ClipboardCheck,
-    FileText,
-    Home,
     Loader2,
-    Clock4,
     Check,
     XCircle,
     Move,
     MoreHorizontal,
-    Pill,
     Trash2,
 } from "lucide-react";
+import DoctorLayout from "@/components/patient/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -30,7 +21,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import {
     Dialog,
     DialogContent,
@@ -41,7 +31,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
 
 interface Appointment {
     id: string;
@@ -54,8 +43,6 @@ interface Appointment {
 }
 
 export default function DoctorAppointmentsPage() {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionType, setActionType] = useState<"cancel" | "move" | null>(null);
@@ -65,15 +52,6 @@ export default function DoctorAppointmentsPage() {
     const [newTimeStart, setNewTimeStart] = useState("");
     const [newTimeEnd, setNewTimeEnd] = useState("");
     const [dialogOpen, setDialogOpen] = useState(false);
-
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
 
     async function loadAppointments() {
         try {
@@ -196,145 +174,74 @@ export default function DoctorAppointmentsPage() {
     }
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
-            {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
-                </div>
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link
-                        href="/doctor"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Home className="h-5 w-5" /> Dashboard
-                    </Link>
-                    <Link
-                        href="/doctor/account"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <User className="h-5 w-5" /> Account
-                    </Link>
-                    <Link
-                        href="/doctor/consultation"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Clock4 className="h-5 w-5" /> Consultation
-                    </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                        <CalendarDays className="h-5 w-5" /> Appointments
-                    </Link>
-                    <Link
-                        href="/doctor/dispense"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Pill className="h-5 w-5" /> Dispense
-                    </Link>
-                    <Link
-                        href="/doctor/patients"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <ClipboardList className="h-5 w-5" /> Patients
-                    </Link>
-                    <Link
-                        href="/doctor/certificates"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <FileText className="h-5 w-5" /> MedCerts
-                    </Link>
-                </nav>
-                <Separator className="my-8" />
+        <DoctorLayout
+            title="Appointment management"
+            description="Oversee consultation requests, confirm schedules, and coordinate adjustments with patients."
+            actions={
                 <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
+                    variant="outline"
+                    className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                    onClick={loadAppointments}
                 >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
+                    Refresh list
                 </Button>
-            </aside>
-
-            {/* Main */}
-            <main className="flex-1 flex flex-col">
-                {/* Header */}
-                <header className="w-full bg-white shadow px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-lg sm:text-xl font-bold text-green-600">
-                        Manage Appointments
-                    </h2>
-
-                    {/* Mobile Menu */}
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild><Link href="/doctor">Dashboard</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/dispense">Dispense</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/certificates">MedCerts</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
-                                    Logout
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
+            }
+        >
+            <div className="space-y-6">
                 {/* Appointments Section */}
-                <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col space-y-8">
-                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
-                        <CardHeader className="border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="flex items-center gap-2 text-green-600 text-lg sm:text-xl">
-                                <CalendarDays className="w-6 h-6" /> All Scheduled Appointments
+                <section className="space-y-6">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <Card className="rounded-3xl border border-emerald-100/70 bg-gradient-to-r from-emerald-100/70 via-white to-emerald-50/80 shadow-sm">
+                            <CardHeader className="space-y-1">
+                                <CardTitle className="text-base font-semibold text-emerald-700">
+                                    Schedule snapshot
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    {loading
+                                        ? "Fetching the latest appointments..."
+                                        : `You have ${appointments.length} appointment${appointments.length === 1 ? "" : "s"} in your queue.`}
+                                </p>
+                            </CardHeader>
+                        </Card>
+                        <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
+                            <CardHeader className="space-y-1">
+                                <CardTitle className="text-base font-semibold text-emerald-700">
+                                    Action reminder
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    Approve or move requests within the day to keep students and employees informed ahead of their visit.
+                                </p>
+                            </CardHeader>
+                        </Card>
+                    </div>
+                    <Card className="flex flex-col rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
+                        <CardHeader className="flex flex-col gap-3 border-b border-emerald-100/70 sm:flex-row sm:items-center sm:justify-between">
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-700 sm:text-xl">
+                                <CalendarDays className="h-6 w-6" /> Appointment queue
                             </CardTitle>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="gap-2 self-start"
+                                className="gap-2 self-start rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
                                 onClick={handleClearAppointments}
                                 disabled={appointments.length === 0}
                             >
                                 <Trash2 className="h-4 w-4" /> Clear appointments
                             </Button>
                         </CardHeader>
-                        <CardContent className="flex-1 flex flex-col pt-4">
+                        <CardContent className="flex flex-1 flex-col pt-4 text-sm text-muted-foreground">
                             {loading ? (
-                                <div className="flex items-center justify-center py-10 text-gray-500">
-                                    <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading appointments...
+                                <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
+                                    <Loader2 className="h-5 w-5 animate-spin" /> Loading appointments...
                                 </div>
                             ) : appointments.length === 0 ? (
-                                <p className="text-gray-500 text-center py-6">
+                                <p className="py-6 text-center">
                                     No appointments found.
                                 </p>
                             ) : (
                                 <div className="overflow-x-auto w-full">
-                                    <table className="min-w-full text-sm border border-gray-200 rounded-md">
-                                        <thead className="bg-green-100 text-green-700">
+                                    <table className="min-w-full border border-emerald-100 rounded-2xl overflow-hidden">
+                                        <thead className="bg-emerald-100/80 text-emerald-700">
                                             <tr>
                                                 <th className="px-4 py-2 text-left">Patient</th>
                                                 <th className="px-4 py-2 text-left">Date</th>
@@ -347,7 +254,7 @@ export default function DoctorAppointmentsPage() {
                                             {appointments.map((appt) => {
                                                 const statusLower = appt.status.toLowerCase();
                                                 return (
-                                                    <tr key={appt.id} className="border-t hover:bg-green-50 transition">
+                                                    <tr key={appt.id} className="border-t border-emerald-50 hover:bg-emerald-50/70 transition">
                                                         <td className="px-4 py-2">{appt.patientName}</td>
                                                         <td className="px-4 py-2">{appt.date}</td>
                                                         <td className="px-4 py-2">{appt.time}</td>
@@ -367,13 +274,13 @@ export default function DoctorAppointmentsPage() {
                                                                             onClick={() => handleApprove(appt.id)}
                                                                             disabled={["approved", "completed", "cancelled"].includes(statusLower)}
                                                                         >
-                                                                            <Check className="w-4 h-4 mr-2 text-green-600" /> Approve
+                                                                            <Check className="mr-2 h-4 w-4 text-emerald-600" /> Approve
                                                                         </DropdownMenuItem>
                                                                         <DropdownMenuItem
                                                                             onClick={() => handleComplete(appt.id)}
                                                                             disabled={statusLower !== "approved" || !appt.hasConsultation}
                                                                         >
-                                                                            <ClipboardCheck className="w-4 h-4 mr-2 text-emerald-600" /> Complete
+                                                                            <ClipboardCheck className="mr-2 h-4 w-4 text-emerald-600" /> Complete
                                                                         </DropdownMenuItem>
                                                                         <DropdownMenuItem
                                                                             onClick={() => {
@@ -468,7 +375,7 @@ export default function DoctorAppointmentsPage() {
 
                         <DialogFooter className="mt-4">
                             <Button
-                                className="bg-green-600 hover:bg-green-700"
+                                className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                                 onClick={handleActionSubmit}
                             >
                                 Submit
@@ -477,11 +384,7 @@ export default function DoctorAppointmentsPage() {
                     </DialogContent>
                 </Dialog>
 
-                {/* Footer */}
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
-                    © {new Date().getFullYear()} HNU Clinic – Doctor Panel
-                </footer>
-            </main>
-        </div>
+            </div>
+        </DoctorLayout>
     );
 }

@@ -1,31 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { toast } from "sonner";
-import {
-    Menu,
-    X,
-    User,
-    CalendarDays,
-    ClipboardList,
-    FileText,
-    Home,
-    Loader2,
-    Clock4,
-    Pill,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 
+import DoctorLayout from "@/components/patient/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -44,7 +25,6 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { formatManilaDateTime } from "@/lib/time";
-import Image from "next/image";
 
 type DispenseRecord = {
     dispense_id: string;
@@ -115,8 +95,6 @@ function formatDate(value: string | null | undefined) {
 }
 
 export default function DoctorDispensePage() {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [dispenses, setDispenses] = useState<DispenseRecord[]>([]);
@@ -127,15 +105,6 @@ export default function DoctorDispensePage() {
         med_id: "",
         quantity: "",
     });
-
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
 
     const selectedMedicine = useMemo(
         () => medicines.find((med) => med.med_id === form.med_id) || null,
@@ -225,126 +194,54 @@ export default function DoctorDispensePage() {
     }
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
-                </div>
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link
-                        href="/doctor"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Home className="h-5 w-5" /> Dashboard
-                    </Link>
-                    <Link
-                        href="/doctor/account"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <User className="h-5 w-5" /> Account
-                    </Link>
-                    <Link
-                        href="/doctor/consultation"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Clock4 className="h-5 w-5" /> Consultation
-                    </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <CalendarDays className="h-5 w-5" /> Appointments
-                    </Link>
-                    <Link
-                        href="/doctor/dispense"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                        <Pill className="h-5 w-5" /> Dispense
-                    </Link>
-                    <Link
-                        href="/doctor/patients"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <ClipboardList className="h-5 w-5" /> Patients
-                    </Link>
-                    <Link
-                        href="/doctor/certificates"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <FileText className="h-5 w-5" /> MedCerts
-                    </Link>
-                </nav>
-                <Separator className="my-8" />
+        <DoctorLayout
+            title="Dispensing log"
+            description="Document issued medicines, validate stock balances, and maintain accurate clinic records."
+            actions={
                 <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
+                    className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                    onClick={() => {
+                        setForm({ consultation_id: "", med_id: "", quantity: "" });
+                    }}
                 >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
+                    Reset form
                 </Button>
-            </aside>
-
-            <main className="flex-1 flex flex-col">
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">Dispense Management</h2>
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild><Link href="/doctor">Dashboard</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/account">Account</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/consultation">Consultation</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/appointments">Appointments</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/dispense">Dispense</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/patients">Patients</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/doctor/certificates">MedCerts</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
-                                    Logout
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col gap-6">
-                    <Card className="shadow-lg rounded-2xl">
-                        <CardHeader>
-                            <CardTitle className="text-lg sm:text-xl text-green-600 font-semibold">
-                                Record a Dispense
+            }
+        >
+            <div className="space-y-6">
+                <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
+                    <Card className="rounded-3xl border border-emerald-100/70 bg-gradient-to-r from-emerald-100/70 via-white to-emerald-50/80 shadow-sm">
+                        <CardHeader className="space-y-1">
+                            <CardTitle className="text-base font-semibold text-emerald-700">
+                                Inventory snapshot
                             </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                {dispenses.length === 0
+                                    ? "No dispense activity logged yet today."
+                                    : `Recorded ${dispenses.length} dispense ${dispenses.length === 1 ? "entry" : "entries"} so far. Keep logging to maintain real-time inventory accuracy.`}
+                            </p>
                         </CardHeader>
-                        <CardContent>
+                    </Card>
+                    <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
+                        <CardHeader className="space-y-1 border-b border-emerald-100/70">
+                            <CardTitle className="text-lg font-semibold text-emerald-700 sm:text-xl">
+                                Record a dispense
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Link the dispensed medicine to a consultation to keep the inventory and patient record aligned.
+                            </p>
+                        </CardHeader>
+                        <CardContent className="pt-6">
                             <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label className="font-medium text-gray-700">Consultation</Label>
+                                    <Label className="font-medium text-emerald-700">Consultation</Label>
                                     <Select
                                         value={form.consultation_id}
                                         onValueChange={(value) =>
                                             setForm((prev) => ({ ...prev, consultation_id: value }))
                                         }
                                     >
-                                        <SelectTrigger className="w-full min-h-[90px] rounded-lg border border-gray-300 px-4 py-3 text-base leading-relaxed whitespace-normal text-left">
+                                        <SelectTrigger className="w-full min-h-[90px] rounded-lg border border-emerald-100 px-4 py-3 text-base leading-relaxed whitespace-normal text-left">
                                             <SelectValue placeholder="Select consultation" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -380,7 +277,7 @@ export default function DoctorDispensePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="font-medium text-gray-700">Medicine</Label>
+                                    <Label className="font-medium text-emerald-700">Medicine</Label>
                                     <Select
                                         value={form.med_id}
                                         onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
@@ -410,7 +307,7 @@ export default function DoctorDispensePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="font-medium text-gray-700">Quantity</Label>
+                                    <Label className="font-medium text-emerald-700">Quantity</Label>
                                     <Input
                                         type="number"
                                         min={1}
@@ -429,7 +326,7 @@ export default function DoctorDispensePage() {
                                 <div className="sm:col-span-2 flex justify-end">
                                     <Button
                                         type="submit"
-                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                        className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                                         disabled={submitting}
                                     >
                                         {submitting ? (
@@ -446,21 +343,21 @@ export default function DoctorDispensePage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="flex-1 rounded-2xl shadow-lg">
-                        <CardHeader>
-                            <CardTitle className="text-lg sm:text-xl text-green-600 font-semibold">
-                                Recent Dispense Records
+                    <Card className="flex-1 rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
+                        <CardHeader className="border-b border-emerald-100/70">
+                            <CardTitle className="text-lg font-semibold text-emerald-700 sm:text-xl">
+                                Recent dispense records
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-4">
                             {loading ? (
-                                <div className="flex items-center justify-center py-12 text-gray-600">
-                                    <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading records...
+                                <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+                                    <Loader2 className="h-5 w-5 animate-spin" /> Loading records...
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <Table className="min-w-full text-sm">
-                                        <TableHeader>
+                                        <TableHeader className="bg-emerald-100/70 text-emerald-700">
                                             <TableRow>
                                                 <TableHead>Clinic</TableHead>
                                                 <TableHead>Patient</TableHead>
@@ -475,7 +372,7 @@ export default function DoctorDispensePage() {
                                         <TableBody>
                                             {dispenses.length > 0 ? (
                                                 dispenses.map((d) => (
-                                                    <TableRow key={d.dispense_id} className="hover:bg-green-50">
+                                                    <TableRow key={d.dispense_id} className="hover:bg-emerald-50">
                                                         <TableCell>{d.med.clinic.clinic_name}</TableCell>
                                                         <TableCell>
                                                             {d.consultation.appointment?.patient?.username || "—"}
@@ -487,7 +384,7 @@ export default function DoctorDispensePage() {
                                                         <TableCell>{formatDateTime(d.createdAt)}</TableCell>
                                                         <TableCell>
                                                             {d.dispenseBatches.length > 0 ? (
-                                                                <ul className="text-xs text-gray-700 space-y-1">
+                                                                <ul className="text-xs text-emerald-700 space-y-1">
                                                                     {d.dispenseBatches.map((batch) => (
                                                                         <li key={batch.id}>
                                                                             <span className="font-medium">{batch.quantity_used}</span>{" "}
@@ -503,7 +400,7 @@ export default function DoctorDispensePage() {
                                                 ))
                                             ) : (
                                                 <TableRow>
-                                                    <TableCell colSpan={8} className="text-center text-gray-500 py-6">
+                                                    <TableCell colSpan={8} className="py-6 text-center text-muted-foreground">
                                                         No dispense records found
                                                     </TableCell>
                                                 </TableRow>
@@ -516,10 +413,7 @@ export default function DoctorDispensePage() {
                     </Card>
                 </section>
 
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
-                    © {new Date().getFullYear()} HNU Clinic – Doctor Panel
-                </footer>
-            </main>
-        </div>
+            </div>
+        </DoctorLayout>
     );
 }

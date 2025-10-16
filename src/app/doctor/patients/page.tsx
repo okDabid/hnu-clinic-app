@@ -1,32 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import {
-    Menu,
-    X,
-    Home,
-    User,
-    CalendarDays,
-    ClipboardList,
-    FileText,
-    Clock4,
     Loader2,
-    Pill,
     Search,
     Stethoscope,
 } from "lucide-react";
 
+import DoctorLayout from "@/components/patient/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +41,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { formatManilaDateTime } from "@/lib/time";
 import { BLOOD_TYPES } from "@/lib/patient-records-update";
-import Image from "next/image";
 
 type PatientRecord = {
     id: string;
@@ -215,8 +198,6 @@ function formatStaffName(staff?: { fullName: string | null; username: string } |
 }
 
 export default function DoctorPatientsPage() {
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [records, setRecords] = useState<PatientRecord[]>([]);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
@@ -224,15 +205,6 @@ export default function DoctorPatientsPage() {
     const [loadingRecords, setLoadingRecords] = useState(false);
     const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
     const [savingNotesPatientId, setSavingNotesPatientId] = useState<string | null>(null);
-
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
 
     const loadRecords = useCallback(async () => {
         try {
@@ -289,166 +261,64 @@ export default function DoctorPatientsPage() {
     );
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
-                </div>
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link
-                        href="/doctor"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Home className="h-5 w-5" /> Dashboard
-                    </Link>
-                    <Link
-                        href="/doctor/account"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <User className="h-5 w-5" /> Account
-                    </Link>
-                    <Link
-                        href="/doctor/consultation"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Clock4 className="h-5 w-5" /> Consultation
-                    </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <CalendarDays className="h-5 w-5" /> Appointments
-                    </Link>
-                    <Link
-                        href="/doctor/dispense"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Pill className="h-5 w-5" /> Dispense
-                    </Link>
-                    <Link
-                        href="/doctor/patients"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                        <ClipboardList className="h-5 w-5" /> Patients
-                    </Link>
-                    <Link
-                        href="/doctor/certificates"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <FileText className="h-5 w-5" /> MedCerts
-                    </Link>
-                </nav>
-                <Separator className="my-8" />
+        <DoctorLayout
+            title="Patient registry"
+            description="Review medical records, follow up on clinic visits, and capture key notes for coordinated care."
+            actions={
                 <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
+                    variant="outline"
+                    className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                    onClick={loadRecords}
                 >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
+                    Refresh records
                 </Button>
-            </aside>
-
-            <main className="flex-1 flex flex-col">
-                <header className="w-full bg-white shadow px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-lg sm:text-xl font-bold text-green-600">Patient Records</h2>
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setMenuOpen((prev) => !prev)}>
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor">Dashboard</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/account">Account</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/consultation">Consultation</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/appointments">Appointments</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/dispense">Dispense</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/certificates">MedCerts</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/patients">Patients</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>
-                                    Logout
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col space-y-8">
+            }
+        >
+            <div className="space-y-6">
+                <section className="mx-auto w-full max-w-6xl space-y-8 px-4 sm:px-6">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <Card className="shadow-sm">
+                        <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                                    Total Patients
+                                    Total patients
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-2xl font-semibold text-green-600">{records.length}</p>
+                                <p className="text-2xl font-semibold text-emerald-700">{records.length}</p>
                             </CardContent>
                         </Card>
-                        <Card className="shadow-sm">
+                        <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">
                                     Students
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-2xl font-semibold text-green-600">{studentCount}</p>
+                                <p className="text-2xl font-semibold text-emerald-700">{studentCount}</p>
                             </CardContent>
                         </Card>
-                        <Card className="shadow-sm">
+                        <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">
                                     Employees
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-2xl font-semibold text-green-600">{employeeCount}</p>
+                                <p className="text-2xl font-semibold text-emerald-700">{employeeCount}</p>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
-                        <CardHeader className="border-b">
-                            <CardTitle className="text-lg sm:text-xl font-semibold text-green-600">
-                                Patient Directory
+                    <Card className="flex flex-col rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
+                        <CardHeader className="border-b border-emerald-100/70">
+                            <CardTitle className="text-lg font-semibold text-emerald-700 sm:text-xl">
+                                Patient directory
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="pt-4 space-y-4">
+                        <CardContent className="space-y-4 pt-4">
                             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="relative w-full lg:max-w-sm">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         placeholder="Search patients..."
                                         value={search}
@@ -458,7 +328,7 @@ export default function DoctorPatientsPage() {
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                                     <div className="space-y-1 w-full sm:w-40">
-                                        <Label htmlFor="status-filter" className="text-sm font-medium text-gray-600">
+                                        <Label htmlFor="status-filter" className="text-sm font-medium text-emerald-700">
                                             Status
                                         </Label>
                                         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -473,7 +343,7 @@ export default function DoctorPatientsPage() {
                                         </Select>
                                     </div>
                                     <div className="space-y-1 w-full sm:w-40">
-                                        <Label htmlFor="type-filter" className="text-sm font-medium text-gray-600">
+                                        <Label htmlFor="type-filter" className="text-sm font-medium text-emerald-700">
                                             Patient Type
                                         </Label>
                                         <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -491,15 +361,15 @@ export default function DoctorPatientsPage() {
                             </div>
 
                             {loadingRecords ? (
-                                <div className="flex items-center justify-center py-12 text-gray-500">
-                                    <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading patient records...
+                                <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+                                    <Loader2 className="h-5 w-5 animate-spin" /> Loading patient records...
                                 </div>
                             ) : filteredRecords.length === 0 ? (
-                                <p className="text-center text-gray-500 py-10">No patient records found.</p>
+                                <p className="py-10 text-center text-muted-foreground">No patient records found.</p>
                             ) : (
                                 <div className="overflow-x-auto">
                                     <Table className="min-w-[900px] text-sm">
-                                        <TableHeader>
+                                        <TableHeader className="bg-emerald-100/70 text-emerald-700">
                                             <TableRow>
                                                 <TableHead>Patient ID</TableHead>
                                                 <TableHead>Full Name</TableHead>
@@ -514,7 +384,7 @@ export default function DoctorPatientsPage() {
                                         </TableHeader>
                                         <TableBody>
                                             {filteredRecords.map((record) => (
-                                                <TableRow key={record.id} className="hover:bg-green-50">
+                                                <TableRow key={record.id} className="hover:bg-emerald-50">
                                                     <TableCell>{record.patientId}</TableCell>
                                                     <TableCell>{record.fullName}</TableCell>
                                                     <TableCell>{record.patientType}</TableCell>
@@ -525,8 +395,8 @@ export default function DoctorPatientsPage() {
                                                             variant={record.status === "Active" ? "default" : "secondary"}
                                                             className={
                                                                 record.status === "Active"
-                                                                    ? "bg-green-100 text-green-700"
-                                                                    : "bg-gray-200 text-gray-600"
+                                                                    ? "bg-emerald-100 text-emerald-700"
+                                                                    : "bg-neutral-200 text-neutral-600"
                                                             }
                                                         >
                                                             {record.status}
@@ -566,7 +436,7 @@ export default function DoctorPatientsPage() {
                                                     <TableCell className="text-center whitespace-nowrap min-w-[90px] sm:min-w-[110px]">
                                                         <Dialog>
                                                             <DialogTrigger asChild>
-                                                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white px-3 text-xs sm:text-sm">
+                                                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 text-xs sm:text-sm">
                                                                     Manage
                                                                 </Button>
                                                             </DialogTrigger>
@@ -612,7 +482,7 @@ export default function DoctorPatientsPage() {
                                                                         <Separator />
 
                                                                         <div className="space-y-3 text-sm">
-                                                                            <h4 className="font-semibold text-green-600 flex items-center gap-2">
+                                                                            <h4 className="font-semibold text-emerald-600 flex items-center gap-2">
                                                                                 <Stethoscope className="h-4 w-4" /> Latest Appointment
                                                                             </h4>
                                                                             {record.latestAppointment?.timestart ? (
@@ -636,7 +506,7 @@ export default function DoctorPatientsPage() {
 
                                                                             {record.latestAppointment?.consultation && (
                                                                                 <div className="rounded-md border bg-muted/40 p-3 space-y-1">
-                                                                                    <p className="text-sm font-semibold text-green-600">Consultation Notes</p>
+                                                                                    <p className="text-sm font-semibold text-emerald-600">Consultation Notes</p>
                                                                                     <p><strong>Reason:</strong> {record.latestAppointment.consultation.reason_of_visit || "—"}</p>
                                                                                     <p><strong>Findings:</strong> {record.latestAppointment.consultation.findings || "—"}</p>
                                                                                     <p><strong>Diagnosis:</strong> {record.latestAppointment.consultation.diagnosis || "—"}</p>
@@ -703,7 +573,7 @@ export default function DoctorPatientsPage() {
                                                                             <Button
                                                                                 type="submit"
                                                                                 disabled={updatingPatientId === record.id}
-                                                                                className="bg-green-600 hover:bg-green-700 text-white"
+                                                                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                                                             >
                                                                                 {updatingPatientId === record.id ? (
                                                                                     <>
@@ -789,7 +659,7 @@ export default function DoctorPatientsPage() {
                                                                             <Button
                                                                                 type="submit"
                                                                                 disabled={savingNotesPatientId === record.id || !record.latestAppointment?.id}
-                                                                                className="bg-green-600 hover:bg-green-700 text-white"
+                                                                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
                                                                             >
                                                                                 {savingNotesPatientId === record.id ? (
                                                                                     <>
@@ -818,10 +688,7 @@ export default function DoctorPatientsPage() {
                     </Card>
                 </section>
 
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
-                    © {new Date().getFullYear()} HNU Clinic – Doctor Panel
-                </footer>
-            </main>
-        </div>
+            </div>
+        </DoctorLayout>
     );
 }
