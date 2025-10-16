@@ -11,31 +11,48 @@ import {
     startOfManilaDay,
 } from "@/lib/time";
 
-// ✅ Define allowed statuses for modification (reschedule/cancel)
+/**
+ * Allowed statuses that can still be rescheduled or cancelled.
+ */
 const cancellableStatuses: AppointmentStatus[] = [
     AppointmentStatus.Pending,
     AppointmentStatus.Approved,
     AppointmentStatus.Moved,
 ];
 
-// ✅ Helper function for type-safe cancellation/rescheduling check
+/**
+ * Helper to check if appointment is still cancellable/reschedulable.
+ */
 function isCancellable(status: AppointmentStatus): boolean {
     return cancellableStatuses.includes(status);
 }
 
-// ✅ Define context type for the route (no `any`, no inline type)
-interface RouteContext {
-    params: { id: string };
+/**
+ * Extract appointment ID from the request URL (used instead of Next.js context param to avoid route type errors).
+ */
+function extractAppointmentId(req: Request): string | null {
+    try {
+        const url = new URL(req.url);
+        const parts = url.pathname.split("/").filter(Boolean);
+        const id = parts[parts.length - 1];
+        if (!id || id === "appointments") return null;
+        return id;
+    } catch {
+        return null;
+    }
 }
 
-// ------------------------------------------------------------
-// PATCH — Reschedule an Appointment
-// ------------------------------------------------------------
-export async function PATCH(req: Request, context: RouteContext) {
+/* ------------------------------------------------------------
+ * PATCH — Reschedule an Appointment
+ * ---------------------------------------------------------- */
+export async function PATCH(req: Request) {
     try {
-        const { params } = context;
-        const session = await getServerSession(authOptions);
+        const appointmentId = extractAppointmentId(req);
+        if (!appointmentId) {
+            return NextResponse.json({ message: "Invalid route" }, { status: 400 });
+        }
 
+        const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
@@ -47,8 +64,9 @@ export async function PATCH(req: Request, context: RouteContext) {
             return NextResponse.json({ message: "Missing fields" }, { status: 400 });
         }
 
+        // Find appointment
         const appointment = await prisma.appointment.findUnique({
-            where: { appointment_id: params.id },
+            where: { appointment_id: appointmentId },
         });
 
         if (!appointment || appointment.patient_user_id !== session.user.id) {
@@ -62,6 +80,7 @@ export async function PATCH(req: Request, context: RouteContext) {
             );
         }
 
+        // Build Manila time values
         const appointment_timestart = buildManilaDate(date, time_start);
         const appointment_timeend = buildManilaDate(date, time_end);
 
@@ -69,6 +88,7 @@ export async function PATCH(req: Request, context: RouteContext) {
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
         }
 
+        // Must be at least 3 days ahead
         const now = manilaNow();
         const diffMs = appointment_timestart.getTime() - now.getTime();
         const diffDays = diffMs / (1000 * 60 * 60 * 24);
@@ -82,6 +102,7 @@ export async function PATCH(req: Request, context: RouteContext) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
 
+        // Check doctor availability for the new date/time
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id: appointment.doctor_user_id,
@@ -103,14 +124,13 @@ export async function PATCH(req: Request, context: RouteContext) {
             );
         }
 
+        // Check for conflicting appointments
         const conflictingAppointments = await prisma.appointment.findMany({
             where: {
                 appointment_id: { not: appointment.appointment_id },
                 doctor_user_id: appointment.doctor_user_id,
                 appointment_timestart: { gte: dayStart, lte: dayEnd },
-                status: {
-                    in: cancellableStatuses,
-                },
+                status: { in: cancellableStatuses },
             },
         });
 
@@ -127,6 +147,7 @@ export async function PATCH(req: Request, context: RouteContext) {
             return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
         }
 
+        // Update appointment
         const updated = await prisma.appointment.update({
             where: { appointment_id: appointment.appointment_id },
             data: {
@@ -154,20 +175,24 @@ export async function PATCH(req: Request, context: RouteContext) {
     }
 }
 
-// ------------------------------------------------------------
-// DELETE — Cancel an Appointment
-// ------------------------------------------------------------
-export async function DELETE(req: Request, context: RouteContext) {
+/* ------------------------------------------------------------
+ * DELETE — Cancel an Appointment
+ * ---------------------------------------------------------- */
+export async function DELETE(req: Request) {
     try {
-        const { params } = context;
-        const session = await getServerSession(authOptions);
+        const appointmentId = extractAppointmentId(req);
+        if (!appointmentId) {
+            return NextResponse.json({ message: "Invalid route" }, { status: 400 });
+        }
 
+        const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
+        // Find appointment
         const appointment = await prisma.appointment.findUnique({
-            where: { appointment_id: params.id },
+            where: { appointment_id: appointmentId },
         });
 
         if (!appointment || appointment.patient_user_id !== session.user.id) {
