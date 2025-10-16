@@ -17,6 +17,36 @@ export function endOfManilaDay(date: string): Date {
 }
 
 /**
+ * ✅ Convert a JS Date into a Manila-local YYYY-MM-DD string
+ */
+export function formatManilaDate(date: Date): string {
+    return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+}
+
+/**
+ * ✅ Return a new Date pinned to the Monday of the given week (Manila time)
+ */
+export function startOfManilaWeek(date: Date): Date {
+    const copy = new Date(date.getTime());
+    copy.setHours(0, 0, 0, 0);
+
+    const day = copy.getDay();
+    const diffToMonday = (day + 6) % 7; // 0 if Monday, 1 if Tuesday, ..., 6 if Sunday
+    copy.setDate(copy.getDate() - diffToMonday);
+
+    return copy;
+}
+
+/**
+ * ✅ Add days to a Date while keeping Manila timezone context
+ */
+export function addManilaDays(date: Date, days: number): Date {
+    const copy = new Date(date.getTime());
+    copy.setDate(copy.getDate() + days);
+    return copy;
+}
+
+/**
  * ✅ Range overlap check (used for appointments)
  */
 export function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {

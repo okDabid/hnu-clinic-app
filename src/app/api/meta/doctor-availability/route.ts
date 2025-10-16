@@ -48,7 +48,7 @@ export async function GET(req: Request) {
             where: {
                 doctor_user_id,
                 appointment_timestart: { gte: dayStart, lte: dayEnd },
-                status: { in: ["Pending", "Approved"] },
+                status: { in: ["Pending", "Approved", "Moved"] },
             },
             select: {
                 appointment_timestart: true,
@@ -94,7 +94,11 @@ export async function GET(req: Request) {
             }
         }
 
-        return NextResponse.json({ slots });
+        const unique = Array.from(
+            new Map(slots.map((slot) => [`${slot.start}-${slot.end}`, slot])).values()
+        );
+
+        return NextResponse.json({ slots: unique });
     } catch (err) {
         console.error("[GET /api/meta/doctor-availability]", err);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
