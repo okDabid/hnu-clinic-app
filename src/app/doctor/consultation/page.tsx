@@ -14,7 +14,6 @@ import {
     Clock4,
     Loader2,
     PlusCircle,
-    Pencil,
     Pill,
     FileText,
 } from "lucide-react";
@@ -48,11 +47,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-import {
-    format12Hour,
-    toManilaDateString,
-    toManilaTimeString,
-} from "@/lib/time";
+import { format12Hour } from "@/lib/time";
 
 import Image from "next/image";
 
@@ -77,11 +72,9 @@ export default function DoctorConsultationPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [formData, setFormData] = useState({
         clinic_id: "",
-        available_date: "",
-        available_timestart: "",
-        available_timeend: "",
+        time_start: "",
+        time_end: "",
     });
-    const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
 
     async function handleLogout() {
@@ -124,41 +117,29 @@ export default function DoctorConsultationPage() {
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        if (
-            !formData.clinic_id ||
-            !formData.available_date ||
-            !formData.available_timestart ||
-            !formData.available_timeend
-        ) {
+        if (!formData.clinic_id || !formData.time_start || !formData.time_end) {
             toast.error("All fields are required.");
             return;
         }
 
-        const body = editingSlot
-            ? { availability_id: editingSlot.availability_id, ...formData }
-            : formData;
-        const method = editingSlot ? "PUT" : "POST";
-
         try {
             setLoading(true);
             const res = await fetch("/api/doctor/consultation", {
-                method,
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
+                body: JSON.stringify(formData),
             });
             const data = await res.json();
             if (data.error) {
                 toast.error(data.error);
             } else {
-                toast.success(editingSlot ? "Schedule updated!" : "Duty hours added!");
+                toast.success("Duty hours saved across your weekly schedule!");
                 setDialogOpen(false);
                 setFormData({
                     clinic_id: "",
-                    available_date: "",
-                    available_timestart: "",
-                    available_timeend: "",
+                    time_start: "",
+                    time_end: "",
                 });
-                setEditingSlot(null);
                 loadSlots();
             }
         } catch {
@@ -288,24 +269,23 @@ export default function DoctorConsultationPage() {
                                     <Button
                                         className="bg-green-600 hover:bg-green-700 text-white gap-2"
                                         onClick={() => {
-                                            setEditingSlot(null);
                                             setFormData({
                                                 clinic_id: "",
-                                                available_date: "",
-                                                available_timestart: "",
-                                                available_timeend: "",
+                                                time_start: "",
+                                                time_end: "",
                                             });
                                         }}
                                     >
-                                        <PlusCircle className="h-4 w-4" /> Add Slot
+                                        <PlusCircle className="h-4 w-4" /> Set Duty Hours
                                     </Button>
                                 </DialogTrigger>
 
                                 <DialogContent className="rounded-xl">
                                     <DialogHeader>
-                                        <DialogTitle>{editingSlot ? "Edit Consultation Slot" : "Add Consultation Slot"}</DialogTitle>
+                                        <DialogTitle>Configure weekly duty hours</DialogTitle>
                                         <DialogDescription>
-                                            {editingSlot ? "Modify your existing consultation slot." : "Add a new consultation slot."}
+                                            Set your start and end time once and we will generate duty slots for each working day
+                                            of the upcoming week.
                                         </DialogDescription>
                                     </DialogHeader>
 
@@ -327,23 +307,13 @@ export default function DoctorConsultationPage() {
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <Label>Date</Label>
-                                            <Input
-                                                type="date"
-                                                value={formData.available_date}
-                                                onChange={(e) => setFormData({ ...formData, available_date: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <Label>Start Time</Label>
                                                 <Input
                                                     type="time"
-                                                    value={formData.available_timestart}
-                                                    onChange={(e) => setFormData({ ...formData, available_timestart: e.target.value })}
+                                                    value={formData.time_start}
+                                                    onChange={(e) => setFormData({ ...formData, time_start: e.target.value })}
                                                     required
                                                 />
                                             </div>
@@ -351,8 +321,8 @@ export default function DoctorConsultationPage() {
                                                 <Label>End Time</Label>
                                                 <Input
                                                     type="time"
-                                                    value={formData.available_timeend}
-                                                    onChange={(e) => setFormData({ ...formData, available_timeend: e.target.value })}
+                                                    value={formData.time_end}
+                                                    onChange={(e) => setFormData({ ...formData, time_end: e.target.value })}
                                                     required
                                                 />
                                             </div>
@@ -361,7 +331,7 @@ export default function DoctorConsultationPage() {
                                         <DialogFooter>
                                             <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
                                                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                                                {editingSlot ? "Save Changes" : "Add Slot"}
+                                                Save Duty Hours
                                             </Button>
                                         </DialogFooter>
                                     </form>
@@ -383,7 +353,6 @@ export default function DoctorConsultationPage() {
                                                 <TableHead>Start Time</TableHead>
                                                 <TableHead>End Time</TableHead>
                                                 <TableHead>Clinic</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -397,25 +366,6 @@ export default function DoctorConsultationPage() {
                                                     <TableCell>{format12Hour(slot.available_timestart)}</TableCell>
                                                     <TableCell>{format12Hour(slot.available_timeend)}</TableCell>
                                                     <TableCell>{slot.clinic.clinic_name}</TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => {
-                                                                setEditingSlot(slot);
-                                                                setFormData({
-                                                                    clinic_id: slot.clinic.clinic_id,
-                                                                    available_date: toManilaDateString(slot.available_date),
-                                                                    available_timestart: toManilaTimeString(slot.available_timestart),
-                                                                    available_timeend: toManilaTimeString(slot.available_timeend),
-                                                                });
-                                                                setDialogOpen(true);
-                                                            }}
-                                                            className="gap-2 text-green-700 border-green-200 hover:bg-green-50"
-                                                        >
-                                                            <Pencil className="h-4 w-4" /> Edit
-                                                        </Button>
-                                                    </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>

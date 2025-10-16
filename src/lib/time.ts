@@ -102,6 +102,34 @@ export function manilaNow(): Date {
     return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}+08:00`);
 }
 
+export function formatAsManilaDate(date: Date): string {
+    return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+}
+
+export function startOfNextOrSameManilaMonday(fromDate?: Date): Date {
+    const reference = fromDate ? new Date(fromDate) : manilaNow();
+    reference.setHours(0, 0, 0, 0);
+    const day = reference.getDay();
+    const daysUntilMonday = (1 - day + 7) % 7;
+    const monday = new Date(reference);
+    monday.setDate(monday.getDate() + daysUntilMonday);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+}
+
+export function addDays(date: Date, days: number): Date {
+    const copy = new Date(date);
+    copy.setDate(copy.getDate() + days);
+    return copy;
+}
+
+export function isAtLeastNDaysAway(target: Date, days: number): boolean {
+    const threshold = manilaNow();
+    threshold.setHours(0, 0, 0, 0);
+    threshold.setDate(threshold.getDate() + days);
+    return target >= threshold;
+}
+
 /**
  * ✅ Format a date/time value into a Manila-localized string
  */
