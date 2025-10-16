@@ -7,6 +7,7 @@ import {
     buildManilaDate,
     startOfManilaDay,
     endOfManilaDay,
+    isAtLeastNDaysAway,
 } from "@/lib/time";
 import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
 
@@ -44,7 +45,10 @@ export async function GET() {
             return {
                 id: a.appointment_id,
                 clinic: a.clinic?.clinic_name ?? "-",
+                clinic_id: a.clinic_id,
                 doctor: doctorName,
+                doctor_user_id: a.doctor_user_id,
+                service_type: a.service_type ?? null,
                 date: new Date(a.appointment_timestart).toLocaleDateString("en-CA", {
                     timeZone: "Asia/Manila",
                 }),
@@ -96,6 +100,12 @@ export async function POST(req: Request) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
 
+        if (!isAtLeastNDaysAway(appointment_timestart, 3))
+            return NextResponse.json(
+                { message: "Appointments must be booked at least 3 days in advance" },
+                { status: 400 }
+            );
+
         if (!(appointment_timestart < appointment_timeend))
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
 
@@ -140,6 +150,29 @@ export async function POST(req: Request) {
 
         if (conflict)
             return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
+
+        const patientConflicts = await prisma.appointment.findMany({
+            where: {
+                patient_user_id,
+                appointment_timestart: { gte: dayStart, lte: dayEnd },
+                status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved] },
+            },
+        });
+
+        const patientOverlap = patientConflicts.some((e) =>
+            rangesOverlap(
+                appointment_timestart,
+                appointment_timeend,
+                e.appointment_timestart,
+                e.appointment_timeend
+            )
+        );
+
+        if (patientOverlap)
+            return NextResponse.json(
+                { message: "You already have an appointment at this time" },
+                { status: 409 }
+            );
 
         // ✅ Create the appointment
         const created = await prisma.appointment.create({
