@@ -1,18 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { signOut } from "next-auth/react";
-import {
-    Menu,
-    X,
-    Users,
-    Package,
-    Home,
-    ClipboardList,
-    Loader2,
-    Pill,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
+
+import { NurseLayout } from "@/components/nurse/nurse-layout";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,13 +12,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import Image from "next/image";
 import {
     Dialog,
     DialogContent,
@@ -40,7 +24,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
 
 type Clinic = {
     clinic_id: string;
@@ -50,20 +33,9 @@ type Clinic = {
 };
 
 export default function NurseClinicPage() {
-    const [menuOpen, setMenuOpen] = useState(false);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
     const [loading, setLoading] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
 
     async function loadClinics() {
         const res = await fetch("/api/nurse/clinic");
@@ -132,131 +104,14 @@ export default function NurseClinicPage() {
     }
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-green-50">
-            {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link
-                        href="/nurse"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Home className="h-5 w-5" />
-                        Dashboard
-                    </Link>
-
-                    <Link
-                        href="/nurse/accounts"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Users className="h-5 w-5" />
-                        Accounts
-                    </Link>
-
-                    <Link
-                        href="/nurse/inventory"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Package className="h-5 w-5" />
-                        Inventory
-                    </Link>
-
-                    <Link
-                        href="/nurse/clinic"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                        <ClipboardList className="h-5 w-5" />
-                        Clinic
-                    </Link>
-
-                    <Link
-                        href="/nurse/dispense"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Pill className="h-5 w-5" />
-                        Dispense
-                    </Link>
-
-                    <Link
-                        href="/nurse/records"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <ClipboardList className="h-5 w-5" />
-                        Records
-                    </Link>
-                </nav>
-
-                {/* Spacer pushes logout to bottom */}
-                <Separator className="my-8" />
-
-                {/* Logout Button */}
-                <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
-                </Button>
-            </aside>
-
-            {/* Main Content */}
-            <main className="flex-1 w-full overflow-x-hidden flex flex-col">
-                {/* Header */}
-                <header className="w-full bg-white shadow px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-lg sm:text-xl font-bold text-green-600">
-                        Clinic Management
-                    </h2>
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setMenuOpen(!menuOpen)}
-                                >
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild><Link href="/nurse">Dashboard</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/accounts">Accounts</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/inventory">Inventory</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/clinic">Clinic</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/dispense">Dispense</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/nurse/records">Records</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                {/* Clinics Section */}
-                <section className="px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
-                    <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
-                        <CardHeader className="border-b">
-                            <div className="flex justify-between items-center flex-wrap gap-3">
+        <NurseLayout
+            title="Clinic Management"
+            description="Maintain clinic locations, contact information, and update details for campus services."
+        >
+            <section className="px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
+                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader className="border-b">
+                        <div className="flex justify-between items-center flex-wrap gap-3">
                                 <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                                     Clinics
                                 </CardTitle>
@@ -384,13 +239,7 @@ export default function NurseClinicPage() {
                             </table>
                         </CardContent>
                     </Card>
-                </section>
-
-                {/* Footer */}
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto text-sm sm:text-base">
-                    © {new Date().getFullYear()} HNU Clinic – Nurse Panel
-                </footer>
-            </main>
-        </div>
+            </section>
+        </NurseLayout>
     );
 }
