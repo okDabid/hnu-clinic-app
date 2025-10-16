@@ -1,290 +1,109 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import {
-    Menu,
-    X,
-    User,
     CalendarDays,
-    ClipboardList,
     FileText,
-    Stethoscope,
-    Home,
-    Loader2,
-    Clock4,
     Pill,
+    Stethoscope,
+    User,
+    Users,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
+import DoctorLayout from "@/components/patient/doctor-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function DoctorDashboardPage() {
     const { data: session } = useSession();
-    const [menuOpen] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-    const fullName = session?.user?.name || "School Doctor";
-
-    async function handleLogout() {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    }
+    const fullName = session?.user?.name ?? "School Doctor";
 
     return (
-        <div className="flex min-h-screen bg-green-50">
-            {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
-                </div>
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link
-                        href="/doctor"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200"
-                    >
-                        <Home className="h-5 w-5" /> Dashboard
-                    </Link>
-                    <Link
-                        href="/doctor/account"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <User className="h-5 w-5" /> Account
-                    </Link>
-                    <Link
-                        href="/doctor/consultation"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Clock4 className="h-5 w-5" /> Consultation
-                    </Link>
-                    <Link
-                        href="/doctor/appointments"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <CalendarDays className="h-5 w-5" /> Appointments
-                    </Link>
-                    <Link
-                        href="/doctor/dispense"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <Pill className="h-5 w-5" /> Dispense
-                    </Link>
-                    <Link
-                        href="/doctor/patients"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
-                    >
-                        <ClipboardList className="h-5 w-5" /> Patients
-                    </Link>
-                    <Link
-                        href="/doctor/certificates"
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <FileText className="h-5 w-5" /> MedCerts
-                    </Link>
-                </nav>
-                <Separator className="my-8" />
-                <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
-                </Button>
-            </aside>
+        <DoctorLayout
+            title="Dashboard Overview"
+            description="Monitor your clinic responsibilities, track upcoming consultations, and keep patient care organized in one professional workspace."
+        >
+            <section className="rounded-3xl border border-green-100/80 bg-white/80 px-6 py-10 text-center shadow-sm backdrop-blur">
+                <h2 className="text-2xl font-semibold text-green-700 md:text-3xl">
+                    Welcome back, {fullName}
+                </h2>
+                <p className="mt-3 text-sm text-muted-foreground md:text-base">
+                    Manage appointments, consultations, medication dispensing, and patient relationships with clarity and confidence.
+                </p>
+            </section>
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col">
-                {/* Header */}
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">
-                        Doctor Panel Dashboard
-                    </h2>
+            <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                <Card className="border border-green-100/80 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-700">
+                            <User className="h-5 w-5" /> Account
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm text-muted-foreground">
+                        <p>Review your profile details and update credentials securely.</p>
+                        <p>Manage password settings and professional information.</p>
+                    </CardContent>
+                </Card>
 
-                    {/* Mobile Menu */}
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                    {menuOpen ? (
-                                        <X className="w-5 h-5" />
-                                    ) : (
-                                        <Menu className="w-5 h-5" />
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor">Dashboard</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/account">Account</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/consultation">Consultation</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/appointments">Appointments</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/dispense">Dispense</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                    <Link href="/doctor/patients">Patients</Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() =>
-                                        signOut({ callbackUrl: "/login?logout=success" })
-                                    }
-                                >
-                                    Logout
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
+                <Card className="border border-green-100/80 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-700">
+                            <Stethoscope className="h-5 w-5" /> Consultation
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm text-muted-foreground">
+                        <p>Set availability, adjust duty hours, and approve schedule changes.</p>
+                        <p>Coordinate clinic coverage and ensure patient access.</p>
+                    </CardContent>
+                </Card>
 
-                {/* Welcome Section */}
-                <section className="px-6 py-8 bg-white shadow-sm">
-                    <div className="text-center">
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">
-                            Welcome, {fullName}
-                        </h2>
-                        <p className="text-gray-700 mt-2">
-                            Manage your account, consultations, appointments, dispenses, and medical
-                            certificates.
-                        </p>
-                    </div>
-                </section>
+                <Card className="border border-green-100/80 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-700">
+                            <CalendarDays className="h-5 w-5" /> Appointments
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm text-muted-foreground">
+                        <p>Approve, reschedule, or cancel appointments with a single view.</p>
+                        <p>Track daily schedules and stay informed of upcoming visits.</p>
+                    </CardContent>
+                </Card>
 
-                {/* Cards */}
-                <section className="px-6 py-12 grid gap-6 md:grid-cols-3 max-w-6xl mx-auto">
-                    {/* Account */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <User className="w-6 h-6" /> Account
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>View and edit profile details</li>
-                                <li>Change account password</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
+                <Card className="border border-green-100/80 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-700">
+                            <Pill className="h-5 w-5" /> Dispense
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm text-muted-foreground">
+                        <p>Document prescribed medicines tied to consultations.</p>
+                        <p>Monitor stock usage in sync with the clinic inventory.</p>
+                    </CardContent>
+                </Card>
 
-                    {/* Consultation */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <Clock4 className="w-6 h-6" /> Consultation
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Set duty hours and availability</li>
-                                <li>Modify consultation slots</li>
-                                <li>Approve schedule changes</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
+                <Card className="border border-green-100/80 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-700">
+                            <Users className="h-5 w-5" /> Patients
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm text-muted-foreground">
+                        <p>Review patient history, vital notes, and consultation records.</p>
+                        <p>Coordinate care plans and follow-up treatments.</p>
+                    </CardContent>
+                </Card>
 
-                    {/* Appointments */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <CalendarDays className="w-6 h-6" /> Appointments
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Approve, move, or cancel appointments</li>
-                                <li>View all scheduled patients</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
-
-                    {/* Dispense */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <Pill className="w-6 h-6" /> Dispense
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Record consultation-linked medicine usage</li>
-                                <li>Monitor inventory impact in real time</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
-
-                    {/* Patients */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <Stethoscope className="w-6 h-6" /> Patients
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>View patient history and records</li>
-                                <li>Update patient consultation data</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
-
-                    {/* Medical Certificates */}
-                    <Card className="shadow-lg rounded-2xl hover:shadow-xl transition">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-green-600">
-                                <FileText className="w-6 h-6" /> Medical Certificates
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-                                <li>Generate medical certificates</li>
-                                <li>Track issued certificates</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
-                </section>
-
-                {/* Footer */}
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
-                    © {new Date().getFullYear()} HNU Clinic – Doctor Panel
-                </footer>
-            </main>
-        </div>
+                <Card className="border border-green-100/80 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-green-700">
+                            <FileText className="h-5 w-5" /> Medical Certificates
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1 text-sm text-muted-foreground">
+                        <p>Generate medical certificates with verified patient details.</p>
+                        <p>Track issued documents for compliance and reporting.</p>
+                    </CardContent>
+                </Card>
+            </section>
+        </DoctorLayout>
     );
 }
