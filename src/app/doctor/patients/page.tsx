@@ -8,7 +8,7 @@ import {
     Stethoscope,
 } from "lucide-react";
 
-import DoctorLayout from "@/components/patient/doctor-layout";
+import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
