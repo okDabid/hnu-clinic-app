@@ -7,6 +7,8 @@ import {
     buildManilaDate,
     startOfManilaDay,
     endOfManilaDay,
+    manilaNow,
+    addManilaDays,
 } from "@/lib/time";
 import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
 
@@ -43,15 +45,32 @@ export async function GET() {
 
             return {
                 id: a.appointment_id,
+                clinic_id: a.clinic_id,
                 clinic: a.clinic?.clinic_name ?? "-",
+                doctor_id: a.doctor_user_id,
                 doctor: doctorName,
                 date: new Date(a.appointment_timestart).toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Manila",
+                }),
+                dateISO: new Date(a.appointment_timestart).toLocaleDateString("en-CA", {
                     timeZone: "Asia/Manila",
                 }),
                 time: new Date(a.appointment_timestart).toLocaleTimeString("en-US", {
                     hour: "2-digit",
                     minute: "2-digit",
                     hour12: true,
+                    timeZone: "Asia/Manila",
+                }),
+                timeStart: new Date(a.appointment_timestart).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                    timeZone: "Asia/Manila",
+                }),
+                timeEnd: new Date(a.appointment_timeend).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
                     timeZone: "Asia/Manila",
                 }),
                 status: a.status,
@@ -99,6 +118,13 @@ export async function POST(req: Request) {
         if (!(appointment_timestart < appointment_timeend))
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
 
+        const earliestAllowed = addManilaDays(manilaNow(), 3);
+        if (appointment_timestart < earliestAllowed)
+            return NextResponse.json(
+                { message: "Appointments must be scheduled at least 3 days in advance" },
+                { status: 400 }
+            );
+
         // ✅ Check if within availability
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
@@ -140,6 +166,31 @@ export async function POST(req: Request) {
 
         if (conflict)
             return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
+
+        const patientConflicts = await prisma.appointment.findMany({
+            where: {
+                patient_user_id,
+                appointment_timestart: { gte: dayStart, lte: dayEnd },
+                status: {
+                    in: [AppointmentStatus.Pending, AppointmentStatus.Approved, AppointmentStatus.Moved],
+                },
+            },
+        });
+
+        const patientOverlap = patientConflicts.some((e) =>
+            rangesOverlap(
+                appointment_timestart,
+                appointment_timeend,
+                e.appointment_timestart,
+                e.appointment_timeend
+            )
+        );
+
+        if (patientOverlap)
+            return NextResponse.json(
+                { message: "You already booked an appointment for this time" },
+                { status: 409 }
+            );
 
         // ✅ Create the appointment
         const created = await prisma.appointment.create({
