@@ -77,7 +77,8 @@ export function PatientLayout({
         <nav className="flex flex-col gap-1">
             {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const isActive = pathname === item.href;
+
                 return (
                     <Link
                         key={item.href}
@@ -90,13 +91,16 @@ export function PatientLayout({
                         )}
                         onClick={() => setMobileOpen(false)}
                     >
-                        <Icon className="h-4 w-4" />
+                        <Icon
+                            className={cn("h-4 w-4", isActive ? "text-green-700" : "text-gray-600")}
+                        />
                         {item.label}
                     </Link>
                 );
             })}
         </nav>
     );
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100">

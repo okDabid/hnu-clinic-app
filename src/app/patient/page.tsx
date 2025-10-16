@@ -130,7 +130,7 @@ export default function PatientDashboardPage() {
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
                         <p>
-                            Bring all required documents, such as referral forms or previous prescriptions. Updating your personal details before the visit helps our staff deliver faster care.
+                            Updating your personal details before the visit helps our staff deliver faster care.
                         </p>
                         <p>
                             If you need to adjust the schedule, request a reschedule from the Appointments page. The clinic will confirm availability and notify you through email and the portal.
