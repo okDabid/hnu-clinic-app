@@ -1,33 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { signOut } from "next-auth/react";
-import Link from "next/link";
 import { toast } from "sonner";
-import {
-    Menu,
-    X,
-    Home,
-    User,
-    Loader2,
-    CalendarDays,
-    Bell,
-    Eye,
-    EyeOff,
-    Cog,
-} from "lucide-react";
+import { Eye, EyeOff, Loader2, Cog } from "lucide-react";
 
+import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import {
     Dialog,
     DialogContent,
@@ -56,7 +37,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-import Image from "next/image";
 
 // ✅ Enum ↔ Label Mappings
 const departmentEnumMap: Record<string, string> = {
@@ -193,8 +173,6 @@ const programOptions: Record<string, string[]> = {
 export default function PatientAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
-    const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [menuOpen, setMenuOpen] = useState(false);
 
     const [profileType, setProfileType] = useState<"student" | "employee" | null>(null);
 
@@ -228,15 +206,6 @@ export default function PatientAccountPage() {
         }
     };
 
-    const handleLogout = async () => {
-        try {
-            setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
-        } finally {
-            setIsLoggingOut(false);
-        }
-    };
-
     const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
@@ -265,6 +234,20 @@ export default function PatientAccountPage() {
     useEffect(() => {
         loadProfile();
     }, [loadProfile]);
+
+    const layoutTitle = profileLoading
+        ? "Loading profile"
+        : profileType === "employee"
+          ? "Employee profile"
+          : profileType === "student"
+            ? "Student profile"
+            : "Account overview";
+
+    const layoutDescription = profileLoading
+        ? "Please wait while we retrieve your account data."
+        : "Review and update your personal, academic, and emergency contact information to keep the clinic prepared.";
+
+    const statusBadge = profile?.status ?? null;
 
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -327,573 +310,505 @@ export default function PatientAccountPage() {
     };
 
     return (
-        <div className="flex min-h-screen bg-green-50">
-            {/* Sidebar */}
-            <aside className="hidden md:flex w-64 flex-col bg-white shadow-xl border-r p-6">
-                {/* Logo Section */}
-                <div className="flex items-center mb-12">
-                    <Image
-                        src="/clinic-illustration.svg"
-                        alt="clinic-logo"
-                        width={40}
-                        height={40}
-                        className="object-contain drop-shadow-sm"
-                    />
-                    <h1 className="text-2xl font-extrabold text-green-600 tracking-tight leading-none">
-                        HNU Clinic
-                    </h1>
-                </div>
-                <nav className="flex flex-col gap-2 text-gray-700">
-                    <Link href="/patient" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <Home className="h-5 w-5" />
-                        Dashboard
-                    </Link>
-                    <Link href="/patient/account" className="flex items-center gap-3 px-3 py-2 rounded-lg text-green-600 font-semibold bg-green-100 hover:bg-green-200 transition-colors duration-200">
-                        <User className="h-5 w-5" />
-                        Account
-                    </Link>
-                    <Link href="/patient/appointments" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <CalendarDays className="h-5 w-5" />
-                        Appointments
-                    </Link>
-                    <Link href="/patient/notification" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
-                        <Bell className="h-5 w-5" />
-                        Notifications
-                    </Link>
-                </nav>
+        <PatientLayout
+            title={layoutTitle}
+            description={layoutDescription}
+            actions={
+                statusBadge ? (
+                    <span className="hidden rounded-xl border border-green-100 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-green-700 shadow-sm md:inline-flex">
+                        Status: {statusBadge}
+                    </span>
+                ) : null
+            }
+        >
+            <div className="space-y-6">
+                {profileLoading ? (
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 p-8 text-center shadow-sm">
+                        <div className="flex flex-col items-center gap-3 text-green-700">
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                            <p className="text-sm">Fetching your profile information…</p>
+                        </div>
+                    </Card>
+                ) : null}
 
-                <Separator className="my-8" />
+                {!profileLoading && !profile ? (
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 p-6 text-center shadow-sm">
+                        <p className="text-sm text-muted-foreground">We couldn&apos;t load your account information right now. Please refresh or contact the clinic team.</p>
+                    </Card>
+                ) : null}
 
-                <Button
-                    variant="default"
-                    className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 py-2"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                >
-                    {isLoggingOut ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Logging out...
-                        </>
-                    ) : (
-                        "Logout"
-                    )}
-                </Button>
-            </aside>
-
-            {/* Main */}
-            <main className="flex-1 flex flex-col">
-                <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between sticky top-0 z-40">
-                    <h2 className="text-xl font-bold text-green-600">
-                        {profileLoading || !profileType ? (
-                            <div className="flex items-center justify-center gap-2">
-                                <Loader2 className="h-5 w-5 animate-spin text-green-600" />
-                                <span>Loading Profile</span>
-                            </div>
-                        ) : profileType === "employee" ? (
-                            "Employee Profile"
-                        ) : (
-                            "Student Profile"
-                        )}
-                    </h2>
-                    {/* Mobile Menu */}
-                    <div className="md:hidden">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setMenuOpen(!menuOpen)}>
-                                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild><Link href="/patient">Dashboard</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/patient/account">Account</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/patient/appointments">Appointments</Link></DropdownMenuItem>
-                                <DropdownMenuItem asChild><Link href="/patient/notification">Notifications</Link></DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login?logout=success" })}>Logout</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </header>
-
-                {/* Account Section */}
-                <section className="px-6 py-8 max-w-4xl mx-auto w-full">
-                    {profile && (
-                        <Card className="rounded-2xl shadow-lg hover:shadow-xl transition">
-                            <CardHeader className="border-b flex items-center justify-between gap-3">
-                                <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
-
-                                {/* Password Dialog */}
-                                <Dialog
-                                    onOpenChange={(open) => {
-                                        if (!open) {
-                                            setPasswordErrors([]);
-                                            setPasswordMessage(null);
-                                            setPasswordLoading(false);
-                                        }
-                                    }}
-                                >
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon" className="hover:bg-green-50">
-                                            <Cog className="h-5 w-5 text-green-600" />
-                                        </Button>
-                                    </DialogTrigger>
-
-                                    <DialogContent className="w-[95%] max-w-md rounded-xl">
-                                        <DialogHeader>
-                                            <DialogTitle>Update Password</DialogTitle>
-                                            <DialogDescription>
-                                                Change your account password securely. Enter your current password and set a new one.
-                                            </DialogDescription>
-                                        </DialogHeader>
-
-                                        <form
-                                            onSubmit={async (e) => {
-                                                e.preventDefault();
-                                                const form = e.currentTarget;
-                                                const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
-                                                const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
-                                                const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
-
-                                                const errors: string[] = [];
-                                                if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
-                                                if (!/[A-Z]/.test(newPassword)) errors.push("Must contain an uppercase letter.");
-                                                if (!/[a-z]/.test(newPassword)) errors.push("Must contain a lowercase letter.");
-                                                if (!/\d/.test(newPassword)) errors.push("Must contain a number.");
-                                                if (!/[^\w\s]/.test(newPassword)) errors.push("Must contain a symbol.");
-                                                if (newPassword !== confirmPassword) errors.push("Passwords do not match.");
-
-                                                if (errors.length > 0) {
-                                                    setPasswordErrors(errors);
-                                                    return;
+                {profile && (
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader className="flex flex-col gap-3 border-b border-green-100/70 pb-4 md:flex-row md:items-center md:justify-between">
+                            <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
+                    
+                            {/* Password Dialog */}
+                            <Dialog
+                                onOpenChange={(open) => {
+                                    if (!open) {
+                                        setPasswordErrors([]);
+                                        setPasswordMessage(null);
+                                        setPasswordLoading(false);
+                                    }
+                                }}
+                            >
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" size="icon" className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/60">
+                                        <Cog className="h-5 w-5 text-green-600" />
+                                    </Button>
+                                </DialogTrigger>
+                    
+                                <DialogContent className="w-[95%] max-w-md rounded-3xl border border-green-100/80 bg-white/95">
+                                    <DialogHeader>
+                                        <DialogTitle>Update Password</DialogTitle>
+                                        <DialogDescription>
+                                            Change your account password securely. Enter your current password and set a new one.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                    
+                                    <form
+                                        onSubmit={async (e) => {
+                                            e.preventDefault();
+                                            const form = e.currentTarget;
+                                            const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
+                                            const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
+                                            const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
+                    
+                                            const errors: string[] = [];
+                                            if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
+                                            if (!/[A-Z]/.test(newPassword)) errors.push("Must contain an uppercase letter.");
+                                            if (!/[a-z]/.test(newPassword)) errors.push("Must contain a lowercase letter.");
+                                            if (!/\d/.test(newPassword)) errors.push("Must contain a number.");
+                                            if (!/[^\w\s]/.test(newPassword)) errors.push("Must contain a symbol.");
+                                            if (newPassword !== confirmPassword) errors.push("Passwords do not match.");
+                    
+                                            if (errors.length > 0) {
+                                                setPasswordErrors(errors);
+                                                return;
+                                            }
+                    
+                                            try {
+                                                setPasswordLoading(true);
+                                                const res = await fetch("/api/patient/account/password", {
+                                                    method: "PUT",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ oldPassword, newPassword }),
+                                                });
+                    
+                                                const data = await res.json();
+                                                if (data.error) setPasswordErrors([data.error]);
+                                                else {
+                                                    setPasswordMessage("Password updated successfully!");
+                                                    toast.success("Password updated successfully!");
+                                                    form.reset();
                                                 }
-
-                                                try {
-                                                    setPasswordLoading(true);
-                                                    const res = await fetch("/api/patient/account/password", {
-                                                        method: "PUT",
-                                                        headers: { "Content-Type": "application/json" },
-                                                        body: JSON.stringify({ oldPassword, newPassword }),
-                                                    });
-
-                                                    const data = await res.json();
-                                                    if (data.error) setPasswordErrors([data.error]);
-                                                    else {
-                                                        setPasswordMessage("Password updated successfully!");
-                                                        toast.success("Password updated successfully!");
-                                                        form.reset();
-                                                    }
-                                                } catch {
-                                                    setPasswordErrors(["Failed to update password. Please try again."]);
-                                                } finally {
-                                                    setPasswordLoading(false);
-                                                }
-                                            }}
-                                            className="space-y-4"
-                                        >
-                                            {/* Current Password */}
-                                            <div>
-                                                <Label className="block mb-1 font-medium">Current Password</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showCurrent ? "text" : "password"}
-                                                        name="oldPassword"
-                                                        required
-                                                        className="pr-10"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setShowCurrent(!showCurrent)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                    >
-                                                        {showCurrent ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            {/* New Password with live validation */}
-                                            <div>
-                                                <Label className="block mb-1 font-medium">New Password</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showNew ? "text" : "password"}
-                                                        name="newPassword"
-                                                        required
-                                                        className="pr-10"
-                                                        onChange={(e) => {
-                                                            const val = e.target.value;
-                                                            const errs: string[] = [];
-                                                            if (val.length < 8) errs.push("Password must be at least 8 characters.");
-                                                            if (!/[A-Z]/.test(val)) errs.push("Must contain an uppercase letter.");
-                                                            if (!/[a-z]/.test(val)) errs.push("Must contain a lowercase letter.");
-                                                            if (!/\d/.test(val)) errs.push("Must contain a number.");
-                                                            if (!/[^\w\s]/.test(val)) errs.push("Must contain a symbol.");
-                                                            setPasswordErrors(errs);
-                                                        }}
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setShowNew(!showNew)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                    >
-                                                        {showNew ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            {/* Confirm Password */}
-                                            <div>
-                                                <Label className="block mb-1 font-medium">Confirm Password</Label>
-                                                <div className="relative">
-                                                    <Input
-                                                        type={showConfirm ? "text" : "password"}
-                                                        name="confirmPassword"
-                                                        required
-                                                        className="pr-10"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setShowConfirm(!showConfirm)}
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                    >
-                                                        {showConfirm ? (
-                                                            <EyeOff className="h-5 w-5 text-gray-500" />
-                                                        ) : (
-                                                            <Eye className="h-5 w-5 text-gray-500" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            {/* Validation Feedback */}
-                                            {passwordErrors.length > 0 && (
-                                                <ul className="text-sm text-red-600 space-y-1">
-                                                    {passwordErrors.map((err, idx) => (
-                                                        <li key={idx}>• {err}</li>
-                                                    ))}
-                                                </ul>
-                                            )}
-                                            {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
-
-                                            <DialogFooter className="pt-2">
+                                            } catch {
+                                                setPasswordErrors(["Failed to update password. Please try again."]);
+                                            } finally {
+                                                setPasswordLoading(false);
+                                            }
+                                        }}
+                                        className="space-y-4"
+                                    >
+                                        {/* Current Password */}
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Current Password</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    type={showCurrent ? "text" : "password"}
+                                                    name="oldPassword"
+                                                    required
+                                                    className="pr-10"
+                                                />
                                                 <Button
-                                                    type="submit"
-                                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
-                                                    disabled={passwordLoading}
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setShowCurrent(!showCurrent)}
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
                                                 >
-                                                    {passwordLoading ? (
-                                                        <>
-                                                            <Loader2 className="h-4 w-4 animate-spin" /> Updating...
-                                                        </>
+                                                    {showCurrent ? (
+                                                        <EyeOff className="h-5 w-5 text-gray-500" />
                                                     ) : (
-                                                        "Update Password"
+                                                        <Eye className="h-5 w-5 text-gray-500" />
                                                     )}
                                                 </Button>
-                                            </DialogFooter>
-                                        </form>
-                                    </DialogContent>
-                                </Dialog>
-
-                            </CardHeader>
-
-                            <CardContent className="pt-6">
-                                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                                    {/* Uneditable Fields */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.user_id} disabled /></div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">
-                                                {profileType === "student" ? "School ID" : profileType === "employee" ? "Employee ID" : "ID"}
-                                            </Label>
-                                            <Input value={profile.username} disabled />
+                                            </div>
                                         </div>
-                                        <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
-                                        <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
+                    
+                                        {/* New Password with live validation */}
                                         <div>
-                                            <Label className="block mb-1 font-medium">Date of Birth</Label>
-
-                                            {/* If already set → disable input */}
-                                            {profile.date_of_birth ? (
+                                            <Label className="block mb-1 font-medium">New Password</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    type={showNew ? "text" : "password"}
+                                                    name="newPassword"
+                                                    required
+                                                    className="pr-10"
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        const errs: string[] = [];
+                                                        if (val.length < 8) errs.push("Password must be at least 8 characters.");
+                                                        if (!/[A-Z]/.test(val)) errs.push("Must contain an uppercase letter.");
+                                                        if (!/[a-z]/.test(val)) errs.push("Must contain a lowercase letter.");
+                                                        if (!/\d/.test(val)) errs.push("Must contain a number.");
+                                                        if (!/[^\w\s]/.test(val)) errs.push("Must contain a symbol.");
+                                                        setPasswordErrors(errs);
+                                                    }}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setShowNew(!showNew)}
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                                >
+                                                    {showNew ? (
+                                                        <EyeOff className="h-5 w-5 text-gray-500" />
+                                                    ) : (
+                                                        <Eye className="h-5 w-5 text-gray-500" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </div>
+                    
+                                        {/* Confirm Password */}
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Confirm Password</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    type={showConfirm ? "text" : "password"}
+                                                    name="confirmPassword"
+                                                    required
+                                                    className="pr-10"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setShowConfirm(!showConfirm)}
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                                >
+                                                    {showConfirm ? (
+                                                        <EyeOff className="h-5 w-5 text-gray-500" />
+                                                    ) : (
+                                                        <Eye className="h-5 w-5 text-gray-500" />
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        </div>
+                    
+                                        {/* Validation Feedback */}
+                                        {passwordErrors.length > 0 && (
+                                            <ul className="text-sm text-red-600 space-y-1">
+                                                {passwordErrors.map((err, idx) => (
+                                                    <li key={idx}>• {err}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                        {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
+                    
+                                        <DialogFooter className="pt-2">
+                                            <Button
+                                                type="submit"
+                                                className="w-full rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
+                                                disabled={passwordLoading}
+                                            >
+                                                {passwordLoading ? (
+                                                    <>
+                                                        <Loader2 className="h-4 w-4 animate-spin" /> Updating...
+                                                    </>
+                                                ) : (
+                                                    "Update Password"
+                                                )}
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                    
+                        </CardHeader>
+                    
+                        <CardContent className="pt-6">
+                            <form onSubmit={handleProfileUpdate} className="space-y-6">
+                                {/* Uneditable Fields */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.user_id} disabled /></div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">
+                                            {profileType === "student" ? "School ID" : profileType === "employee" ? "Employee ID" : "ID"}
+                                        </Label>
+                                        <Input value={profile.username} disabled />
+                                    </div>
+                                    <div><Label className="block mb-1 font-medium">Role</Label><Input value={profile.role} disabled /></div>
+                                    <div><Label className="block mb-1 font-medium">Status</Label><Input value={profile.status} disabled /></div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Date of Birth</Label>
+                    
+                                        {/* If already set → disable input */}
+                                        {profile.date_of_birth ? (
+                                            <Input
+                                                type="date"
+                                                value={profile.date_of_birth?.slice(0, 10) || ""}
+                                                disabled
+                                            />
+                                        ) : (
+                                            <>
                                                 <Input
                                                     type="date"
-                                                    value={profile.date_of_birth?.slice(0, 10) || ""}
-                                                    disabled
+                                                    value={tempDOB}
+                                                    onChange={(e) => setTempDOB(e.target.value)}
                                                 />
-                                            ) : (
-                                                <>
-                                                    <Input
-                                                        type="date"
-                                                        value={tempDOB}
-                                                        onChange={(e) => setTempDOB(e.target.value)}
-                                                    />
-                                                    {tempDOB && (
-                                                        <Button
-                                                            type="button"
-                                                            className="mt-2 bg-green-600 hover:bg-green-700 text-white text-sm"
-                                                            onClick={() => setShowDOBConfirm(true)}
-                                                        >
-                                                            Confirm Date
-                                                        </Button>
-                                                    )}
-                                                    <p className="text-xs text-gray-500 mt-1">
-                                                        You can only set this once. Once saved, it cannot be changed.
-                                                    </p>
-
-                                                    {/* 🔒 Confirmation Dialog (only shows when user confirms) */}
-                                                    <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
-                                                        <AlertDialogContent className="max-w-sm sm:max-w-md">
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    You are about to set your Date of Birth to{" "}
-                                                                    <span className="font-semibold text-green-700">{tempDOB}</span>.
-                                                                    <br />
-                                                                    This action can only be done once and cannot be changed later.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter className="mt-4">
-                                                                <AlertDialogCancel
-                                                                    onClick={() => {
-                                                                        setTempDOB("");
-                                                                        setShowDOBConfirm(false);
-                                                                    }}
-                                                                >
-                                                                    Cancel
-                                                                </AlertDialogCancel>
-                                                                <AlertDialogAction
-                                                                    className="bg-green-600 hover:bg-green-700"
-                                                                    onClick={async () => {
-                                                                        setProfile({ ...profile, date_of_birth: tempDOB });
-                                                                        setShowDOBConfirm(false);
-
-                                                                        // ✅ Immediately save to the DB
-                                                                        try {
-                                                                            setProfileLoading(true);
-                                                                            const payload = {
-                                                                                ...profile,
-                                                                                date_of_birth: tempDOB,
-                                                                                bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
-                                                                            };
-
-                                                                            const res = await fetch("/api/patient/account/me", {
-                                                                                method: "PUT",
-                                                                                headers: { "Content-Type": "application/json" },
-                                                                                body: JSON.stringify({ profile: payload }),
-                                                                            });
-
-                                                                            const data = await res.json();
-                                                                            if (data.error) {
-                                                                                toast.error(data.error);
-                                                                            } else {
-                                                                                toast.success("Date of Birth saved!");
-                                                                                await loadProfile(); // Refresh with updated DOB
-                                                                            }
-                                                                        } catch {
-                                                                            toast.error("Failed to save Date of Birth");
-                                                                        } finally {
-                                                                            setProfileLoading(false);
+                                                {tempDOB && (
+                                                    <Button
+                                                        type="button"
+                                                        className="mt-2 rounded-xl bg-green-600 px-3 text-sm font-semibold text-white hover:bg-green-700"
+                                                        onClick={() => setShowDOBConfirm(true)}
+                                                    >
+                                                        Confirm Date
+                                                    </Button>
+                                                )}
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    You can only set this once. Once saved, it cannot be changed.
+                                                </p>
+                    
+                                                {/* 🔒 Confirmation Dialog (only shows when user confirms) */}
+                                                <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
+                                                    <AlertDialogContent className="max-w-sm rounded-3xl border border-green-100/80 bg-white/95 sm:max-w-md">
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                You are about to set your Date of Birth to{" "}
+                                                                <span className="font-semibold text-green-700">{tempDOB}</span>.
+                                                                <br />
+                                                                This action can only be done once and cannot be changed later.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter className="mt-4">
+                                                            <AlertDialogCancel
+                                                                onClick={() => {
+                                                                    setTempDOB("");
+                                                                    setShowDOBConfirm(false);
+                                                                }}
+                                                            >
+                                                                Cancel
+                                                            </AlertDialogCancel>
+                                                            <AlertDialogAction
+                                                                className="rounded-xl bg-green-600 text-sm font-semibold hover:bg-green-700"
+                                                                onClick={async () => {
+                                                                    setProfile({ ...profile, date_of_birth: tempDOB });
+                                                                    setShowDOBConfirm(false);
+                    
+                                                                    // ✅ Immediately save to the DB
+                                                                    try {
+                                                                        setProfileLoading(true);
+                                                                        const payload = {
+                                                                            ...profile,
+                                                                            date_of_birth: tempDOB,
+                                                                            bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                                                                        };
+                    
+                                                                        const res = await fetch("/api/patient/account/me", {
+                                                                            method: "PUT",
+                                                                            headers: { "Content-Type": "application/json" },
+                                                                            body: JSON.stringify({ profile: payload }),
+                                                                        });
+                    
+                                                                        const data = await res.json();
+                                                                        if (data.error) {
+                                                                            toast.error(data.error);
+                                                                        } else {
+                                                                            toast.success("Date of Birth saved!");
+                                                                            await loadProfile(); // Refresh with updated DOB
                                                                         }
-                                                                    }}
-                                                                >
-                                                                    Confirm
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        <div><Label className="block mb-1 font-medium">Gender</Label><Input value={profile.gender || ""} disabled /></div>
+                                                                    } catch {
+                                                                        toast.error("Failed to save Date of Birth");
+                                                                    } finally {
+                                                                        setProfileLoading(false);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Confirm
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </>
+                                        )}
                                     </div>
-
-                                    {/* Editable Fields */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label className="block mb-1 font-medium">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
-                                        <div><Label className="block mb-1 font-medium">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
-                                        <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
-                                    </div>
-
-                                    {/* 🎓 Student Academic Info */}
-                                    {profileType === "student" && (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label className="block mb-1 font-medium">Department</Label>
-                                                <Select
-                                                    value={profile.department || ""}
-                                                    onValueChange={(val) =>
-                                                        setProfile({
-                                                            ...profile,
-                                                            department: val,
-                                                            program: "",
-                                                            year_level: "",
-                                                        })
-                                                    }
-                                                >
-                                                    <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {departmentOptions.map((dept) => (
-                                                            <SelectItem key={dept} value={dept}>
-                                                                {dept}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            <div>
-                                                <Label className="block mb-1 font-medium">Program</Label>
-                                                <Select
-                                                    value={profile.program || ""}
-                                                    onValueChange={(val) => setProfile({ ...profile, program: val })}
-                                                >
-                                                    <SelectTrigger><SelectValue placeholder="Select Program" /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {(programOptions[profile.department || ""] || []).map((prog) => (
-                                                            <SelectItem key={prog} value={prog}>
-                                                                {prog}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            <div>
-                                                <Label className="block mb-1 font-medium">Year Level</Label>
-                                                <Select
-                                                    value={profile.year_level || ""}
-                                                    onValueChange={(val) => setProfile({ ...profile, year_level: val })}
-                                                >
-                                                    <SelectTrigger><SelectValue placeholder="Select Year Level" /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {getYearLevelOptions(
-                                                            profile.department || "",
-                                                            profile.program ?? undefined
-                                                        ).map((lvl) => (
-                                                            <SelectItem key={lvl} value={lvl}>
-                                                                {lvl}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* 💼 Employee Info */}
-                                    {profileType === "employee" && (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label className="block mb-1 font-medium">Department / Office</Label>
-                                                <Input
-                                                    value={profile.department || ""}
-                                                    onChange={(e) => setProfile({ ...profile, department: e.target.value })}
-                                                    placeholder="e.g. HR, Accounting, Nursing"
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Contact Info */}
+                    
+                                    <div><Label className="block mb-1 font-medium">Gender</Label><Input value={profile.gender || ""} disabled /></div>
+                                </div>
+                    
+                                {/* Editable Fields */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div><Label className="block mb-1 font-medium">First Name</Label><Input value={profile.fname} onChange={(e) => setProfile({ ...profile, fname: e.target.value })} /></div>
+                                    <div><Label className="block mb-1 font-medium">Middle Name</Label><Input value={profile.mname || ""} onChange={(e) => setProfile({ ...profile, mname: e.target.value })} /></div>
+                                    <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
+                                </div>
+                    
+                                {/* 🎓 Student Academic Info */}
+                                {profileType === "student" && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <Label className="block mb-1 font-medium">Email</Label>
-                                            <Input
-                                                type="email"
-                                                placeholder="example@hnu.edu.ph"
-                                                value={profile.email || ""}
-                                                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Contact No.</Label>
-                                            <Input
-                                                type="tel"
-                                                placeholder="09XXXXXXXXX"
-                                                value={profile.contactno || ""}
-                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label className="block mb-1 font-medium">Address</Label>
-                                        <Input
-                                            value={profile.address || ""}
-                                            onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                                        />
-                                    </div>
-
-
-                                    {/* Medical Info */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Blood Type</Label>
+                                            <Label className="block mb-1 font-medium">Department</Label>
                                             <Select
-                                                value={profile.bloodtype || ""}
-                                                onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
+                                                value={profile.department || ""}
+                                                onValueChange={(val) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        department: val,
+                                                        program: "",
+                                                        year_level: "",
+                                                    })
+                                                }
                                             >
-                                                <SelectTrigger><SelectValue placeholder="Select Blood Type" /></SelectTrigger>
+                                                <SelectTrigger><SelectValue placeholder="Select Department" /></SelectTrigger>
                                                 <SelectContent>
-                                                    {bloodTypeOptions.map((type) => (
-                                                        <SelectItem key={type} value={type}>
-                                                            {type}
+                                                    {departmentOptions.map((dept) => (
+                                                        <SelectItem key={dept} value={dept}>
+                                                            {dept}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <div><Label className="block mb-1 font-medium">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                    
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Program</Label>
+                                            <Select
+                                                value={profile.program || ""}
+                                                onValueChange={(val) => setProfile({ ...profile, program: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Program" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {(programOptions[profile.department || ""] || []).map((prog) => (
+                                                        <SelectItem key={prog} value={prog}>
+                                                            {prog}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                    
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Year Level</Label>
+                                            <Select
+                                                value={profile.year_level || ""}
+                                                onValueChange={(val) => setProfile({ ...profile, year_level: val })}
+                                            >
+                                                <SelectTrigger><SelectValue placeholder="Select Year Level" /></SelectTrigger>
+                                                <SelectContent>
+                                                    {getYearLevelOptions(
+                                                        profile.department || "",
+                                                        profile.program ?? undefined
+                                                    ).map((lvl) => (
+                                                        <SelectItem key={lvl} value={lvl}>
+                                                            {lvl}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
-
+                                )}
+                    
+                                {/* 💼 Employee Info */}
+                                {profileType === "employee" && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label className="block mb-1 font-medium">Department / Office</Label>
+                                            <Input
+                                                value={profile.department || ""}
+                                                onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+                                                placeholder="e.g. HR, Accounting, Nursing"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                    
+                                {/* Contact Info */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <Label className="block mb-1 font-medium">Medical Conditions</Label>
-                                        <Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} />
+                                        <Label className="block mb-1 font-medium">Email</Label>
+                                        <Input
+                                            type="email"
+                                            placeholder="example@hnu.edu.ph"
+                                            value={profile.email || ""}
+                                            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                                        />
                                     </div>
-
-                                    {/* Emergency Contact */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div><Label className="block mb-1 font-medium">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
-                                        <div><Label className="block mb-1 font-medium">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
-                                        <div><Label className="block mb-1 font-medium">Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Contact No.</Label>
+                                        <Input
+                                            type="tel"
+                                            placeholder="09XXXXXXXXX"
+                                            value={profile.contactno || ""}
+                                            onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                        />
                                     </div>
-
-                                    <Button
-                                        type="submit"
-                                        className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                                        disabled={profileLoading}
-                                    >
-                                        {profileLoading ? (
-                                            <>
-                                                <Loader2 className="h-5 w-5 animate-spin" /> Saving...
-                                            </>
-                                        ) : (
-                                            "Save Changes"
-                                        )}
-                                    </Button>
-                                </form>
-                            </CardContent>
-                        </Card>
-                    )}
-                </section>
-
-                <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
-                    © {new Date().getFullYear()} HNU Clinic – Patient Panel
-                </footer>
-            </main>
-        </div>
+                                </div>
+                    
+                                <div>
+                                    <Label className="block mb-1 font-medium">Address</Label>
+                                    <Input
+                                        value={profile.address || ""}
+                                        onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                                    />
+                                </div>
+                    
+                    
+                                {/* Medical Info */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="block mb-1 font-medium">Blood Type</Label>
+                                        <Select
+                                            value={profile.bloodtype || ""}
+                                            onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
+                                        >
+                                            <SelectTrigger><SelectValue placeholder="Select Blood Type" /></SelectTrigger>
+                                            <SelectContent>
+                                                {bloodTypeOptions.map((type) => (
+                                                    <SelectItem key={type} value={type}>
+                                                        {type}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div><Label className="block mb-1 font-medium">Allergies</Label><Input value={profile.allergies || ""} onChange={(e) => setProfile({ ...profile, allergies: e.target.value })} /></div>
+                                </div>
+                    
+                                <div>
+                                    <Label className="block mb-1 font-medium">Medical Conditions</Label>
+                                    <Input value={profile.medical_cond || ""} onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })} />
+                                </div>
+                    
+                                {/* Emergency Contact */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div><Label className="block mb-1 font-medium">Emergency Contact Name</Label><Input value={profile.emergencyco_name || ""} onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })} /></div>
+                                    <div><Label className="block mb-1 font-medium">Emergency Contact Number</Label><Input value={profile.emergencyco_num || ""} onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })} /></div>
+                                    <div><Label className="block mb-1 font-medium">Emergency Contact Relation</Label><Input value={profile.emergencyco_relation || ""} onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })} /></div>
+                                </div>
+                    
+                                <Button
+                                    type="submit"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
+                                    disabled={profileLoading}
+                                >
+                                    {profileLoading ? (
+                                        <>
+                                            <Loader2 className="h-5 w-5 animate-spin" /> Saving...
+                                        </>
+                                    ) : (
+                                        "Save Changes"
+                                    )}
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+        </PatientLayout>
     );
 }
