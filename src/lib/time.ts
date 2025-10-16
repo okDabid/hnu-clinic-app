@@ -16,6 +16,34 @@ export function endOfManilaDay(date: string): Date {
     return new Date(`${date}T23:59:59+08:00`);
 }
 
+const MANILA_WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+function formatManilaWeekday(date: Date): number {
+    const weekday = new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+        timeZone: "Asia/Manila",
+    }).format(date) as (typeof MANILA_WEEKDAYS)[number];
+
+    return MANILA_WEEKDAYS.indexOf(weekday);
+}
+
+export function manilaDateISO(date: Date): string {
+    return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Manila",
+    }).format(date);
+}
+
+export function addManilaDays(date: Date, days: number): Date {
+    return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+export function startOfManilaWeek(date: Date): Date {
+    const base = startOfManilaDay(manilaDateISO(date));
+    const weekday = formatManilaWeekday(base);
+    const diff = (weekday + 6) % 7; // distance from Monday
+    return addManilaDays(base, -diff);
+}
+
 /**
  * ✅ Range overlap check (used for appointments)
  */

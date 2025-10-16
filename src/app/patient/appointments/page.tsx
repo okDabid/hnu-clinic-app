@@ -26,6 +26,14 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatTimeRange } from "@/lib/time";
 import Image from "next/image";
@@ -36,11 +44,34 @@ type Slot = { start: string; end: string };
 type Appointment = {
     id: string;
     clinic: string;
+    clinic_id: string;
     doctor: string;
+    doctor_id: string;
     date: string;
+    dateISO: string;
     time: string;
+    timeStart: string;
+    timeEnd: string;
     status: string;
 };
+
+function isAppointmentResponse(item: unknown): item is Appointment {
+    if (!item || typeof item !== "object") return false;
+    const obj = item as Record<string, unknown>;
+    return (
+        typeof obj.id === "string" &&
+        typeof obj.clinic === "string" &&
+        typeof obj.clinic_id === "string" &&
+        typeof obj.doctor === "string" &&
+        typeof obj.doctor_id === "string" &&
+        typeof obj.date === "string" &&
+        typeof obj.dateISO === "string" &&
+        typeof obj.time === "string" &&
+        typeof obj.timeStart === "string" &&
+        typeof obj.timeEnd === "string" &&
+        typeof obj.status === "string"
+    );
+}
 
 export default function PatientAppointmentsPage() {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -60,6 +91,20 @@ export default function PatientAppointmentsPage() {
     const [serviceType, setServiceType] = useState<string>("");
     const [date, setDate] = useState<string>("");
     const [timeStart, setTimeStart] = useState<string>("");
+    const minBookingDate = useMemo(() => {
+        const minDate = new Date();
+        minDate.setDate(minDate.getDate() + 3);
+        return minDate.toISOString().slice(0, 10);
+    }, []);
+
+    const [rescheduleOpen, setRescheduleOpen] = useState(false);
+    const [appointmentEditing, setAppointmentEditing] = useState<Appointment | null>(null);
+    const [rescheduleDate, setRescheduleDate] = useState<string>("");
+    const [rescheduleSlots, setRescheduleSlots] = useState<Slot[]>([]);
+    const [rescheduleTimeStart, setRescheduleTimeStart] = useState<string>("");
+    const [loadingRescheduleSlots, setLoadingRescheduleSlots] = useState(false);
+    const [rescheduling, setRescheduling] = useState(false);
+    const [cancellingId, setCancellingId] = useState<string | null>(null);
 
     // My appointments
     const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -133,8 +178,46 @@ export default function PatientAppointmentsPage() {
         })();
     }, [clinicId, doctorId, date]);
 
+    useEffect(() => {
+        if (!appointmentEditing || !rescheduleDate) {
+            setRescheduleSlots([]);
+            setRescheduleTimeStart("");
+            return;
+        }
+
+        setRescheduleTimeStart("");
+        (async () => {
+            try {
+                setLoadingRescheduleSlots(true);
+                const params = new URLSearchParams({
+                    clinic_id: appointmentEditing.clinic_id,
+                    doctor_user_id: appointmentEditing.doctor_id,
+                    date: rescheduleDate,
+                });
+                const res = await fetch(`/api/meta/doctor-availability?${params}`);
+                const data = await res.json();
+                const fetchedSlots: Slot[] = data?.slots || [];
+                setRescheduleSlots(fetchedSlots);
+                if (
+                    appointmentEditing.timeStart &&
+                    fetchedSlots.some((slot) => slot.start === appointmentEditing.timeStart)
+                ) {
+                    setRescheduleTimeStart(appointmentEditing.timeStart);
+                }
+            } catch {
+                toast.error("Failed to load reschedule slots");
+            } finally {
+                setLoadingRescheduleSlots(false);
+            }
+        })();
+    }, [appointmentEditing, rescheduleDate]);
+
     const selectedSlot = useMemo(() => slots.find(s => s.start === timeStart), [slots, timeStart]);
     const selectedDoctor = useMemo(() => doctors.find(d => d.user_id === doctorId) || null, [doctorId, doctors]);
+    const selectedRescheduleSlot = useMemo(
+        () => rescheduleSlots.find((s) => s.start === rescheduleTimeStart) || null,
+        [rescheduleSlots, rescheduleTimeStart]
+    );
 
     // ✅ Dynamic service options: each label has a unique value
     const availableServices = useMemo(() => {
@@ -173,6 +256,11 @@ export default function PatientAppointmentsPage() {
         e.preventDefault();
         if (!clinicId || !doctorId || !serviceType || !date || !selectedSlot) {
             toast.error("Please complete all fields");
+            return;
+        }
+
+        if (date < minBookingDate) {
+            toast.error("Appointments must be scheduled at least 3 days in advance");
             return;
         }
 
@@ -215,8 +303,9 @@ export default function PatientAppointmentsPage() {
             setLoadingAppointments(true);
             const res = await fetch("/api/patient/appointments");
             if (!res.ok) throw new Error("Failed to load appointments");
-            const data = await res.json();
-            setAppointments(data);
+            const data: unknown = await res.json();
+            const normalized = Array.isArray(data) ? data.filter(isAppointmentResponse) : [];
+            setAppointments(normalized);
         } catch {
             toast.error("Could not load your appointments");
         } finally {
@@ -227,6 +316,82 @@ export default function PatientAppointmentsPage() {
     useEffect(() => {
         loadAppointments();
     }, []);
+
+    const canModify = (status: string) => !["Completed", "Cancelled"].includes(status);
+
+    function openReschedule(appt: Appointment) {
+        setAppointmentEditing(appt);
+        const defaultDate = appt.dateISO && appt.dateISO >= minBookingDate ? appt.dateISO : minBookingDate;
+        setRescheduleDate(defaultDate);
+        setRescheduleTimeStart("");
+        setRescheduleOpen(true);
+    }
+
+    function closeReschedule() {
+        setRescheduleOpen(false);
+        setAppointmentEditing(null);
+        setRescheduleDate("");
+        setRescheduleTimeStart("");
+        setRescheduleSlots([]);
+    }
+
+    async function submitReschedule(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        if (!appointmentEditing || !selectedRescheduleSlot) {
+            toast.error("Select a new date and time");
+            return;
+        }
+
+        if (!rescheduleDate || rescheduleDate < minBookingDate) {
+            toast.error("Appointments must be scheduled at least 3 days in advance");
+            return;
+        }
+
+        try {
+            setRescheduling(true);
+            const res = await fetch(`/api/patient/appointments/${appointmentEditing.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "reschedule",
+                    date: rescheduleDate,
+                    time_start: selectedRescheduleSlot.start,
+                    time_end: selectedRescheduleSlot.end,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.message || "Failed to reschedule appointment");
+
+            toast.success("Appointment rescheduled!");
+            closeReschedule();
+            loadAppointments();
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to reschedule appointment");
+        } finally {
+            setRescheduling(false);
+        }
+    }
+
+    async function cancelAppointment(appt: Appointment) {
+        if (!canModify(appt.status)) return;
+        try {
+            setCancellingId(appt.id);
+            const res = await fetch(`/api/patient/appointments/${appt.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "cancel" }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.message || "Failed to cancel appointment");
+
+            toast.success("Appointment cancelled");
+            loadAppointments();
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to cancel appointment");
+        } finally {
+            setCancellingId(null);
+        }
+    }
 
     return (
         <div className="flex min-h-screen bg-green-50">
@@ -380,8 +545,11 @@ export default function PatientAppointmentsPage() {
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
-                                        min={new Date().toISOString().slice(0, 10)}
+                                        min={minBookingDate}
                                     />
+                                    <p className="text-xs text-muted-foreground">
+                                        You can only reserve appointments at least three days ahead.
+                                    </p>
                                 </div>
 
                                 {/* Time Slot */}
@@ -447,6 +615,7 @@ export default function PatientAppointmentsPage() {
                                                 <th className="px-4 py-2 text-left">Date</th>
                                                 <th className="px-4 py-2 text-left">Time</th>
                                                 <th className="px-4 py-2 text-left">Status</th>
+                                                <th className="px-4 py-2 text-left">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -457,6 +626,34 @@ export default function PatientAppointmentsPage() {
                                                     <td className="px-4 py-2">{a.date}</td>
                                                     <td className="px-4 py-2">{a.time}</td>
                                                     <td className="px-4 py-2 capitalize">{a.status}</td>
+                                                    <td className="px-4 py-2">
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => openReschedule(a)}
+                                                                disabled={!canModify(a.status)}
+                                                            >
+                                                                Reschedule
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="text-red-600 hover:text-red-700"
+                                                                onClick={() => cancelAppointment(a)}
+                                                                disabled={!canModify(a.status) || cancellingId === a.id}
+                                                            >
+                                                                {cancellingId === a.id ? (
+                                                                    <>
+                                                                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                                                        Cancelling...
+                                                                    </>
+                                                                ) : (
+                                                                    "Cancel"
+                                                                )}
+                                                            </Button>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -466,6 +663,87 @@ export default function PatientAppointmentsPage() {
                         </CardContent>
                     </Card>
                 </section>
+
+                <Dialog
+                    open={rescheduleOpen}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            closeReschedule();
+                        } else {
+                            setRescheduleOpen(true);
+                        }
+                    }}
+                >
+                    <DialogContent className="rounded-xl">
+                        <DialogHeader>
+                            <DialogTitle>Reschedule appointment</DialogTitle>
+                            <DialogDescription>
+                                Select a new date (at least three days ahead) and an available slot with your doctor.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <form className="space-y-4" onSubmit={submitReschedule}>
+                            <div className="grid gap-2">
+                                <Label>New date</Label>
+                                <Input
+                                    type="date"
+                                    value={rescheduleDate}
+                                    min={minBookingDate}
+                                    onChange={(e) => setRescheduleDate(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label>Available slot</Label>
+                                <Select
+                                    value={rescheduleTimeStart}
+                                    onValueChange={setRescheduleTimeStart}
+                                    disabled={loadingRescheduleSlots || rescheduleSlots.length === 0}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue
+                                            placeholder={
+                                                loadingRescheduleSlots
+                                                    ? "Loading slots..."
+                                                    : rescheduleSlots.length === 0
+                                                        ? "No slots available"
+                                                        : "Select time"
+                                            }
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {rescheduleSlots.map((slot) => (
+                                            <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
+                                                {formatTimeRange(slot.start, slot.end)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {!loadingRescheduleSlots && rescheduleSlots.length === 0 && (
+                                    <p className="text-xs text-muted-foreground">
+                                        No available slots for the selected date. Try another day.
+                                    </p>
+                                )}
+                            </div>
+
+                            <DialogFooter className="gap-2">
+                                <Button type="button" variant="outline" onClick={closeReschedule}>
+                                    Close
+                                </Button>
+                                <Button type="submit" disabled={rescheduling || !selectedRescheduleSlot}>
+                                    {rescheduling ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...
+                                        </>
+                                    ) : (
+                                        "Confirm"
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
 
                 <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
                     © {new Date().getFullYear()} HNU Clinic – Patient Panel

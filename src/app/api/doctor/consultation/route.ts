@@ -2,8 +2,17 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Role, Prisma } from "@prisma/client";
-import { buildManilaDate, startOfManilaDay } from "@/lib/time";
+import { AppointmentStatus, Role, Prisma } from "@prisma/client";
+import {
+    addManilaDays,
+    buildManilaDate,
+    endOfManilaDay,
+    manilaDateISO,
+    manilaNow,
+    rangesOverlap,
+    startOfManilaDay,
+    startOfManilaWeek,
+} from "@/lib/time";
 
 /**
  * ✅ GET — Fetch all consultation slots for logged-in doctor
@@ -53,23 +62,35 @@ export async function POST(req: Request) {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: session.user.id },
+            select: { user_id: true, role: true, specialization: true },
         });
 
         if (!doctor || doctor.role !== Role.DOCTOR) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const { clinic_id, available_date, available_timestart, available_timeend } =
-            await req.json();
+        const {
+            clinic_id,
+            start_time,
+            end_time,
+            week_start,
+            available_date,
+        } = await req.json();
 
-        if (!clinic_id || !available_date || !available_timestart || !available_timeend) {
-            return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+        if (!clinic_id || !start_time || !end_time) {
+            return NextResponse.json({ error: "Start and end time are required" }, { status: 400 });
         }
 
-        const start = buildManilaDate(available_date, available_timestart);
-        const end = buildManilaDate(available_date, available_timeend);
+        const referenceDateStr =
+            week_start || available_date || manilaDateISO(manilaNow());
+        const referenceDate = startOfManilaDay(referenceDateStr);
+        const weekStart = startOfManilaWeek(referenceDate);
+        const totalDays = doctor.specialization === "Dentist" ? 6 : 5; // Mon–Sat vs Mon–Fri
 
-        if (end <= start) {
+        const startProbe = buildManilaDate(referenceDateStr, start_time);
+        const endProbe = buildManilaDate(referenceDateStr, end_time);
+
+        if (endProbe <= startProbe) {
             return NextResponse.json(
                 { error: "End time must be after start time" },
                 { status: 400 }
@@ -81,20 +102,108 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
         }
 
-        const newSlot = await prisma.doctorAvailability.create({
-            data: {
+        const now = manilaNow();
+        const weekEnd = addManilaDays(weekStart, 7);
+
+        const existing = await prisma.doctorAvailability.findMany({
+            where: {
                 doctor_user_id: doctor.user_id,
-                clinic_id,
-                available_date: startOfManilaDay(available_date),
-                available_timestart: start,
-                available_timeend: end,
-            },
-            include: {
-                clinic: { select: { clinic_id: true, clinic_name: true } },
+                available_date: { gte: weekStart, lt: weekEnd },
             },
         });
 
-        return NextResponse.json(newSlot);
+        const appointments = await prisma.appointment.findMany({
+            where: {
+                doctor_user_id: doctor.user_id,
+                appointment_timestart: { gte: weekStart, lt: weekEnd },
+                status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved] },
+            },
+            select: {
+                appointment_timestart: true,
+                appointment_timeend: true,
+            },
+        });
+
+        const slotsToCreate: {
+            available_date: Date;
+            available_timestart: Date;
+            available_timeend: Date;
+        }[] = [];
+        const conflicts: string[] = [];
+
+        for (let dayOffset = 0; dayOffset < totalDays; dayOffset += 1) {
+            const dayDate = addManilaDays(weekStart, dayOffset);
+            const dateStr = manilaDateISO(dayDate);
+            const slotStart = buildManilaDate(dateStr, start_time);
+            const slotEnd = buildManilaDate(dateStr, end_time);
+
+            if (slotEnd <= slotStart) {
+                continue;
+            }
+
+            if (slotEnd <= now) {
+                continue; // Skip past windows
+            }
+
+            const hasConflict = existing.some((record) =>
+                rangesOverlap(
+                    slotStart,
+                    slotEnd,
+                    record.available_timestart,
+                    record.available_timeend
+                )
+            );
+
+            const appointmentConflict = appointments.some((appt) =>
+                rangesOverlap(slotStart, slotEnd, appt.appointment_timestart, appt.appointment_timeend)
+            );
+
+            if (hasConflict || appointmentConflict) {
+                conflicts.push(dateStr);
+                continue;
+            }
+
+            slotsToCreate.push({
+                available_date: startOfManilaDay(dateStr),
+                available_timestart: slotStart,
+                available_timeend: slotEnd,
+            });
+        }
+
+        if (slotsToCreate.length === 0) {
+            if (conflicts.length > 0) {
+                return NextResponse.json(
+                    {
+                        error: `Unable to create duty hours. Existing schedules already cover: ${conflicts.join(", ")}`,
+                    },
+                    { status: 409 }
+                );
+            }
+
+            return NextResponse.json(
+                {
+                    error: "No future days available this week for the selected time range",
+                },
+                { status: 400 }
+            );
+        }
+
+        const created = await prisma.$transaction(
+            slotsToCreate.map((slot) =>
+                prisma.doctorAvailability.create({
+                    data: {
+                        doctor_user_id: doctor.user_id,
+                        clinic_id,
+                        ...slot,
+                    },
+                    include: {
+                        clinic: { select: { clinic_id: true, clinic_name: true } },
+                    },
+                })
+            )
+        );
+
+        return NextResponse.json({ created });
     } catch (err) {
         console.error("[POST /api/doctor/consultation]", err);
         return NextResponse.json(
@@ -124,31 +233,67 @@ export async function PUT(req: Request) {
 
         const {
             availability_id,
-            clinic_id,
-            available_date,
             available_timestart,
             available_timeend,
+            clinic_id,
         } = await req.json();
 
         if (!availability_id) {
             return NextResponse.json({ error: "Missing availability ID" }, { status: 400 });
         }
 
-        const updateData: Prisma.DoctorAvailabilityUpdateInput = {};
+        const slot = await prisma.doctorAvailability.findUnique({
+            where: { availability_id },
+        });
+
+        if (!slot || slot.doctor_user_id !== doctor.user_id) {
+            return NextResponse.json({ error: "Availability not found" }, { status: 404 });
+        }
+
+        const dateStr = manilaDateISO(slot.available_timestart);
+        const newStart = available_timestart
+            ? buildManilaDate(dateStr, available_timestart)
+            : slot.available_timestart;
+        const newEnd = available_timeend
+            ? buildManilaDate(dateStr, available_timeend)
+            : slot.available_timeend;
+
+        if (newEnd <= newStart) {
+            return NextResponse.json(
+                { error: "End time must be after start time" },
+                { status: 400 }
+            );
+        }
+
+        const dayStart = startOfManilaDay(dateStr);
+        const dayEnd = endOfManilaDay(dateStr);
+
+        const overlapsSameDay = await prisma.doctorAvailability.findMany({
+            where: {
+                doctor_user_id: doctor.user_id,
+                availability_id: { not: availability_id },
+                available_timestart: { gte: dayStart, lte: dayEnd },
+            },
+        });
+
+        const conflict = overlapsSameDay.some((record) =>
+            rangesOverlap(newStart, newEnd, record.available_timestart, record.available_timeend)
+        );
+
+        if (conflict) {
+            return NextResponse.json(
+                { error: "This time overlaps with another duty hour" },
+                { status: 409 }
+            );
+        }
+
+        const updateData: Prisma.DoctorAvailabilityUpdateInput = {
+            available_timestart: newStart,
+            available_timeend: newEnd,
+        };
 
         if (clinic_id) {
             updateData.clinic = { connect: { clinic_id } };
-        }
-
-        if (available_date) {
-            updateData.available_date = startOfManilaDay(available_date);
-        }
-
-        if (available_timestart && available_date) {
-            updateData.available_timestart = buildManilaDate(available_date, available_timestart);
-        }
-        if (available_timeend && available_date) {
-            updateData.available_timeend = buildManilaDate(available_date, available_timeend);
         }
 
         const updated = await prisma.doctorAvailability.update({
