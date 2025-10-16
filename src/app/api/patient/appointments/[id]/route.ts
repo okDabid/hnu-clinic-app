@@ -173,22 +173,18 @@ export async function DELETE(
         const { params } = context;
         const session = await getServerSession(authOptions);
 
-        // 1️⃣ Ensure authenticated
         if (!session?.user?.id) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        // 2️⃣ Fetch appointment
         const appointment = await prisma.appointment.findUnique({
             where: { appointment_id: params.id },
         });
 
-        // 3️⃣ Verify ownership
         if (!appointment || appointment.patient_user_id !== session.user.id) {
             return NextResponse.json({ message: "Appointment not found" }, { status: 404 });
         }
 
-        // 4️⃣ Check if appointment can still be cancelled
         if (!isCancellable(appointment.status)) {
             return NextResponse.json(
                 { message: "Appointment can no longer be cancelled" },
@@ -196,7 +192,6 @@ export async function DELETE(
             );
         }
 
-        // 5️⃣ Update to Cancelled
         await prisma.appointment.update({
             where: { appointment_id: appointment.appointment_id },
             data: { status: AppointmentStatus.Cancelled },
@@ -208,3 +203,4 @@ export async function DELETE(
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
+
