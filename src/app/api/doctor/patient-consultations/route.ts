@@ -78,7 +78,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(created);
     } catch (err) {
-        console.error("POST /api/doctor/patient-consultations error:", err);
+        console.error("[POST /api/doctor/patient-consultations]", err);
         return NextResponse.json(
             { error: "Failed to save consultation notes" },
             { status: 500 }
