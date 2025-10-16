@@ -77,7 +77,7 @@ export default function PatientDashboardPage() {
                         <CalendarDays className="h-5 w-5" />
                         Appointments
                     </Link>
-                    <Link href="/patient/notifications" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
+                    <Link href="/patient/notification" className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200">
                         <Bell className="h-5 w-5" />
                         Notifications
                     </Link>
@@ -129,7 +129,7 @@ export default function PatientDashboardPage() {
                                     <Link href="/patient/appointments">Appointments</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                    <Link href="/patient/notifications">Notifications</Link>
+                                    <Link href="/patient/notification">Notifications</Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => signOut({ callbackUrl: "/login?logout=success" })}
