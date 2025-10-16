@@ -126,17 +126,27 @@ export default function DoctorConsultationPage() {
         e.preventDefault();
         if (
             !formData.clinic_id ||
-            !formData.available_date ||
             !formData.available_timestart ||
-            !formData.available_timeend
+            !formData.available_timeend ||
+            (editingSlot && !formData.available_date)
         ) {
             toast.error("All fields are required.");
             return;
         }
 
         const body = editingSlot
-            ? { availability_id: editingSlot.availability_id, ...formData }
-            : formData;
+            ? {
+                  availability_id: editingSlot.availability_id,
+                  clinic_id: formData.clinic_id,
+                  available_date: formData.available_date,
+                  available_timestart: formData.available_timestart,
+                  available_timeend: formData.available_timeend,
+              }
+            : {
+                  clinic_id: formData.clinic_id,
+                  available_timestart: formData.available_timestart,
+                  available_timeend: formData.available_timeend,
+              };
         const method = editingSlot ? "PUT" : "POST";
 
         try {
@@ -147,10 +157,14 @@ export default function DoctorConsultationPage() {
                 body: JSON.stringify(body),
             });
             const data = await res.json();
-            if (data.error) {
-                toast.error(data.error);
+            if (!res.ok || data.error) {
+                toast.error(data.error || data.message || "Failed to save duty hours");
             } else {
-                toast.success(editingSlot ? "Schedule updated!" : "Duty hours added!");
+                toast.success(
+                    editingSlot
+                        ? "Schedule updated!"
+                        : data.message ?? "Duty hours generated successfully!",
+                );
                 setDialogOpen(false);
                 setFormData({
                     clinic_id: "",
@@ -297,15 +311,21 @@ export default function DoctorConsultationPage() {
                                             });
                                         }}
                                     >
-                                        <PlusCircle className="h-4 w-4" /> Add Slot
+                                        <PlusCircle className="h-4 w-4" /> Generate Schedule
                                     </Button>
                                 </DialogTrigger>
 
                                 <DialogContent className="rounded-xl">
                                     <DialogHeader>
-                                        <DialogTitle>{editingSlot ? "Edit Consultation Slot" : "Add Consultation Slot"}</DialogTitle>
+                                        <DialogTitle>
+                                            {editingSlot
+                                                ? "Edit Consultation Slot"
+                                                : "Generate Weekly Duty Hours"}
+                                        </DialogTitle>
                                         <DialogDescription>
-                                            {editingSlot ? "Modify your existing consultation slot." : "Add a new consultation slot."}
+                                            {editingSlot
+                                                ? "Modify your existing consultation slot."
+                                                : "Select a clinic and input your preferred duty start and end time. The system will create daily duty hours for the upcoming week based on your specialization."}
                                         </DialogDescription>
                                     </DialogHeader>
 
@@ -327,15 +347,22 @@ export default function DoctorConsultationPage() {
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <Label>Date</Label>
-                                            <Input
-                                                type="date"
-                                                value={formData.available_date}
-                                                onChange={(e) => setFormData({ ...formData, available_date: e.target.value })}
-                                                required
-                                            />
-                                        </div>
+                                        {editingSlot && (
+                                            <div>
+                                                <Label>Date</Label>
+                                                <Input
+                                                    type="date"
+                                                    value={formData.available_date}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            available_date: e.target.value,
+                                                        })
+                                                    }
+                                                    required
+                                                />
+                                            </div>
+                                        )}
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
@@ -358,10 +385,16 @@ export default function DoctorConsultationPage() {
                                             </div>
                                         </div>
 
+                                        {!editingSlot && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Physicians receive duty slots from Monday to Friday, while dentists are scheduled Monday to Saturday.
+                                            </p>
+                                        )}
+
                                         <DialogFooter>
                                             <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 text-white">
                                                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                                                {editingSlot ? "Save Changes" : "Add Slot"}
+                                                {editingSlot ? "Save Changes" : "Generate"}
                                             </Button>
                                         </DialogFooter>
                                     </form>
