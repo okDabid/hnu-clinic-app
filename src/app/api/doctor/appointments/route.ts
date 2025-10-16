@@ -35,6 +35,7 @@ export async function GET() {
                     },
                 },
                 clinic: { select: { clinic_name: true } },
+                consultation: { select: { consultation_id: true } },
             },
             orderBy: { appointment_date: "desc" },
         });
@@ -52,6 +53,7 @@ export async function GET() {
             date: phDate(a.appointment_timestart),
             time: phTime(a.appointment_timestart),
             status: a.status,
+            hasConsultation: Boolean(a.consultation),
         }));
 
         return NextResponse.json(formatted);

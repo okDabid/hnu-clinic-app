@@ -20,6 +20,7 @@ import {
     Move,
     MoreHorizontal,
     Pill,
+    Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -49,6 +50,7 @@ interface Appointment {
     time: string;
     status: string;
     clinic?: string;
+    hasConsultation: boolean;
 }
 
 export default function DoctorAppointmentsPage() {
@@ -73,23 +75,30 @@ export default function DoctorAppointmentsPage() {
         }
     }
 
+    async function loadAppointments() {
+        try {
+            setLoading(true);
+            const res = await fetch("/api/doctor/appointments");
+            if (!res.ok) throw new Error("Failed to fetch appointments");
+            const data = await res.json();
+            setAppointments(data);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to load appointments");
+        } finally {
+            setLoading(false);
+        }
+    }
+
     // Fetch appointments
     useEffect(() => {
-        async function fetchAppointments() {
-            try {
-                const res = await fetch("/api/doctor/appointments");
-                if (!res.ok) throw new Error("Failed to fetch appointments");
-                const data = await res.json();
-                setAppointments(data);
-            } catch (error) {
-                console.error(error);
-                toast.error("Failed to load appointments");
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchAppointments();
+        loadAppointments();
     }, []);
+
+    const handleClearAppointments = () => {
+        setAppointments([]);
+        toast.info("Appointments cleared from view");
+    };
 
     async function handleApprove(id: string) {
         try {
@@ -299,10 +308,19 @@ export default function DoctorAppointmentsPage() {
                 {/* Appointments Section */}
                 <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col space-y-8">
                     <Card className="rounded-2xl shadow-lg hover:shadow-xl transition flex flex-col">
-                        <CardHeader className="border-b">
+                        <CardHeader className="border-b flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <CardTitle className="flex items-center gap-2 text-green-600 text-lg sm:text-xl">
                                 <CalendarDays className="w-6 h-6" /> All Scheduled Appointments
                             </CardTitle>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 self-start"
+                                onClick={handleClearAppointments}
+                                disabled={appointments.length === 0}
+                            >
+                                <Trash2 className="h-4 w-4" /> Clear appointments
+                            </Button>
                         </CardHeader>
                         <CardContent className="flex-1 flex flex-col pt-4">
                             {loading ? (
@@ -335,48 +353,52 @@ export default function DoctorAppointmentsPage() {
                                                         <td className="px-4 py-2">{appt.time}</td>
                                                         <td className="px-4 py-2 capitalize">{appt.status}</td>
                                                         <td className="px-4 py-2 text-center">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button size="sm" variant="outline" className="flex items-center gap-2">
-                                                                        <MoreHorizontal className="w-4 h-4" /> Manage
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="w-40 space-y-1">
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => handleApprove(appt.id)}
-                                                                        disabled={["approved", "completed"].includes(statusLower)}
-                                                                    >
-                                                                        <Check className="w-4 h-4 mr-2 text-green-600" /> Approve
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => handleComplete(appt.id)}
-                                                                        disabled={statusLower !== "approved"}
-                                                                    >
-                                                                        <ClipboardCheck className="w-4 h-4 mr-2 text-emerald-600" /> Complete
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => {
-                                                                            setSelectedAppt(appt);
-                                                                            setActionType("move");
-                                                                            setDialogOpen(true);
-                                                                        }}
-                                                                        disabled={statusLower === "completed"}
-                                                                    >
-                                                                        <Move className="w-4 h-4 mr-2 text-blue-600" /> Move
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => {
-                                                                            setSelectedAppt(appt);
-                                                                            setActionType("cancel");
-                                                                            setDialogOpen(true);
-                                                                        }}
-                                                                        className="text-red-600 focus:text-red-700"
-                                                                        disabled={statusLower === "completed" || statusLower === "cancelled"}
-                                                                    >
-                                                                        <XCircle className="w-4 h-4 mr-2 text-red-600" /> Cancel
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
+                                                            {["cancelled", "completed"].includes(statusLower) ? (
+                                                                <span className="text-xs text-muted-foreground">No actions available</span>
+                                                            ) : (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button size="sm" variant="outline" className="flex items-center gap-2">
+                                                                            <MoreHorizontal className="w-4 h-4" /> Manage
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end" className="w-40 space-y-1">
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => handleApprove(appt.id)}
+                                                                            disabled={["approved", "completed", "cancelled"].includes(statusLower)}
+                                                                        >
+                                                                            <Check className="w-4 h-4 mr-2 text-green-600" /> Approve
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => handleComplete(appt.id)}
+                                                                            disabled={statusLower !== "approved" || !appt.hasConsultation}
+                                                                        >
+                                                                            <ClipboardCheck className="w-4 h-4 mr-2 text-emerald-600" /> Complete
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => {
+                                                                                setSelectedAppt(appt);
+                                                                                setActionType("move");
+                                                                                setDialogOpen(true);
+                                                                            }}
+                                                                            disabled={statusLower === "completed" || statusLower === "cancelled"}
+                                                                        >
+                                                                            <Move className="w-4 h-4 mr-2 text-blue-600" /> Move
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => {
+                                                                                setSelectedAppt(appt);
+                                                                                setActionType("cancel");
+                                                                                setDialogOpen(true);
+                                                                            }}
+                                                                            className="text-red-600 focus:text-red-700"
+                                                                            disabled={statusLower === "completed" || statusLower === "cancelled"}
+                                                                        >
+                                                                            <XCircle className="w-4 h-4 mr-2 text-red-600" /> Cancel
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 );

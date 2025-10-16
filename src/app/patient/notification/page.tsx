@@ -6,14 +6,17 @@ import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import {
     Bell,
+    CheckCircle2,
     CalendarCheck,
     CalendarDays,
     Home,
     Info,
     Loader2,
+    ClipboardCheck,
     Mail,
     Menu,
     User,
+    XCircle,
     X,
 } from "lucide-react";
 
@@ -46,7 +49,29 @@ const notificationHighlights = [
 const followUpTips = [
     "Confirm that the new schedule fits your availability and plan to arrive 10 minutes early.",
     "Update personal reminders on your phone or calendar with the revised appointment details.",
+    "Check the Appointments tab whenever a status changes to Approved, Cancelled, or Completed to see what to do next.",
     "Contact the clinic if you need additional adjustments or medical assistance before your visit.",
+];
+
+const statusUpdates = [
+    {
+        icon: CheckCircle2,
+        title: "Approved status",
+        description:
+            "Your visit is confirmed. The doctor is expecting you, so arrive a little early to complete any forms before your scheduled time.",
+    },
+    {
+        icon: ClipboardCheck,
+        title: "Completed status",
+        description:
+            "The appointment has finished. Review any consultation notes or prescriptions under your Appointments tab for next steps.",
+    },
+    {
+        icon: XCircle,
+        title: "Cancelled status",
+        description:
+            "Either you or the clinic cancelled the appointment. Read the cancellation note and book a new schedule if you still need care.",
+    },
 ];
 
 export default function PatientNotificationPage() {
@@ -162,9 +187,9 @@ export default function PatientNotificationPage() {
                     <div className="max-w-4xl mx-auto text-center">
                         <h2 className="text-2xl md:text-3xl font-bold text-green-600">Stay Informed, Stay Prepared</h2>
                         <p className="text-gray-700 mt-3 leading-relaxed">
-                            Hello <span className="font-semibold">{fullName}</span>! Each time your doctor moves an appointment,
-                            we notify you through email and highlight the change here in the portal. Keep an eye on this
-                            page for quick summaries and helpful tips after every update.
+                            Hello <span className="font-semibold">{fullName}</span>! Whenever your doctor approves, cancels,
+                            completes, or moves an appointment, we notify you through email and highlight the change here in the
+                            portal. Keep an eye on this page for quick summaries and helpful tips after every update.
                         </p>
                     </div>
                 </section>
@@ -183,6 +208,28 @@ export default function PatientNotificationPage() {
                                 </CardContent>
                             </Card>
                         ))}
+                    </div>
+                </section>
+
+                <section className="px-6 py-12 bg-white">
+                    <div className="max-w-5xl mx-auto">
+                        <h3 className="text-xl md:text-2xl font-semibold text-green-700 text-center mb-8">
+                            What each appointment status means
+                        </h3>
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {statusUpdates.map(({ icon: Icon, title, description }) => (
+                                <Card key={title} className="shadow-lg rounded-2xl border-green-100">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2 text-green-600">
+                                            <Icon className="w-6 h-6" /> {title}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
                     </div>
                 </section>
 

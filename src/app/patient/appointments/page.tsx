@@ -14,6 +14,7 @@ import {
     Loader2,
     Undo2,
     Ban,
+    Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -425,6 +426,11 @@ export default function PatientAppointmentsPage() {
         }
     }
 
+    const handleClearAppointments = () => {
+        setAppointments([]);
+        toast.info("Appointments cleared from view");
+    };
+
     useEffect(() => {
         loadAppointments();
     }, []);
@@ -626,10 +632,19 @@ export default function PatientAppointmentsPage() {
                 {/* My Appointments */}
                 <section className="px-6 py-10 max-w-5xl mx-auto w-full">
                     <Card className="shadow-lg rounded-2xl">
-                        <CardHeader>
+                        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <CardTitle className="flex items-center gap-2 text-green-600">
                                 <ClipboardList className="w-6 h-6" /> My Appointments
                             </CardTitle>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 self-start"
+                                onClick={handleClearAppointments}
+                                disabled={appointments.length === 0}
+                            >
+                                <Trash2 className="h-4 w-4" /> Clear appointments
+                            </Button>
                         </CardHeader>
                         <CardContent>
                             {loadingAppointments ? (

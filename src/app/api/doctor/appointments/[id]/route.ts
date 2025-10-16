@@ -37,6 +37,100 @@ function formatPatientName(patient: {
     return patient.username;
 }
 
+function getPatientEmail(patient: {
+    username: string;
+    student: { email: string | null } | null;
+    employee: { email: string | null } | null;
+}) {
+    return (
+        patient.student?.email ||
+        patient.employee?.email ||
+        (patient.username.includes("@") ? patient.username : "")
+    );
+}
+
+function buildStatusEmail({
+    status,
+    patientName,
+    clinicName,
+    schedule,
+    cancelReason,
+}: {
+    status: AppointmentStatus;
+    patientName: string;
+    clinicName: string;
+    schedule: string;
+    cancelReason?: string | null;
+}): { subject: string; html: string } | null {
+    const safeName = escapeHtml(patientName);
+    const safeClinic = escapeHtml(clinicName);
+    const safeSchedule = escapeHtml(schedule);
+    const safeReason = cancelReason ? escapeHtml(cancelReason) : null;
+
+    const rows = [
+        { label: "Clinic", value: safeClinic },
+        { label: "Schedule", value: safeSchedule },
+    ];
+
+    let heading = "";
+    let intro = "";
+    let outro = "Thank you,<br/>HNU Clinic";
+    let subject = "";
+
+    switch (status) {
+        case AppointmentStatus.Approved:
+            heading = "Appointment Approved";
+            intro = `Good news, <strong>${safeName}</strong>! Your appointment has been approved.`;
+            subject = "Your appointment has been approved";
+            break;
+        case AppointmentStatus.Cancelled:
+            heading = "Appointment Cancelled";
+            intro = `Hello <strong>${safeName}</strong>, your appointment has been cancelled by the clinic.`;
+            subject = "Your appointment has been cancelled";
+            if (safeReason) {
+                rows.push({ label: "Cancellation Reason", value: safeReason });
+            }
+            outro =
+                "If you still need assistance, please book another schedule through the patient portal.";
+            break;
+        case AppointmentStatus.Completed:
+            heading = "Appointment Completed";
+            intro = `Hello <strong>${safeName}</strong>, your appointment has been marked as completed.`;
+            subject = "Your appointment has been completed";
+            outro =
+                "We hope you had a good visit. You can review your consultation notes and next steps inside the patient portal.";
+            break;
+        default:
+            return null;
+    }
+
+    const rowHtml = rows
+        .map(
+            (row) => `
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">${row.label}</td>
+                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${row.value}</td>
+                </tr>
+            `
+        )
+        .join("");
+
+    const html = `
+        <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0; color: #065f46;">
+            <h2 style="margin-top: 0; color: #047857;">${heading}</h2>
+            <p>${intro}</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                <tbody>
+                    ${rowHtml}
+                </tbody>
+            </table>
+            <p style="margin-bottom: 0;">${outro}</p>
+        </div>
+    `;
+
+    return { subject, html };
+}
+
 function shapeResponse(appointment: {
     appointment_id: string;
     appointment_timestart: Date;
@@ -47,6 +141,7 @@ function shapeResponse(appointment: {
         student: { fname: string | null; lname: string | null } | null;
         employee: { fname: string | null; lname: string | null } | null;
     };
+    consultation: { consultation_id: string } | null;
 }) {
     const patientName = formatPatientName(appointment.patient);
     const time = new Date(appointment.appointment_timestart).toLocaleTimeString("en-US", {
@@ -63,6 +158,7 @@ function shapeResponse(appointment: {
         date: formatManilaISODate(appointment.appointment_timestart),
         time,
         status: appointment.status,
+        hasConsultation: Boolean(appointment.consultation),
     };
 }
 
@@ -216,16 +312,12 @@ export async function PATCH(
                         },
                     },
                     clinic: { select: { clinic_name: true } },
+                    consultation: { select: { consultation_id: true } },
                 },
             });
 
             const patientName = formatPatientName(updated.patient);
-            const patientEmail =
-                appointment.patient.student?.email ||
-                appointment.patient.employee?.email ||
-                (appointment.patient.username.includes("@")
-                    ? appointment.patient.username
-                    : "");
+            const patientEmail = getPatientEmail(appointment.patient);
 
             if (patientEmail) {
                 const oldSchedule = formatManilaDateTime(appointment.appointment_timestart);
@@ -277,6 +369,15 @@ export async function PATCH(
             );
         }
 
+        let trimmedCancelReason: string | null = null;
+        if (action === "cancel") {
+            const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+            if (!reason) {
+                return NextResponse.json({ error: "Cancellation reason is required" }, { status: 400 });
+            }
+            trimmedCancelReason = reason;
+        }
+
         // ✅ Map frontend actions to Prisma enum
         let newStatus: AppointmentStatus;
         switch (action) {
@@ -296,18 +397,45 @@ export async function PATCH(
         // ✅ Update appointment and include relations
         const updated = await prisma.appointment.update({
             where: { appointment_id: id },
-            data: { status: newStatus },
+            data: {
+                status: newStatus,
+                ...(trimmedCancelReason ? { remarks: trimmedCancelReason } : {}),
+            },
             include: {
                 patient: {
                     select: {
                         username: true,
-                        student: { select: { fname: true, lname: true } },
-                        employee: { select: { fname: true, lname: true } },
+                        student: { select: { fname: true, lname: true, email: true } },
+                        employee: { select: { fname: true, lname: true, email: true } },
                     },
                 },
                 clinic: { select: { clinic_name: true } },
+                consultation: { select: { consultation_id: true } },
             },
         });
+
+        const patientEmail = getPatientEmail(updated.patient);
+        if (patientEmail) {
+            const emailPayload = buildStatusEmail({
+                status: newStatus,
+                patientName: formatPatientName(updated.patient),
+                clinicName: updated.clinic.clinic_name,
+                schedule: formatManilaDateTime(updated.appointment_timestart),
+                cancelReason: trimmedCancelReason,
+            });
+
+            if (emailPayload) {
+                try {
+                    await sendEmail({
+                        to: patientEmail,
+                        subject: emailPayload.subject,
+                        html: emailPayload.html,
+                    });
+                } catch (emailErr) {
+                    console.error("[PATCH /api/doctor/appointments/:id] status email error", emailErr);
+                }
+            }
+        }
 
         return NextResponse.json(shapeResponse(updated));
     } catch (error) {
