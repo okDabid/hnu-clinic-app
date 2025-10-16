@@ -26,6 +26,24 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatTimeRange } from "@/lib/time";
 import Image from "next/image";
@@ -33,12 +51,28 @@ import Image from "next/image";
 type Clinic = { clinic_id: string; clinic_name: string };
 type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
 type Slot = { start: string; end: string };
+type RawAppointment = {
+    id: string;
+    clinic: string;
+    clinic_id: string;
+    doctor: string;
+    doctor_id: string;
+    date: string;
+    time: string;
+    start_iso: string;
+    end_iso: string;
+    status: string;
+};
 type Appointment = {
     id: string;
     clinic: string;
+    clinicId: string;
     doctor: string;
+    doctorId: string;
     date: string;
     time: string;
+    startIso: string;
+    endIso: string;
     status: string;
 };
 
@@ -64,6 +98,23 @@ export default function PatientAppointmentsPage() {
     // My appointments
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loadingAppointments, setLoadingAppointments] = useState(true);
+
+    const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleTimeStart, setRescheduleTimeStart] = useState("");
+    const [rescheduleSlots, setRescheduleSlots] = useState<Slot[]>([]);
+    const [loadingRescheduleSlots, setLoadingRescheduleSlots] = useState(false);
+    const [rescheduling, setRescheduling] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
+    const [cancelling, setCancelling] = useState(false);
+
+    const bookingMinDate = useMemo(() => {
+        const today = new Date();
+        today.setDate(today.getDate() + 3);
+        return today.toISOString().slice(0, 10);
+    }, []);
 
     async function handleLogout() {
         try {
@@ -133,8 +184,50 @@ export default function PatientAppointmentsPage() {
         })();
     }, [clinicId, doctorId, date]);
 
+    useEffect(() => {
+        setTimeStart("");
+    }, [date, doctorId]);
+
+    useEffect(() => {
+        if (!rescheduleDialogOpen || !selectedAppointment || !rescheduleDate) {
+            setRescheduleSlots([]);
+            return;
+        }
+
+        (async () => {
+            try {
+                setLoadingRescheduleSlots(true);
+                const params = new URLSearchParams({
+                    clinic_id: selectedAppointment.clinicId,
+                    doctor_user_id: selectedAppointment.doctorId,
+                    date: rescheduleDate,
+                });
+                const res = await fetch(`/api/meta/doctor-availability?${params}`);
+                const data = await res.json();
+                setRescheduleSlots(data?.slots || []);
+            } catch {
+                toast.error("Failed to load available slots");
+            } finally {
+                setLoadingRescheduleSlots(false);
+            }
+        })();
+    }, [rescheduleDialogOpen, selectedAppointment, rescheduleDate]);
+
+    useEffect(() => {
+        setRescheduleTimeStart("");
+    }, [rescheduleDate]);
+
     const selectedSlot = useMemo(() => slots.find(s => s.start === timeStart), [slots, timeStart]);
     const selectedDoctor = useMemo(() => doctors.find(d => d.user_id === doctorId) || null, [doctorId, doctors]);
+
+    const rescheduleSelectedSlot = useMemo(
+        () => rescheduleSlots.find((s) => s.start === rescheduleTimeStart) || null,
+        [rescheduleSlots, rescheduleTimeStart]
+    );
+
+    function isoToDateInput(iso: string): string {
+        return new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+    }
 
     // ✅ Dynamic service options: each label has a unique value
     const availableServices = useMemo(() => {
@@ -191,7 +284,8 @@ export default function PatientAppointmentsPage() {
                 }),
             });
 
-            if (!res.ok) throw new Error("Failed to create appointment");
+            const responseData = await res.json();
+            if (!res.ok) throw new Error(responseData.message || "Failed to create appointment");
 
             toast.success("Appointment request submitted! Status: Pending");
             loadAppointments();
@@ -202,10 +296,80 @@ export default function PatientAppointmentsPage() {
             setDate("");
             setTimeStart("");
             setSlots([]);
-        } catch {
-            toast.error("Unable to create appointment");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Unable to create appointment";
+            toast.error(message);
         } finally {
             setSubmitting(false);
+        }
+    }
+
+    function openRescheduleDialog(appointment: Appointment) {
+        setSelectedAppointment(appointment);
+        const defaultDate = isoToDateInput(appointment.startIso);
+        const normalized = defaultDate < bookingMinDate ? bookingMinDate : defaultDate;
+        setRescheduleDate(normalized);
+        setRescheduleTimeStart("");
+        setRescheduleSlots([]);
+        setRescheduleDialogOpen(true);
+    }
+
+    async function handleReschedule(e: React.FormEvent) {
+        e.preventDefault();
+        if (!selectedAppointment || !rescheduleSelectedSlot || !rescheduleDate) {
+            toast.error("Select a new date and time");
+            return;
+        }
+
+        try {
+            setRescheduling(true);
+            const res = await fetch(`/api/patient/appointments/${selectedAppointment.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    date: rescheduleDate,
+                    time_start: rescheduleSelectedSlot.start,
+                    time_end: rescheduleSelectedSlot.end,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to reschedule appointment");
+
+            toast.success("Appointment rescheduled!");
+            setRescheduleDialogOpen(false);
+            setSelectedAppointment(null);
+            setRescheduleDate("");
+            setRescheduleTimeStart("");
+            setRescheduleSlots([]);
+            loadAppointments();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to reschedule";
+            toast.error(message);
+        } finally {
+            setRescheduling(false);
+        }
+    }
+
+    async function handleCancel() {
+        if (!appointmentToCancel) return;
+        try {
+            setCancelling(true);
+            const res = await fetch(`/api/patient/appointments/${appointmentToCancel.id}`, {
+                method: "DELETE",
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to cancel appointment");
+
+            toast.success("Appointment cancelled");
+            setCancelDialogOpen(false);
+            setAppointmentToCancel(null);
+            loadAppointments();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to cancel";
+            toast.error(message);
+        } finally {
+            setCancelling(false);
         }
     }
 
@@ -215,8 +379,20 @@ export default function PatientAppointmentsPage() {
             setLoadingAppointments(true);
             const res = await fetch("/api/patient/appointments");
             if (!res.ok) throw new Error("Failed to load appointments");
-            const data = await res.json();
-            setAppointments(data);
+            const data = (await res.json()) as RawAppointment[];
+            const normalized = data.map((item) => ({
+                id: item.id,
+                clinic: item.clinic,
+                clinicId: item.clinic_id,
+                doctor: item.doctor,
+                doctorId: item.doctor_id,
+                date: item.date,
+                time: item.time,
+                startIso: item.start_iso,
+                endIso: item.end_iso,
+                status: item.status,
+            })) as Appointment[];
+            setAppointments(normalized);
         } catch {
             toast.error("Could not load your appointments");
         } finally {
@@ -380,7 +556,7 @@ export default function PatientAppointmentsPage() {
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
-                                        min={new Date().toISOString().slice(0, 10)}
+                                        min={bookingMinDate}
                                     />
                                 </div>
 
@@ -447,18 +623,65 @@ export default function PatientAppointmentsPage() {
                                                 <th className="px-4 py-2 text-left">Date</th>
                                                 <th className="px-4 py-2 text-left">Time</th>
                                                 <th className="px-4 py-2 text-left">Status</th>
+                                                <th className="px-4 py-2 text-right">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {appointments.map((a) => (
-                                                <tr key={a.id} className="border-t hover:bg-green-50 transition">
-                                                    <td className="px-4 py-2">{a.clinic}</td>
-                                                    <td className="px-4 py-2">{a.doctor}</td>
-                                                    <td className="px-4 py-2">{a.date}</td>
-                                                    <td className="px-4 py-2">{a.time}</td>
-                                                    <td className="px-4 py-2 capitalize">{a.status}</td>
-                                                </tr>
-                                            ))}
+                                            {appointments.map((a) => {
+                                                const canManage = ["Pending", "Approved", "Moved"].includes(a.status);
+                                                const isActiveReschedule =
+                                                    rescheduleDialogOpen && selectedAppointment?.id === a.id && rescheduling;
+                                                const isActiveCancel =
+                                                    cancelDialogOpen && appointmentToCancel?.id === a.id && cancelling;
+
+                                                return (
+                                                    <tr key={a.id} className="border-t hover:bg-green-50 transition">
+                                                        <td className="px-4 py-2">{a.clinic}</td>
+                                                        <td className="px-4 py-2">{a.doctor}</td>
+                                                        <td className="px-4 py-2">{a.date}</td>
+                                                        <td className="px-4 py-2">{a.time}</td>
+                                                        <td className="px-4 py-2 capitalize">{a.status}</td>
+                                                        <td className="px-4 py-2">
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    disabled={!canManage || isActiveReschedule}
+                                                                    onClick={() => openRescheduleDialog(a)}
+                                                                >
+                                                                    {isActiveReschedule ? (
+                                                                        <>
+                                                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                                            Rescheduling...
+                                                                        </>
+                                                                    ) : (
+                                                                        "Reschedule"
+                                                                    )}
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="text-red-600 hover:text-red-700"
+                                                                    disabled={!canManage || isActiveCancel}
+                                                                    onClick={() => {
+                                                                        setAppointmentToCancel(a);
+                                                                        setCancelDialogOpen(true);
+                                                                    }}
+                                                                >
+                                                                    {isActiveCancel ? (
+                                                                        <>
+                                                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                                            Cancelling...
+                                                                        </>
+                                                                    ) : (
+                                                                        "Cancel"
+                                                                    )}
+                                                                </Button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -466,6 +689,105 @@ export default function PatientAppointmentsPage() {
                         </CardContent>
                     </Card>
                 </section>
+
+                <Dialog
+                    open={rescheduleDialogOpen}
+                    onOpenChange={(open) => {
+                        setRescheduleDialogOpen(open);
+                        if (!open) {
+                            setSelectedAppointment(null);
+                            setRescheduleDate("");
+                            setRescheduleTimeStart("");
+                            setRescheduleSlots([]);
+                        }
+                    }}
+                >
+                    <DialogContent className="rounded-xl">
+                        <DialogHeader>
+                            <DialogTitle>Reschedule appointment</DialogTitle>
+                            <DialogDescription>
+                                {selectedAppointment
+                                    ? `Current schedule: ${selectedAppointment.date} at ${selectedAppointment.time}`
+                                    : "Pick a new schedule for your appointment."}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <form onSubmit={handleReschedule} className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label>Date</Label>
+                                <Input
+                                    type="date"
+                                    min={bookingMinDate}
+                                    value={rescheduleDate}
+                                    onChange={(e) => setRescheduleDate(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label>Time</Label>
+                                <Select
+                                    value={rescheduleTimeStart}
+                                    onValueChange={setRescheduleTimeStart}
+                                    disabled={loadingRescheduleSlots || rescheduleSlots.length === 0}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue
+                                            placeholder={
+                                                loadingRescheduleSlots
+                                                    ? "Loading slots..."
+                                                    : rescheduleSlots.length
+                                                        ? "Select a time"
+                                                        : "No slots available"
+                                            }
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {rescheduleSlots.map((slot) => (
+                                            <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
+                                                {formatTimeRange(slot.start, slot.end)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <DialogFooter>
+                                <Button type="submit" disabled={rescheduling || !rescheduleSelectedSlot} className="bg-green-600 hover:bg-green-700">
+                                    {rescheduling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                    Reschedule
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+
+                <AlertDialog
+                    open={cancelDialogOpen}
+                    onOpenChange={(open) => {
+                        setCancelDialogOpen(open);
+                        if (!open) {
+                            setAppointmentToCancel(null);
+                        }
+                    }}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Cancel appointment</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                {appointmentToCancel
+                                    ? `Cancel your appointment on ${appointmentToCancel.date} at ${appointmentToCancel.time}?`
+                                    : "Cancel your appointment?"}
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={cancelling}>Keep appointment</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleCancel} disabled={cancelling} className="bg-red-600 hover:bg-red-700">
+                                {cancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Cancel
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
 
                 <footer className="bg-white py-6 text-center text-gray-600 mt-auto">
                     © {new Date().getFullYear()} HNU Clinic – Patient Panel

@@ -7,6 +7,7 @@ import {
     buildManilaDate,
     startOfManilaDay,
     endOfManilaDay,
+    manilaNow,
 } from "@/lib/time";
 import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
 
@@ -44,7 +45,9 @@ export async function GET() {
             return {
                 id: a.appointment_id,
                 clinic: a.clinic?.clinic_name ?? "-",
+                clinic_id: a.clinic_id,
                 doctor: doctorName,
+                doctor_id: a.doctor_user_id,
                 date: new Date(a.appointment_timestart).toLocaleDateString("en-CA", {
                     timeZone: "Asia/Manila",
                 }),
@@ -54,6 +57,8 @@ export async function GET() {
                     hour12: true,
                     timeZone: "Asia/Manila",
                 }),
+                start_iso: a.appointment_timestart.toISOString(),
+                end_iso: a.appointment_timeend.toISOString(),
                 status: a.status,
             };
         });
@@ -99,6 +104,16 @@ export async function POST(req: Request) {
         if (!(appointment_timestart < appointment_timeend))
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
 
+        const now = manilaNow();
+        const diffMs = appointment_timestart.getTime() - now.getTime();
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        if (diffDays < 3) {
+            return NextResponse.json(
+                { message: "Appointments must be booked at least 3 days in advance" },
+                { status: 400 }
+            );
+        }
+
         // ✅ Check if within availability
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
@@ -125,7 +140,13 @@ export async function POST(req: Request) {
             where: {
                 doctor_user_id,
                 appointment_timestart: { gte: dayStart, lte: dayEnd },
-                status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved] },
+                status: {
+                    in: [
+                        AppointmentStatus.Pending,
+                        AppointmentStatus.Approved,
+                        AppointmentStatus.Moved,
+                    ],
+                },
             },
         });
 

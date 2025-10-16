@@ -77,10 +77,10 @@ export default function DoctorConsultationPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [formData, setFormData] = useState({
         clinic_id: "",
-        available_date: "",
         available_timestart: "",
         available_timeend: "",
     });
+    const [editingDate, setEditingDate] = useState<string>("");
     const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -126,7 +126,6 @@ export default function DoctorConsultationPage() {
         e.preventDefault();
         if (
             !formData.clinic_id ||
-            !formData.available_date ||
             !formData.available_timestart ||
             !formData.available_timeend
         ) {
@@ -135,7 +134,12 @@ export default function DoctorConsultationPage() {
         }
 
         const body = editingSlot
-            ? { availability_id: editingSlot.availability_id, ...formData }
+            ? {
+                  availability_id: editingSlot.availability_id,
+                  clinic_id: formData.clinic_id,
+                  available_timestart: formData.available_timestart,
+                  available_timeend: formData.available_timeend,
+              }
             : formData;
         const method = editingSlot ? "PUT" : "POST";
 
@@ -154,10 +158,10 @@ export default function DoctorConsultationPage() {
                 setDialogOpen(false);
                 setFormData({
                     clinic_id: "",
-                    available_date: "",
                     available_timestart: "",
                     available_timeend: "",
                 });
+                setEditingDate("");
                 setEditingSlot(null);
                 loadSlots();
             }
@@ -291,10 +295,10 @@ export default function DoctorConsultationPage() {
                                             setEditingSlot(null);
                                             setFormData({
                                                 clinic_id: "",
-                                                available_date: "",
                                                 available_timestart: "",
                                                 available_timeend: "",
                                             });
+                                            setEditingDate("");
                                         }}
                                     >
                                         <PlusCircle className="h-4 w-4" /> Add Slot
@@ -327,15 +331,18 @@ export default function DoctorConsultationPage() {
                                             </select>
                                         </div>
 
-                                        <div>
-                                            <Label>Date</Label>
-                                            <Input
-                                                type="date"
-                                                value={formData.available_date}
-                                                onChange={(e) => setFormData({ ...formData, available_date: e.target.value })}
-                                                required
-                                            />
-                                        </div>
+                                        {!editingSlot ? (
+                                            <p className="text-sm text-gray-500 bg-green-50 border border-green-100 rounded-md p-3">
+                                                Enter your start and end time once and we will automatically plot the duty hours
+                                                from Monday to Friday for physicians, or Monday to Saturday for dentists, based
+                                                on the current week.
+                                            </p>
+                                        ) : (
+                                            <div>
+                                                <Label>Date</Label>
+                                                <Input type="date" value={editingDate} disabled readOnly />
+                                            </div>
+                                        )}
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
@@ -343,7 +350,12 @@ export default function DoctorConsultationPage() {
                                                 <Input
                                                     type="time"
                                                     value={formData.available_timestart}
-                                                    onChange={(e) => setFormData({ ...formData, available_timestart: e.target.value })}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            available_timestart: e.target.value,
+                                                        })
+                                                    }
                                                     required
                                                 />
                                             </div>
@@ -352,7 +364,12 @@ export default function DoctorConsultationPage() {
                                                 <Input
                                                     type="time"
                                                     value={formData.available_timeend}
-                                                    onChange={(e) => setFormData({ ...formData, available_timeend: e.target.value })}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            available_timeend: e.target.value,
+                                                        })
+                                                    }
                                                     required
                                                 />
                                             </div>
@@ -405,10 +422,10 @@ export default function DoctorConsultationPage() {
                                                                 setEditingSlot(slot);
                                                                 setFormData({
                                                                     clinic_id: slot.clinic.clinic_id,
-                                                                    available_date: toManilaDateString(slot.available_date),
                                                                     available_timestart: toManilaTimeString(slot.available_timestart),
                                                                     available_timeend: toManilaTimeString(slot.available_timeend),
                                                                 });
+                                                                setEditingDate(toManilaDateString(slot.available_date));
                                                                 setDialogOpen(true);
                                                             }}
                                                             className="gap-2 text-green-700 border-green-200 hover:bg-green-50"
