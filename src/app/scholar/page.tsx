@@ -52,8 +52,8 @@ const supportChecklist = [
 
 const documentationTips = [
     {
-        label: "Update appointment notes",
-        description: "Document walk-in adjustments for visibility across the care team.",
+        label: "Schedule walk-ins",
+        description: "Document walk-in for visibility across the clinic.",
         href: "/scholar/appointments",
     },
     {
@@ -95,21 +95,6 @@ export default function ScholarDashboardPage() {
                             Keep the clinic desk synchronized—double-check booking requests, guide students through intake, and
                             flag any priority concerns early so the team can respond quickly.
                         </p>
-                    </div>
-                    <div className="flex w-full flex-col gap-3 rounded-2xl border border-green-100 bg-white/80 p-4 text-sm text-muted-foreground shadow-sm md:w-80">
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-600/10 text-green-700">
-                                <CalendarClock className="h-4 w-4" />
-                            </span>
-                            <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Today&apos;s reminder</p>
-                                <p className="font-semibold text-green-700">Validate afternoon slots before lunch break.</p>
-                            </div>
-                        </div>
-                        <Separator className="border-green-100" />
-                        <Button asChild variant="outline" className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70">
-                            <Link href="/scholar/patients">Open intake queue</Link>
-                        </Button>
                     </div>
                 </div>
             </section>

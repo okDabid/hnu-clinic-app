@@ -64,21 +64,6 @@ export default function PatientDashboardPage() {
                             Stay on top of your health journey. From this dashboard you can update your profile, manage bookings, and monitor clinic communications tailored for you.
                         </p>
                     </div>
-                    <div className="flex w-full flex-col gap-3 rounded-2xl border border-green-100 bg-white/80 p-4 text-sm text-muted-foreground shadow-sm md:w-80">
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-600/10 text-green-700">
-                                <CalendarDays className="h-4 w-4" />
-                            </span>
-                            <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Need to visit?</p>
-                                <p className="font-semibold text-green-700">Reserve your slot at least 3 days ahead.</p>
-                            </div>
-                        </div>
-                        <Separator className="border-green-100" />
-                        <Button asChild variant="outline" className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70">
-                            <Link href="/patient/appointments">Book an appointment</Link>
-                        </Button>
-                    </div>
                 </div>
             </section>
 

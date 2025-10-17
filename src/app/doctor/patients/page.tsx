@@ -534,10 +534,9 @@ export default function DoctorPatientsPage() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <Badge
-                                                                className={`rounded-full px-2 py-1 text-xs ${
-                                                                    PATIENT_STATUS_CLASSES[statusKey] ??
+                                                                className={`rounded-full px-2 py-1 text-xs ${PATIENT_STATUS_CLASSES[statusKey] ??
                                                                     "border-slate-200 bg-slate-100 text-slate-700"
-                                                                }`}
+                                                                    }`}
                                                             >
                                                                 {record.status}
                                                             </Badge>
@@ -564,248 +563,248 @@ export default function DoctorPatientsPage() {
                                     </Table>
                                 </div>
                             )}
-                </CardContent>
-            </Card>
-        </section>
+                        </CardContent>
+                    </Card>
+                </section>
 
-            <Dialog
-                open={detailOpen}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        closeDetails();
-                    }
-                }}
-            >
-                <DialogContent className="rounded-3xl sm:max-w-3xl">
-                    {selectedRecord ? (
-                        <div className="space-y-6">
-                            <DialogHeader>
-                                <DialogTitle className="text-xl text-green-700">Patient snapshot</DialogTitle>
-                                <DialogDescription className="text-sm text-muted-foreground">
-                                    Contact details and clinical notes shared with the care team.
-                                </DialogDescription>
-                            </DialogHeader>
+                <Dialog
+                    open={detailOpen}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            closeDetails();
+                        }
+                    }}
+                >
+                    <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
+                        {selectedRecord ? (
+                            <div className="space-y-6">
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl text-green-700">Patient snapshot</DialogTitle>
+                                    <DialogDescription className="text-sm text-muted-foreground">
+                                        Contact details and clinical notes shared with the care team.
+                                    </DialogDescription>
+                                </DialogHeader>
 
-                            <div className="rounded-2xl bg-green-50/70 p-4 text-green-700">
-                                <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
-                                <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-                                    <div>
-                                        <p className="text-xs uppercase tracking-wide text-green-500">Patient ID</p>
-                                        <p className="font-medium text-green-700">{selectedRecord.patientId}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs uppercase tracking-wide text-green-500">Type</p>
-                                        <p className="font-medium text-green-700">{selectedRecord.patientType}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs uppercase tracking-wide text-green-500">Date of birth</p>
-                                        <p className="font-medium text-green-700">{formatDateOnly(selectedRecord.date_of_birth)}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs uppercase tracking-wide text-green-500">Gender</p>
-                                        <p className="font-medium text-green-700">{selectedRecord.gender ?? "—"}</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <Tabs
-                                value={activeTab}
-                                onValueChange={(value) => setActiveTab(value as "details" | "update" | "notes")}
-                                className="space-y-4"
-                            >
-                                <div className="flex justify-center">
-                                    <TabsList className="flex flex-wrap gap-2">
-                                        <TabsTrigger value="details">Details</TabsTrigger>
-                                        <TabsTrigger value="update">Update Info</TabsTrigger>
-                                        <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
-                                    </TabsList>
-                                </div>
-
-                                <TabsContent value="details" className="space-y-4">
-                                    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                                        <p>
-                                            <strong>Contact:</strong> {selectedRecord.contactno || "—"}
-                                        </p>
-                                        <p>
-                                            <strong>Address:</strong> {selectedRecord.address || "—"}
-                                        </p>
-                                        <p>
-                                            <strong>Blood Type:</strong> {formatBloodType(selectedRecord.bloodtype)}
-                                        </p>
-                                        <p>
-                                            <strong>Allergies:</strong> {selectedRecord.allergies || "—"}
-                                        </p>
-                                        <p>
-                                            <strong>Medical Conditions:</strong> {selectedRecord.medical_cond || "—"}
-                                        </p>
-                                        <p>
-                                            <strong>Emergency:</strong> {selectedRecord.emergency?.name || "—"} (
-                                            {selectedRecord.emergency?.relation || "—"}) – {selectedRecord.emergency?.num || "—"}
-                                        </p>
-                                        {selectedRecord.patientType === "Student" ? (
-                                            <>
-                                                <p>
-                                                    <strong>Department:</strong> {formatDeptTypes(selectedRecord.department)}
-                                                </p>
-                                                <p>
-                                                    <strong>Program:</strong> {formatDeptTypes(selectedRecord.program)}
-                                                </p>
-                                                <p>
-                                                    <strong>Year Level:</strong> {formatYearTypes(selectedRecord.year_level)}
-                                                </p>
-                                            </>
-                                        ) : null}
-                                    </div>
-
-                                    <Separator />
-
-                                    <div className="space-y-3 text-sm">
-                                        <h4 className="flex items-center gap-2 font-semibold text-green-600">
-                                            <Stethoscope className="h-4 w-4" /> Latest appointment
-                                        </h4>
-                                        {selectedRecord.latestAppointment?.timestart ? (
-                                            <div className="grid gap-2 sm:grid-cols-2">
-                                                <p>
-                                                    <strong>Schedule:</strong> {formatAppointmentWindow(selectedRecord.latestAppointment)}
-                                                </p>
-                                                <p>
-                                                    <strong>Doctor:</strong> {formatStaffName(selectedRecord.latestAppointment.doctor)}
-                                                </p>
-                                                <p>
-                                                    <strong>Nurse:</strong> {formatStaffName(selectedRecord.latestAppointment.consultation?.nurse)}
-                                                </p>
-                                                <p>
-                                                    <strong>Appointment ID:</strong> {selectedRecord.latestAppointment.id}
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <p className="text-muted-foreground">No recent appointment on file.</p>
-                                        )}
-
-                                        {selectedRecord.latestAppointment?.consultation ? (
-                                            <div className="space-y-1 rounded-md border bg-muted/40 p-3">
-                                                <p className="text-sm font-semibold text-green-600">Consultation Notes</p>
-                                                <p>
-                                                    <strong>Reason:</strong> {selectedRecord.latestAppointment.consultation.reason_of_visit || "—"}
-                                                </p>
-                                                <p>
-                                                    <strong>Findings:</strong> {selectedRecord.latestAppointment.consultation.findings || "—"}
-                                                </p>
-                                                <p>
-                                                    <strong>Diagnosis:</strong> {selectedRecord.latestAppointment.consultation.diagnosis || "—"}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    Updated by {formatStaffName(selectedRecord.latestAppointment.consultation.doctor)} on
-                                                    {" "}
-                                                    {formatManilaDateTime(selectedRecord.latestAppointment.consultation.updatedAt) || "—"}
-                                                </p>
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                </TabsContent>
-
-                                <TabsContent value="update" className="space-y-4">
-                                    <form onSubmit={handleUpdateInfo} className="space-y-3">
+                                <div className="rounded-2xl bg-green-50/70 p-4 text-green-700">
+                                    <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
+                                    <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                                         <div>
-                                            <Label className="mb-1 block font-medium" htmlFor="medical_cond">
-                                                Medical Conditions
-                                            </Label>
-                                            <Input
-                                                id="medical_cond"
-                                                name="medical_cond"
-                                                defaultValue={selectedRecord.medical_cond || ""}
-                                            />
+                                            <p className="text-xs uppercase tracking-wide text-green-500">Patient ID</p>
+                                            <p className="font-medium text-green-700">{selectedRecord.patientId}</p>
                                         </div>
                                         <div>
-                                            <Label className="mb-1 block font-medium" htmlFor="allergies">
-                                                Allergies
-                                            </Label>
-                                            <Input
-                                                id="allergies"
-                                                name="allergies"
-                                                defaultValue={selectedRecord.allergies || ""}
-                                                placeholder="e.g. Penicillin, Peanuts"
-                                            />
+                                            <p className="text-xs uppercase tracking-wide text-green-500">Type</p>
+                                            <p className="font-medium text-green-700">{selectedRecord.patientType}</p>
                                         </div>
-                                        <Button
-                                            type="submit"
-                                            disabled={updatingPatientId === selectedRecord.id}
-                                            className="bg-green-600 text-white hover:bg-green-700"
-                                        >
-                                            {updatingPatientId === selectedRecord.id ? (
-                                                <>
-                                                    <Loader2 className="h-4 w-4 animate-spin" /> Saving...
-                                                </>
-                                            ) : (
-                                                "Save info"
-                                            )}
-                                        </Button>
-                                    </form>
-                                </TabsContent>
+                                        <div>
+                                            <p className="text-xs uppercase tracking-wide text-green-500">Date of birth</p>
+                                            <p className="font-medium text-green-700">{formatDateOnly(selectedRecord.date_of_birth)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs uppercase tracking-wide text-green-500">Gender</p>
+                                            <p className="font-medium text-green-700">{selectedRecord.gender ?? "—"}</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <TabsContent value="notes" className="space-y-4">
-                                    <form onSubmit={handleSaveNotes} className="space-y-3">
-                                        {!selectedRecord.latestAppointment?.id ? (
-                                            <p className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-700">
-                                                This patient has no active appointment. Approve or schedule one to record consultation notes.
+                                <Tabs
+                                    value={activeTab}
+                                    onValueChange={(value) => setActiveTab(value as "details" | "update" | "notes")}
+                                    className="space-y-4"
+                                >
+                                    <div className="flex justify-center">
+                                        <TabsList className="flex flex-wrap gap-2">
+                                            <TabsTrigger value="details">Details</TabsTrigger>
+                                            <TabsTrigger value="update">Update Info</TabsTrigger>
+                                            <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
+                                        </TabsList>
+                                    </div>
+
+                                    <TabsContent value="details" className="space-y-4">
+                                        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                                            <p>
+                                                <strong>Contact:</strong> {selectedRecord.contactno || "—"}
                                             </p>
-                                        ) : null}
-                                        <div>
-                                            <Label className="mb-1 block font-medium" htmlFor="reason_of_visit">
-                                                Reason of Visit
-                                            </Label>
-                                            <Input
-                                                id="reason_of_visit"
-                                                name="reason_of_visit"
-                                                defaultValue={selectedRecord.latestAppointment?.consultation?.reason_of_visit || ""}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="mb-1 block font-medium" htmlFor="findings">
-                                                Findings
-                                            </Label>
-                                            <Input
-                                                id="findings"
-                                                name="findings"
-                                                defaultValue={selectedRecord.latestAppointment?.consultation?.findings || ""}
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="mb-1 block font-medium" htmlFor="diagnosis">
-                                                Diagnosis
-                                            </Label>
-                                            <Input
-                                                id="diagnosis"
-                                                name="diagnosis"
-                                                defaultValue={selectedRecord.latestAppointment?.consultation?.diagnosis || ""}
-                                            />
-                                        </div>
-                                        <Button
-                                            type="submit"
-                                            disabled={
-                                                savingNotesPatientId === selectedRecord.id ||
-                                                !selectedRecord.latestAppointment?.id
-                                            }
-                                            className="bg-green-600 text-white hover:bg-green-700"
-                                        >
-                                            {savingNotesPatientId === selectedRecord.id ? (
+                                            <p>
+                                                <strong>Address:</strong> {selectedRecord.address || "—"}
+                                            </p>
+                                            <p>
+                                                <strong>Blood Type:</strong> {formatBloodType(selectedRecord.bloodtype)}
+                                            </p>
+                                            <p>
+                                                <strong>Allergies:</strong> {selectedRecord.allergies || "—"}
+                                            </p>
+                                            <p>
+                                                <strong>Medical Conditions:</strong> {selectedRecord.medical_cond || "—"}
+                                            </p>
+                                            <p>
+                                                <strong>Emergency:</strong> {selectedRecord.emergency?.name || "—"} (
+                                                {selectedRecord.emergency?.relation || "—"}) – {selectedRecord.emergency?.num || "—"}
+                                            </p>
+                                            {selectedRecord.patientType === "Student" ? (
                                                 <>
-                                                    <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                                                    <p>
+                                                        <strong>Department:</strong> {formatDeptTypes(selectedRecord.department)}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Program:</strong> {formatDeptTypes(selectedRecord.program)}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Year Level:</strong> {formatYearTypes(selectedRecord.year_level)}
+                                                    </p>
                                                 </>
-                                            ) : !selectedRecord.latestAppointment?.id ? (
-                                                "No appointment"
+                                            ) : null}
+                                        </div>
+
+                                        <Separator />
+
+                                        <div className="space-y-3 text-sm">
+                                            <h4 className="flex items-center gap-2 font-semibold text-green-600">
+                                                <Stethoscope className="h-4 w-4" /> Latest appointment
+                                            </h4>
+                                            {selectedRecord.latestAppointment?.timestart ? (
+                                                <div className="grid gap-2 sm:grid-cols-2">
+                                                    <p>
+                                                        <strong>Schedule:</strong> {formatAppointmentWindow(selectedRecord.latestAppointment)}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Doctor:</strong> {formatStaffName(selectedRecord.latestAppointment.doctor)}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Nurse:</strong> {formatStaffName(selectedRecord.latestAppointment.consultation?.nurse)}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Appointment ID:</strong> {selectedRecord.latestAppointment.id}
+                                                    </p>
+                                                </div>
                                             ) : (
-                                                "Save notes"
+                                                <p className="text-muted-foreground">No recent appointment on file.</p>
                                             )}
-                                        </Button>
-                                    </form>
-                                </TabsContent>
-                            </Tabs>
-                        </div>
-                    ) : null}
-                </DialogContent>
-            </Dialog>
-        </div>
+
+                                            {selectedRecord.latestAppointment?.consultation ? (
+                                                <div className="space-y-1 rounded-md border bg-muted/40 p-3">
+                                                    <p className="text-sm font-semibold text-green-600">Consultation Notes</p>
+                                                    <p>
+                                                        <strong>Reason:</strong> {selectedRecord.latestAppointment.consultation.reason_of_visit || "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Findings:</strong> {selectedRecord.latestAppointment.consultation.findings || "—"}
+                                                    </p>
+                                                    <p>
+                                                        <strong>Diagnosis:</strong> {selectedRecord.latestAppointment.consultation.diagnosis || "—"}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Updated by {formatStaffName(selectedRecord.latestAppointment.consultation.doctor)} on
+                                                        {" "}
+                                                        {formatManilaDateTime(selectedRecord.latestAppointment.consultation.updatedAt) || "—"}
+                                                    </p>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </TabsContent>
+
+                                    <TabsContent value="update" className="space-y-4">
+                                        <form onSubmit={handleUpdateInfo} className="space-y-3">
+                                            <div>
+                                                <Label className="mb-1 block font-medium" htmlFor="medical_cond">
+                                                    Medical Conditions
+                                                </Label>
+                                                <Input
+                                                    id="medical_cond"
+                                                    name="medical_cond"
+                                                    defaultValue={selectedRecord.medical_cond || ""}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="mb-1 block font-medium" htmlFor="allergies">
+                                                    Allergies
+                                                </Label>
+                                                <Input
+                                                    id="allergies"
+                                                    name="allergies"
+                                                    defaultValue={selectedRecord.allergies || ""}
+                                                    placeholder="e.g. Penicillin, Peanuts"
+                                                />
+                                            </div>
+                                            <Button
+                                                type="submit"
+                                                disabled={updatingPatientId === selectedRecord.id}
+                                                className="bg-green-600 text-white hover:bg-green-700"
+                                            >
+                                                {updatingPatientId === selectedRecord.id ? (
+                                                    <>
+                                                        <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                                                    </>
+                                                ) : (
+                                                    "Save info"
+                                                )}
+                                            </Button>
+                                        </form>
+                                    </TabsContent>
+
+                                    <TabsContent value="notes" className="space-y-4">
+                                        <form onSubmit={handleSaveNotes} className="space-y-3">
+                                            {!selectedRecord.latestAppointment?.id ? (
+                                                <p className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-700">
+                                                    This patient has no active appointment. Approve or schedule one to record consultation notes.
+                                                </p>
+                                            ) : null}
+                                            <div>
+                                                <Label className="mb-1 block font-medium" htmlFor="reason_of_visit">
+                                                    Reason of Visit
+                                                </Label>
+                                                <Input
+                                                    id="reason_of_visit"
+                                                    name="reason_of_visit"
+                                                    defaultValue={selectedRecord.latestAppointment?.consultation?.reason_of_visit || ""}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="mb-1 block font-medium" htmlFor="findings">
+                                                    Findings
+                                                </Label>
+                                                <Input
+                                                    id="findings"
+                                                    name="findings"
+                                                    defaultValue={selectedRecord.latestAppointment?.consultation?.findings || ""}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="mb-1 block font-medium" htmlFor="diagnosis">
+                                                    Diagnosis
+                                                </Label>
+                                                <Input
+                                                    id="diagnosis"
+                                                    name="diagnosis"
+                                                    defaultValue={selectedRecord.latestAppointment?.consultation?.diagnosis || ""}
+                                                />
+                                            </div>
+                                            <Button
+                                                type="submit"
+                                                disabled={
+                                                    savingNotesPatientId === selectedRecord.id ||
+                                                    !selectedRecord.latestAppointment?.id
+                                                }
+                                                className="bg-green-600 text-white hover:bg-green-700"
+                                            >
+                                                {savingNotesPatientId === selectedRecord.id ? (
+                                                    <>
+                                                        <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                                                    </>
+                                                ) : !selectedRecord.latestAppointment?.id ? (
+                                                    "No appointment"
+                                                ) : (
+                                                    "Save notes"
+                                                )}
+                                            </Button>
+                                        </form>
+                                    </TabsContent>
+                                </Tabs>
+                            </div>
+                        ) : null}
+                    </DialogContent>
+                </Dialog>
+            </div>
         </DoctorLayout>
     );
 }

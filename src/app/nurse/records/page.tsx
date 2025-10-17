@@ -108,10 +108,10 @@ function formatAppointmentWindow(appointment: PatientRecord["latestAppointment"]
     const start = formatManilaDateTime(appointment.timestart);
     const end = appointment.timeend
         ? formatManilaDateTime(appointment.timeend, {
-              year: undefined,
-              month: undefined,
-              day: undefined,
-          })
+            year: undefined,
+            month: undefined,
+            day: undefined,
+        })
         : null;
 
     if (start && end) {
@@ -588,7 +588,7 @@ export default function NurseRecordsPage() {
                         }
                     }}
                 >
-                    <DialogContent className="rounded-3xl sm:max-w-3xl">
+                    <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
                         {selectedRecord ? (
                             <div className="space-y-6">
                                 <DialogHeader>
@@ -654,8 +654,8 @@ export default function NurseRecordsPage() {
                                             </p>
                                             <p>
                                                 <strong>Emergency:</strong> {selectedRecord.emergency?.name || "—"} ({
-                                                selectedRecord.emergency?.relation || "—"
-                                            }) – {selectedRecord.emergency?.num || "—"}
+                                                    selectedRecord.emergency?.relation || "—"
+                                                }) – {selectedRecord.emergency?.num || "—"}
                                             </p>
                                             {selectedRecord.patientType === "Student" ? (
                                                 <>

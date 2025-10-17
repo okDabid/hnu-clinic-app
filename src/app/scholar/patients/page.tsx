@@ -459,7 +459,7 @@ export default function ScholarPatientsPage() {
             </div>
 
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-                <DialogContent className="rounded-3xl sm:max-w-3xl">
+                <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
                     <DialogHeader>
                         <DialogTitle className="text-xl text-green-700">Patient snapshot</DialogTitle>
                         <DialogDescription className="text-sm text-muted-foreground">

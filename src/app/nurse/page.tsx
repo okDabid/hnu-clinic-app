@@ -69,21 +69,6 @@ export default function NurseDashboardPage() {
                             Keep the clinic running smoothly with instant visibility into schedules, stock levels, and patient coordination. Use the quick tools below to support the care team.
                         </p>
                     </div>
-                    <div className="flex w-full flex-col gap-3 rounded-2xl border border-green-100 bg-white/80 p-4 text-sm text-muted-foreground shadow-sm md:w-80">
-                        <div className="flex items-center gap-3">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-600/10 text-green-700">
-                                <ClipboardList className="h-4 w-4" />
-                            </span>
-                            <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Today&apos;s focus</p>
-                                <p className="font-semibold text-green-700">Verify supply counts before closeout.</p>
-                            </div>
-                        </div>
-                        <Separator className="border-green-100" />
-                        <Button asChild variant="outline" className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70">
-                            <Link href="/nurse/inventory">Review inventory log</Link>
-                        </Button>
-                    </div>
                 </div>
             </section>
 
