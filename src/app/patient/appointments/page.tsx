@@ -614,7 +614,7 @@ export default function PatientAppointmentsPage() {
                             onClick={handleClearAppointments}
                             disabled={appointments.length === 0}
                         >
-                            <Trash2 className="h-4 w-4" /> Clear view
+                            <Trash2 className="h-4 w-4" /> Clear appointments
                         </Button>
                     </CardHeader>
                     <CardContent>

@@ -37,7 +37,7 @@ const quickActions = [
 const wellnessHighlights = [
     "Arrive 10 minutes early to allow time for screening and paperwork.",
     "Keep your emergency contact details up to date for faster coordination.",
-    "Bring your clinic ID or student/employee ID whenever you have a scheduled visit.",
+    "Bring your student/employee ID whenever you have a scheduled visit.",
 ];
 
 export default function PatientDashboardPage() {
