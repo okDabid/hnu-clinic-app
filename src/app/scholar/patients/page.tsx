@@ -134,10 +134,10 @@ function formatAppointmentWindow(appointment: PatientRecord["latestAppointment"]
     const start = formatManilaDateTime(appointment.timestart);
     const end = appointment.timeend
         ? formatManilaDateTime(appointment.timeend, {
-              year: undefined,
-              month: undefined,
-              day: undefined,
-          })
+            year: undefined,
+            month: undefined,
+            day: undefined,
+        })
         : null;
     return end ? `${start} – ${end}` : start;
 }
@@ -255,8 +255,8 @@ export default function ScholarPatientsPage() {
             title="Patient intake overview"
             description="Review student and employee profiles, confirm eligibility, and keep contact details ready for the care team."
             actions={
-                <Button variant="outline" onClick={loadRecords} className="rounded-xl">
-                    <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
+                <Button variant="outline" onClick={loadRecords} className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70">
+                    <RefreshCcw className="mr-2 h-4 w-4" /> Refresh records
                 </Button>
             }
         >
@@ -531,19 +531,19 @@ export default function ScholarPatientsPage() {
                             </div>
 
                             <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
-                                <h4 className="text-sm font-semibold text-green-700">Contact information</h4>
-                                <dl className="grid gap-2 text-muted-foreground">
-                                    <div>
-                                        <dt className="text-xs uppercase tracking-wide">Phone</dt>
-                                        <dd>{selected.contactno || "—"}</dd>
-                                    </div>
-                                    <div>
-                                        <dt className="text-xs uppercase tracking-wide">Address</dt>
-                                        <dd>{selected.address || "—"}</dd>
-                                    </div>
-                                </dl>
-                            </div>
+                                <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
+                                    <h4 className="text-sm font-semibold text-green-700">Contact information</h4>
+                                    <dl className="grid gap-2 text-muted-foreground">
+                                        <div>
+                                            <dt className="text-xs uppercase tracking-wide">Phone</dt>
+                                            <dd>{selected.contactno || "—"}</dd>
+                                        </div>
+                                        <div>
+                                            <dt className="text-xs uppercase tracking-wide">Address</dt>
+                                            <dd>{selected.address || "—"}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
                                 <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
                                     <h4 className="text-sm font-semibold text-green-700">Emergency contact</h4>
                                     <dl className="grid gap-2 text-muted-foreground">
