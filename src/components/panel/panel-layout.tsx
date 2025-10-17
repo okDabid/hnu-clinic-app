@@ -121,8 +121,7 @@ export function PanelLayout({
                             className="h-11 w-11 object-contain drop-shadow"
                         />
                         <div>
-                            <p className="text-xs uppercase tracking-wide text-green-500">Health &amp; Wellness</p>
-                            <h1 className="text-xl font-semibold text-green-700">HNU Clinic</h1>
+                            <h1 className="text-xl font-bold text-green-700">HNU Clinic</h1>
                         </div>
                     </div>
                     <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
