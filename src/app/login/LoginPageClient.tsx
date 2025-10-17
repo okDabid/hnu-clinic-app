@@ -219,7 +219,7 @@ export default function LoginPageClient() {
                         <span className="h-2 w-2 rounded-full bg-green-500" />
                         Secure Access Portal
                     </span>
-                    <h1 className="mt-6 text-3xl font-semibold text-green-900 sm:text-4xl md:text-5xl">
+                    <h1 className="mt-6 text-3xl font-bold text-green-600 sm:text-4xl md:text-5xl">
                         Welcome back to HNU Clinic
                     </h1>
                     <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
