@@ -196,7 +196,7 @@ export default function ScholarAppointmentsPage() {
             description="Track campus clinic bookings, monitor status changes, and keep students informed about their schedules."
             actions={
                 <Button variant="outline" onClick={loadAppointments} className="rounded-xl">
-                    <RefreshCcw className="mr-2 h-4 w-4" /> Refresh
+                    <RefreshCcw className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70" /> Refresh list
                 </Button>
             }
         >
