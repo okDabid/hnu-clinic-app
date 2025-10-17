@@ -13,6 +13,7 @@ import {
 import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { AppointmentPanel } from "@/components/appointments/appointment-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -430,123 +431,113 @@ export default function PatientAppointmentsPage() {
             }
         >
             <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-                <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
-                    <CardHeader className="space-y-2">
-                        <CardTitle className="flex items-center gap-3 text-xl text-green-700">
-                            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-600/10 text-green-700">
-                                <CalendarDays className="h-5 w-5" />
-                            </span>
-                            Request an appointment
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                            Choose the clinic, provider, and time that works for you. Appointments must be scheduled at least {MIN_BOOKING_LEAD_DAYS} days in advance.
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        <form className="space-y-5" onSubmit={handleSubmit}>
-                            <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Clinic</Label>
-                                <Select value={clinicId} onValueChange={setClinicId} disabled={loadingClinics}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
-                                        <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {clinics.map((clinic) => (
-                                            <SelectItem key={clinic.clinic_id} value={clinic.clinic_id}>
-                                                {clinic.clinic_name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                <AppointmentPanel
+                    icon={CalendarDays}
+                    title="Request an appointment"
+                    description="Choose the clinic, provider, and time that works for you. Appointments must be scheduled at least 3 days in advance."
+                >
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                        <div className="grid gap-2">
+                            <Label className="text-sm font-medium text-green-700">Clinic</Label>
+                            <Select value={clinicId} onValueChange={setClinicId} disabled={loadingClinics}>
+                                <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {clinics.map((clinic) => (
+                                        <SelectItem key={clinic.clinic_id} value={clinic.clinic_id}>
+                                            {clinic.clinic_name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                            <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Doctor</Label>
-                                <Select value={doctorId} onValueChange={setDoctorId} disabled={!clinicId || loadingDoctors}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
-                                        <SelectValue placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {doctors.map((doctor) => (
-                                            <SelectItem key={doctor.user_id} value={doctor.user_id}>
-                                                {doctor.name} ({doctor.specialization ?? "N/A"})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <div className="grid gap-2">
+                            <Label className="text-sm font-medium text-green-700">Doctor</Label>
+                            <Select value={doctorId} onValueChange={setDoctorId} disabled={!clinicId || loadingDoctors}>
+                                <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectValue placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {doctors.map((doctor) => (
+                                        <SelectItem key={doctor.user_id} value={doctor.user_id}>
+                                            {doctor.name} ({doctor.specialization ?? "N/A"})
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                            <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Service type</Label>
-                                <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
-                                        <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableServices.map((service) => (
-                                            <SelectItem key={service.value} value={service.value}>
-                                                {service.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <div className="grid gap-2">
+                            <Label className="text-sm font-medium text-green-700">Service type</Label>
+                            <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
+                                <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableServices.map((service) => (
+                                        <SelectItem key={service.value} value={service.value}>
+                                            {service.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                            <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Date</Label>
-                                <Input
-                                    type="date"
-                                    value={date}
-                                    onChange={(event) => setDate(event.target.value)}
-                                    min={minBookingDate}
-                                    className="rounded-xl border-green-200"
-                                />
-                            </div>
+                        <div className="grid gap-2">
+                            <Label className="text-sm font-medium text-green-700">Date</Label>
+                            <Input
+                                type="date"
+                                value={date}
+                                onChange={(event) => setDate(event.target.value)}
+                                min={minBookingDate}
+                                className="rounded-xl border-green-200"
+                            />
+                        </div>
 
-                            <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Preferred time</Label>
-                                <Select value={timeStart} onValueChange={setTimeStart} disabled={loadingSlots || !doctorId || !date}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
-                                        <SelectValue
-                                            placeholder={
-                                                !doctorId || !date
-                                                    ? "Select doctor and date"
-                                                    : loadingSlots
-                                                        ? "Loading slots..."
-                                                        : slots.length
-                                                            ? "Select a time"
-                                                            : "No slots available"
-                                            }
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {slots.map((slot) => (
-                                            <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
-                                                {formatTimeRange(slot.start, slot.end)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <div className="grid gap-2">
+                            <Label className="text-sm font-medium text-green-700">Preferred time</Label>
+                            <Select value={timeStart} onValueChange={setTimeStart} disabled={loadingSlots || !doctorId || !date}>
+                                <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectValue
+                                        placeholder={
+                                            !doctorId || !date
+                                                ? "Select doctor and date"
+                                                : loadingSlots
+                                                    ? "Loading slots..."
+                                                    : slots.length
+                                                        ? "Select a time"
+                                                        : "No slots available"
+                                        }
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {slots.map((slot) => (
+                                        <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
+                                            {formatTimeRange(slot.start, slot.end)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                            <div className="pt-1">
-                                <Button
-                                    type="submit"
-                                    className="w-full rounded-xl bg-green-600 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 focus-visible:ring-green-500"
-                                    disabled={submitting}
-                                >
-                                    {submitting ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-                                        </>
-                                    ) : (
-                                        "Book appointment"
-                                    )}
-                                </Button>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+                        <Button
+                            type="submit"
+                            className="w-full rounded-xl bg-green-600 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
+                            disabled={submitting}
+                        >
+                            {submitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+                                </>
+                            ) : (
+                                "Request appointment"
+                            )}
+                        </Button>
+                    </form>
+                </AppointmentPanel>
+
 
                 <div className="space-y-6">
                     <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">

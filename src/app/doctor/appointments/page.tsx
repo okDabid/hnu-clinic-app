@@ -15,6 +15,8 @@ import {
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { AppointmentPanel } from "@/components/appointments/appointment-panel";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -214,11 +216,11 @@ export default function DoctorAppointmentsPage() {
                             </CardHeader>
                         </Card>
                     </div>
-                    <Card className="flex flex-col rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
-                        <CardHeader className="flex flex-col gap-3 border-b border-emerald-100/70 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-emerald-700 sm:text-xl">
-                                <CalendarDays className="h-6 w-6" /> Appointment queue
-                            </CardTitle>
+                    <AppointmentPanel
+                        icon={ClipboardCheck}
+                        title="Appointment queue"
+                        description="Review upcoming visits, confirm slots, or make quick adjustments for your patients."
+                        actions={
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -228,94 +230,112 @@ export default function DoctorAppointmentsPage() {
                             >
                                 <Trash2 className="h-4 w-4" /> Clear appointments
                             </Button>
-                        </CardHeader>
-                        <CardContent className="flex flex-1 flex-col pt-4 text-sm text-muted-foreground">
-                            {loading ? (
-                                <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
-                                    <Loader2 className="h-5 w-5 animate-spin" /> Loading appointments...
-                                </div>
-                            ) : appointments.length === 0 ? (
-                                <p className="py-6 text-center">
-                                    No appointments found.
-                                </p>
-                            ) : (
-                                <div className="overflow-x-auto w-full">
-                                    <table className="min-w-full border border-emerald-100 rounded-2xl overflow-hidden">
-                                        <thead className="bg-emerald-100/80 text-emerald-700">
-                                            <tr>
-                                                <th className="px-4 py-2 text-left">Patient</th>
-                                                <th className="px-4 py-2 text-left">Date</th>
-                                                <th className="px-4 py-2 text-left">Time</th>
-                                                <th className="px-4 py-2 text-left">Status</th>
-                                                <th className="px-4 py-2 text-center">Manage</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {appointments.map((appt) => {
-                                                const statusLower = appt.status.toLowerCase();
-                                                return (
-                                                    <tr key={appt.id} className="border-t border-emerald-50 hover:bg-emerald-50/70 transition">
-                                                        <td className="px-4 py-2">{appt.patientName}</td>
-                                                        <td className="px-4 py-2">{appt.date}</td>
-                                                        <td className="px-4 py-2">{appt.time}</td>
-                                                        <td className="px-4 py-2 capitalize">{appt.status}</td>
-                                                        <td className="px-4 py-2 text-center">
-                                                            {["cancelled", "completed"].includes(statusLower) ? (
-                                                                <span className="text-xs text-muted-foreground">No actions available</span>
-                                                            ) : (
-                                                                <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild>
-                                                                        <Button size="sm" variant="outline" className="flex items-center gap-2">
-                                                                            <MoreHorizontal className="w-4 h-4" /> Manage
-                                                                        </Button>
-                                                                    </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent align="end" className="w-40 space-y-1">
-                                                                        <DropdownMenuItem
-                                                                            onClick={() => handleApprove(appt.id)}
-                                                                            disabled={["approved", "completed", "cancelled"].includes(statusLower)}
-                                                                        >
-                                                                            <Check className="mr-2 h-4 w-4 text-emerald-600" /> Approve
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem
-                                                                            onClick={() => handleComplete(appt.id)}
-                                                                            disabled={statusLower !== "approved" || !appt.hasConsultation}
-                                                                        >
-                                                                            <ClipboardCheck className="mr-2 h-4 w-4 text-emerald-600" /> Complete
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem
-                                                                            onClick={() => {
-                                                                                setSelectedAppt(appt);
-                                                                                setActionType("move");
-                                                                                setDialogOpen(true);
-                                                                            }}
-                                                                            disabled={statusLower === "completed" || statusLower === "cancelled"}
-                                                                        >
-                                                                            <Move className="w-4 h-4 mr-2 text-blue-600" /> Move
-                                                                        </DropdownMenuItem>
-                                                                        <DropdownMenuItem
-                                                                            onClick={() => {
-                                                                                setSelectedAppt(appt);
-                                                                                setActionType("cancel");
-                                                                                setDialogOpen(true);
-                                                                            }}
-                                                                            className="text-red-600 focus:text-red-700"
-                                                                            disabled={statusLower === "completed" || statusLower === "cancelled"}
-                                                                        >
-                                                                            <XCircle className="w-4 h-4 mr-2 text-red-600" /> Cancel
-                                                                        </DropdownMenuItem>
-                                                                    </DropdownMenuContent>
-                                                                </DropdownMenu>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                        }
+                    >
+                        {loading ? (
+                            <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
+                                <Loader2 className="h-5 w-5 animate-spin" /> Loading appointments...
+                            </div>
+                        ) : appointments.length === 0 ? (
+                            <p className="py-6 text-center">No appointments found.</p>
+                        ) : (
+                            <div className="space-y-3 text-sm text-muted-foreground">
+                                {appointments.map((appointment) => (
+                                    <Card
+                                        key={appointment.id}
+                                        className="rounded-2xl border border-emerald-100/70 bg-white/90 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md"
+                                    >
+                                        <CardContent className="flex flex-col gap-4 py-4">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                <div>
+                                                    <h3 className="text-base font-semibold text-emerald-700">
+                                                        {appointment.patientName}
+                                                    </h3>
+                                                    <p className="text-xs uppercase tracking-wide text-emerald-500">
+                                                        {appointment.clinic ?? "Clinic assignment"}
+                                                    </p>
+                                                </div>
+                                                <Badge
+                                                    variant={appointment.status === "Pending" ? "outline" : "default"}
+                                                    className="rounded-full border-emerald-200 bg-emerald-50/70 px-3 py-1 text-xs font-semibold text-emerald-700"
+                                                >
+                                                    {appointment.status}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="grid gap-2 text-sm sm:grid-cols-2">
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <CalendarDays className="h-4 w-4 text-emerald-600" />
+                                                    <span>{appointment.date}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+                                                    <span>{appointment.time}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                                                <Badge variant="outline" className="rounded-full border-emerald-200 bg-emerald-50/70 text-emerald-700">
+                                                    {appointment.hasConsultation ? "With consultation" : "Awaiting consultation"}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                                                    onClick={() => handleApprove(appointment.id)}
+                                                >
+                                                    <Check className="mr-2 h-4 w-4" /> Approve
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                                                    onClick={() => handleComplete(appointment.id)}
+                                                >
+                                                    <ClipboardCheck className="mr-2 h-4 w-4" /> Complete
+                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button size="sm" variant="ghost" className="rounded-xl text-emerald-700 hover:bg-emerald-100/70">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="rounded-xl border-emerald-100">
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                setActionType("move");
+                                                                setSelectedAppt(appointment);
+                                                                setDialogOpen(true);
+                                                                setReason("");
+                                                                setNewDate("");
+                                                                setNewTimeStart("");
+                                                                setNewTimeEnd("");
+                                                            }}
+                                                        >
+                                                            <Move className="mr-2 h-4 w-4" /> Move appointment
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                setActionType("cancel");
+                                                                setSelectedAppt(appointment);
+                                                                setDialogOpen(true);
+                                                                setReason("");
+                                                            }}
+                                                        >
+                                                            <XCircle className="mr-2 h-4 w-4" /> Cancel appointment
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        )}
+                    </AppointmentPanel>
                 </section>
 
                 {/* Dialog */}

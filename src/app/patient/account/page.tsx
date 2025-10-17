@@ -2,22 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, Cog } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -36,6 +27,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { AccountCard } from "@/components/account/account-card";
+import { AccountPasswordResult } from "@/components/account/account-password-dialog";
 
 
 // ✅ Enum ↔ Label Mappings
@@ -176,13 +169,6 @@ export default function PatientAccountPage() {
 
     const [profileType, setProfileType] = useState<"student" | "employee" | null>(null);
 
-    const [showCurrent, setShowCurrent] = useState(false);
-    const [showNew, setShowNew] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [passwordLoading, setPasswordLoading] = useState(false);
-    const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-    const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
-
     const [tempDOB, setTempDOB] = useState("");
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
 
@@ -309,6 +295,31 @@ export default function PatientAccountPage() {
         }
     };
 
+    const handlePasswordSubmit = useCallback(
+        async ({ oldPassword, newPassword }: { oldPassword: string; newPassword: string }): Promise<AccountPasswordResult> => {
+            try {
+                const res = await fetch("/api/patient/account/password", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ oldPassword, newPassword }),
+                });
+
+                const data = await res.json();
+                if (data.error) {
+                    return { error: data.error };
+                }
+
+                const message = "Password updated successfully!";
+                toast.success(message);
+                return { success: message };
+            } catch (error) {
+                console.error("Failed to update password", error);
+                return { error: "Failed to update password. Please try again." };
+            }
+        },
+        []
+    );
+
     return (
         <PatientLayout
             title={layoutTitle}
@@ -338,199 +349,12 @@ export default function PatientAccountPage() {
                 ) : null}
 
                 {profile && (
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
-                        <CardHeader className="flex flex-col gap-3 border-b border-green-100/70 pb-4 md:flex-row md:items-center md:justify-between">
-                            <CardTitle className="text-2xl font-bold text-green-600">My Account</CardTitle>
-                    
-                            {/* Password Dialog */}
-                            <Dialog
-                                onOpenChange={(open) => {
-                                    if (!open) {
-                                        setPasswordErrors([]);
-                                        setPasswordMessage(null);
-                                        setPasswordLoading(false);
-                                    }
-                                }}
-                            >
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" size="icon" className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/60">
-                                        <Cog className="h-5 w-5 text-green-600" />
-                                    </Button>
-                                </DialogTrigger>
-                    
-                                <DialogContent className="w-[95%] max-w-md rounded-3xl border border-green-100/80 bg-white/95">
-                                    <DialogHeader>
-                                        <DialogTitle>Update Password</DialogTitle>
-                                        <DialogDescription>
-                                            Change your account password securely. Enter your current password and set a new one.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                    
-                                    <form
-                                        onSubmit={async (e) => {
-                                            e.preventDefault();
-                                            const form = e.currentTarget;
-                                            const oldPassword = (form.elements.namedItem("oldPassword") as HTMLInputElement).value;
-                                            const newPassword = (form.elements.namedItem("newPassword") as HTMLInputElement).value;
-                                            const confirmPassword = (form.elements.namedItem("confirmPassword") as HTMLInputElement).value;
-                    
-                                            const errors: string[] = [];
-                                            if (newPassword.length < 8) errors.push("Password must be at least 8 characters.");
-                                            if (!/[A-Z]/.test(newPassword)) errors.push("Must contain an uppercase letter.");
-                                            if (!/[a-z]/.test(newPassword)) errors.push("Must contain a lowercase letter.");
-                                            if (!/\d/.test(newPassword)) errors.push("Must contain a number.");
-                                            if (!/[^\w\s]/.test(newPassword)) errors.push("Must contain a symbol.");
-                                            if (newPassword !== confirmPassword) errors.push("Passwords do not match.");
-                    
-                                            if (errors.length > 0) {
-                                                setPasswordErrors(errors);
-                                                return;
-                                            }
-                    
-                                            try {
-                                                setPasswordLoading(true);
-                                                const res = await fetch("/api/patient/account/password", {
-                                                    method: "PUT",
-                                                    headers: { "Content-Type": "application/json" },
-                                                    body: JSON.stringify({ oldPassword, newPassword }),
-                                                });
-                    
-                                                const data = await res.json();
-                                                if (data.error) setPasswordErrors([data.error]);
-                                                else {
-                                                    setPasswordMessage("Password updated successfully!");
-                                                    toast.success("Password updated successfully!");
-                                                    form.reset();
-                                                }
-                                            } catch {
-                                                setPasswordErrors(["Failed to update password. Please try again."]);
-                                            } finally {
-                                                setPasswordLoading(false);
-                                            }
-                                        }}
-                                        className="space-y-4"
-                                    >
-                                        {/* Current Password */}
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Current Password</Label>
-                                            <div className="relative">
-                                                <Input
-                                                    type={showCurrent ? "text" : "password"}
-                                                    name="oldPassword"
-                                                    required
-                                                    className="pr-10"
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setShowCurrent(!showCurrent)}
-                                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                >
-                                                    {showCurrent ? (
-                                                        <EyeOff className="h-5 w-5 text-gray-500" />
-                                                    ) : (
-                                                        <Eye className="h-5 w-5 text-gray-500" />
-                                                    )}
-                                                </Button>
-                                            </div>
-                                        </div>
-                    
-                                        {/* New Password with live validation */}
-                                        <div>
-                                            <Label className="block mb-1 font-medium">New Password</Label>
-                                            <div className="relative">
-                                                <Input
-                                                    type={showNew ? "text" : "password"}
-                                                    name="newPassword"
-                                                    required
-                                                    className="pr-10"
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        const errs: string[] = [];
-                                                        if (val.length < 8) errs.push("Password must be at least 8 characters.");
-                                                        if (!/[A-Z]/.test(val)) errs.push("Must contain an uppercase letter.");
-                                                        if (!/[a-z]/.test(val)) errs.push("Must contain a lowercase letter.");
-                                                        if (!/\d/.test(val)) errs.push("Must contain a number.");
-                                                        if (!/[^\w\s]/.test(val)) errs.push("Must contain a symbol.");
-                                                        setPasswordErrors(errs);
-                                                    }}
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setShowNew(!showNew)}
-                                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                >
-                                                    {showNew ? (
-                                                        <EyeOff className="h-5 w-5 text-gray-500" />
-                                                    ) : (
-                                                        <Eye className="h-5 w-5 text-gray-500" />
-                                                    )}
-                                                </Button>
-                                            </div>
-                                        </div>
-                    
-                                        {/* Confirm Password */}
-                                        <div>
-                                            <Label className="block mb-1 font-medium">Confirm Password</Label>
-                                            <div className="relative">
-                                                <Input
-                                                    type={showConfirm ? "text" : "password"}
-                                                    name="confirmPassword"
-                                                    required
-                                                    className="pr-10"
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => setShowConfirm(!showConfirm)}
-                                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                                                >
-                                                    {showConfirm ? (
-                                                        <EyeOff className="h-5 w-5 text-gray-500" />
-                                                    ) : (
-                                                        <Eye className="h-5 w-5 text-gray-500" />
-                                                    )}
-                                                </Button>
-                                            </div>
-                                        </div>
-                    
-                                        {/* Validation Feedback */}
-                                        {passwordErrors.length > 0 && (
-                                            <ul className="text-sm text-red-600 space-y-1">
-                                                {passwordErrors.map((err, idx) => (
-                                                    <li key={idx}>• {err}</li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                        {passwordMessage && <p className="text-sm text-green-600">{passwordMessage}</p>}
-                    
-                                        <DialogFooter className="pt-2">
-                                            <Button
-                                                type="submit"
-                                                className="w-full rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
-                                                disabled={passwordLoading}
-                                            >
-                                                {passwordLoading ? (
-                                                    <>
-                                                        <Loader2 className="h-4 w-4 animate-spin" /> Updating...
-                                                    </>
-                                                ) : (
-                                                    "Update Password"
-                                                )}
-                                            </Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                    
-                        </CardHeader>
-                    
-                        <CardContent className="pt-6">
-                            <form onSubmit={handleProfileUpdate} className="space-y-6">
+                    <AccountCard
+                        description="Update your personal, academic, and emergency details to keep the clinic team prepared."
+                        onPasswordSubmit={handlePasswordSubmit}
+                        contentClassName="pt-6"
+                    >
+                        <form onSubmit={handleProfileUpdate} className="space-y-6">
                                 {/* Uneditable Fields */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div><Label className="block mb-1 font-medium">User ID</Label><Input value={profile.user_id} disabled /></div>
@@ -805,8 +629,7 @@ export default function PatientAccountPage() {
                                     )}
                                 </Button>
                             </form>
-                        </CardContent>
-                    </Card>
+                    </AccountCard>
                 )}
             </div>
         </PatientLayout>
