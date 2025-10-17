@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "HNU Clinic",
+  title: "HNU Clinic Health Record & Appointment System",
   description: "Health Record & Appointment System for HNU Clinic",
 };
 
