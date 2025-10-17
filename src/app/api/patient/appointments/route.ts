@@ -337,9 +337,8 @@ export async function DELETE(req: Request) {
             );
         }
 
-        await prisma.appointment.update({
+        await prisma.appointment.delete({
             where: { appointment_id },
-            data: { status: AppointmentStatus.Cancelled },
         });
 
         return NextResponse.json({ message: "Appointment cancelled" });

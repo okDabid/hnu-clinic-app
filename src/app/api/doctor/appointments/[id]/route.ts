@@ -369,13 +369,43 @@ export async function PATCH(
             );
         }
 
-        let trimmedCancelReason: string | null = null;
         if (action === "cancel") {
             const reason = typeof body.reason === "string" ? body.reason.trim() : "";
             if (!reason) {
                 return NextResponse.json({ error: "Cancellation reason is required" }, { status: 400 });
             }
-            trimmedCancelReason = reason;
+
+            const patientEmail = getPatientEmail(appointment.patient);
+            if (patientEmail) {
+                const emailPayload = buildStatusEmail({
+                    status: AppointmentStatus.Cancelled,
+                    patientName: formatPatientName(appointment.patient),
+                    clinicName: appointment.clinic.clinic_name,
+                    schedule: formatManilaDateTime(appointment.appointment_timestart),
+                    cancelReason: reason,
+                });
+
+                if (emailPayload) {
+                    try {
+                        await sendEmail({
+                            to: patientEmail,
+                            subject: emailPayload.subject,
+                            html: emailPayload.html,
+                        });
+                    } catch (emailErr) {
+                        console.error(
+                            "[PATCH /api/doctor/appointments/:id] cancellation email error",
+                            emailErr
+                        );
+                    }
+                }
+            }
+
+            await prisma.appointment.delete({
+                where: { appointment_id: id },
+            });
+
+            return NextResponse.json({ message: "Appointment cancelled" });
         }
 
         // ✅ Map frontend actions to Prisma enum
@@ -383,9 +413,6 @@ export async function PATCH(
         switch (action) {
             case "approve":
                 newStatus = AppointmentStatus.Approved;
-                break;
-            case "cancel":
-                newStatus = AppointmentStatus.Cancelled;
                 break;
             case "complete":
                 newStatus = AppointmentStatus.Completed;
@@ -399,7 +426,6 @@ export async function PATCH(
             where: { appointment_id: id },
             data: {
                 status: newStatus,
-                ...(trimmedCancelReason ? { remarks: trimmedCancelReason } : {}),
             },
             include: {
                 patient: {
@@ -421,7 +447,6 @@ export async function PATCH(
                 patientName: formatPatientName(updated.patient),
                 clinicName: updated.clinic.clinic_name,
                 schedule: formatManilaDateTime(updated.appointment_timestart),
-                cancelReason: trimmedCancelReason,
             });
 
             if (emailPayload) {
