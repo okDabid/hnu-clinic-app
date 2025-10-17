@@ -197,13 +197,13 @@ export default function ScholarAppointmentsPage() {
 
             const options: PatientOption[] = Array.isArray(data)
                 ? (data as PatientRecordResponse[])
-                      .filter((record) => typeof record.userId === "string" && record.userId.length > 0)
-                      .map((record) => ({
-                          userId: record.userId as string,
-                          name: record.fullName ?? "Unnamed patient",
-                          identifier: record.patientId ?? "",
-                          type: record.patientType ?? "Patient",
-                      }))
+                    .filter((record) => typeof record.userId === "string" && record.userId.length > 0)
+                    .map((record) => ({
+                        userId: record.userId as string,
+                        name: record.fullName ?? "Unnamed patient",
+                        identifier: record.patientId ?? "",
+                        type: record.patientType ?? "Patient",
+                    }))
                 : [];
 
             setPatientOptions(options);
