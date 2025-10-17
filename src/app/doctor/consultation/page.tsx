@@ -112,17 +112,17 @@ export default function DoctorConsultationPage() {
 
         const body = isEditing
             ? {
-                  availability_id: editingSlot!.availability_id,
-                  clinic_id: formData.clinic_id,
-                  available_date: formData.available_date,
-                  available_timestart: formData.available_timestart,
-                  available_timeend: formData.available_timeend,
-              }
+                availability_id: editingSlot!.availability_id,
+                clinic_id: formData.clinic_id,
+                available_date: formData.available_date,
+                available_timestart: formData.available_timestart,
+                available_timeend: formData.available_timeend,
+            }
             : {
-                  clinic_id: formData.clinic_id,
-                  available_timestart: formData.available_timestart,
-                  available_timeend: formData.available_timeend,
-              };
+                clinic_id: formData.clinic_id,
+                available_timestart: formData.available_timestart,
+                available_timeend: formData.available_timeend,
+            };
         const method = isEditing ? "PUT" : "POST";
 
         try {
@@ -171,7 +171,7 @@ export default function DoctorConsultationPage() {
             description="Manage your duty hours, adjust clinic assignments, and publish new consultation slots."
             actions={
                 <Button
-                    className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                    className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                     onClick={() => {
                         setDialogOpen(true);
                         setEditingSlot(null);
@@ -190,9 +190,9 @@ export default function DoctorConsultationPage() {
             <div className="space-y-6">
                 {/* Consultation Section */}
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-emerald-100/70 bg-gradient-to-r from-emerald-100/70 via-white to-emerald-50/80 shadow-sm">
+                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
                         <CardHeader className="space-y-1">
-                            <CardTitle className="text-base font-semibold text-emerald-700">
+                            <CardTitle className="text-base font-semibold text-green-700">
                                 Availability overview
                             </CardTitle>
                             <p className="text-sm text-muted-foreground">
@@ -202,16 +202,16 @@ export default function DoctorConsultationPage() {
                             </p>
                         </CardHeader>
                     </Card>
-                    <Card className="flex flex-col rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
-                        <CardHeader className="flex flex-col gap-3 border-b border-emerald-100/70 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-xl font-semibold text-emerald-700 sm:text-2xl">
+                    <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
+                        <CardHeader className="flex flex-col gap-3 border-b border-green-100/70 sm:flex-row sm:items-center sm:justify-between">
+                            <CardTitle className="text-xl font-semibold text-green-700 sm:text-2xl">
                                 My duty hours
                             </CardTitle>
 
                             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                                 <DialogTrigger asChild>
                                     <Button
-                                        className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                        className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                                         onClick={() => {
                                             setEditingSlot(null);
                                             setFormData({
@@ -226,9 +226,9 @@ export default function DoctorConsultationPage() {
                                     </Button>
                                 </DialogTrigger>
 
-                                <DialogContent className="rounded-3xl border border-emerald-100 bg-white/95">
+                                <DialogContent className="rounded-3xl border border-green-100 bg-white/95">
                                     <DialogHeader>
-                                        <DialogTitle className="text-lg font-semibold text-emerald-700">
+                                        <DialogTitle className="text-lg font-semibold text-green-700">
                                             {editingSlot ? "Edit consultation slot" : "Generate duty hours"}
                                         </DialogTitle>
                                         <DialogDescription className="text-sm text-muted-foreground">
@@ -300,7 +300,7 @@ export default function DoctorConsultationPage() {
                                             <Button
                                                 type="submit"
                                                 disabled={loading}
-                                                className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                                className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                                             >
                                                 {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                                                 {editingSlot ? "Save Changes" : "Generate"}
@@ -330,7 +330,7 @@ export default function DoctorConsultationPage() {
                                         </TableHeader>
                                         <TableBody>
                                             {slots.map((slot) => (
-                                                <TableRow key={slot.availability_id} className="hover:bg-emerald-50 transition">
+                                                <TableRow key={slot.availability_id} className="hover:bg-green-50 transition">
                                                     <TableCell>
                                                         {new Date(slot.available_date).toLocaleDateString("en-CA", {
                                                             timeZone: "Asia/Manila",
@@ -340,21 +340,21 @@ export default function DoctorConsultationPage() {
                                                     <TableCell>{format12Hour(slot.available_timeend)}</TableCell>
                                                     <TableCell>{slot.clinic.clinic_name}</TableCell>
                                                     <TableCell className="text-right">
-                                                          <Button
-                                                              size="sm"
-                                                              variant="outline"
-                                                              className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70 gap-2"
-                                                              onClick={() => {
-                                                                  setEditingSlot(slot);
-                                                                  setFormData({
-                                                                      clinic_id: slot.clinic.clinic_id,
-                                                                      available_date: toManilaDateString(slot.available_date),
-                                                                      available_timestart: toManilaTimeString(slot.available_timestart),
-                                                                      available_timeend: toManilaTimeString(slot.available_timeend),
-                                                                  });
-                                                                  setDialogOpen(true);
-                                                              }}
-                                                          >
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 gap-2"
+                                                            onClick={() => {
+                                                                setEditingSlot(slot);
+                                                                setFormData({
+                                                                    clinic_id: slot.clinic.clinic_id,
+                                                                    available_date: toManilaDateString(slot.available_date),
+                                                                    available_timestart: toManilaTimeString(slot.available_timestart),
+                                                                    available_timeend: toManilaTimeString(slot.available_timeend),
+                                                                });
+                                                                setDialogOpen(true);
+                                                            }}
+                                                        >
                                                             <Pencil className="h-4 w-4" /> Edit
                                                         </Button>
                                                     </TableCell>

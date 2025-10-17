@@ -182,7 +182,7 @@ export default function DoctorAppointmentsPage() {
             actions={
                 <Button
                     variant="outline"
-                    className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
                     onClick={loadAppointments}
                 >
                     Refresh list
@@ -193,9 +193,9 @@ export default function DoctorAppointmentsPage() {
                 {/* Appointments Section */}
                 <section className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Card className="rounded-3xl border border-emerald-100/70 bg-gradient-to-r from-emerald-100/70 via-white to-emerald-50/80 shadow-sm">
+                        <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
                             <CardHeader className="space-y-1">
-                                <CardTitle className="text-base font-semibold text-emerald-700">
+                                <CardTitle className="text-base font-semibold text-green-700">
                                     Schedule snapshot
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
@@ -205,9 +205,9 @@ export default function DoctorAppointmentsPage() {
                                 </p>
                             </CardHeader>
                         </Card>
-                        <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
+                        <Card className="rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
                             <CardHeader className="space-y-1">
-                                <CardTitle className="text-base font-semibold text-emerald-700">
+                                <CardTitle className="text-base font-semibold text-green-700">
                                     Action reminder
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
@@ -224,7 +224,7 @@ export default function DoctorAppointmentsPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="gap-2 self-start rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                                className="gap-2 self-start rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
                                 onClick={handleClearAppointments}
                                 disabled={appointments.length === 0}
                             >
@@ -243,21 +243,21 @@ export default function DoctorAppointmentsPage() {
                                 {appointments.map((appointment) => (
                                     <Card
                                         key={appointment.id}
-                                        className="rounded-2xl border border-emerald-100/70 bg-white/90 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md"
+                                        className="rounded-2xl border border-green-100/70 bg-white/90 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md"
                                     >
                                         <CardContent className="flex flex-col gap-4 py-4">
                                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                                 <div>
-                                                    <h3 className="text-base font-semibold text-emerald-700">
+                                                    <h3 className="text-base font-semibold text-green-700">
                                                         {appointment.patientName}
                                                     </h3>
-                                                    <p className="text-xs uppercase tracking-wide text-emerald-500">
+                                                    <p className="text-xs uppercase tracking-wide text-green-500">
                                                         {appointment.clinic ?? "Clinic assignment"}
                                                     </p>
                                                 </div>
                                                 <Badge
                                                     variant={appointment.status === "Pending" ? "outline" : "default"}
-                                                    className="rounded-full border-emerald-200 bg-emerald-50/70 px-3 py-1 text-xs font-semibold text-emerald-700"
+                                                    className="rounded-full border-green-200 bg-green-50/70 px-3 py-1 text-xs font-semibold text-green-700"
                                                 >
                                                     {appointment.status}
                                                 </Badge>
@@ -265,17 +265,17 @@ export default function DoctorAppointmentsPage() {
 
                                             <div className="grid gap-2 text-sm sm:grid-cols-2">
                                                 <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <CalendarDays className="h-4 w-4 text-emerald-600" />
+                                                    <CalendarDays className="h-4 w-4 text-green-600" />
                                                     <span>{appointment.date}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+                                                    <ClipboardCheck className="h-4 w-4 text-green-600" />
                                                     <span>{appointment.time}</span>
                                                 </div>
                                             </div>
 
                                             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                                <Badge variant="outline" className="rounded-full border-emerald-200 bg-emerald-50/70 text-emerald-700">
+                                                <Badge variant="outline" className="rounded-full border-green-200 bg-green-50/70 text-green-700">
                                                     {appointment.hasConsultation ? "With consultation" : "Awaiting consultation"}
                                                 </Badge>
                                             </div>
@@ -284,7 +284,7 @@ export default function DoctorAppointmentsPage() {
                                                 <Button
                                                     size="sm"
                                                     variant="secondary"
-                                                    className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                                                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
                                                     onClick={() => handleApprove(appointment.id)}
                                                 >
                                                     <Check className="mr-2 h-4 w-4" /> Approve
@@ -292,18 +292,18 @@ export default function DoctorAppointmentsPage() {
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-100/70"
+                                                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
                                                     onClick={() => handleComplete(appointment.id)}
                                                 >
                                                     <ClipboardCheck className="mr-2 h-4 w-4" /> Complete
                                                 </Button>
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button size="sm" variant="ghost" className="rounded-xl text-emerald-700 hover:bg-emerald-100/70">
+                                                        <Button size="sm" variant="ghost" className="rounded-xl text-green-700 hover:bg-green-100/70">
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="rounded-xl border-emerald-100">
+                                                    <DropdownMenuContent align="end" className="rounded-xl border-green-100">
                                                         <DropdownMenuItem
                                                             onClick={() => {
                                                                 setActionType("move");
@@ -395,7 +395,7 @@ export default function DoctorAppointmentsPage() {
 
                         <DialogFooter className="mt-4">
                             <Button
-                                className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                                 onClick={handleActionSubmit}
                             >
                                 Submit

@@ -6,7 +6,7 @@ import {
     Home,
     Pill,
     Stethoscope,
-    UserCog,
+    User,
 } from "lucide-react";
 
 import {
@@ -17,7 +17,7 @@ import {
 
 const NAV_ITEMS = [
     { href: "/doctor", label: "Dashboard", icon: Home },
-    { href: "/doctor/account", label: "Account", icon: UserCog },
+    { href: "/doctor/account", label: "Account", icon: User },
     { href: "/doctor/consultation", label: "Consultation", icon: Stethoscope },
     { href: "/doctor/appointments", label: "Appointments", icon: CalendarDays },
     { href: "/doctor/dispense", label: "Dispensing", icon: Pill },

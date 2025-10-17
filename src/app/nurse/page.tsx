@@ -149,29 +149,12 @@ export default function NurseDashboardPage() {
                         <p>
                             Document every dispensing and inventory update as it happens. Accurate logs keep compliance effortless during audits.
                         </p>
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                            <Button asChild variant="outline" className="w-full rounded-xl border-green-200 text-green-700 hover:bg-green-100/70">
-                                <Link href="/nurse/dispense">Open dispensing log</Link>
-                            </Button>
-                            <Button asChild variant="ghost" className="w-full rounded-xl bg-green-600/10 text-green-700 hover:bg-green-600/20">
-                                <Link href="/nurse/clinic">View clinic schedule</Link>
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-green-700">Shift reminders</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-muted-foreground">
-                        <ul className="space-y-2">
-                            {shiftReminders.map((tip) => (
-                                <li key={tip} className="flex items-start gap-2 rounded-2xl bg-green-600/5 p-3">
-                                    <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-green-500" />
-                                    <span>{tip}</span>
-                                </li>
-                            ))}
-                        </ul>
+                        <Button asChild variant="outline" className="w-full rounded-xl border-green-200 text-green-700 hover:bg-green-100/70">
+                            <Link href="/nurse/dispense">Open dispensing log</Link>
+                        </Button>
+                        <Button asChild variant="ghost" className="w-full rounded-xl bg-green-600/10 text-green-700 hover:bg-green-600/20">
+                            <Link href="/nurse/clinic">View clinic schedule</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </section>

@@ -199,7 +199,7 @@ export default function DoctorDispensePage() {
             description="Document issued medicines, validate stock balances, and maintain accurate clinic records."
             actions={
                 <Button
-                    className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                    className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                     onClick={() => {
                         setForm({ consultation_id: "", med_id: "", quantity: "" });
                     }}
@@ -210,9 +210,9 @@ export default function DoctorDispensePage() {
         >
             <div className="space-y-6">
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-emerald-100/70 bg-gradient-to-r from-emerald-100/70 via-white to-emerald-50/80 shadow-sm">
+                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
                         <CardHeader className="space-y-1">
-                            <CardTitle className="text-base font-semibold text-emerald-700">
+                            <CardTitle className="text-base font-semibold text-green-700">
                                 Inventory snapshot
                             </CardTitle>
                             <p className="text-sm text-muted-foreground">
@@ -222,9 +222,9 @@ export default function DoctorDispensePage() {
                             </p>
                         </CardHeader>
                     </Card>
-                    <Card className="rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
-                        <CardHeader className="space-y-1 border-b border-emerald-100/70">
-                            <CardTitle className="text-lg font-semibold text-emerald-700 sm:text-xl">
+                    <Card className="rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
+                        <CardHeader className="space-y-1 border-b border-green-100/70">
+                            <CardTitle className="text-lg font-semibold text-green-700 sm:text-xl">
                                 Record a dispense
                             </CardTitle>
                             <p className="text-sm text-muted-foreground">
@@ -234,14 +234,14 @@ export default function DoctorDispensePage() {
                         <CardContent className="pt-6">
                             <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label className="font-medium text-emerald-700">Consultation</Label>
+                                    <Label className="font-medium text-green-700">Consultation</Label>
                                     <Select
                                         value={form.consultation_id}
                                         onValueChange={(value) =>
                                             setForm((prev) => ({ ...prev, consultation_id: value }))
                                         }
                                     >
-                                        <SelectTrigger className="w-full min-h-[90px] rounded-lg border border-emerald-100 px-4 py-3 text-base leading-relaxed whitespace-normal text-left">
+                                        <SelectTrigger className="w-full min-h-[90px] rounded-lg border border-green-100 px-4 py-3 text-base leading-relaxed whitespace-normal text-left">
                                             <SelectValue placeholder="Select consultation" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -277,7 +277,7 @@ export default function DoctorDispensePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="font-medium text-emerald-700">Medicine</Label>
+                                    <Label className="font-medium text-green-700">Medicine</Label>
                                     <Select
                                         value={form.med_id}
                                         onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
@@ -307,7 +307,7 @@ export default function DoctorDispensePage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="font-medium text-emerald-700">Quantity</Label>
+                                    <Label className="font-medium text-green-700">Quantity</Label>
                                     <Input
                                         type="number"
                                         min={1}
@@ -326,7 +326,7 @@ export default function DoctorDispensePage() {
                                 <div className="sm:col-span-2 flex justify-end">
                                     <Button
                                         type="submit"
-                                        className="rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                        className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                                         disabled={submitting}
                                     >
                                         {submitting ? (
@@ -343,9 +343,9 @@ export default function DoctorDispensePage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="flex-1 rounded-3xl border border-emerald-100/70 bg-white/85 shadow-sm">
-                        <CardHeader className="border-b border-emerald-100/70">
-                            <CardTitle className="text-lg font-semibold text-emerald-700 sm:text-xl">
+                    <Card className="flex-1 rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
+                        <CardHeader className="border-b border-green-100/70">
+                            <CardTitle className="text-lg font-semibold text-green-700 sm:text-xl">
                                 Recent dispense records
                             </CardTitle>
                         </CardHeader>
@@ -357,7 +357,7 @@ export default function DoctorDispensePage() {
                             ) : (
                                 <div className="overflow-x-auto">
                                     <Table className="min-w-full text-sm">
-                                        <TableHeader className="bg-emerald-100/70 text-emerald-700">
+                                        <TableHeader className="bg-green-100/70 text-green-700">
                                             <TableRow>
                                                 <TableHead>Clinic</TableHead>
                                                 <TableHead>Patient</TableHead>
@@ -372,7 +372,7 @@ export default function DoctorDispensePage() {
                                         <TableBody>
                                             {dispenses.length > 0 ? (
                                                 dispenses.map((d) => (
-                                                    <TableRow key={d.dispense_id} className="hover:bg-emerald-50">
+                                                    <TableRow key={d.dispense_id} className="hover:bg-green-50">
                                                         <TableCell>{d.med.clinic.clinic_name}</TableCell>
                                                         <TableCell>
                                                             {d.consultation.appointment?.patient?.username || "—"}
@@ -384,7 +384,7 @@ export default function DoctorDispensePage() {
                                                         <TableCell>{formatDateTime(d.createdAt)}</TableCell>
                                                         <TableCell>
                                                             {d.dispenseBatches.length > 0 ? (
-                                                                <ul className="text-xs text-emerald-700 space-y-1">
+                                                                <ul className="text-xs text-green-700 space-y-1">
                                                                     {d.dispenseBatches.map((batch) => (
                                                                         <li key={batch.id}>
                                                                             <span className="font-medium">{batch.quantity_used}</span>{" "}

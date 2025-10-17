@@ -608,9 +608,9 @@ export default function PatientAppointmentsPage() {
                             </p>
                         </div>
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="gap-2 rounded-xl border border-red-100 bg-red-50/70 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed"
+                            className="gap-2 self-start rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
                             onClick={handleClearAppointments}
                             disabled={appointments.length === 0}
                         >
