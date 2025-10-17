@@ -87,7 +87,6 @@ export default function LoginPageClient() {
         }
     }
 
-
     // ---------- FORGOT PASSWORD ----------
     async function handleSendCode(e: React.FormEvent) {
         e.preventDefault();
@@ -143,11 +142,16 @@ export default function LoginPageClient() {
         }
     }
 
-
     // ---------- FORM RENDER ----------
     const renderForm = (role: string, label: string, fieldName: string, placeholder: string) => (
-        <form className="space-y-4" onSubmit={(e) => handleLogin(e, role)}>
-            <Input name={fieldName} placeholder={placeholder} required disabled={!!loadingRole} />
+        <form className="space-y-5" onSubmit={(e) => handleLogin(e, role)}>
+            <Input
+                name={fieldName}
+                placeholder={placeholder}
+                required
+                disabled={!!loadingRole}
+                className="h-11 rounded-xl border-emerald-100 bg-white/90 text-slate-700 placeholder:text-slate-400 focus-visible:ring-emerald-500/50"
+            />
 
             <div className="relative">
                 <Input
@@ -155,7 +159,7 @@ export default function LoginPageClient() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     required
-                    className="pr-10"
+                    className="h-11 rounded-xl border-emerald-100 bg-white/90 pr-12 text-slate-700 placeholder:text-slate-400 focus-visible:ring-emerald-500/50"
                     disabled={!!loadingRole}
                 />
                 <Button
@@ -164,12 +168,12 @@ export default function LoginPageClient() {
                     size="icon"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={!!loadingRole}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
                 >
                     {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-500" />
+                        <EyeOff className="h-5 w-5" />
                     ) : (
-                        <Eye className="h-5 w-5 text-gray-500" />
+                        <Eye className="h-5 w-5" />
                     )}
                 </Button>
             </div>
@@ -177,7 +181,7 @@ export default function LoginPageClient() {
             <Button
                 type="submit"
                 disabled={loadingRole === role}
-                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 font-medium text-white shadow-md shadow-emerald-200 transition hover:bg-emerald-600"
             >
                 {loadingRole === role ? (
                     <>
@@ -189,11 +193,11 @@ export default function LoginPageClient() {
             </Button>
 
             {/* ✅ Forgot password opens modal */}
-            <p className="text-sm text-center mt-3">
+            <p className="mt-3 text-center text-sm">
                 <button
                     type="button"
                     onClick={() => setForgotOpen(true)}
-                    className="text-green-700 hover:underline"
+                    className="font-medium text-emerald-700 underline-offset-4 transition hover:underline"
                 >
                     Forgot password?
                 </button>
@@ -203,45 +207,112 @@ export default function LoginPageClient() {
 
     // ---------- RENDER ----------
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-green-50 p-6">
-            <div className="flex items-center gap-3 mb-8">
-                <Image src="/clinic-illustration.svg" alt="logo" width={50} height={50} />
-                <h1 className="text-2xl md:text-3xl font-bold text-green-600">
-                    HNU Clinic Login
-                </h1>
+        <div className="relative min-h-screen bg-gradient-to-br from-emerald-100 via-white to-emerald-200">
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-emerald-300/40 blur-3xl" />
+                <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-lime-300/40 blur-3xl" />
             </div>
 
-            <Card
-                className={`w-full max-w-md shadow-lg rounded-2xl transition-opacity ${loadingRole ? "opacity-50 pointer-events-none" : ""
-                    }`}
-            >
-                <CardContent className="p-6">
-                    <Tabs defaultValue="doctor" className="w-full">
-                        <TabsList className="flex flex-wrap w-full mb-6 bg-muted p-1 rounded-lg gap-2">
-                            <TabsTrigger value="doctor">Doctor</TabsTrigger>
-                            <TabsTrigger value="nurse">Nurse</TabsTrigger>
-                            <TabsTrigger value="scholar">Scholar</TabsTrigger>
-                            <TabsTrigger value="patient">Patient</TabsTrigger>
-                        </TabsList>
+            <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-between gap-12 px-6 py-12 lg:flex-row lg:items-center lg:py-24">
+                <div className="mx-auto max-w-2xl text-center lg:mx-0 lg:max-w-lg lg:text-left">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1 text-sm font-medium text-emerald-700 shadow-sm">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        Secure Access Portal
+                    </span>
+                    <h1 className="mt-6 text-3xl font-semibold text-slate-900 sm:text-4xl md:text-5xl">
+                        Welcome back to the HNU Clinic
+                    </h1>
+                    <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
+                        Sign in to manage appointments, review health records, and stay connected with the Holy
+                        Name University Clinic team. Choose your role to continue.
+                    </p>
 
-                        <TabsContent value="doctor">
-                            {renderForm("doctor", "Doctor", "employee_id", "Employee ID")}
-                        </TabsContent>
-                        <TabsContent value="nurse">
-                            {renderForm("nurse", "Nurse", "employee_id", "Employee ID")}
-                        </TabsContent>
-                        <TabsContent value="scholar">
-                            {renderForm("scholar", "Scholar", "school_id", "Student ID")}
-                        </TabsContent>
-                        <TabsContent value="patient">
-                            {renderForm("patient", "Patient", "patient_id", "Student ID or Employee ID")}
-                        </TabsContent>
-                    </Tabs>
-                </CardContent>
-            </Card>
+                    <dl className="mt-8 grid gap-4 text-left sm:grid-cols-2">
+                        <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
+                            <dt className="text-sm font-medium text-emerald-700">Multi-role support</dt>
+                            <dd className="mt-1 text-sm text-slate-600">
+                                Access tailored dashboards for doctors, nurses, scholars, and patients.
+                            </dd>
+                        </div>
+                        <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
+                            <dt className="text-sm font-medium text-emerald-700">Privacy first</dt>
+                            <dd className="mt-1 text-sm text-slate-600">
+                                Your information is protected with secure authentication measures.
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
 
-            <p className="text-gray-600 text-sm mt-6 text-center">
-                © {new Date().getFullYear()} HNU Clinic Capstone Project
+                <div className="mx-auto w-full max-w-md lg:mx-0">
+                    <Card
+                        className={`relative z-10 overflow-hidden border-0 bg-white/90 shadow-xl backdrop-blur-xl transition-opacity ${loadingRole ? "opacity-60" : ""}`}
+                    >
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-lime-400 to-emerald-500" />
+                        <CardContent className="p-8">
+                            <div className="mb-6 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-slate-900">Sign in</h2>
+                                    <p className="text-sm text-slate-500">
+                                        Use your assigned credentials to access the clinic portal.
+                                    </p>
+                                </div>
+                                <div className="hidden sm:block">
+                                    <Image src="/clinic-illustration.svg" alt="HNU Clinic" width={48} height={48} />
+                                </div>
+                            </div>
+
+                            <Tabs defaultValue="doctor" className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 gap-2 rounded-xl bg-emerald-100/60 p-1 text-sm sm:grid-cols-4">
+                                    <TabsTrigger
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-emerald-700"
+                                        value="doctor"
+                                    >
+                                        Doctor
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-emerald-700"
+                                        value="nurse"
+                                    >
+                                        Nurse
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-emerald-700"
+                                        value="scholar"
+                                    >
+                                        Scholar
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-emerald-700"
+                                        value="patient"
+                                    >
+                                        Patient
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="doctor" className="mt-6">
+                                    {renderForm("doctor", "Doctor", "employee_id", "Employee ID")}
+                                </TabsContent>
+                                <TabsContent value="nurse" className="mt-6">
+                                    {renderForm("nurse", "Nurse", "employee_id", "Employee ID")}
+                                </TabsContent>
+                                <TabsContent value="scholar" className="mt-6">
+                                    {renderForm("scholar", "Scholar", "school_id", "Student ID")}
+                                </TabsContent>
+                                <TabsContent value="patient" className="mt-6">
+                                    {renderForm("patient", "Patient", "patient_id", "Student ID or Employee ID")}
+                                </TabsContent>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+
+                    <p className="mt-6 text-center text-xs text-slate-500">
+                        By logging in you agree to our confidentiality and privacy standards.
+                    </p>
+                </div>
+            </div>
+
+            <p className="relative pb-8 text-center text-xs text-slate-500">
+                © {new Date().getFullYear()} HNU Clinic Capstone Project. All rights reserved.
             </p>
 
             {/* 🔒 Forgot Password Modal */}
@@ -257,7 +328,7 @@ export default function LoginPageClient() {
                     </DialogHeader>
 
                     {!tokenSent ? (
-                        <form onSubmit={handleSendCode} className="space-y-4 mt-2">
+                        <form onSubmit={handleSendCode} className="mt-2 space-y-4">
                             <Input
                                 value={contact}
                                 onChange={(e) => setContact(e.target.value)}
@@ -268,7 +339,7 @@ export default function LoginPageClient() {
                                 <Button
                                     type="submit"
                                     disabled={verifying}
-                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                    className="w-full bg-green-600 text-white hover:bg-green-700"
                                 >
                                     {verifying ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -279,7 +350,7 @@ export default function LoginPageClient() {
                             </DialogFooter>
                         </form>
                     ) : (
-                        <form onSubmit={handleReset} className="space-y-4 mt-2">
+                        <form onSubmit={handleReset} className="mt-2 space-y-4">
                             <Input
                                 placeholder="Enter 6-digit code"
                                 value={code}
@@ -297,7 +368,7 @@ export default function LoginPageClient() {
                                 <Button
                                     type="submit"
                                     disabled={resetting}
-                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                    className="w-full bg-green-600 text-white hover:bg-green-700"
                                 >
                                     {resetting ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -310,7 +381,6 @@ export default function LoginPageClient() {
                     )}
                 </DialogContent>
             </Dialog>
-
         </div>
     );
 }
