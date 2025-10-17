@@ -80,6 +80,7 @@ type ConsultationSummary = {
 
 type PatientRecord = {
     id: string;
+    userId: string;
     patientId: string;
     fullName: string;
     patientType: "Student" | "Employee";

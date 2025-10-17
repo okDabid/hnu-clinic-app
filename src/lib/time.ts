@@ -49,8 +49,54 @@ export function formatTimeString12(time: string): string {
 /**
  * ✅ Format a full time range (used in patient and doctor pages)
  */
-export function formatTimeRange(start: string, end: string): string {
-    return `${formatTimeString12(start)} – ${formatTimeString12(end)}`;
+type TimeInput = string | Date | null | undefined;
+
+function parseTimeInput(value: TimeInput): Date | null {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : value;
+    }
+
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+
+        if (/^\d{2}:\d{2}$/.test(trimmed)) {
+            return new Date(`1970-01-01T${trimmed}:00+08:00`);
+        }
+
+        const date = new Date(trimmed);
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    return null;
+}
+
+export function formatTimeRange(start: TimeInput, end: TimeInput): string {
+    const startDate = parseTimeInput(start);
+    const endDate = parseTimeInput(end);
+
+    const startText = startDate
+        ? startDate.toLocaleTimeString("en-PH", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+              timeZone: "Asia/Manila",
+          })
+        : "";
+
+    const endText = endDate
+        ? endDate.toLocaleTimeString("en-PH", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+              timeZone: "Asia/Manila",
+          })
+        : "";
+
+    if (startText && endText) return `${startText} – ${endText}`;
+    return startText || endText || "";
 }
 
 const manilaISOFormatter = new Intl.DateTimeFormat("en-CA", {

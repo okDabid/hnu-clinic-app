@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
+import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type Clinic = { clinic_id: string; clinic_name: string };
@@ -392,47 +393,29 @@ export default function PatientAppointmentsPage() {
     }, [rescheduleTarget, rescheduleDate]);
 
     // ✅ Dynamic service options: each label has a unique value
-    const availableServices = useMemo(() => {
-        if (!selectedDoctor?.specialization) return [];
-
-        if (selectedDoctor.specialization === "Physician") {
-            return [
-                { label: "Physical examinations", value: "Assessment-physical" },
-                { label: "Consultations", value: "Consultation-general" },
-                { label: "Medical certificate issuance", value: "Consultation-cert" },
-            ];
-        }
-
-        if (selectedDoctor.specialization === "Dentist") {
-            return [
-                { label: "Consultations and examinations", value: "Dental-consult" },
-                { label: "Oral prophylaxis", value: "Dental-cleaning" },
-                { label: "Tooth extractions", value: "Dental-extraction" },
-                { label: "Dental certificate issuance", value: "Dental-cert" },
-            ];
-        }
-
-        return [];
-    }, [selectedDoctor]);
-
-    const selectedServiceLabel = useMemo(
-        () => availableServices.find((service) => service.value === serviceType)?.label ?? null,
-        [availableServices, serviceType]
+    const availableServices = useMemo(
+        () => getServiceOptionsForSpecialization(selectedDoctor?.specialization ?? null),
+        [selectedDoctor]
     );
 
-    // ✅ Convert unique UI value to enum-safe backend value
-    function getEnumValue(v: string): string {
-        if (v.startsWith("Consultation")) return "Consultation";
-        if (v.startsWith("Dental")) return "Dental";
-        if (v.startsWith("Assessment")) return "Assessment";
-        return "Other";
-    }
+    const selectedServiceLabel = useMemo(() => {
+        const match = availableServices.find((service) => service.value === serviceType);
+        return match?.label ?? null;
+    }, [availableServices, serviceType]);
 
     // ✅ Submit appointment
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!clinicId || !doctorId || !serviceType || !date || !selectedSlot) {
             toast.error("Please complete all fields");
+            return;
+        }
+
+        const matchedService = availableServices.find((service) => service.value === serviceType);
+        const serviceEnumValue = matchedService?.serviceType ?? resolveServiceType(serviceType);
+
+        if (!serviceEnumValue) {
+            toast.error("Select a valid service type");
             return;
         }
 
@@ -444,7 +427,7 @@ export default function PatientAppointmentsPage() {
                 body: JSON.stringify({
                     clinic_id: clinicId,
                     doctor_user_id: doctorId,
-                    service_type: getEnumValue(serviceType),
+                    service_type: serviceEnumValue,
                     date,
                     time_start: selectedSlot.start,
                     time_end: selectedSlot.end,
