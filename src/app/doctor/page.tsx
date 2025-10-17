@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import {
     CalendarDays,
     ClipboardList,
-    ClipboardCheck,
     Pill,
     Stethoscope,
     UserCog,
@@ -16,7 +15,6 @@ import {
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 const managementAreas = [
     {

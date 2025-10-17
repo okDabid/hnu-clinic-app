@@ -8,7 +8,6 @@ import { Bell, CalendarDays, Stethoscope, User } from "lucide-react";
 import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 const quickActions = [
     {

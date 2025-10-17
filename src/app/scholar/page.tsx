@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
-    CalendarClock,
     CalendarDays,
     ClipboardList,
     FileSpreadsheet,
@@ -15,7 +14,6 @@ import {
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 const workflowHighlights = [
     {

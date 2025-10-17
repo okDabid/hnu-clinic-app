@@ -6,7 +6,6 @@ import { useSession } from "next-auth/react";
 import {
     BarChart3,
     ClipboardCheck,
-    ClipboardList,
     Package,
     Users,
 } from "lucide-react";
@@ -19,7 +18,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 const quickActions = [
     {
