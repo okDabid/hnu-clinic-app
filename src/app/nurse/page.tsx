@@ -45,12 +45,6 @@ const quickActions = [
     },
 ];
 
-const shiftReminders = [
-    "Verify tomorrow's appointment queue and prepare intake forms by 3:00 PM.",
-    "Coordinate with physicians on urgent follow-ups and note special care instructions.",
-    "Audit essential medicines before closing to keep the dispensary fully stocked.",
-];
-
 export default function NurseDashboardPage() {
     const { data: session } = useSession();
     const fullName = session?.user?.name ?? "Nurse";
