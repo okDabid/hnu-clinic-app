@@ -41,6 +41,7 @@ import { BLOOD_TYPES } from "@/lib/patient-records-update";
 
 type PatientRecord = {
     id: string;
+    userId: string;
     patientId: string;
     fullName: string;
     patientType: "Student" | "Employee";

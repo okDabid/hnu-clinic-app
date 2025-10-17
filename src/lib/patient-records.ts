@@ -19,6 +19,7 @@ type ConsultationSummary = {
 
 export type PatientRecordEntry = {
     id: string;
+    userId: string;
     patientId: string;
     fullName: string;
     patientType: "Student" | "Employee";
@@ -155,6 +156,7 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
         const appointment = student.user.appointmentsPatient?.[0] ?? null;
         return {
             id: student.stud_user_id,
+            userId: student.user.user_id,
             patientId: student.student_id,
             fullName: normalizeName(student.fname, student.mname, student.lname),
             patientType: "Student",
@@ -201,6 +203,7 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
         const appointment = employee.user.appointmentsPatient?.[0] ?? null;
         return {
             id: employee.emp_id,
+            userId: employee.user.user_id,
             patientId: employee.employee_id,
             fullName: normalizeName(employee.fname, employee.mname, employee.lname),
             patientType: "Employee",

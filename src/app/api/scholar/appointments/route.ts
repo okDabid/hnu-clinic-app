@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { AppointmentStatus, Prisma, Role } from "@prisma/client";
+import { AppointmentStatus, Prisma, Role, ServiceType } from "@prisma/client";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { manilaNow } from "@/lib/time";
+import {
+    buildManilaDate,
+    endOfManilaDay,
+    manilaNow,
+    rangesOverlap,
+    startOfManilaDay,
+} from "@/lib/time";
 
 function parseDate(value: string | null, type: "start" | "end") {
     if (!value) return null;
@@ -184,6 +190,148 @@ export async function GET(req: Request) {
             { error: "Failed to fetch appointments" },
             { status: 500 }
         );
+    }
+}
+
+export async function POST(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const account = await prisma.users.findUnique({
+            where: { user_id: session.user.id },
+            select: { role: true },
+        });
+
+        if (!account || account.role !== Role.SCHOLAR) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        const body = await req.json();
+        const patient_user_id = typeof body?.patient_user_id === "string" ? body.patient_user_id : "";
+        const clinic_id = typeof body?.clinic_id === "string" ? body.clinic_id : "";
+        const doctor_user_id = typeof body?.doctor_user_id === "string" ? body.doctor_user_id : "";
+        const service_type = typeof body?.service_type === "string" ? body.service_type : "";
+        const date = typeof body?.date === "string" ? body.date : "";
+        const time_start = typeof body?.time_start === "string" ? body.time_start : "";
+        const time_end = typeof body?.time_end === "string" ? body.time_end : "";
+        const remarks = typeof body?.remarks === "string" ? body.remarks.trim() : "";
+
+        if (!patient_user_id || !clinic_id || !doctor_user_id || !service_type || !date || !time_start || !time_end) {
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+        }
+
+        if (!(Object.values(ServiceType) as string[]).includes(service_type)) {
+            return NextResponse.json({ error: "Invalid service type" }, { status: 400 });
+        }
+
+        const patient = await prisma.users.findUnique({
+            where: { user_id: patient_user_id },
+            select: { role: true },
+        });
+
+        if (!patient || patient.role !== Role.PATIENT) {
+            return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+        }
+
+        const clinic = await prisma.clinic.findUnique({ where: { clinic_id } });
+        if (!clinic) {
+            return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
+        }
+
+        const doctor = await prisma.users.findUnique({
+            where: { user_id: doctor_user_id },
+            select: { role: true },
+        });
+
+        if (!doctor || doctor.role !== Role.DOCTOR) {
+            return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
+        }
+
+        const appointment_date = startOfManilaDay(date);
+        const appointment_timestart = buildManilaDate(date, time_start);
+        const appointment_timeend = buildManilaDate(date, time_end);
+
+        if (!(appointment_timestart < appointment_timeend)) {
+            return NextResponse.json({ error: "Invalid time range" }, { status: 400 });
+        }
+
+        const dayStart = appointment_date;
+        const dayEnd = endOfManilaDay(date);
+
+        const availabilities = await prisma.doctorAvailability.findMany({
+            where: {
+                doctor_user_id,
+                clinic_id,
+                available_date: { gte: dayStart, lte: dayEnd },
+            },
+        });
+
+        const withinAvailability = availabilities.some(
+            (availability) =>
+                appointment_timestart >= availability.available_timestart &&
+                appointment_timeend <= availability.available_timeend
+        );
+
+        if (!withinAvailability) {
+            return NextResponse.json(
+                { error: "Selected time is outside doctor's availability" },
+                { status: 400 }
+            );
+        }
+
+        const conflicts = await prisma.appointment.findMany({
+            where: {
+                doctor_user_id,
+                appointment_timestart: { gte: dayStart, lte: dayEnd },
+                status: {
+                    in: [AppointmentStatus.Pending, AppointmentStatus.Approved, AppointmentStatus.Moved],
+                },
+            },
+            select: {
+                appointment_timestart: true,
+                appointment_timeend: true,
+            },
+        });
+
+        const hasConflict = conflicts.some((existing) =>
+            rangesOverlap(
+                appointment_timestart,
+                appointment_timeend,
+                existing.appointment_timestart,
+                existing.appointment_timeend
+            )
+        );
+
+        if (hasConflict) {
+            return NextResponse.json({ error: "Time slot already booked" }, { status: 409 });
+        }
+
+        const created = await prisma.appointment.create({
+            data: {
+                patient_user_id,
+                clinic_id,
+                doctor_user_id,
+                created_by_user_id: session.user.id,
+                appointment_date,
+                appointment_timestart,
+                appointment_timeend,
+                remarks: remarks.length > 0 ? remarks : null,
+                service_type: service_type as ServiceType,
+                status: AppointmentStatus.Approved,
+            },
+            select: {
+                appointment_id: true,
+                status: true,
+            },
+        });
+
+        return NextResponse.json(created, { status: 201 });
+    } catch (err) {
+        console.error("[POST /api/scholar/appointments]", err);
+        return NextResponse.json({ error: "Failed to create appointment" }, { status: 500 });
     }
 }
 
