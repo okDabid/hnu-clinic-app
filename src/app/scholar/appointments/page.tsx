@@ -2,15 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-    AlertCircle,
-    CalendarDays,
-    CheckCircle2,
-    Clock3,
-    Loader2,
-    RefreshCcw,
-    Search,
-} from "lucide-react";
+import { AlertCircle, CalendarDays, Clock3, Loader2, RefreshCcw, Search } from "lucide-react";
 
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { AppointmentPanel } from "@/components/appointments/appointment-panel";
@@ -26,15 +18,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { formatManilaDateTime } from "@/lib/time";
@@ -118,11 +101,6 @@ export default function ScholarAppointmentsPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
-    const [manageOpen, setManageOpen] = useState(false);
-    const [selected, setSelected] = useState<ScholarAppointment | null>(null);
-    const [updateStatus, setUpdateStatus] = useState<AppointmentStatus | "">("");
-    const [updateRemarks, setUpdateRemarks] = useState("");
-    const [updating, setUpdating] = useState(false);
 
     const loadAppointments = useCallback(async () => {
         try {
@@ -211,57 +189,6 @@ export default function ScholarAppointmentsPage() {
             .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
         return upcoming[0] ?? null;
     }, [activeAppointments]);
-
-    function openManageDialog(appointment: ScholarAppointment) {
-        setSelected(appointment);
-        setUpdateStatus(appointment.status);
-        setUpdateRemarks(appointment.remarks ?? "");
-        setManageOpen(true);
-    }
-
-    function closeManageDialog() {
-        setManageOpen(false);
-        setSelected(null);
-        setUpdateStatus("");
-        setUpdateRemarks("");
-    }
-
-    const handleUpdateSubmit = useCallback(
-        async (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            if (!selected || !updateStatus) {
-                toast.error("Select a new status before saving");
-                return;
-            }
-
-            try {
-                setUpdating(true);
-                const res = await fetch("/api/scholar/appointments", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        appointment_id: selected.id,
-                        status: updateStatus,
-                        remarks: updateRemarks,
-                    }),
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    toast.error(data?.error ?? "Failed to update appointment");
-                    return;
-                }
-                toast.success("Appointment updated");
-                closeManageDialog();
-                loadAppointments();
-            } catch (err) {
-                console.error(err);
-                toast.error("Unable to update appointment");
-            } finally {
-                setUpdating(false);
-            }
-        },
-        [loadAppointments, selected, updateRemarks, updateStatus]
-    );
 
     return (
         <ScholarLayout
@@ -396,13 +323,12 @@ export default function ScholarAppointmentsPage() {
                                         <TableHead className="min-w-[140px]">Time</TableHead>
                                         <TableHead className="min-w-[120px]">Status</TableHead>
                                         <TableHead className="min-w-[120px]">Service</TableHead>
-                                        <TableHead className="w-[100px] text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {loading ? (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                                            <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                                                 <div className="flex items-center justify-center gap-2 text-sm">
                                                     <Loader2 className="h-4 w-4 animate-spin" /> Loading appointments...
                                                 </div>
@@ -410,7 +336,7 @@ export default function ScholarAppointmentsPage() {
                                         </TableRow>
                                     ) : filteredAppointments.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                                            <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                                                 No appointments match your filters.
                                             </TableCell>
                                         </TableRow>
@@ -445,16 +371,6 @@ export default function ScholarAppointmentsPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell>{appointment.serviceType ?? "—"}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="rounded-xl text-green-700 hover:bg-green-100"
-                                                        onClick={() => openManageDialog(appointment)}
-                                                    >
-                                                        Manage
-                                                    </Button>
-                                                </TableCell>
                                             </TableRow>
                                         ))
                                     )}
@@ -465,74 +381,6 @@ export default function ScholarAppointmentsPage() {
                 </AppointmentPanel>
             </div>
 
-            <Dialog open={manageOpen} onOpenChange={setManageOpen}>
-                <DialogContent className="rounded-3xl sm:max-w-lg">
-                    <form onSubmit={handleUpdateSubmit} className="space-y-4">
-                        <DialogHeader>
-                            <DialogTitle className="text-xl text-green-700">Manage appointment</DialogTitle>
-                            <DialogDescription className="text-sm text-muted-foreground">
-                                Update the appointment status or add front-desk notes visible to the care team.
-                            </DialogDescription>
-                        </DialogHeader>
-                        {selected ? (
-                            <div className="rounded-2xl bg-green-50/70 p-4 text-sm text-green-700">
-                                <p className="font-semibold">{selected.patient.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {selected.clinic.name || "Unassigned clinic"} • {formatDateOnly(selected.start)} • {" "}
-                                    {formatTimeWindow(selected.start, selected.end)}
-                                </p>
-                            </div>
-                        ) : null}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-green-700">Status</Label>
-                            <Select
-                                value={updateStatus || undefined}
-                                onValueChange={(value) => setUpdateStatus(value as AppointmentStatus)}
-                            >
-                                <SelectTrigger className="rounded-xl border-green-200">
-                                    <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {STATUS_ORDER.map((status) => (
-                                        <SelectItem key={status} value={status}>
-                                            {STATUS_LABELS[status]}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-green-700">Front-desk notes</Label>
-                            <Textarea
-                                value={updateRemarks}
-                                onChange={(event) => setUpdateRemarks(event.target.value)}
-                                className="min-h-[120px] rounded-2xl border-green-200"
-                                placeholder="Leave context for the nurses or doctors (optional)"
-                            />
-                        </div>
-                        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button type="button" variant="outline" onClick={closeManageDialog} className="rounded-xl">
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                className="rounded-xl bg-green-600 text-white hover:bg-green-700"
-                                disabled={updating}
-                            >
-                                {updating ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle2 className="mr-2 h-4 w-4" /> Save changes
-                                    </>
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
         </ScholarLayout>
     );
 }

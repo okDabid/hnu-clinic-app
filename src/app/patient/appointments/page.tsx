@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+    AlertCircle,
     Ban,
     CalendarDays,
     ClipboardList,
+    Clock3,
     Loader2,
-    Trash2,
+    Search,
     Undo2,
 } from "lucide-react";
 
@@ -14,6 +16,7 @@ import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AppointmentPanel } from "@/components/appointments/appointment-panel";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,7 +39,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { formatTimeRange, manilaNow } from "@/lib/time";
+import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type Clinic = { clinic_id: string; clinic_name: string };
 type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
@@ -77,6 +81,78 @@ function isoToInputDate(iso: string | null | undefined): string {
     return toInputDate(date);
 }
 
+const STATUS_ORDER = ["Pending", "Approved", "Moved", "Completed", "Cancelled"] as const;
+
+type AppointmentStatus = (typeof STATUS_ORDER)[number];
+
+const STATUS_LABELS: Record<AppointmentStatus, string> = {
+    Pending: "Awaiting review",
+    Approved: "Confirmed",
+    Moved: "Rescheduled",
+    Completed: "Completed",
+    Cancelled: "Cancelled",
+};
+
+const STATUS_BADGE_CLASSES: Record<AppointmentStatus, string> = {
+    Pending: "border-amber-200 bg-amber-50 text-amber-700",
+    Approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    Moved: "border-sky-200 bg-sky-50 text-sky-700",
+    Completed: "border-slate-200 bg-slate-100 text-slate-700",
+    Cancelled: "border-rose-200 bg-rose-50 text-rose-700",
+};
+
+const ACTIVE_STATUSES: AppointmentStatus[] = ["Pending", "Approved", "Moved"];
+
+const STATUS_VALUE_MAP: Record<string, AppointmentStatus> = {
+    pending: "Pending",
+    approved: "Approved",
+    moved: "Moved",
+    completed: "Completed",
+    cancelled: "Cancelled",
+};
+
+function normalizeStatus(value: string): AppointmentStatus | null {
+    return STATUS_VALUE_MAP[value.toLowerCase()] ?? null;
+}
+
+function formatDateOnly(value: string) {
+    if (!value) return "—";
+    const iso = `${value}T00:00:00+08:00`;
+    return (
+        formatManilaDateTime(iso, {
+            hour: undefined,
+            minute: undefined,
+        }) ?? "—"
+    );
+}
+
+function formatAppointmentDate(appointment: Appointment) {
+    if (appointment.startISO) {
+        return (
+            formatManilaDateTime(appointment.startISO, {
+                hour: undefined,
+                minute: undefined,
+            }) ?? formatDateOnly(appointment.date)
+        );
+    }
+    return formatDateOnly(appointment.date);
+}
+
+function formatAppointmentTime(appointment: Appointment) {
+    const range = formatTimeRange(appointment.startISO, appointment.endISO);
+    if (range) return range;
+    return appointment.time || "—";
+}
+
+function humanizeService(value: string | null | undefined) {
+    if (!value) return "—";
+    return value
+        .toLowerCase()
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}
+
 export default function PatientAppointmentsPage() {
     const minBookingDate = useMemo(() => computeMinBookingDate(), []);
 
@@ -98,6 +174,8 @@ export default function PatientAppointmentsPage() {
     // My appointments
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loadingAppointments, setLoadingAppointments] = useState(true);
+    const [searchAppointments, setSearchAppointments] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string>("active");
 
     // Reschedule & cancel
     const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -410,14 +488,89 @@ export default function PatientAppointmentsPage() {
         }
     }
 
-    const handleClearAppointments = () => {
-        setAppointments([]);
-        toast.info("Appointments cleared from view");
-    };
-
     useEffect(() => {
         loadAppointments();
     }, []);
+
+    const appointmentSearch = searchAppointments.trim().toLowerCase();
+
+    const filteredAppointments = useMemo(() => {
+        return appointments.filter((appointment) => {
+            const status = normalizeStatus(appointment.status);
+            if (statusFilter && statusFilter !== "all") {
+                if (statusFilter === "active" && (!status || !ACTIVE_STATUSES.includes(status))) {
+                    return false;
+                }
+                if (statusFilter !== "active") {
+                    const matchStatus = STATUS_VALUE_MAP[statusFilter];
+                    if (!matchStatus || status !== matchStatus) {
+                        return false;
+                    }
+                }
+            }
+
+            if (!appointmentSearch) return true;
+
+            const haystack = [
+                appointment.clinic,
+                appointment.doctor,
+                appointment.status,
+                appointment.serviceType ?? "",
+                appointment.date,
+                appointment.time,
+            ]
+                .join(" ")
+                .toLowerCase();
+
+            return haystack.includes(appointmentSearch);
+        });
+    }, [appointmentSearch, appointments, statusFilter]);
+
+    const statusCounts = useMemo(() => {
+        const counts: Record<AppointmentStatus, number> = {
+            Pending: 0,
+            Approved: 0,
+            Moved: 0,
+            Completed: 0,
+            Cancelled: 0,
+        };
+
+        for (const appointment of appointments) {
+            const status = normalizeStatus(appointment.status);
+            if (status) {
+                counts[status] += 1;
+            }
+        }
+
+        return counts;
+    }, [appointments]);
+
+    const activeAppointments = useMemo(
+        () =>
+            appointments.filter((appointment) => {
+                const status = normalizeStatus(appointment.status);
+                return status ? ACTIVE_STATUSES.includes(status) : false;
+            }),
+        [appointments]
+    );
+
+    const upcomingAppointments = useMemo(
+        () =>
+            activeAppointments.filter((appointment) => {
+                const start = appointment.startISO ? new Date(appointment.startISO) : null;
+                return start ? start.getTime() >= Date.now() : false;
+            }),
+        [activeAppointments]
+    );
+
+    const nextAppointment = useMemo(() => {
+        const sorted = [...upcomingAppointments].sort((a, b) => {
+            const startA = a.startISO ? new Date(a.startISO).getTime() : Number.POSITIVE_INFINITY;
+            const startB = b.startISO ? new Date(b.startISO).getTime() : Number.POSITIVE_INFINITY;
+            return startA - startB;
+        });
+        return sorted[0] ?? null;
+    }, [upcomingAppointments]);
 
     return (
         <PatientLayout
@@ -593,108 +746,201 @@ export default function PatientAppointmentsPage() {
                 </div>
             </section>
 
-            <section className="space-y-4">
-                <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
-                    <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <CardTitle className="flex items-center gap-3 text-xl text-green-700">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-600/10 text-green-700">
-                                    <ClipboardList className="h-5 w-5" />
-                                </span>
-                                Your appointment requests
-                            </CardTitle>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Track approval status, reschedule upcoming visits, or cancel when plans change.
-                            </p>
+            <section className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-base font-semibold text-green-700">Active requests</CardTitle>
+                                <p className="text-sm text-muted-foreground">Pending, approved, and moved appointments</p>
+                            </div>
+                            <Clock3 className="h-9 w-9 text-green-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-semibold text-green-700">{activeAppointments.length}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-base font-semibold text-green-700">Next visit</CardTitle>
+                                <p className="text-sm text-muted-foreground">Your soonest approved appointment</p>
+                            </div>
+                            <CalendarDays className="h-9 w-9 text-green-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-semibold text-green-700">{upcomingAppointments.length}</p>
+                            {nextAppointment ? (
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    {formatAppointmentDate(nextAppointment)} • {formatAppointmentTime(nextAppointment)}
+                                </p>
+                            ) : null}
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-base font-semibold text-green-700">Pending approvals</CardTitle>
+                                <p className="text-sm text-muted-foreground">Requests awaiting confirmation</p>
+                            </div>
+                            <AlertCircle className="h-9 w-9 text-amber-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-semibold text-green-700">{statusCounts.Pending}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <AppointmentPanel
+                    icon={ClipboardList}
+                    title="Appointment board"
+                    description="Track approval status, reschedule upcoming visits, or cancel when plans change."
+                    actions={
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Confirmed
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-amber-500" /> Pending
+                            </div>
                         </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2 self-start rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
-                            onClick={handleClearAppointments}
-                            disabled={appointments.length === 0}
-                        >
-                            <Trash2 className="h-4 w-4" /> Clear appointments
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        {loadingAppointments ? (
-                            <div className="flex items-center justify-center rounded-3xl border border-dashed border-green-200 bg-green-50/60 py-10 text-sm text-green-700">
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading appointments…
+                    }
+                    contentClassName="pt-4"
+                >
+                    <div className="flex flex-col gap-4">
+                        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-green-700">Search requests</Label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search by clinic, doctor, or status"
+                                        value={searchAppointments}
+                                        onChange={(event) => setSearchAppointments(event.target.value)}
+                                        className="rounded-xl border-green-200 pl-9"
+                                    />
+                                </div>
                             </div>
-                        ) : appointments.length === 0 ? (
-                            <div className="rounded-3xl border border-dashed border-green-200 bg-green-50/60 p-8 text-center text-sm text-green-700">
-                                No appointment requests yet. Submit a booking to see it here.
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto rounded-3xl border border-green-100">
-                                <table className="min-w-full text-sm">
-                                    <thead className="bg-green-600/10 text-xs font-semibold uppercase tracking-wide text-green-700">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left">Clinic</th>
-                                            <th className="px-4 py-3 text-left">Doctor</th>
-                                            <th className="px-4 py-3 text-left">Date</th>
-                                            <th className="px-4 py-3 text-left">Time</th>
-                                            <th className="px-4 py-3 text-left">Status</th>
-                                            <th className="px-4 py-3 text-left">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-green-100/80">
-                                        {appointments.map((appointment) => (
-                                            <tr key={appointment.id} className="bg-white/90">
-                                                <td className="px-4 py-3 font-medium text-green-800">{appointment.clinic}</td>
-                                                <td className="px-4 py-3 text-muted-foreground">{appointment.doctor}</td>
-                                                <td className="px-4 py-3 text-muted-foreground">{appointment.date}</td>
-                                                <td className="px-4 py-3 text-muted-foreground">{appointment.time}</td>
-                                                <td className="px-4 py-3">
-                                                    <span className="rounded-full bg-green-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-700">
-                                                        {appointment.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    {canModifyAppointment(appointment) ? (
-                                                        <div className="flex flex-wrap gap-2">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() => openRescheduleDialog(appointment)}
-                                                                disabled={rescheduling && rescheduleTarget?.id === appointment.id}
-                                                                className="gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/60"
-                                                            >
-                                                                {rescheduling && rescheduleTarget?.id === appointment.id ? (
-                                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                                ) : (
-                                                                    <Undo2 className="h-3 w-3" />
-                                                                )}
-                                                                Reschedule
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="destructive"
-                                                                onClick={() => openCancelDialog(appointment)}
-                                                                disabled={cancelSubmitting && cancelTarget?.id === appointment.id}
-                                                                className="gap-2 rounded-xl"
-                                                            >
-                                                                {cancelSubmitting && cancelTarget?.id === appointment.id ? (
-                                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                                ) : (
-                                                                    <Ban className="h-3 w-3" />
-                                                                )}
-                                                                Cancel
-                                                            </Button>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-xs text-muted-foreground">No actions available</span>
-                                                    )}
-                                                </td>
-                                            </tr>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-green-700">Status filter</Label>
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue placeholder="All statuses" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All statuses</SelectItem>
+                                        <SelectItem value="active">Active requests</SelectItem>
+                                        {STATUS_ORDER.map((status) => (
+                                            <SelectItem key={status} value={status.toLowerCase()}>
+                                                {STATUS_LABELS[status]}
+                                            </SelectItem>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </SelectContent>
+                                </Select>
                             </div>
-                        )}
-                    </CardContent>
-                </Card>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
+                                        <TableHead className="min-w-[180px]">Clinic</TableHead>
+                                        <TableHead className="min-w-[160px]">Doctor</TableHead>
+                                        <TableHead className="min-w-[120px]">Date</TableHead>
+                                        <TableHead className="min-w-[120px]">Time</TableHead>
+                                        <TableHead className="min-w-[120px]">Status</TableHead>
+                                        <TableHead className="w-[180px] text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {loadingAppointments ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                                                <div className="flex items-center justify-center gap-2 text-sm">
+                                                    <Loader2 className="h-4 w-4 animate-spin" /> Loading appointments...
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : filteredAppointments.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                                                No appointments match your filters.
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        filteredAppointments.map((appointment) => {
+                                            const status = normalizeStatus(appointment.status);
+                                            const statusLabel = status ? STATUS_LABELS[status] : appointment.status;
+                                            const statusClasses = status
+                                                ? STATUS_BADGE_CLASSES[status]
+                                                : "border-slate-200 bg-slate-100 text-slate-700";
+                                            const canModify = canModifyAppointment(appointment);
+                                            const isRescheduling = rescheduling && rescheduleTarget?.id === appointment.id;
+                                            const isCancelling = cancelSubmitting && cancelTarget?.id === appointment.id;
+
+                                            return (
+                                                <TableRow key={appointment.id} className="text-sm">
+                                                    <TableCell className="font-medium text-green-700">
+                                                        <div className="flex flex-col">
+                                                            <span>{appointment.clinic}</span>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {humanizeService(appointment.serviceType)}
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{appointment.doctor}</TableCell>
+                                                    <TableCell>{formatAppointmentDate(appointment)}</TableCell>
+                                                    <TableCell>{formatAppointmentTime(appointment)}</TableCell>
+                                                    <TableCell>
+                                                        <Badge className={`rounded-full px-2 py-1 text-xs ${statusClasses}`}>
+                                                            {statusLabel}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        {canModify ? (
+                                                            <div className="flex flex-wrap items-center justify-end gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() => openRescheduleDialog(appointment)}
+                                                                    disabled={isRescheduling}
+                                                                    className="gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100"
+                                                                >
+                                                                    {isRescheduling ? (
+                                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                                    ) : (
+                                                                        <Undo2 className="h-3 w-3" />
+                                                                    )}
+                                                                    Reschedule
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="destructive"
+                                                                    onClick={() => openCancelDialog(appointment)}
+                                                                    disabled={isCancelling}
+                                                                    className="gap-2 rounded-xl"
+                                                                >
+                                                                    {isCancelling ? (
+                                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                                    ) : (
+                                                                        <Ban className="h-3 w-3" />
+                                                                    )}
+                                                                    Cancel
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-muted-foreground">No actions available</span>
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                </AppointmentPanel>
             </section>
 
             <Dialog

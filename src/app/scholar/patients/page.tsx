@@ -372,13 +372,12 @@ export default function ScholarPatientsPage() {
                                     <TableHead className="min-w-[160px]">Program / Department</TableHead>
                                     <TableHead className="min-w-[120px]">Status</TableHead>
                                     <TableHead className="min-w-[200px]">Latest appointment</TableHead>
-                                    <TableHead className="w-[110px] text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                                             <div className="flex items-center justify-center gap-2 text-sm">
                                                 <Loader2 className="h-4 w-4 animate-spin" /> Loading patient records...
                                             </div>
@@ -386,7 +385,7 @@ export default function ScholarPatientsPage() {
                                     </TableRow>
                                 ) : filteredRecords.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                                        <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                                             No patient records match your filters.
                                         </TableCell>
                                     </TableRow>
@@ -394,7 +393,19 @@ export default function ScholarPatientsPage() {
                                     filteredRecords.map((record) => {
                                         const statusKey = record.status.toLowerCase();
                                         return (
-                                            <TableRow key={`${record.patientType}-${record.id}`} className="text-sm">
+                                            <TableRow
+                                                key={`${record.patientType}-${record.id}`}
+                                                className="cursor-pointer text-sm transition hover:bg-green-50/60 focus-visible:bg-green-50/60"
+                                                tabIndex={0}
+                                                role="button"
+                                                onClick={() => openDetails(record)}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === "Enter" || event.key === " ") {
+                                                        event.preventDefault();
+                                                        openDetails(record);
+                                                    }
+                                                }}
+                                            >
                                                 <TableCell className="font-medium text-green-700">
                                                     <div className="flex flex-col">
                                                         <span>{record.fullName}</span>
@@ -435,16 +446,6 @@ export default function ScholarPatientsPage() {
                                                     ) : (
                                                         <span className="text-muted-foreground">—</span>
                                                     )}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="rounded-xl text-green-700 hover:bg-green-100"
-                                                        onClick={() => openDetails(record)}
-                                                    >
-                                                        View
-                                                    </Button>
                                                 </TableCell>
                                             </TableRow>
                                         );
