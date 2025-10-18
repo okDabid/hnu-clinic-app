@@ -2,6 +2,7 @@
 
 import {
     CalendarCheck,
+    FileBarChart2,
     ClipboardList,
     Home,
     Package,
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
     { href: "/nurse/dispense", label: "Dispense", icon: Pill },
     { href: "/nurse/inventory", label: "Inventory", icon: Package },
     { href: "/nurse/records", label: "Records", icon: CalendarCheck },
+    { href: "/nurse/reports", label: "Reports", icon: FileBarChart2 },
 ] as const satisfies readonly PanelNavItem[];
 
 export type NurseLayoutProps = PanelLayoutContentProps;
