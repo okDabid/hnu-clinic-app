@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-    AlertCircle,
-    BarChart2,
-    CalendarRange,
-    DownloadCloud,
-    Loader2,
-    PieChart,
-    FileDown,
-} from "lucide-react";
+import { AlertCircle, BarChart2, CalendarRange, Loader2, PieChart, FileDown } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
@@ -278,43 +270,6 @@ export default function NurseReportsPage() {
                             <FileDown className="mr-2 h-4 w-4" />
                         )}
                         Generate PDF
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
-                        onClick={() => {
-                            if (!data) return;
-                            const reportDate = new Date();
-                            const blob = new Blob(
-                                [
-                                    JSON.stringify(
-                                        {
-                                            generatedAt: reportDate.toISOString(),
-                                            filters: {
-                                                year,
-                                                quarter,
-                                            },
-                                            data,
-                                        },
-                                        null,
-                                        2
-                                    ),
-                                ],
-                                { type: "application/json" }
-                            );
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement("a");
-                            link.href = url;
-                            link.download = `nurse-quarterly-report-${year}-q${quarter}.json`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
-                        }}
-                        disabled={!data}
-                    >
-                        <DownloadCloud className="mr-2 h-4 w-4" /> Export JSON
                     </Button>
                 </div>
             }

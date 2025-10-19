@@ -49,205 +49,381 @@ function formatNumber(value: number) {
     return new Intl.NumberFormat("en-PH").format(value);
 }
 
-function renderQuarterRow(quarter: QuarterReport) {
-    return `
-        <tr>
-            <td>${escapeHtml(quarter.label)}</td>
-            <td>${formatDateRange(quarter.startDate, quarter.endDate)}</td>
-            <td>${formatNumber(quarter.consultations)}</td>
-            <td>${formatNumber(quarter.uniquePatients)}</td>
-            <td>${formatNumber(quarter.patientTypeCounts.Student ?? 0)}</td>
-            <td>${formatNumber(quarter.patientTypeCounts.Employee ?? 0)}</td>
-            <td>${formatNumber(quarter.patientTypeCounts.Unknown ?? 0)}</td>
-        </tr>
-    `;
+function formatPercentage(value: number, total: number) {
+    if (!total) return "0%";
+
+    const ratio = value / total;
+    return new Intl.NumberFormat("en-PH", {
+        style: "percent",
+        minimumFractionDigits: ratio > 0 && ratio < 0.1 ? 1 : 0,
+        maximumFractionDigits: 1,
+    }).format(ratio);
 }
 
 function renderDiagnosisList(diagnoses: QuarterReport["diagnosisCounts"]) {
     if (!diagnoses.length) {
-        return "<li>No diagnoses recorded.</li>";
-    }
-
-    return diagnoses
-        .map((item) => {
-            return `<li><span>${escapeHtml(item.diagnosis)}</span> <strong>${formatNumber(
-                item.count
-            )}</strong></li>`;
-        })
-        .join("\n");
-}
-
-function renderYearlyDiagnosisList(diagnoses: ReportsResponse["yearlyTopDiagnoses"]) {
-    if (!diagnoses.length) {
-        return "<li>No diagnoses recorded for the year.</li>";
+        return '<li class="empty">No diagnoses were recorded for this quarter.</li>';
     }
 
     return diagnoses
         .map((item, index) => {
-            return `<li><span>${index + 1}. ${escapeHtml(item.diagnosis)}</span> <strong>${formatNumber(
+            return `<li><span class="name">${index + 1}. ${escapeHtml(item.diagnosis)}</span><span class="count">${formatNumber(
                 item.count
-            )}</strong></li>`;
+            )}</span></li>`;
         })
         .join("\n");
 }
 
+function renderPatientMixTable(counts: QuarterReport["patientTypeCounts"]) {
+    const entries = [
+        { label: "Students", value: counts.Student ?? 0 },
+        { label: "Employees", value: counts.Employee ?? 0 },
+        { label: "Unspecified", value: counts.Unknown ?? 0 },
+    ];
+
+    const total = entries.reduce((sum, entry) => sum + entry.value, 0);
+
+    const rows = entries
+        .map((entry) => {
+            return `<tr><td>${escapeHtml(entry.label)}</td><td>${formatNumber(entry.value)}</td><td>${formatPercentage(
+                entry.value,
+                total
+            )}</td></tr>`;
+        })
+        .join("\n");
+
+    return `${rows}\n<tr class="total"><td>Total</td><td>${formatNumber(total)}</td><td>${total ? "100%" : "0%"}</td></tr>`;
+}
+
 function createReportHtml(report: ReportsResponse) {
     const generatedAt = new Intl.DateTimeFormat("en-PH", {
-        dateStyle: "full",
+        dateStyle: "long",
         timeStyle: "short",
     }).format(new Date());
 
-    const quarterRows = report.quarters.map(renderQuarterRow).join("\n");
-    const selectedQuarterDiagnoses = renderDiagnosisList(report.selectedQuarter.diagnosisCounts);
-    const yearlyTopDiagnoses = renderYearlyDiagnosisList(report.yearlyTopDiagnoses);
+    const quarter = report.selectedQuarter;
+    const coverageRange = formatDateRange(quarter.startDate, quarter.endDate);
+    const quarterHeading = `${quarter.label} ${report.year}`;
+
+    const studentCount = quarter.patientTypeCounts.Student ?? 0;
+    const employeeCount = quarter.patientTypeCounts.Employee ?? 0;
+    const unspecifiedCount = quarter.patientTypeCounts.Unknown ?? 0;
+
+    const patientMixTable = renderPatientMixTable(quarter.patientTypeCounts);
+    const diagnosesList = renderDiagnosisList(quarter.diagnosisCounts);
 
     return `<!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="utf-8" />
-                <title>Quarterly Nurse Report</title>
-                <style>
-                    * {
-                        box-sizing: border-box;
-                        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                    }
-                    body {
-                        margin: 0;
-                        padding: 32px;
-                        color: #052e16;
-                        background: #f8fafc;
-                        font-size: 14px;
-                    }
-                    header {
-                        border-bottom: 2px solid #bbf7d0;
-                        padding-bottom: 16px;
-                        margin-bottom: 24px;
-                    }
-                    h1 {
-                        margin: 0;
-                        font-size: 28px;
-                        color: #166534;
-                    }
-                    h2 {
-                        font-size: 20px;
-                        margin-top: 32px;
-                        color: #14532d;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 12px;
-                    }
-                    th, td {
-                        border: 1px solid #d1fae5;
-                        padding: 8px 10px;
-                        text-align: left;
-                    }
-                    th {
-                        background: #ecfdf5;
-                        color: #065f46;
-                        font-weight: 600;
-                    }
-                    .summary {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                        gap: 16px;
-                    }
-                    .summary-card {
-                        background: #ecfdf5;
-                        border: 1px solid #bbf7d0;
-                        border-radius: 12px;
-                        padding: 16px;
-                    }
-                    .summary-card h3 {
-                        margin: 0 0 8px;
-                        font-size: 16px;
-                        color: #047857;
-                    }
-                    ul {
-                        list-style: none;
-                        padding: 0;
-                        margin: 12px 0 0;
-                    }
-                    ul li {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 6px 8px;
-                        border-bottom: 1px solid #e2e8f0;
-                    }
-                    ul li strong {
-                        color: #14532d;
-                    }
-                    footer {
-                        margin-top: 40px;
-                        padding-top: 12px;
-                        font-size: 12px;
-                        color: #475569;
-                        border-top: 1px solid #e2e8f0;
-                    }
-                </style>
-            </head>
-            <body>
-                <header>
-                    <h1>Quarterly Nurse Report – ${report.year}</h1>
-                    <p>Generated for quarter ${escapeHtml(
-        report.selectedQuarter.label
-    )} on ${escapeHtml(generatedAt)}</p>
-                </header>
-                <section class="summary">
-                    <div class="summary-card">
-                        <h3>Quarter consultations</h3>
-                        <p><strong>${formatNumber(
-        report.selectedQuarter.consultations
-    )}</strong> consultations recorded.</p>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Quarterly Nurse Report</title>
+        <style>
+            :root {
+                color-scheme: only light;
+            }
+
+            * {
+                box-sizing: border-box;
+                font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            }
+
+            body {
+                margin: 0;
+                padding: 48px 0;
+                background: linear-gradient(180deg, #f0fdf4 0%, #e0f2fe 100%);
+                color: #0f172a;
+            }
+
+            main {
+                max-width: 960px;
+                margin: 0 auto;
+                background: #ffffff;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(15, 118, 110, 0.1);
+                border: 1px solid #e2e8f0;
+                overflow: hidden;
+            }
+
+            header {
+                padding: 36px 48px 28px;
+                background: radial-gradient(circle at top left, #047857, #0f766e);
+                color: #f8fafc;
+            }
+
+            .brand-title {
+                font-size: 26px;
+                font-weight: 700;
+                margin: 0;
+            }
+
+            .brand-subtitle {
+                margin-top: 6px;
+                font-size: 16px;
+                opacity: 0.85;
+            }
+
+            .header-meta {
+                margin-top: 24px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 18px;
+            }
+
+            .meta-block {
+                padding: 14px 16px;
+                border-radius: 14px;
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+            }
+
+            .meta-label {
+                display: block;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                opacity: 0.7;
+                margin-bottom: 6px;
+            }
+
+            .meta-value {
+                font-size: 15px;
+                font-weight: 600;
+            }
+
+            .content {
+                padding: 40px 48px 48px;
+                display: flex;
+                flex-direction: column;
+                gap: 36px;
+            }
+
+            h2 {
+                margin: 0;
+                font-size: 20px;
+                color: #0f172a;
+            }
+
+            .section-summary {
+                margin: 8px 0 0;
+                color: #475569;
+                font-size: 14px;
+            }
+
+            .metrics {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 18px;
+            }
+
+            .metric-card {
+                padding: 20px;
+                border-radius: 16px;
+                border: 1px solid #e2e8f0;
+                background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+                box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            }
+
+            .metric-card.primary {
+                background: linear-gradient(135deg, #047857, #0f766e);
+                color: #ecfdf5;
+                border: none;
+                box-shadow: 0 14px 30px rgba(4, 120, 87, 0.35);
+            }
+
+            .metric-card .label {
+                display: block;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                color: rgba(71, 85, 105, 0.9);
+                margin-bottom: 10px;
+            }
+
+            .metric-card.primary .label {
+                color: rgba(236, 253, 245, 0.75);
+            }
+
+            .metric-card .value {
+                font-size: 28px;
+                font-weight: 700;
+                color: #0f172a;
+            }
+
+            .metric-card.primary .value {
+                color: #ffffff;
+            }
+
+            .metric-card .caption {
+                margin-top: 12px;
+                font-size: 13px;
+                color: #64748b;
+                line-height: 1.45;
+            }
+
+            .metric-card.primary .caption {
+                color: rgba(236, 253, 245, 0.85);
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 16px;
+                font-size: 14px;
+            }
+
+            th,
+            td {
+                padding: 12px 14px;
+                text-align: left;
+            }
+
+            thead th {
+                background: #ecfdf5;
+                color: #047857;
+                font-weight: 600;
+                border-bottom: 2px solid #bbf7d0;
+            }
+
+            tbody td {
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            tbody tr.total td {
+                font-weight: 600;
+                color: #0f172a;
+                border-bottom: none;
+                background: #f8fafc;
+            }
+
+            .diagnosis-list {
+                list-style: none;
+                padding: 0;
+                margin: 16px 0 0;
+                border: 1px solid #e2e8f0;
+                border-radius: 16px;
+                overflow: hidden;
+            }
+
+            .diagnosis-list li {
+                display: flex;
+                justify-content: space-between;
+                gap: 18px;
+                padding: 14px 18px;
+                background: #ffffff;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .diagnosis-list li:nth-child(even) {
+                background: #f8fafc;
+            }
+
+            .diagnosis-list li:last-child {
+                border-bottom: none;
+            }
+
+            .diagnosis-list li .name {
+                font-weight: 600;
+                color: #0f172a;
+            }
+
+            .diagnosis-list li .count {
+                font-weight: 600;
+                color: #047857;
+            }
+
+            .diagnosis-list li.empty {
+                justify-content: center;
+                color: #64748b;
+                font-weight: 500;
+            }
+
+            footer {
+                padding: 24px 48px 36px;
+                background: #f8fafc;
+                color: #475569;
+                font-size: 13px;
+                border-top: 1px solid #e2e8f0;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <header>
+                <h1 class="brand-title">Holy Name University Clinic</h1>
+                <p class="brand-subtitle">Quarterly Nursing Report</p>
+                <div class="header-meta">
+                    <div class="meta-block">
+                        <span class="meta-label">Quarter</span>
+                        <span class="meta-value">${escapeHtml(quarterHeading)}</span>
                     </div>
-                    <div class="summary-card">
-                        <h3>Unique patients</h3>
-                        <p><strong>${formatNumber(
-        report.selectedQuarter.uniquePatients
-    )}</strong> patients cared for.</p>
+                    <div class="meta-block">
+                        <span class="meta-label">Coverage</span>
+                        <span class="meta-value">${escapeHtml(coverageRange)}</span>
                     </div>
-                    <div class="summary-card">
-                        <h3>Year totals</h3>
-                        <p><strong>${formatNumber(report.totals.consultations)}</strong> consultations • <strong>${formatNumber(
-        report.totals.uniquePatients
-    )}</strong> patients.</p>
+                    <div class="meta-block">
+                        <span class="meta-label">Generated</span>
+                        <span class="meta-value">${escapeHtml(generatedAt)}</span>
+                    </div>
+                </div>
+            </header>
+            <section class="content">
+                <section class="metrics">
+                    <div class="metric-card primary">
+                        <span class="label">Consultations</span>
+                        <span class="value">${formatNumber(quarter.consultations)}</span>
+                        <p class="caption">Patient encounters recorded throughout the reporting period.</p>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Unique patients</span>
+                        <span class="value">${formatNumber(quarter.uniquePatients)}</span>
+                        <p class="caption">Individuals who visited the clinic at least once.</p>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Students</span>
+                        <span class="value">${formatNumber(studentCount)}</span>
+                        <p class="caption">Consultations from the student population.</p>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Employees</span>
+                        <span class="value">${formatNumber(employeeCount)}</span>
+                        <p class="caption">Consultations from faculty and staff.</p>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">Unspecified</span>
+                        <span class="value">${formatNumber(unspecifiedCount)}</span>
+                        <p class="caption">Encounters without an affiliation on record.</p>
                     </div>
                 </section>
-
-                <h2>Quarter breakdown</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Quarter</th>
-                            <th>Coverage</th>
-                            <th>Consultations</th>
-                            <th>Unique patients</th>
-                            <th>Students</th>
-                            <th>Employees</th>
-                            <th>Unspecified</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${quarterRows}
-                    </tbody>
-                </table>
-
-                <h2>${escapeHtml(report.selectedQuarter.label)} diagnoses</h2>
-                <ul>
-                    ${selectedQuarterDiagnoses}
-                </ul>
-
-                <h2>Top diagnoses this year</h2>
-                <ul>
-                    ${yearlyTopDiagnoses}
-                </ul>
-
-                <footer>
-                    Generated by the HNU Clinic reporting system using Puppeteer and headless Chromium.
-                </footer>
-            </body>
-        </html>`;
+                <section>
+                    <h2>Patient mix</h2>
+                    <p class="section-summary">Distribution of consultations by patient affiliation.</p>
+                    <table class="patient-mix">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Consultations</th>
+                                <th>Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${patientMixTable}
+                        </tbody>
+                    </table>
+                </section>
+                <section>
+                    <h2>Diagnosis insights</h2>
+                    <p class="section-summary">Leading reasons for consultations during the quarter.</p>
+                    <ul class="diagnosis-list">
+                        ${diagnosesList}
+                    </ul>
+                </section>
+            </section>
+            <footer>
+                Prepared automatically by the HNU Clinic reporting system for internal quality monitoring.
+            </footer>
+        </main>
+    </body>
+</html>`;
 }
 
 export async function GET(req: NextRequest) {
@@ -285,15 +461,10 @@ export async function GET(req: NextRequest) {
 
         const filename = `nurse-quarterly-report-${report.year}-q${report.selectedQuarter.quarter}.pdf`;
 
-        // ✅ Convert the Buffer into a valid ArrayBuffer
         const pdfArrayBuffer = pdfBuffer instanceof ArrayBuffer
             ? pdfBuffer
-            : pdfBuffer.buffer.slice(
-                pdfBuffer.byteOffset,
-                pdfBuffer.byteOffset + pdfBuffer.byteLength
-            );
+            : pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
 
-        // ✅ Use Response instead of NextResponse (cleaner + type-safe)
         return new Response(pdfArrayBuffer as ArrayBuffer, {
             status: 200,
             headers: {
@@ -307,9 +478,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Failed to generate report PDF" }, { status: 500 });
     } finally {
         if (browser) {
-            await browser.close().catch(() => { });
+            await browser.close().catch(() => {});
         }
     }
 }
-
-
