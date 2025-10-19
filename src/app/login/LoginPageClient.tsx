@@ -142,11 +142,7 @@ export default function LoginPageClient() {
             });
             const data = await res.json();
             if (res.ok) {
-<<<<<<< HEAD
-                toast.success("Verification code sent via Email!");
-=======
                 toast.success("Verification code sent via email!");
->>>>>>> origin/codex/remove-sms-references-and-update-to-email
                 setTokenSent(true);
                 setResendCooldown(60);
                 return true;
