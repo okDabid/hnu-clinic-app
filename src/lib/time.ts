@@ -1,19 +1,73 @@
 // src/lib/time.ts
 
+const PH_TIME_ZONE = "Asia/Manila";
+// The managed database cluster runs in Asia/Singapore. Manila shares the same UTC offset
+// (+08:00), so we explicitly pin every conversion to that offset to avoid relying on the
+// host environment configuration.
+const PH_UTC_OFFSET = "+08:00";
+
+const ISO_TZ_PATTERN = /(Z|[+-]\d{2}:\d{2})$/i;
+const TIME_ONLY_PATTERN = /^\d{2}:\d{2}$/;
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const DATETIME_NO_TZ_PATTERN =
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/;
+
+function normalizeToPhilippineISO(value: string): string {
+    const trimmed = value.trim();
+    if (!trimmed) return trimmed;
+
+    if (TIME_ONLY_PATTERN.test(trimmed)) {
+        return `1970-01-01T${trimmed}:00${PH_UTC_OFFSET}`;
+    }
+
+    const normalized = trimmed.replace(" ", "T");
+
+    if (DATE_ONLY_PATTERN.test(normalized)) {
+        return `${normalized}T00:00:00${PH_UTC_OFFSET}`;
+    }
+
+    if (DATETIME_NO_TZ_PATTERN.test(normalized) && !ISO_TZ_PATTERN.test(normalized)) {
+        return `${normalized}${PH_UTC_OFFSET}`;
+    }
+
+    return normalized;
+}
+
+type TimeInput = string | Date | null | undefined;
+
+function parsePhilippineDate(value: TimeInput): Date | null {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
+    }
+
+    if (typeof value === "string") {
+        const normalized = normalizeToPhilippineISO(value);
+        if (!normalized) return null;
+
+        const date = new Date(normalized);
+        return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    return null;
+}
+
 /**
  * ✅ Build a Manila-local Date that Prisma can store correctly in UTC.
- * Requires `TZ=Asia/Manila` in next.config.js.
+ * We normalise the value so that the Singapore-hosted database and the
+ * Manila-facing application use the same local wall clock time.
  */
 export function buildManilaDate(date: string, time: string): Date {
-    return new Date(`${date}T${time}:00+08:00`);
+    return new Date(`${date}T${time}:00${PH_UTC_OFFSET}`);
 }
 
 export function startOfManilaDay(date: string): Date {
-    return new Date(`${date}T00:00:00+08:00`);
+    return new Date(`${date}T00:00:00${PH_UTC_OFFSET}`);
 }
 
 export function endOfManilaDay(date: string): Date {
-    return new Date(`${date}T23:59:59+08:00`);
+    return new Date(`${date}T23:59:59${PH_UTC_OFFSET}`);
 }
 
 /**
@@ -27,62 +81,38 @@ export function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date
  * ✅ Convert Date → 12-hour format (e.g. "2:30 PM")
  */
 export function format12Hour(date: Date | string): string {
-    const d = typeof date === "string" ? new Date(date) : date;
-    const hours = d.getHours();
-    const minutes = d.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    const displayMinutes = minutes.toString().padStart(2, "0");
-    return `${displayHours}:${displayMinutes} ${ampm}`;
+    const parsed = parsePhilippineDate(date);
+    if (!parsed) return "";
+
+    return parsed.toLocaleTimeString("en-PH", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: PH_TIME_ZONE,
+    });
 }
 
 /**
  * ✅ Convert "HH:mm" → readable 12-hour format (used in dropdowns)
  */
 export function formatTimeString12(time: string): string {
-    const [hh, mm] = time.split(":").map(Number);
-    const date = new Date();
-    date.setHours(hh, mm, 0);
-    return format12Hour(date);
+    const parsed = parsePhilippineDate(time);
+    return parsed ? format12Hour(parsed) : "";
 }
 
 /**
  * ✅ Format a full time range (used in patient and doctor pages)
  */
-type TimeInput = string | Date | null | undefined;
-
-function parseTimeInput(value: TimeInput): Date | null {
-    if (!value) return null;
-
-    if (value instanceof Date) {
-        return Number.isNaN(value.getTime()) ? null : value;
-    }
-
-    if (typeof value === "string") {
-        const trimmed = value.trim();
-        if (!trimmed) return null;
-
-        if (/^\d{2}:\d{2}$/.test(trimmed)) {
-            return new Date(`1970-01-01T${trimmed}:00+08:00`);
-        }
-
-        const date = new Date(trimmed);
-        return Number.isNaN(date.getTime()) ? null : date;
-    }
-
-    return null;
-}
-
 export function formatTimeRange(start: TimeInput, end: TimeInput): string {
-    const startDate = parseTimeInput(start);
-    const endDate = parseTimeInput(end);
+    const startDate = parsePhilippineDate(start);
+    const endDate = parsePhilippineDate(end);
 
     const startText = startDate
         ? startDate.toLocaleTimeString("en-PH", {
               hour: "numeric",
               minute: "2-digit",
               hour12: true,
-              timeZone: "Asia/Manila",
+              timeZone: PH_TIME_ZONE,
           })
         : "";
 
@@ -91,7 +121,7 @@ export function formatTimeRange(start: TimeInput, end: TimeInput): string {
               hour: "numeric",
               minute: "2-digit",
               hour12: true,
-              timeZone: "Asia/Manila",
+              timeZone: PH_TIME_ZONE,
           })
         : "";
 
@@ -100,7 +130,7 @@ export function formatTimeRange(start: TimeInput, end: TimeInput): string {
 }
 
 const manilaISOFormatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Manila",
+    timeZone: PH_TIME_ZONE,
 });
 
 export function formatManilaISODate(date: Date): string {
@@ -108,13 +138,14 @@ export function formatManilaISODate(date: Date): string {
 }
 
 export function toManilaTimeString(dateStr: string): string {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
+    const date = parsePhilippineDate(dateStr);
+    if (!date) return "";
+
     return date.toLocaleTimeString("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
-        timeZone: "Asia/Manila",
+        timeZone: PH_TIME_ZONE,
     });
 }
 
@@ -123,9 +154,10 @@ export function toManilaTimeString(dateStr: string): string {
  * e.g. "2025-10-12T16:00:00Z" → "2025-10-13"
  */
 export function toManilaDateString(dateStr: string): string {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+    const date = parsePhilippineDate(dateStr);
+    if (!date) return "";
+
+    return date.toLocaleDateString("en-CA", { timeZone: PH_TIME_ZONE });
 }
 
 /**
@@ -133,7 +165,7 @@ export function toManilaDateString(dateStr: string): string {
  */
 export function manilaNow(): Date {
     const formatter = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Manila",
+        timeZone: PH_TIME_ZONE,
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -153,7 +185,7 @@ export function manilaNow(): Date {
     const minute = lookup.minute;
     const second = lookup.second;
 
-    return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}+08:00`);
+    return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}${PH_UTC_OFFSET}`);
 }
 
 /**
@@ -163,12 +195,11 @@ export function formatManilaDateTime(
     value: string | Date | null | undefined,
     options: Intl.DateTimeFormatOptions = {}
 ): string {
-    if (!value) return "";
-    const date = typeof value === "string" ? new Date(value) : value;
-    if (Number.isNaN(date.getTime())) return "";
+    const date = parsePhilippineDate(value);
+    if (!date) return "";
 
     const baseOptions: Intl.DateTimeFormatOptions = {
-        timeZone: "Asia/Manila",
+        timeZone: PH_TIME_ZONE,
         year: "numeric",
         month: "short",
         day: "numeric",
