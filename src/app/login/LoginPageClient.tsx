@@ -23,6 +23,8 @@ import { normalizeResetContact } from "@/lib/password-reset";
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
+    const [showResetPassword, setShowResetPassword] = useState(false);
+    const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
     const [forgotOpen, setForgotOpen] = useState(false);
     const [verifying, setVerifying] = useState(false);
     const [resetting, setResetting] = useState(false);
@@ -63,6 +65,8 @@ export default function LoginPageClient() {
             setResendCooldown(0);
             setVerifying(false);
             setResetting(false);
+            setShowResetPassword(false);
+            setShowResetConfirmPassword(false);
         }
     };
 
@@ -452,19 +456,21 @@ export default function LoginPageClient() {
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            setTokenSent(false);
-                                            setCode("");
-                                            setNewPassword("");
-                                            setConfirmPassword("");
-                                            setCodeError(null);
-                                            setPasswordError(null);
-                                            setResendCooldown(0);
-                                        }}
-                                        className="text-xs font-medium text-green-700 underline-offset-2 hover:underline"
-                                    >
-                                        Use a different contact
-                                    </button>
+                                            onClick={() => {
+                                                setTokenSent(false);
+                                                setCode("");
+                                                setNewPassword("");
+                                                setConfirmPassword("");
+                                                setCodeError(null);
+                                                setPasswordError(null);
+                                                setResendCooldown(0);
+                                                setShowResetPassword(false);
+                                                setShowResetConfirmPassword(false);
+                                            }}
+                                            className="text-xs font-medium text-green-700 underline-offset-2 hover:underline"
+                                        >
+                                            Use a different contact
+                                        </button>
                                 </div>
                             </div>
                             <form onSubmit={handleReset} className="mt-4 space-y-4">
@@ -503,28 +509,62 @@ export default function LoginPageClient() {
                                         {codeError && <p className="text-sm text-red-600">{codeError}</p>}
                                     </div>
                                     <div className="space-y-2">
-                                        <Input
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="New Password"
-                                            value={newPassword}
-                                            minLength={8}
-                                            onChange={(e) => {
-                                                setNewPassword(e.target.value);
-                                                if (passwordError) setPasswordError(null);
-                                            }}
-                                            required
-                                        />
-                                        <Input
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="Confirm New Password"
-                                            value={confirmPassword}
-                                            minLength={8}
-                                            onChange={(e) => {
-                                                setConfirmPassword(e.target.value);
-                                                if (passwordError) setPasswordError(null);
-                                            }}
-                                            required
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                type={showResetPassword ? "text" : "password"}
+                                                placeholder="New Password"
+                                                value={newPassword}
+                                                minLength={8}
+                                                onChange={(e) => {
+                                                    setNewPassword(e.target.value);
+                                                    if (passwordError) setPasswordError(null);
+                                                }}
+                                                className="pr-12"
+                                                required
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => setShowResetPassword((prev) => !prev)}
+                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
+                                            >
+                                                {showResetPassword ? (
+                                                    <EyeOff className="h-5 w-5" />
+                                                ) : (
+                                                    <Eye className="h-5 w-5" />
+                                                )}
+                                            </Button>
+                                        </div>
+                                        <div className="relative">
+                                            <Input
+                                                type={showResetConfirmPassword ? "text" : "password"}
+                                                placeholder="Confirm New Password"
+                                                value={confirmPassword}
+                                                minLength={8}
+                                                onChange={(e) => {
+                                                    setConfirmPassword(e.target.value);
+                                                    if (passwordError) setPasswordError(null);
+                                                }}
+                                                className="pr-12"
+                                                required
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() =>
+                                                    setShowResetConfirmPassword((prev) => !prev)
+                                                }
+                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
+                                            >
+                                                {showResetConfirmPassword ? (
+                                                    <EyeOff className="h-5 w-5" />
+                                                ) : (
+                                                    <Eye className="h-5 w-5" />
+                                                )}
+                                            </Button>
+                                        </div>
                                         {passwordError && (
                                             <p className="text-sm text-red-600">{passwordError}</p>
                                         )}
