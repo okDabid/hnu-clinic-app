@@ -127,6 +127,35 @@ function isMobileDevice() {
     return /(android|iphone|ipad|ipod|mobile|blackberry|iemobile|opera mini)/i.test(userAgent);
 }
 
+function buildReportFilename(year: number, quarter?: number | null) {
+    const base = `nurse-quarterly-report-${year}`;
+    return typeof quarter === "number" && Number.isFinite(quarter)
+        ? `${base}-q${quarter}.pdf`
+        : `${base}.pdf`;
+}
+
+function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+
+    if (isMobile) {
+        link.rel = "noopener";
+        link.target = "_blank";
+    }
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    window.setTimeout(() => {
+        URL.revokeObjectURL(url);
+    }, 1000);
+}
+
 export default function NurseReportsPage() {
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState(currentYear);
@@ -248,43 +277,10 @@ export default function NurseReportsPage() {
                                 }
 
                                 const blob = await response.blob();
-                                if (isMobileDevice()) {
-                                    await new Promise<void>((resolve, reject) => {
-                                        const reader = new FileReader();
-                                        reader.onerror = () => {
-                                            reader.abort();
-                                            reject(new Error("Failed to load PDF report"));
-                                        };
-                                        reader.onloadend = () => {
-                                            const result =
-                                                typeof reader.result === "string"
-                                                    ? reader.result
-                                                    : null;
-                                            if (!result) {
-                                                reject(new Error("Failed to process PDF report"));
-                                                return;
-                                            }
+                                const mobile = isMobileDevice();
+                                const filename = buildReportFilename(year, quarter);
 
-                                            const newWindow = window.open(result, "_blank");
-                                            if (!newWindow) {
-                                                window.location.href = result;
-                                            }
-
-                                            resolve();
-                                        };
-
-                                        reader.readAsDataURL(blob);
-                                    });
-                                } else {
-                                    const url = URL.createObjectURL(blob);
-                                    const link = document.createElement("a");
-                                    link.href = url;
-                                    link.download = `nurse-quarterly-report-${year}-q${quarter}.pdf`;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    URL.revokeObjectURL(url);
-                                }
+                                downloadBlob(blob, filename, mobile);
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 if (typeof window !== "undefined") {
