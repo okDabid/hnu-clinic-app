@@ -191,27 +191,27 @@ function createReportHtml(report: ReportsResponse) {
                 <header>
                     <h1>Quarterly Nurse Report – ${report.year}</h1>
                     <p>Generated for quarter ${escapeHtml(
-                        report.selectedQuarter.label
-                    )} on ${escapeHtml(generatedAt)}</p>
+        report.selectedQuarter.label
+    )} on ${escapeHtml(generatedAt)}</p>
                 </header>
                 <section class="summary">
                     <div class="summary-card">
                         <h3>Quarter consultations</h3>
                         <p><strong>${formatNumber(
-                            report.selectedQuarter.consultations
-                        )}</strong> consultations recorded.</p>
+        report.selectedQuarter.consultations
+    )}</strong> consultations recorded.</p>
                     </div>
                     <div class="summary-card">
                         <h3>Unique patients</h3>
                         <p><strong>${formatNumber(
-                            report.selectedQuarter.uniquePatients
-                        )}</strong> patients cared for.</p>
+        report.selectedQuarter.uniquePatients
+    )}</strong> patients cared for.</p>
                     </div>
                     <div class="summary-card">
                         <h3>Year totals</h3>
                         <p><strong>${formatNumber(report.totals.consultations)}</strong> consultations • <strong>${formatNumber(
-                            report.totals.uniquePatients
-                        )}</strong> patients.</p>
+        report.totals.uniquePatients
+    )}</strong> patients.</p>
                     </div>
                 </section>
 
@@ -252,7 +252,6 @@ function createReportHtml(report: ReportsResponse) {
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-
     const yearParam = Number.parseInt(searchParams.get("year") ?? "", 10);
     const quarterParam = Number.parseInt(searchParams.get("quarter") ?? "", 10);
 
@@ -260,8 +259,8 @@ export async function GET(req: NextRequest) {
     const quarter = Number.isNaN(quarterParam)
         ? undefined
         : QUARTERS.includes(quarterParam as (typeof QUARTERS)[number])
-        ? (quarterParam as (typeof QUARTERS)[number])
-        : undefined;
+            ? (quarterParam as (typeof QUARTERS)[number])
+            : undefined;
 
     let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 
@@ -270,10 +269,8 @@ export async function GET(req: NextRequest) {
 
         browser = await puppeteer.launch({
             args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
             executablePath: await chromium.executablePath(),
-            headless: chromium.headless,
-            ignoreHTTPSErrors: true,
+            headless: true,
         });
 
         const page = await browser.newPage();
@@ -288,7 +285,16 @@ export async function GET(req: NextRequest) {
 
         const filename = `nurse-quarterly-report-${report.year}-q${report.selectedQuarter.quarter}.pdf`;
 
-        return new NextResponse(pdfBuffer, {
+        // ✅ Convert the Buffer into a valid ArrayBuffer
+        const pdfArrayBuffer = pdfBuffer instanceof ArrayBuffer
+            ? pdfBuffer
+            : pdfBuffer.buffer.slice(
+                pdfBuffer.byteOffset,
+                pdfBuffer.byteOffset + pdfBuffer.byteLength
+            );
+
+        // ✅ Use Response instead of NextResponse (cleaner + type-safe)
+        return new Response(pdfArrayBuffer as ArrayBuffer, {
             status: 200,
             headers: {
                 "Content-Type": "application/pdf",
@@ -301,10 +307,9 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Failed to generate report PDF" }, { status: 500 });
     } finally {
         if (browser) {
-            await browser.close().catch(() => {
-                /* ignore */
-            });
+            await browser.close().catch(() => { });
         }
     }
 }
+
 
