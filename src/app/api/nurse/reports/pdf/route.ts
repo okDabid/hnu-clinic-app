@@ -99,6 +99,7 @@ function createReportHtml(report: ReportsResponse) {
     const generatedAt = new Intl.DateTimeFormat("en-PH", {
         dateStyle: "long",
         timeStyle: "short",
+        timeZone: "Asia/Manila",
     }).format(new Date());
 
     const quarter = report.selectedQuarter;
@@ -119,7 +120,7 @@ function createReportHtml(report: ReportsResponse) {
         <title>Quarterly Nurse Report</title>
         <style>
             :root {
-                color-scheme: only light;
+                color-scheme: light;
             }
 
             * {
@@ -129,8 +130,8 @@ function createReportHtml(report: ReportsResponse) {
 
             body {
                 margin: 0;
-                padding: 48px 0;
-                background: linear-gradient(180deg, #f0fdf4 0%, #e0f2fe 100%);
+                padding: 32px 16px;
+                background: #f5f7fb;
                 color: #0f172a;
             }
 
@@ -139,41 +140,46 @@ function createReportHtml(report: ReportsResponse) {
                 margin: 0 auto;
                 background: #ffffff;
                 border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(15, 118, 110, 0.1);
                 border: 1px solid #e2e8f0;
+                box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
                 overflow: hidden;
             }
 
+            .header-accent {
+                height: 6px;
+                background: linear-gradient(90deg, #22c55e, #0ea5e9);
+            }
+
             header {
-                padding: 36px 48px 28px;
-                background: radial-gradient(circle at top left, #047857, #0f766e);
-                color: #f8fafc;
+                padding: 40px 48px 32px;
+                background: #ffffff;
             }
 
             .brand-title {
                 font-size: 26px;
                 font-weight: 700;
                 margin: 0;
+                color: #0f172a;
             }
 
             .brand-subtitle {
                 margin-top: 6px;
                 font-size: 16px;
-                opacity: 0.85;
+                color: #475569;
             }
 
             .header-meta {
                 margin-top: 24px;
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                gap: 18px;
+                gap: 16px;
             }
 
             .meta-block {
                 padding: 14px 16px;
                 border-radius: 14px;
-                background: rgba(255, 255, 255, 0.12);
-                border: 1px solid rgba(255, 255, 255, 0.15);
+                border: 1px solid #e2e8f0;
+                background: #f8fafc;
             }
 
             .meta-label {
@@ -181,53 +187,53 @@ function createReportHtml(report: ReportsResponse) {
                 font-size: 11px;
                 text-transform: uppercase;
                 letter-spacing: 0.08em;
-                opacity: 0.7;
+                color: #64748b;
                 margin-bottom: 6px;
             }
 
             .meta-value {
                 font-size: 15px;
                 font-weight: 600;
+                color: #0f172a;
             }
 
             .content {
                 padding: 40px 48px 48px;
+                background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
                 display: flex;
                 flex-direction: column;
-                gap: 36px;
+                gap: 32px;
             }
 
             h2 {
                 margin: 0;
-                font-size: 20px;
+                font-size: 19px;
                 color: #0f172a;
             }
 
             .section-summary {
-                margin: 8px 0 0;
-                color: #475569;
+                margin: 6px 0 0;
+                color: #64748b;
                 font-size: 14px;
             }
 
             .metrics {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                gap: 18px;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 16px;
             }
 
             .metric-card {
                 padding: 20px;
                 border-radius: 16px;
                 border: 1px solid #e2e8f0;
-                background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-                box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+                background: #ffffff;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
             }
 
-            .metric-card.primary {
-                background: linear-gradient(135deg, #047857, #0f766e);
-                color: #ecfdf5;
-                border: none;
-                box-shadow: 0 14px 30px rgba(4, 120, 87, 0.35);
+            .metric-card.emphasis {
+                border-color: rgba(34, 197, 94, 0.35);
+                background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(14, 165, 233, 0.12));
             }
 
             .metric-card .label {
@@ -235,33 +241,21 @@ function createReportHtml(report: ReportsResponse) {
                 font-size: 11px;
                 text-transform: uppercase;
                 letter-spacing: 0.08em;
-                color: rgba(71, 85, 105, 0.9);
-                margin-bottom: 10px;
-            }
-
-            .metric-card.primary .label {
-                color: rgba(236, 253, 245, 0.75);
+                color: #64748b;
+                margin-bottom: 8px;
             }
 
             .metric-card .value {
-                font-size: 28px;
+                font-size: 26px;
                 font-weight: 700;
                 color: #0f172a;
-            }
-
-            .metric-card.primary .value {
-                color: #ffffff;
             }
 
             .metric-card .caption {
                 margin-top: 12px;
                 font-size: 13px;
-                color: #64748b;
-                line-height: 1.45;
-            }
-
-            .metric-card.primary .caption {
-                color: rgba(236, 253, 245, 0.85);
+                color: #475569;
+                line-height: 1.5;
             }
 
             table {
@@ -271,27 +265,23 @@ function createReportHtml(report: ReportsResponse) {
                 font-size: 14px;
             }
 
-            th,
-            td {
-                padding: 12px 14px;
-                text-align: left;
-            }
-
             thead th {
+                text-align: left;
+                padding: 12px 14px;
                 background: #ecfdf5;
                 color: #047857;
                 font-weight: 600;
-                border-bottom: 2px solid #bbf7d0;
+                border-bottom: 1px solid #bbf7d0;
             }
 
             tbody td {
+                padding: 12px 14px;
                 border-bottom: 1px solid #e2e8f0;
             }
 
             tbody tr.total td {
                 font-weight: 600;
                 color: #0f172a;
-                border-bottom: none;
                 background: #f8fafc;
             }
 
@@ -302,19 +292,19 @@ function createReportHtml(report: ReportsResponse) {
                 border: 1px solid #e2e8f0;
                 border-radius: 16px;
                 overflow: hidden;
+                background: #ffffff;
             }
 
             .diagnosis-list li {
                 display: flex;
                 justify-content: space-between;
-                gap: 18px;
+                gap: 16px;
                 padding: 14px 18px;
-                background: #ffffff;
                 border-bottom: 1px solid #e2e8f0;
             }
 
             .diagnosis-list li:nth-child(even) {
-                background: #f8fafc;
+                background: #f9fbff;
             }
 
             .diagnosis-list li:last-child {
@@ -338,16 +328,37 @@ function createReportHtml(report: ReportsResponse) {
             }
 
             footer {
-                padding: 24px 48px 36px;
-                background: #f8fafc;
-                color: #475569;
-                font-size: 13px;
+                padding: 24px 48px 32px;
+                background: #ffffff;
                 border-top: 1px solid #e2e8f0;
+                font-size: 13px;
+                color: #475569;
+            }
+
+            @media print {
+                body {
+                    background: #ffffff;
+                    padding: 0;
+                }
+
+                main {
+                    border: none;
+                    box-shadow: none;
+                    border-radius: 0;
+                }
+
+                header,
+                .content,
+                footer {
+                    padding-left: 32px;
+                    padding-right: 32px;
+                }
             }
         </style>
     </head>
     <body>
         <main>
+            <div class="header-accent"></div>
             <header>
                 <h1 class="brand-title">Holy Name University Clinic</h1>
                 <p class="brand-subtitle">Quarterly Nursing Report</p>
@@ -361,14 +372,14 @@ function createReportHtml(report: ReportsResponse) {
                         <span class="meta-value">${escapeHtml(coverageRange)}</span>
                     </div>
                     <div class="meta-block">
-                        <span class="meta-label">Generated</span>
+                        <span class="meta-label">Generated (PHT)</span>
                         <span class="meta-value">${escapeHtml(generatedAt)}</span>
                     </div>
                 </div>
             </header>
             <section class="content">
                 <section class="metrics">
-                    <div class="metric-card primary">
+                    <div class="metric-card emphasis">
                         <span class="label">Consultations</span>
                         <span class="value">${formatNumber(quarter.consultations)}</span>
                         <p class="caption">Patient encounters recorded throughout the reporting period.</p>
