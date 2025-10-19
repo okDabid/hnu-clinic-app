@@ -142,7 +142,7 @@ export default function LoginPageClient() {
             });
             const data = await res.json();
             if (res.ok) {
-                toast.success("Verification code sent via Email/SMS!");
+                toast.success("Verification code sent via Emai!");
                 setTokenSent(true);
                 setResendCooldown(60);
                 return true;
