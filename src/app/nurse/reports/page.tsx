@@ -121,6 +121,12 @@ const patientMixConfig = {
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
 
+function isMobileDevice() {
+    if (typeof navigator === "undefined") return false;
+    const userAgent = navigator.userAgent || navigator.vendor || "";
+    return /(android|iphone|ipad|ipod|mobile|blackberry|iemobile|opera mini)/i.test(userAgent);
+}
+
 export default function NurseReportsPage() {
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState(currentYear);
@@ -242,14 +248,43 @@ export default function NurseReportsPage() {
                                 }
 
                                 const blob = await response.blob();
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement("a");
-                                link.href = url;
-                                link.download = `nurse-quarterly-report-${year}-q${quarter}.pdf`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                URL.revokeObjectURL(url);
+                                if (isMobileDevice()) {
+                                    await new Promise<void>((resolve, reject) => {
+                                        const reader = new FileReader();
+                                        reader.onerror = () => {
+                                            reader.abort();
+                                            reject(new Error("Failed to load PDF report"));
+                                        };
+                                        reader.onloadend = () => {
+                                            const result =
+                                                typeof reader.result === "string"
+                                                    ? reader.result
+                                                    : null;
+                                            if (!result) {
+                                                reject(new Error("Failed to process PDF report"));
+                                                return;
+                                            }
+
+                                            const newWindow = window.open(result, "_blank");
+                                            if (!newWindow) {
+                                                window.location.href = result;
+                                            }
+
+                                            resolve();
+                                        };
+
+                                        reader.readAsDataURL(blob);
+                                    });
+                                } else {
+                                    const url = URL.createObjectURL(blob);
+                                    const link = document.createElement("a");
+                                    link.href = url;
+                                    link.download = `nurse-quarterly-report-${year}-q${quarter}.pdf`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    URL.revokeObjectURL(url);
+                                }
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 if (typeof window !== "undefined") {
