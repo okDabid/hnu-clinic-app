@@ -82,14 +82,6 @@ function computeMinBookingDate(): string {
     return toInputDate(future);
 }
 
-function parseInputDate(value: string): Date | null {
-    if (!value) return null;
-    const iso = `${value}T00:00:00+08:00`;
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return null;
-    return date;
-}
-
 function isoToInputDate(iso: string | null | undefined): string {
     if (!iso) return "";
     const date = new Date(iso);
@@ -251,9 +243,7 @@ export default function PatientAppointmentsPage() {
             return;
         }
 
-        const minDate = parseInputDate(minBookingDate);
-        const selectedDate = parseInputDate(rescheduleDate);
-        if (minDate && selectedDate && selectedDate.getTime() < minDate.getTime()) {
+        if (rescheduleDate && rescheduleDate < minBookingDate) {
             toast.error(`Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`);
             return;
         }
@@ -468,9 +458,7 @@ export default function PatientAppointmentsPage() {
             return;
         }
 
-        const minDate = parseInputDate(minBookingDate);
-        const selectedDate = parseInputDate(date);
-        if (minDate && selectedDate && selectedDate.getTime() < minDate.getTime()) {
+        if (date < minBookingDate) {
             toast.error(`Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`);
             return;
         }
