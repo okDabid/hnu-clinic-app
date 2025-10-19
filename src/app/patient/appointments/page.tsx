@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 type Clinic = { clinic_id: string; clinic_name: string };
 type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
@@ -770,6 +771,85 @@ export default function PatientAppointmentsPage() {
                                     </dd>
                                 </div>
                             </dl>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader className="space-y-1">
+                            <CardTitle className="text-lg text-green-700">Doctor availability</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Preview open slots before sending your request.
+                            </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {selectedDoctor ? (
+                                <>
+                                    <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-sm font-semibold text-green-700">{selectedDoctor.name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {selectedDoctor.specialization ?? "Doctor"}
+                                                {selectedClinic ? ` · ${selectedClinic.clinic_name}` : ""}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {date
+                                                    ? `Showing availability for ${formatDateOnly(date)}`
+                                                    : "Choose a date to explore available slots."}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {!date ? (
+                                            <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
+                                                Pick a preferred date to display the available times for this doctor.
+                                            </div>
+                                        ) : loadingSlots ? (
+                                            <div className="flex items-center justify-center gap-2 rounded-2xl border border-green-100 p-4 text-sm text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
+                                            </div>
+                                        ) : slots.length > 0 ? (
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                {slots.map((slot) => {
+                                                    const isSelected = timeStart === slot.start;
+                                                    return (
+                                                        <button
+                                                            key={`${slot.start}-${slot.end}`}
+                                                            type="button"
+                                                            onClick={() => setTimeStart(slot.start)}
+                                                            className={cn(
+                                                                "flex items-center justify-between rounded-2xl border px-3 py-2 text-sm font-medium transition",
+                                                                "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
+                                                                isSelected &&
+                                                                    "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
+                                                            )}
+                                                            aria-pressed={isSelected}
+                                                        >
+                                                            <span>{formatTimeRange(slot.start, slot.end)}</span>
+                                                            <span
+                                                                className={cn(
+                                                                    "text-xs font-medium",
+                                                                    isSelected ? "text-white/80" : "text-muted-foreground"
+                                                                )}
+                                                            >
+                                                                {isSelected ? "Selected" : "Available"}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-4 text-sm text-rose-700">
+                                                No available slots for the selected date. Try another day or choose a different doctor.
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
+                                    Select a clinic and doctor to preview availability.
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
