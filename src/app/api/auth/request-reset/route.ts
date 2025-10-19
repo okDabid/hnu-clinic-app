@@ -3,29 +3,80 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import {
+    formatPhoneForSms,
+    normalizeResetContact,
+} from "@/lib/password-reset";
 
 export async function POST(req: Request) {
     try {
         const { contact } = await req.json();
 
-        if (!contact) {
+        if (typeof contact !== "string") {
             return NextResponse.json(
                 { error: "Contact (email or phone) required." },
                 { status: 400 }
             );
         }
 
-        console.log("⚙️ Starting password reset for:", contact);
+        const normalized = normalizeResetContact(contact);
+
+        if (!normalized) {
+            return NextResponse.json(
+                { error: "Enter a valid email address or PH mobile number." },
+                { status: 400 }
+            );
+        }
+
+        console.log("⚙️ Starting password reset for:", normalized.normalized);
 
         // 🔍 Find user by email or phone
         const user = await prisma.users.findFirst({
             where: {
-                OR: [
-                    { student: { is: { email: contact } } },
-                    { student: { is: { contactno: contact } } },
-                    { employee: { is: { email: contact } } },
-                    { employee: { is: { contactno: contact } } },
-                ],
+                OR:
+                    normalized.type === "EMAIL"
+                        ? [
+                              {
+                                  student: {
+                                      is: {
+                                          email: {
+                                              equals: normalized.normalized,
+                                              mode: "insensitive",
+                                          },
+                                      },
+                                  },
+                              },
+                              {
+                                  employee: {
+                                      is: {
+                                          email: {
+                                              equals: normalized.normalized,
+                                              mode: "insensitive",
+                                          },
+                                      },
+                                  },
+                              },
+                          ]
+                        : [
+                              {
+                                  student: {
+                                      is: {
+                                          contactno: {
+                                              in: normalized.variants,
+                                          },
+                                      },
+                                  },
+                              },
+                              {
+                                  employee: {
+                                      is: {
+                                          contactno: {
+                                              in: normalized.variants,
+                                          },
+                                      },
+                                  },
+                              },
+                          ],
             },
             include: {
                 student: { select: { fname: true, lname: true } },
@@ -60,22 +111,22 @@ export async function POST(req: Request) {
             }
 
             await tx.passwordResetToken.deleteMany({
-                where: { userId: user.user_id, contact },
+                where: { userId: user.user_id, contact: normalized.normalized },
             });
 
             await tx.passwordResetToken.create({
                 data: {
                     userId: user.user_id,
                     token: code,
-                    contact,
-                    type: contact.includes("@") ? "EMAIL" : "PHONE",
+                    contact: normalized.normalized,
+                    type: normalized.type,
                     expiresAt,
                 },
             });
         });
 
         // ✉️ EMAIL HANDLER
-        if (contact.includes("@")) {
+        if (normalized.type === "EMAIL") {
             const htmlContent = `
         <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -109,7 +160,7 @@ export async function POST(req: Request) {
       `;
 
             await sendEmail({
-                to: contact,
+                to: normalized.normalized,
                 subject: "Password Reset Code",
                 html: htmlContent,
                 fromName: "HNU Clinic",
@@ -129,24 +180,7 @@ export async function POST(req: Request) {
                 );
             }
 
-            if (typeof contact !== "string") {
-                return NextResponse.json(
-                    { error: "Invalid contact type." },
-                    { status: 400 }
-                );
-            }
-
-            // 🧹 Normalize phone number (Philippine format)
-            let smsNumber = contact.trim();
-            if (/^09\d{9}$/.test(smsNumber)) smsNumber = "+63" + smsNumber.slice(1);
-            else if (/^63\d{10}$/.test(smsNumber)) smsNumber = "+" + smsNumber;
-
-            if (!smsNumber.startsWith("+63")) {
-                return NextResponse.json(
-                    { error: "Invalid Philippine number format." },
-                    { status: 400 }
-                );
-            }
+            const smsNumber = formatPhoneForSms(normalized.normalized);
 
             console.log("📞 Sending SMS to:", smsNumber);
 
