@@ -445,9 +445,9 @@ export default function NurseReportsPage() {
                                     {(Object.keys(patientMixConfig) as PatientTypeKey[]).map((key) => (
                                         <div
                                             key={key}
-                                            className="rounded-2xl border border-green-100 bg-green-50/70 px-3 py-2"
+                                            className="rounded-2xl border border-green-100 bg-green-50/70 px-5 py-4 flex flex-col items-center justify-center space-y-1"
                                         >
-                                            <p className="text-xs uppercase tracking-wide text-green-500">
+                                            <p className="text-xs uppercase tracking-wide text-green-500 font-small">
                                                 {patientMixConfig[key].label}
                                             </p>
                                             <p className="text-lg font-semibold">
