@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +28,12 @@ export default function LoginPageClient() {
     const [tokenSent, setTokenSent] = useState(false);
     const [contact, setContact] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [code, setCode] = useState("");
+    const [resendTimer, setResendTimer] = useState(0);
+    const [verifyingContact, setVerifyingContact] = useState<"EMAIL" | "PHONE" | null>(null);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const router = useRouter();
 
     // ---------- LOGIN ----------
@@ -88,31 +93,143 @@ export default function LoginPageClient() {
     }
 
     // ---------- FORGOT PASSWORD ----------
-    async function handleSendCode(e: React.FormEvent) {
-        e.preventDefault();
+    const emailRegex = useMemo(
+        () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        []
+    );
+
+    const parseContact = (raw: string) => {
+        const trimmed = raw.trim();
+        if (!trimmed) {
+            return { normalized: "", type: null as "EMAIL" | "PHONE" | null };
+        }
+
+        const lower = trimmed.toLowerCase();
+        if (emailRegex.test(lower)) {
+            return { normalized: lower, type: "EMAIL" as const };
+        }
+
+        const compact = trimmed.replace(/[^+\d]/g, "");
+
+        if (/^\+639\d{9}$/.test(compact)) {
+            return { normalized: compact, type: "PHONE" as const };
+        }
+
+        if (/^09\d{9}$/.test(compact)) {
+            return { normalized: `+63${compact.slice(1)}`, type: "PHONE" as const };
+        }
+
+        if (/^639\d{9}$/.test(compact)) {
+            return { normalized: `+${compact}`, type: "PHONE" as const };
+        }
+
+        if (/^9\d{9}$/.test(compact)) {
+            return { normalized: `+63${compact}`, type: "PHONE" as const };
+        }
+
+        return { normalized: trimmed, type: null as "EMAIL" | "PHONE" | null };
+    };
+
+    useEffect(() => {
+        if (!tokenSent || resendTimer <= 0) return;
+
+        const timer = setInterval(() => {
+            setResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [tokenSent, resendTimer]);
+
+    useEffect(() => {
+        if (forgotOpen) return;
+
+        setTokenSent(false);
+        setContact("");
+        setCode("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setResendTimer(0);
+        setVerifying(false);
+        setResetting(false);
+        setVerifyingContact(null);
+    }, [forgotOpen]);
+
+    const requestResetCode = async (isResend = false) => {
+        const { normalized, type } = parseContact(contact);
+        if (!normalized || !type) {
+            toast.error("Enter a valid email or Philippine mobile number.");
+            return false;
+        }
+
+        setContact(normalized);
         setVerifying(true);
+
         try {
             const res = await fetch("/api/auth/request-reset", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contact: contact.trim() }),
+                body: JSON.stringify({ contact: normalized }),
             });
             const data = await res.json();
             if (res.ok) {
-                toast.success("Verification code sent via Email/SMS!");
+                toast.success(
+                    isResend
+                        ? "A new verification code has been sent."
+                        : "Verification code sent via Email/SMS!"
+                );
                 setTokenSent(true);
-            } else {
-                toast.error(data.error || "Account not found");
+                setResendTimer(60);
+                setVerifyingContact(type);
+                return true;
             }
+
+            toast.error(data.error || "Account not found");
+            return false;
         } catch {
             toast.error("Network error. Try again.");
+            return false;
         } finally {
             setVerifying(false);
         }
+    };
+
+    async function handleSendCode(e: React.FormEvent) {
+        e.preventDefault();
+        await requestResetCode(false);
+    }
+
+    async function handleResend() {
+        if (resendTimer > 0 || verifying) return;
+        await requestResetCode(true);
     }
 
     async function handleReset(e: React.FormEvent) {
         e.preventDefault();
+
+        const sanitizedCode = code.trim();
+        if (!/^\d{6}$/.test(sanitizedCode)) {
+            toast.error("Please enter the 6-digit verification code.");
+            return;
+        }
+
+        const password = newPassword.trim();
+        const confirm = confirmPassword.trim();
+
+        if (password.length < 8) {
+            toast.error("Password must be at least 8 characters long.");
+            return;
+        }
+
+        if (!/(?=.*[A-Za-z])(?=.*\d)/.test(password)) {
+            toast.error("Use a mix of letters and numbers for a stronger password.");
+            return;
+        }
+
+        if (password !== confirm) {
+            toast.error("Passwords do not match.");
+            return;
+        }
+
         setResetting(true);
         try {
             const res = await fetch("/api/auth/reset-password", {
@@ -120,8 +237,8 @@ export default function LoginPageClient() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contact: contact.trim(),
-                    code: code.trim(), // ✅ include the verification code
-                    newPassword,
+                    code: sanitizedCode,
+                    newPassword: password,
                 }),
             });
             const data = await res.json();
@@ -131,7 +248,10 @@ export default function LoginPageClient() {
                 setTokenSent(false);
                 setContact("");
                 setNewPassword("");
+                setConfirmPassword("");
                 setCode("");
+                setResendTimer(0);
+                setVerifyingContact(null);
             } else {
                 toast.error(data.error || "Reset failed");
             }
@@ -197,7 +317,7 @@ export default function LoginPageClient() {
                 <button
                     type="button"
                     onClick={() => setForgotOpen(true)}
-                    className="font-medium text-green-800 underline-offset-4 transition hover:underline"
+                                className="font-medium text-green-800 underline-offset-4 transition hover:underline"
                 >
                     Forgot password?
                 </button>
@@ -322,7 +442,9 @@ export default function LoginPageClient() {
                         <DialogTitle className="text-green-700">Reset Password</DialogTitle>
                         <DialogDescription className="text-gray-600">
                             {tokenSent
-                                ? "Enter the 6 digit code sent to your contact and set your new password."
+                                ? `Enter the 6 digit code sent to your ${
+                                      verifyingContact === "EMAIL" ? "email" : "mobile number"
+                                  } and set your new password.`
                                 : "Enter your registered email or phone number to receive a reset code."}
                         </DialogDescription>
                     </DialogHeader>
@@ -354,17 +476,86 @@ export default function LoginPageClient() {
                             <Input
                                 placeholder="Enter 6-digit code"
                                 value={code}
-                                onChange={(e) => setCode(e.target.value)}
+                                onChange={(e) => setCode(e.target.value.replace(/[^\d]/g, ""))}
+                                maxLength={6}
                                 required
                             />
-                            <Input
-                                type="password"
-                                placeholder="New Password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                required
-                            />
-                            <DialogFooter>
+                            <div className="relative">
+                                <Input
+                                    type={showNewPassword ? "text" : "password"}
+                                    placeholder="New Password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    required
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setShowNewPassword((prev) => !prev)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
+                                >
+                                    {showNewPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </Button>
+                            </div>
+                            <div className="relative">
+                                <Input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    placeholder="Confirm Password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    required
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff className="h-5 w-5" />
+                                    ) : (
+                                        <Eye className="h-5 w-5" />
+                                    )}
+                                </Button>
+                            </div>
+                            <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+                                <div className="flex w-full flex-col gap-2 sm:flex-row">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={handleResend}
+                                        disabled={resetting || verifying || resendTimer > 0}
+                                        className="flex-1"
+                                    >
+                                        {verifying
+                                            ? "Sending..."
+                                            : resendTimer > 0
+                                              ? `Resend in ${resendTimer}s`
+                                              : "Resend Code"}
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setTokenSent(false);
+                                            setContact("");
+                                            setCode("");
+                                            setNewPassword("");
+                                            setConfirmPassword("");
+                                            setResendTimer(0);
+                                            setVerifyingContact(null);
+                                        }}
+                                        className="flex-1"
+                                    >
+                                        Use different contact
+                                    </Button>
+                                </div>
                                 <Button
                                     type="submit"
                                     disabled={resetting}

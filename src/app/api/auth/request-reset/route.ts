@@ -4,28 +4,116 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 
+type ParsedContact = {
+    normalized: string;
+    type: "EMAIL" | "PHONE";
+    variants: string[];
+};
+
+function parseContact(raw: unknown): ParsedContact | null {
+    if (typeof raw !== "string") return null;
+
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+
+    const lower = trimmed.toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (emailRegex.test(lower)) {
+        return {
+            normalized: lower,
+            type: "EMAIL",
+            variants: [lower],
+        };
+    }
+
+    const compact = trimmed.replace(/[^+\d]/g, "");
+    const digits = compact.replace(/\D/g, "");
+    const variants = new Set<string>();
+
+    let normalized = "";
+
+    if (/^\+639\d{9}$/.test(compact)) {
+        normalized = compact;
+        variants.add(compact);
+        variants.add(compact.slice(1));
+        variants.add(`0${compact.slice(3)}`);
+    } else if (/^09\d{9}$/.test(compact)) {
+        normalized = `+63${compact.slice(1)}`;
+        variants.add(compact);
+        variants.add(normalized);
+        variants.add(`63${compact.slice(1)}`);
+    } else if (/^639\d{9}$/.test(compact)) {
+        normalized = `+${compact}`;
+        variants.add(compact);
+        variants.add(normalized);
+        variants.add(`0${compact.slice(2)}`);
+    } else if (/^9\d{9}$/.test(compact)) {
+        normalized = `+63${compact}`;
+        variants.add(compact);
+        variants.add(normalized);
+        variants.add(`0${compact}`);
+        variants.add(`63${compact}`);
+    }
+
+    if (!normalized || digits.length < 10) {
+        return null;
+    }
+
+    variants.add(digits.slice(-10));
+
+    const phoneVariants = Array.from(variants);
+
+    if (phoneVariants.length === 0) return null;
+
+    return {
+        normalized,
+        type: "PHONE",
+        variants: phoneVariants,
+    };
+}
+
 export async function POST(req: Request) {
     try {
-        const { contact } = await req.json();
+        const body = await req.json();
+        const parsed = parseContact(body?.contact);
 
-        if (!contact) {
+        if (!parsed) {
             return NextResponse.json(
                 { error: "Contact (email or phone) required." },
                 { status: 400 }
             );
         }
 
-        console.log("⚙️ Starting password reset for:", contact);
+        const { normalized, type, variants } = parsed;
 
-        // 🔍 Find user by email or phone
+        console.log("⚙️ Starting password reset for:", normalized);
+
+        // 🔍 Find user by email or phone (case-insensitive for email)
         const user = await prisma.users.findFirst({
             where: {
-                OR: [
-                    { student: { is: { email: contact } } },
-                    { student: { is: { contactno: contact } } },
-                    { employee: { is: { email: contact } } },
-                    { employee: { is: { contactno: contact } } },
-                ],
+                OR:
+                    type === "EMAIL"
+                        ? [
+                              {
+                                  student: {
+                                      is: {
+                                          email: { equals: normalized, mode: "insensitive" },
+                                      },
+                                  },
+                              },
+                              {
+                                  employee: {
+                                      is: {
+                                          email: { equals: normalized, mode: "insensitive" },
+                                      },
+                                  },
+                              },
+                          ]
+                        : variants.flatMap((value) => [
+                              { student: { is: { contactno: value } } },
+                              { employee: { is: { contactno: value } } },
+                          ]),
             },
             include: {
                 student: { select: { fname: true, lname: true } },
@@ -60,22 +148,22 @@ export async function POST(req: Request) {
             }
 
             await tx.passwordResetToken.deleteMany({
-                where: { userId: user.user_id, contact },
+                where: { userId: user.user_id, contact: normalized },
             });
 
             await tx.passwordResetToken.create({
                 data: {
                     userId: user.user_id,
                     token: code,
-                    contact,
-                    type: contact.includes("@") ? "EMAIL" : "PHONE",
+                    contact: normalized,
+                    type,
                     expiresAt,
                 },
             });
         });
 
         // ✉️ EMAIL HANDLER
-        if (contact.includes("@")) {
+        if (type === "EMAIL") {
             const htmlContent = `
         <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -109,7 +197,7 @@ export async function POST(req: Request) {
       `;
 
             await sendEmail({
-                to: contact,
+                to: normalized,
                 subject: "Password Reset Code",
                 html: htmlContent,
                 fromName: "HNU Clinic",
@@ -129,19 +217,10 @@ export async function POST(req: Request) {
                 );
             }
 
-            if (typeof contact !== "string") {
-                return NextResponse.json(
-                    { error: "Invalid contact type." },
-                    { status: 400 }
-                );
-            }
-
             // 🧹 Normalize phone number (Philippine format)
-            let smsNumber = contact.trim();
-            if (/^09\d{9}$/.test(smsNumber)) smsNumber = "+63" + smsNumber.slice(1);
-            else if (/^63\d{10}$/.test(smsNumber)) smsNumber = "+" + smsNumber;
+            const smsNumber = normalized;
 
-            if (!smsNumber.startsWith("+63")) {
+            if (!/^\+639\d{9}$/.test(smsNumber)) {
                 return NextResponse.json(
                     { error: "Invalid Philippine number format." },
                     { status: 400 }
