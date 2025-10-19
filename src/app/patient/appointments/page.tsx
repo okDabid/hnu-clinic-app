@@ -719,14 +719,14 @@ export default function PatientAppointmentsPage() {
                 </div>
             }
         >
-            <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-                <AppointmentPanel
-                    icon={CalendarDays}
-                    title="Request an appointment"
-                    description={`Choose the clinic, provider, and time that works for you. ${earliestScheduledMessage}`}
-                    contentClassName="pt-6"
-                >
-                    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.95fr)]">
+            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] 2xl:gap-8">
+                <div className="space-y-6">
+                    <AppointmentPanel
+                        icon={CalendarDays}
+                        title="Request an appointment"
+                        description={`Choose the clinic, provider, and time that works for you. ${earliestScheduledMessage}`}
+                        contentClassName="pt-6"
+                    >
                         <form className="space-y-5" onSubmit={handleSubmit}>
                             <div className="grid gap-2">
                                 <Label className="text-sm font-medium text-green-700">Clinic</Label>
@@ -839,20 +839,29 @@ export default function PatientAppointmentsPage() {
                                 )}
                             </Button>
                         </form>
+                    </AppointmentPanel>
 
-                        <section className="flex flex-col gap-4 rounded-2xl border border-green-100 bg-gradient-to-b from-white to-green-50/70 p-5 shadow-inner xl:pl-8">
-                            <div className="flex items-start gap-3">
-                                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-600/10 text-green-600">
-                                    <Clock3 className="h-5 w-5" />
-                                </span>
-                                <div>
-                                    <h3 className="text-base font-semibold text-green-700">Doctor availability</h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        Preview open slots before sending your request.
-                                    </p>
-                                </div>
-                            </div>
+                    <Card className="rounded-3xl border-green-100/80 bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Important reminders</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm text-white/90">
+                            <p>Bring your clinic ID and arrive 10 minutes early for screening and verification.</p>
+                            <p>If you can no longer attend, submit a reschedule or cancellation so another patient can use the slot.</p>
+                            <p>Watch your notifications for approvals, movement updates, and doctor instructions.</p>
+                        </CardContent>
+                    </Card>
+                </div>
 
+                <div className="space-y-6">
+                    <Card className="rounded-3xl border-green-100/80 bg-white/95 shadow-sm">
+                        <CardHeader className="space-y-1">
+                            <CardTitle className="text-lg font-semibold text-green-700">Doctor availability</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Preview open slots before sending your request.
+                            </p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             {!clinicId ? (
                                 <div className="rounded-2xl border border-dashed border-green-200 bg-white/70 p-4 text-sm text-muted-foreground">
                                     Select a clinic to browse available doctors.
@@ -970,12 +979,9 @@ export default function PatientAppointmentsPage() {
                                     </div>
                                 </div>
                             )}
-                        </section>
-                    </div>
-                </AppointmentPanel>
+                        </CardContent>
+                    </Card>
 
-
-                <div className="space-y-6">
                     <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
                         <CardHeader>
                             <CardTitle className="text-lg text-green-700">Booking summary</CardTitle>
@@ -991,7 +997,9 @@ export default function PatientAppointmentsPage() {
                                 <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
                                     <dt className="text-xs uppercase tracking-wide text-green-500">Doctor</dt>
                                     <dd className="mt-1 text-sm font-medium text-green-800">
-                                        {selectedDoctor ? `${selectedDoctor.name} ${selectedDoctor.specialization ? `(${selectedDoctor.specialization})` : ""}` : "Choose a clinic and doctor"}
+                                        {selectedDoctor
+                                            ? `${selectedDoctor.name} ${selectedDoctor.specialization ? `(${selectedDoctor.specialization})` : ""}`
+                                            : "Choose a clinic and doctor"}
                                     </dd>
                                 </div>
                                 <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
@@ -1015,20 +1023,8 @@ export default function PatientAppointmentsPage() {
                             </dl>
                         </CardContent>
                     </Card>
-
-                    <Card className="rounded-3xl border-green-100/80 bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Important reminders</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3 text-sm text-white/90">
-                            <p>Bring your clinic ID and arrive 10 minutes early for screening and verification.</p>
-                            <p>If you can no longer attend, submit a reschedule or cancellation so another patient can use the slot.</p>
-                            <p>Watch your notifications for approvals, movement updates, and doctor instructions.</p>
-                        </CardContent>
-                    </Card>
                 </div>
             </section>
-
             <section className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-3">
                     <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
