@@ -724,181 +724,151 @@ export default function PatientAppointmentsPage() {
                     icon={CalendarDays}
                     title="Request an appointment"
                     description={`Choose the clinic, provider, and time that works for you. ${earliestScheduledMessage}`}
+                    contentClassName="pt-6"
                 >
-                    <form className="space-y-5" onSubmit={handleSubmit}>
-                        <div className="grid gap-2">
-                            <Label className="text-sm font-medium text-green-700">Clinic</Label>
-                            <Select value={clinicId} onValueChange={handleClinicChange} disabled={loadingClinics}>
-                                <SelectTrigger className="rounded-xl border-green-200">
-                                    <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {clinics.map((clinic) => (
-                                        <SelectItem key={clinic.clinic_id} value={clinic.clinic_id}>
-                                            {clinic.clinic_name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.95fr)]">
+                        <form className="space-y-5" onSubmit={handleSubmit}>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Clinic</Label>
+                                <Select value={clinicId} onValueChange={handleClinicChange} disabled={loadingClinics}>
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {clinics.map((clinic) => (
+                                            <SelectItem key={clinic.clinic_id} value={clinic.clinic_id}>
+                                                {clinic.clinic_name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                        <div className="grid gap-2">
-                            <Label className="text-sm font-medium text-green-700">Doctor</Label>
-                            <Select value={doctorId} onValueChange={handleDoctorChange} disabled={!clinicId || loadingDoctors}>
-                                <SelectTrigger className="rounded-xl border-green-200">
-                                    <SelectValue placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {doctors.map((doctor) => (
-                                        <SelectItem key={doctor.user_id} value={doctor.user_id}>
-                                            {doctor.name} ({doctor.specialization ?? "N/A"})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Doctor</Label>
+                                <Select
+                                    value={doctorId}
+                                    onValueChange={handleDoctorChange}
+                                    disabled={!clinicId || loadingDoctors}
+                                >
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue
+                                            placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"}
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {doctors.map((doctor) => (
+                                            <SelectItem key={doctor.user_id} value={doctor.user_id}>
+                                                {doctor.name} ({doctor.specialization ?? "N/A"})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                        <div className="grid gap-2">
-                            <Label className="text-sm font-medium text-green-700">Service type</Label>
-                            <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
-                                <SelectTrigger className="rounded-xl border-green-200">
-                                    <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableServices.map((service) => (
-                                        <SelectItem key={service.value} value={service.value}>
-                                            {service.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Service type</Label>
+                                <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableServices.map((service) => (
+                                            <SelectItem key={service.value} value={service.value}>
+                                                {service.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                        <div className="grid gap-2">
-                            <Label className="text-sm font-medium text-green-700">Date</Label>
-                            <Input
-                                type="date"
-                                value={date}
-                                onChange={(event) => setDate(event.target.value)}
-                                min={minBookingDate}
-                                className="rounded-xl border-green-200"
-                            />
-                        </div>
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Date</Label>
+                                <Input
+                                    type="date"
+                                    value={date}
+                                    onChange={(event) => setDate(event.target.value)}
+                                    min={minBookingDate}
+                                    className="rounded-xl border-green-200"
+                                />
+                            </div>
 
-                        <div className="grid gap-2">
-                            <Label className="text-sm font-medium text-green-700">Preferred time</Label>
-                            <Select
-                                value={timeStart}
-                                onValueChange={setTimeStart}
-                                disabled={loadingSlots || !doctorId || !date || !!selectedDoctorAvailabilityError}
+                            <div className="grid gap-2">
+                                <Label className="text-sm font-medium text-green-700">Preferred time</Label>
+                                <Select
+                                    value={timeStart}
+                                    onValueChange={setTimeStart}
+                                    disabled={loadingSlots || !doctorId || !date || !!selectedDoctorAvailabilityError}
+                                >
+                                    <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectValue
+                                            placeholder={
+                                                !doctorId || !date
+                                                    ? "Select doctor and date"
+                                                    : loadingSlots
+                                                        ? "Loading slots..."
+                                                        : selectedDoctorAvailabilityError
+                                                            ? "Unable to load slots"
+                                                            : slots.length
+                                                                ? "Select a time"
+                                                                : "No slots available"
+                                            }
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {slots.map((slot) => (
+                                            <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
+                                                {formatTimeRange(slot.start, slot.end)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full rounded-xl bg-green-600 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
+                                disabled={submitting}
                             >
-                                <SelectTrigger className="rounded-xl border-green-200">
-                                    <SelectValue
-                                        placeholder={
-                                            !doctorId || !date
-                                                ? "Select doctor and date"
-                                                : loadingSlots
-                                                    ? "Loading slots..."
-                                                    : selectedDoctorAvailabilityError
-                                                        ? "Unable to load slots"
-                                                    : slots.length
-                                                        ? "Select a time"
-                                                        : "No slots available"
-                                        }
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {slots.map((slot) => (
-                                        <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
-                                            {formatTimeRange(slot.start, slot.end)}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                {submitting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
+                                    </>
+                                ) : (
+                                    "Request appointment"
+                                )}
+                            </Button>
+                        </form>
 
-                        <Button
-                            type="submit"
-                            className="w-full rounded-xl bg-green-600 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
-                            disabled={submitting}
-                        >
-                            {submitting ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-                                </>
-                            ) : (
-                                "Request appointment"
-                            )}
-                        </Button>
-                    </form>
-                </AppointmentPanel>
+                        <section className="flex flex-col gap-4 rounded-2xl border border-green-100 bg-gradient-to-b from-white to-green-50/70 p-5 shadow-inner xl:pl-8">
+                            <div className="flex items-start gap-3">
+                                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-600/10 text-green-600">
+                                    <Clock3 className="h-5 w-5" />
+                                </span>
+                                <div>
+                                    <h3 className="text-base font-semibold text-green-700">Doctor availability</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        Preview open slots before sending your request.
+                                    </p>
+                                </div>
+                            </div>
 
-
-                <div className="space-y-6">
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
-                        <CardHeader>
-                            <CardTitle className="text-lg text-green-700">Booking summary</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <dl className="space-y-3 text-sm text-muted-foreground">
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Clinic</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
-                                        {selectedClinic ? selectedClinic.clinic_name : "Select a clinic to continue"}
-                                    </dd>
-                                </div>
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Doctor</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
-                                        {selectedDoctor ? `${selectedDoctor.name} ${selectedDoctor.specialization ? `(${selectedDoctor.specialization})` : ""}` : "Choose a clinic and doctor"}
-                                    </dd>
-                                </div>
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Service</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
-                                        {selectedServiceLabel ?? "Select a service type"}
-                                    </dd>
-                                </div>
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Schedule</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
-                                        {date && selectedSlot ? (
-                                            <span>
-                                                {formatDateOnly(date)} · {formatTimeRange(selectedSlot.start, selectedSlot.end)}
-                                            </span>
-                                        ) : (
-                                            "Choose a date and time"
-                                        )}
-                                    </dd>
-                                </div>
-                            </dl>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
-                        <CardHeader className="space-y-1">
-                            <CardTitle className="text-lg text-green-700">Doctor availability</CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                                Preview open slots before sending your request.
-                            </p>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
                             {!clinicId ? (
-                                <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
+                                <div className="rounded-2xl border border-dashed border-green-200 bg-white/70 p-4 text-sm text-muted-foreground">
                                     Select a clinic to browse available doctors.
                                 </div>
                             ) : loadingDoctors ? (
-                                <div className="flex items-center justify-center gap-2 rounded-2xl border border-green-100 p-4 text-sm text-muted-foreground">
+                                <div className="flex items-center justify-center gap-2 rounded-2xl border border-green-100 bg-white/70 p-4 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin" /> Loading doctors...
                                 </div>
                             ) : doctors.length === 0 ? (
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-4 text-sm text-muted-foreground">
+                                <div className="rounded-2xl border border-green-100 bg-green-600/10 p-4 text-sm text-muted-foreground">
                                     No doctors are assigned to this clinic yet. Try another clinic.
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     {selectedClinic ? (
-                                        <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                        <div className="rounded-2xl border border-green-100 bg-white/70 p-3">
                                             <p className="text-xs uppercase tracking-wide text-green-500">{selectedClinic.clinic_name}</p>
                                             <p className="mt-1 text-sm font-medium text-green-800">
                                                 {date ? `Showing availability for ${formatDateOnly(date)}` : "Choose a date to explore available slots."}
@@ -907,7 +877,7 @@ export default function PatientAppointmentsPage() {
                                     ) : null}
 
                                     {!date ? (
-                                        <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
+                                        <div className="rounded-2xl border border-dashed border-green-200 bg-white/70 p-4 text-sm text-muted-foreground">
                                             Pick a preferred date to display the available times for every doctor.
                                         </div>
                                     ) : null}
@@ -925,7 +895,7 @@ export default function PatientAppointmentsPage() {
                                                     key={doctor.user_id}
                                                     className={cn(
                                                         "rounded-2xl border p-4 transition",
-                                                        "border-green-100 bg-green-600/5",
+                                                        "border-green-100 bg-white/80",
                                                         isActiveDoctor && "border-green-500 bg-green-50 shadow-sm"
                                                     )}
                                                 >
@@ -1000,6 +970,49 @@ export default function PatientAppointmentsPage() {
                                     </div>
                                 </div>
                             )}
+                        </section>
+                    </div>
+                </AppointmentPanel>
+
+
+                <div className="space-y-6">
+                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg text-green-700">Booking summary</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <dl className="space-y-3 text-sm text-muted-foreground">
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Clinic</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {selectedClinic ? selectedClinic.clinic_name : "Select a clinic to continue"}
+                                    </dd>
+                                </div>
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Doctor</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {selectedDoctor ? `${selectedDoctor.name} ${selectedDoctor.specialization ? `(${selectedDoctor.specialization})` : ""}` : "Choose a clinic and doctor"}
+                                    </dd>
+                                </div>
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Service</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {selectedServiceLabel ?? "Select a service type"}
+                                    </dd>
+                                </div>
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-green-500">Schedule</dt>
+                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                        {date && selectedSlot ? (
+                                            <span>
+                                                {formatDateOnly(date)} · {formatTimeRange(selectedSlot.start, selectedSlot.end)}
+                                            </span>
+                                        ) : (
+                                            "Choose a date and time"
+                                        )}
+                                    </dd>
+                                </div>
+                            </dl>
                         </CardContent>
                     </Card>
 
