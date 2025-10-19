@@ -450,7 +450,6 @@ export default function LoginPageClient() {
                             <div className="space-y-2 rounded-lg border border-dashed border-green-200 bg-green-50/60 px-3 py-2 text-xs text-slate-600">
                                 <span className="font-medium text-green-700">Code sent to {maskedContact}</span>
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <span className="text-[0.7rem] uppercase tracking-wide text-slate-500">{contact}</span>
                                     <button
                                         type="button"
                                         onClick={() => {
