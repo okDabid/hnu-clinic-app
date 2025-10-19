@@ -8,6 +8,7 @@ import {
     ClipboardList,
     Clock3,
     Loader2,
+    MoreHorizontal,
     Search,
     Undo2,
 } from "lucide-react";
@@ -38,6 +39,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
@@ -73,6 +80,14 @@ function computeMinBookingDate(): string {
     const base = manilaNow();
     const future = new Date(base.getTime() + MIN_BOOKING_LEAD_DAYS * DAY_IN_MS);
     return toInputDate(future);
+}
+
+function parseInputDate(value: string): Date | null {
+    if (!value) return null;
+    const iso = `${value}T00:00:00+08:00`;
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return null;
+    return date;
 }
 
 function isoToInputDate(iso: string | null | undefined): string {
@@ -155,7 +170,19 @@ function humanizeService(value: string | null | undefined) {
 }
 
 export default function PatientAppointmentsPage() {
-    const minBookingDate = useMemo(() => computeMinBookingDate(), []);
+    const [minBookingDate, setMinBookingDate] = useState(() => computeMinBookingDate());
+
+    useEffect(() => {
+        const updateMinDate = () =>
+            setMinBookingDate((current) => {
+                const next = computeMinBookingDate();
+                return current === next ? current : next;
+            });
+
+        updateMinDate();
+        const interval = setInterval(updateMinDate, 60 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Form state
     const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -221,6 +248,13 @@ export default function PatientAppointmentsPage() {
         e.preventDefault();
         if (!rescheduleTarget || !rescheduleDate || !selectedRescheduleSlot) {
             toast.error("Please choose a new time slot");
+            return;
+        }
+
+        const minDate = parseInputDate(minBookingDate);
+        const selectedDate = parseInputDate(rescheduleDate);
+        if (minDate && selectedDate && selectedDate.getTime() < minDate.getTime()) {
+            toast.error(`Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`);
             return;
         }
 
@@ -362,6 +396,21 @@ export default function PatientAppointmentsPage() {
     }, [rescheduleDate]);
 
     useEffect(() => {
+        setDate((current) => {
+            if (!current) return current;
+            return current < minBookingDate ? minBookingDate : current;
+        });
+    }, [minBookingDate]);
+
+    useEffect(() => {
+        if (!rescheduleOpen) return;
+        setRescheduleDate((current) => {
+            if (!current) return minBookingDate;
+            return current < minBookingDate ? minBookingDate : current;
+        });
+    }, [minBookingDate, rescheduleOpen]);
+
+    useEffect(() => {
         if (!rescheduleTarget) {
             setRescheduleSlots([]);
             setLoadingRescheduleSlots(false);
@@ -416,6 +465,13 @@ export default function PatientAppointmentsPage() {
 
         if (!serviceEnumValue) {
             toast.error("Select a valid service type");
+            return;
+        }
+
+        const minDate = parseInputDate(minBookingDate);
+        const selectedDate = parseInputDate(date);
+        if (minDate && selectedDate && selectedDate.getTime() < minDate.getTime()) {
+            toast.error(`Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`);
             return;
         }
 
@@ -832,7 +888,7 @@ export default function PatientAppointmentsPage() {
                                         <TableHead className="min-w-[120px]">Date</TableHead>
                                         <TableHead className="min-w-[120px]">Time</TableHead>
                                         <TableHead className="min-w-[120px]">Status</TableHead>
-                                        <TableHead className="w-[180px] text-right">Actions</TableHead>
+                                        <TableHead className="w-[110px] text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -881,36 +937,47 @@ export default function PatientAppointmentsPage() {
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         {canModify ? (
-                                                            <div className="flex flex-wrap items-center justify-end gap-2">
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() => openRescheduleDialog(appointment)}
-                                                                    disabled={isRescheduling}
-                                                                    className="gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100"
-                                                                >
-                                                                    {isRescheduling ? (
-                                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                                    ) : (
-                                                                        <Undo2 className="h-3 w-3" />
-                                                                    )}
-                                                                    Reschedule
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="destructive"
-                                                                    onClick={() => openCancelDialog(appointment)}
-                                                                    disabled={isCancelling}
-                                                                    className="gap-2 rounded-xl"
-                                                                >
-                                                                    {isCancelling ? (
-                                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                                    ) : (
-                                                                        <Ban className="h-3 w-3" />
-                                                                    )}
-                                                                    Cancel
-                                                                </Button>
-                                                            </div>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="rounded-xl text-green-700 hover:bg-green-100"
+                                                                        disabled={isRescheduling || isCancelling}
+                                                                    >
+                                                                        {isRescheduling || isCancelling ? (
+                                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                                        ) : (
+                                                                            <MoreHorizontal className="h-4 w-4" />
+                                                                        )}
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-48 rounded-xl border-green-100">
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => openRescheduleDialog(appointment)}
+                                                                        disabled={isRescheduling || isCancelling}
+                                                                    >
+                                                                        {isRescheduling ? (
+                                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                        ) : (
+                                                                            <Undo2 className="mr-2 h-4 w-4" />
+                                                                        )}
+                                                                        Reschedule
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => openCancelDialog(appointment)}
+                                                                        disabled={isCancelling || isRescheduling}
+                                                                        className="text-red-600 focus:text-red-600"
+                                                                    >
+                                                                        {isCancelling ? (
+                                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                        ) : (
+                                                                            <Ban className="mr-2 h-4 w-4" />
+                                                                        )}
+                                                                        Cancel
+                                                                    </DropdownMenuItem>
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
                                                         ) : (
                                                             <span className="text-xs text-muted-foreground">No actions available</span>
                                                         )}
