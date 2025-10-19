@@ -1,23 +1,20 @@
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export const PHONE_NUMBER_REGEX = /^(?:\+639|09)\d{9}$/;
+export const PHONE_NUMBER_REGEX = /^09\d{9}$/;
 
 export function sanitizePhoneNumber(value: string): string {
-    if (!value) {
-        return "";
+    if (!value) return "";
+
+    let cleaned = value.replace(/\D/g, "");
+
+    if (/^9\d{9}$/.test(cleaned)) {
+        cleaned = `0${cleaned}`;
     }
 
-    const cleaned = value.replace(/[^+\d]/g, "");
-
-    if (!cleaned) {
-        return "";
+    if (cleaned.length > 11) {
+        cleaned = cleaned.slice(0, 11);
     }
 
-    if (cleaned.startsWith("+")) {
-        return `+${cleaned.slice(1).replace(/\+/g, "")}`;
-    }
-
-    return cleaned.replace(/\+/g, "");
+    return cleaned;
 }
 
 type ContactValidationInput = {
@@ -51,7 +48,7 @@ export function validateAndNormalizeContacts(input: ContactValidationInput): Con
     if (contactNumber && !PHONE_NUMBER_REGEX.test(contactNumber)) {
         return {
             success: false,
-            error: "Contact number must follow the 09XXXXXXXXX or +639XXXXXXXXX format.",
+            error: "Contact number must follow the 09XXXXXXXXX format (11 digits only).",
         };
     }
 
@@ -59,7 +56,7 @@ export function validateAndNormalizeContacts(input: ContactValidationInput): Con
     if (emergencyNumber && !PHONE_NUMBER_REGEX.test(emergencyNumber)) {
         return {
             success: false,
-            error: "Emergency contact number must follow the 09XXXXXXXXX or +639XXXXXXXXX format.",
+            error: "Emergency contact number must follow the 09XXXXXXXXX format (11 digits only).",
         };
     }
 
