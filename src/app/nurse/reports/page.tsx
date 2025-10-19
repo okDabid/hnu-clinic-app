@@ -143,6 +143,38 @@ function buildReportFilename(year: number, quarter?: number | null) {
 async function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
     if (typeof window === "undefined") return;
 
+    const renderPdfInIframe = (url: string) => {
+        const newWindow = window.open("", "_blank");
+        if (!newWindow) {
+            return false;
+        }
+
+        newWindow.document.write(
+            `<iframe src="${url}#toolbar=1" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;"></iframe>`
+        );
+        return true;
+    };
+
+    const triggerObjectUrlDownload = (url: string) => {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.style.display = "none";
+
+        if (isMobile) {
+            link.rel = "noopener";
+            link.target = "_blank";
+        }
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.setTimeout(() => {
+            URL.revokeObjectURL(url);
+        }, 1000);
+    };
+
     if (isMobile && isIOSDevice()) {
         try {
             const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -160,11 +192,7 @@ async function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
                 reader.readAsDataURL(blob);
             });
 
-            const newWindow = window.open("", "_blank");
-            if (newWindow) {
-                newWindow.document.write(
-                    `<iframe src="${dataUrl}#toolbar=1" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;"></iframe>`
-                );
+            if (renderPdfInIframe(dataUrl)) {
                 return;
             }
 
@@ -175,25 +203,21 @@ async function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
         }
     }
 
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.style.display = "none";
-
     if (isMobile) {
-        link.rel = "noopener";
-        link.target = "_blank";
+        const url = URL.createObjectURL(blob);
+        if (renderPdfInIframe(url)) {
+            window.setTimeout(() => {
+                URL.revokeObjectURL(url);
+            }, 1000);
+            return;
+        }
+
+        triggerObjectUrlDownload(url);
+        return;
     }
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    window.setTimeout(() => {
-        URL.revokeObjectURL(url);
-    }, 1000);
+    const url = URL.createObjectURL(blob);
+    triggerObjectUrlDownload(url);
 }
 
 export default function NurseReportsPage() {
