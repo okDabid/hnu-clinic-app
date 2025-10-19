@@ -1,5 +1,5 @@
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const PHONE_NUMBER_REGEX = /^09\d{9}$/;
+export const PHONE_NUMBER_REGEX = /^09[0-9]{9}$/;
 
 export function sanitizePhoneNumber(value: string): string {
     if (!value) return "";
