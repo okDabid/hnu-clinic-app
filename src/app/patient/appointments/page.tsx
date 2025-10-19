@@ -193,10 +193,11 @@ export default function PatientAppointmentsPage() {
     // Form state
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [doctors, setDoctors] = useState<Doctor[]>([]);
-    const [slots, setSlots] = useState<Slot[]>([]);
+    const [doctorAvailability, setDoctorAvailability] = useState<
+        Record<string, { slots: Slot[]; loading: boolean; error: string | null }>
+    >({});
     const [loadingClinics, setLoadingClinics] = useState(true);
     const [loadingDoctors, setLoadingDoctors] = useState(false);
-    const [loadingSlots, setLoadingSlots] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     const [clinicId, setClinicId] = useState("");
@@ -223,6 +224,27 @@ export default function PatientAppointmentsPage() {
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
     const [cancelSubmitting, setCancelSubmitting] = useState(false);
+
+    const handleClinicChange = (nextClinicId: string) => {
+        setClinicId(nextClinicId);
+        setDoctorId("");
+        setServiceType("");
+        setTimeStart("");
+    };
+
+    const handleDoctorChange = (nextDoctorId: string) => {
+        setDoctorId(nextDoctorId);
+        setServiceType("");
+        setTimeStart("");
+    };
+
+    const handleSlotSelection = (doctor: Doctor, slot: Slot) => {
+        if (doctor.user_id !== doctorId) {
+            setDoctorId(doctor.user_id);
+            setServiceType("");
+        }
+        setTimeStart(slot.start);
+    };
 
     const canModifyAppointment = (appointment: Appointment) => {
         const allowedStatuses = ["Pending", "Approved", "Moved"];
@@ -362,30 +384,90 @@ export default function PatientAppointmentsPage() {
         })();
     }, [clinicId]);
 
-    // Load slots
+    // Load availability for doctors when clinic/date change
     useEffect(() => {
-        setTimeStart("");
-        if (!clinicId || !doctorId || !date) {
-            setSlots([]);
+        if (!clinicId || doctors.length === 0) {
+            setDoctorAvailability({});
             return;
         }
-        (async () => {
+
+        if (!date) {
+            const emptyAvailability: Record<string, { slots: Slot[]; loading: boolean; error: string | null }> = {};
+            doctors.forEach((doctor) => {
+                emptyAvailability[doctor.user_id] = {
+                    slots: [],
+                    loading: false,
+                    error: null,
+                };
+            });
+            setDoctorAvailability(emptyAvailability);
+            return;
+        }
+
+        let cancelled = false;
+
+        setDoctorAvailability((prev) => {
+            const next: typeof prev = {};
+            doctors.forEach((doctor) => {
+                const existing = prev[doctor.user_id];
+                next[doctor.user_id] = {
+                    slots: existing?.slots ?? [],
+                    loading: true,
+                    error: null,
+                };
+            });
+            return next;
+        });
+
+        const loadAvailability = async (doctor: Doctor) => {
             try {
-                setLoadingSlots(true);
-                const params = new URLSearchParams({ clinic_id: clinicId, doctor_user_id: doctorId, date });
+                const params = new URLSearchParams({
+                    clinic_id: clinicId,
+                    doctor_user_id: doctor.user_id,
+                    date,
+                });
                 const res = await fetch(`/api/meta/doctor-availability?${params}`);
                 const data = await res.json();
-                setSlots(data?.slots || []);
-            } catch {
-                toast.error("Failed to load available slots");
-            } finally {
-                setLoadingSlots(false);
-            }
-        })();
-    }, [clinicId, doctorId, date]);
 
-    const selectedSlot = useMemo(() => slots.find(s => s.start === timeStart), [slots, timeStart]);
-    const selectedDoctor = useMemo(() => doctors.find(d => d.user_id === doctorId) || null, [doctorId, doctors]);
+                if (cancelled) return;
+
+                setDoctorAvailability((prev) => ({
+                    ...prev,
+                    [doctor.user_id]: {
+                        slots: data?.slots || [],
+                        loading: false,
+                        error: null,
+                    },
+                }));
+            } catch {
+                if (cancelled) return;
+
+                setDoctorAvailability((prev) => ({
+                    ...prev,
+                    [doctor.user_id]: {
+                        slots: [],
+                        loading: false,
+                        error: "Failed to load availability",
+                    },
+                }));
+            }
+        };
+
+        doctors.forEach((doctor) => {
+            void loadAvailability(doctor);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [clinicId, date, doctors]);
+
+    const selectedDoctorAvailability = doctorId ? doctorAvailability[doctorId] : undefined;
+    const slots = useMemo(() => selectedDoctorAvailability?.slots ?? [], [selectedDoctorAvailability]);
+    const loadingSlots = selectedDoctorAvailability?.loading ?? false;
+    const selectedDoctorAvailabilityError = selectedDoctorAvailability?.error ?? null;
+    const selectedSlot = useMemo(() => slots.find((s) => s.start === timeStart), [slots, timeStart]);
+    const selectedDoctor = useMemo(() => doctors.find((d) => d.user_id === doctorId) || null, [doctorId, doctors]);
     const selectedClinic = useMemo(
         () => clinics.find((clinic) => clinic.clinic_id === clinicId) ?? null,
         [clinics, clinicId]
@@ -398,6 +480,20 @@ export default function PatientAppointmentsPage() {
     useEffect(() => {
         setRescheduleTimeStart("");
     }, [rescheduleDate]);
+
+    useEffect(() => {
+        setTimeStart("");
+    }, [date]);
+
+    useEffect(() => {
+        if (!doctorId) return;
+        const exists = doctors.some((doctor) => doctor.user_id === doctorId);
+        if (!exists) {
+            setDoctorId("");
+            setServiceType("");
+            setTimeStart("");
+        }
+    }, [doctorId, doctors]);
 
     useEffect(() => {
         setDate((current) => {
@@ -506,7 +602,6 @@ export default function PatientAppointmentsPage() {
             setServiceType("");
             setDate("");
             setTimeStart("");
-            setSlots([]);
         } catch {
             toast.error("Unable to create appointment");
         } finally {
@@ -633,7 +728,7 @@ export default function PatientAppointmentsPage() {
                     <form className="space-y-5" onSubmit={handleSubmit}>
                         <div className="grid gap-2">
                             <Label className="text-sm font-medium text-green-700">Clinic</Label>
-                            <Select value={clinicId} onValueChange={setClinicId} disabled={loadingClinics}>
+                            <Select value={clinicId} onValueChange={handleClinicChange} disabled={loadingClinics}>
                                 <SelectTrigger className="rounded-xl border-green-200">
                                     <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
                                 </SelectTrigger>
@@ -649,7 +744,7 @@ export default function PatientAppointmentsPage() {
 
                         <div className="grid gap-2">
                             <Label className="text-sm font-medium text-green-700">Doctor</Label>
-                            <Select value={doctorId} onValueChange={setDoctorId} disabled={!clinicId || loadingDoctors}>
+                            <Select value={doctorId} onValueChange={handleDoctorChange} disabled={!clinicId || loadingDoctors}>
                                 <SelectTrigger className="rounded-xl border-green-200">
                                     <SelectValue placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"} />
                                 </SelectTrigger>
@@ -692,7 +787,11 @@ export default function PatientAppointmentsPage() {
 
                         <div className="grid gap-2">
                             <Label className="text-sm font-medium text-green-700">Preferred time</Label>
-                            <Select value={timeStart} onValueChange={setTimeStart} disabled={loadingSlots || !doctorId || !date}>
+                            <Select
+                                value={timeStart}
+                                onValueChange={setTimeStart}
+                                disabled={loadingSlots || !doctorId || !date || !!selectedDoctorAvailabilityError}
+                            >
                                 <SelectTrigger className="rounded-xl border-green-200">
                                     <SelectValue
                                         placeholder={
@@ -700,6 +799,8 @@ export default function PatientAppointmentsPage() {
                                                 ? "Select doctor and date"
                                                 : loadingSlots
                                                     ? "Loading slots..."
+                                                    : selectedDoctorAvailabilityError
+                                                        ? "Unable to load slots"
                                                     : slots.length
                                                         ? "Select a time"
                                                         : "No slots available"
@@ -782,72 +883,121 @@ export default function PatientAppointmentsPage() {
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {selectedDoctor ? (
-                                <>
-                                    <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                        <div className="flex flex-col gap-1">
-                                            <p className="text-sm font-semibold text-green-700">{selectedDoctor.name}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {selectedDoctor.specialization ?? "Doctor"}
-                                                {selectedClinic ? ` · ${selectedClinic.clinic_name}` : ""}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {date
-                                                    ? `Showing availability for ${formatDateOnly(date)}`
-                                                    : "Choose a date to explore available slots."}
+                            {!clinicId ? (
+                                <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
+                                    Select a clinic to browse available doctors.
+                                </div>
+                            ) : loadingDoctors ? (
+                                <div className="flex items-center justify-center gap-2 rounded-2xl border border-green-100 p-4 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" /> Loading doctors...
+                                </div>
+                            ) : doctors.length === 0 ? (
+                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-4 text-sm text-muted-foreground">
+                                    No doctors are assigned to this clinic yet. Try another clinic.
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {selectedClinic ? (
+                                        <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
+                                            <p className="text-xs uppercase tracking-wide text-green-500">{selectedClinic.clinic_name}</p>
+                                            <p className="mt-1 text-sm font-medium text-green-800">
+                                                {date ? `Showing availability for ${formatDateOnly(date)}` : "Choose a date to explore available slots."}
                                             </p>
                                         </div>
-                                    </div>
+                                    ) : null}
+
+                                    {!date ? (
+                                        <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
+                                            Pick a preferred date to display the available times for every doctor.
+                                        </div>
+                                    ) : null}
 
                                     <div className="space-y-3">
-                                        {!date ? (
-                                            <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
-                                                Pick a preferred date to display the available times for this doctor.
-                                            </div>
-                                        ) : loadingSlots ? (
-                                            <div className="flex items-center justify-center gap-2 rounded-2xl border border-green-100 p-4 text-sm text-muted-foreground">
-                                                <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
-                                            </div>
-                                        ) : slots.length > 0 ? (
-                                            <div className="grid gap-2 sm:grid-cols-2">
-                                                {slots.map((slot) => {
-                                                    const isSelected = timeStart === slot.start;
-                                                    return (
-                                                        <button
-                                                            key={`${slot.start}-${slot.end}`}
-                                                            type="button"
-                                                            onClick={() => setTimeStart(slot.start)}
-                                                            className={cn(
-                                                                "flex items-center justify-between rounded-2xl border px-3 py-2 text-sm font-medium transition",
-                                                                "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
-                                                                isSelected &&
-                                                                    "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
-                                                            )}
-                                                            aria-pressed={isSelected}
-                                                        >
-                                                            <span>{formatTimeRange(slot.start, slot.end)}</span>
-                                                            <span
-                                                                className={cn(
-                                                                    "text-xs font-medium",
-                                                                    isSelected ? "text-white/80" : "text-muted-foreground"
-                                                                )}
+                                        {doctors.map((doctor) => {
+                                            const availability = doctorAvailability[doctor.user_id];
+                                            const doctorSlots = availability?.slots ?? [];
+                                            const doctorLoading = date ? availability?.loading ?? false : false;
+                                            const doctorError = date ? availability?.error ?? null : null;
+                                            const isActiveDoctor = doctor.user_id === doctorId;
+
+                                            return (
+                                                <div
+                                                    key={doctor.user_id}
+                                                    className={cn(
+                                                        "rounded-2xl border p-4 transition",
+                                                        "border-green-100 bg-green-600/5",
+                                                        isActiveDoctor && "border-green-500 bg-green-50 shadow-sm"
+                                                    )}
+                                                >
+                                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-green-700">{doctor.name}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {doctor.specialization ?? "Doctor"}
+                                                                {selectedClinic ? ` · ${selectedClinic.clinic_name}` : ""}
+                                                            </p>
+                                                        </div>
+                                                        {isActiveDoctor && timeStart ? (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="border-green-500 bg-green-500/10 text-[11px] font-semibold uppercase tracking-wide text-green-700"
                                                             >
-                                                                {isSelected ? "Selected" : "Available"}
-                                                            </span>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-4 text-sm text-rose-700">
-                                                No available slots for the selected date. Try another day or choose a different doctor.
-                                            </div>
-                                        )}
+                                                                Selected
+                                                            </Badge>
+                                                        ) : null}
+                                                    </div>
+
+                                                    <div className="mt-3">
+                                                        {!date ? (
+                                                            <p className="text-xs text-muted-foreground">Select a date above to view availability.</p>
+                                                        ) : doctorLoading ? (
+                                                            <div className="flex items-center gap-2 rounded-2xl border border-green-100 bg-white p-3 text-sm text-muted-foreground">
+                                                                <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
+                                                            </div>
+                                                        ) : doctorError ? (
+                                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
+                                                                Unable to load the schedule for this doctor. Try again later.
+                                                            </div>
+                                                        ) : doctorSlots.length > 0 ? (
+                                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                                {doctorSlots.map((slot) => {
+                                                                    const isSelected = isActiveDoctor && timeStart === slot.start;
+                                                                    return (
+                                                                        <button
+                                                                            key={`${doctor.user_id}-${slot.start}-${slot.end}`}
+                                                                            type="button"
+                                                                            onClick={() => handleSlotSelection(doctor, slot)}
+                                                                            className={cn(
+                                                                                "flex items-center justify-between rounded-2xl border px-3 py-2 text-sm font-medium transition",
+                                                                                "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
+                                                                                isSelected &&
+                                                                                    "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
+                                                                            )}
+                                                                            aria-pressed={isSelected}
+                                                                        >
+                                                                            <span>{formatTimeRange(slot.start, slot.end)}</span>
+                                                                            <span
+                                                                                className={cn(
+                                                                                    "text-xs font-medium",
+                                                                                    isSelected ? "text-white/80" : "text-muted-foreground"
+                                                                                )}
+                                                                            >
+                                                                                {isSelected ? "Selected" : "Available"}
+                                                                            </span>
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
+                                                                No available slots for this date. Try another day.
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                </>
-                            ) : (
-                                <div className="rounded-2xl border border-dashed border-green-200 p-4 text-sm text-muted-foreground">
-                                    Select a clinic and doctor to preview availability.
                                 </div>
                             )}
                         </CardContent>
