@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,9 +18,7 @@ import {
     DialogFooter,
     DialogDescription,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { signIn } from "next-auth/react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { normalizeResetContact } from "@/lib/password-reset";
 
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
@@ -28,8 +29,42 @@ export default function LoginPageClient() {
     const [tokenSent, setTokenSent] = useState(false);
     const [contact, setContact] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [code, setCode] = useState("");
+    const [contactError, setContactError] = useState<string | null>(null);
+    const [codeError, setCodeError] = useState<string | null>(null);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [resendCooldown, setResendCooldown] = useState(0);
     const router = useRouter();
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return;
+
+        const timeout = window.setTimeout(() => {
+            setResendCooldown((prev) => Math.max(prev - 1, 0));
+        }, 1000);
+
+        return () => window.clearTimeout(timeout);
+    }, [resendCooldown]);
+
+    const maskedContact = useMemo(() => maskContact(contact), [contact]);
+
+    const handleForgotToggle = (open: boolean) => {
+        setForgotOpen(open);
+        if (!open) {
+            setTokenSent(false);
+            setContact("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setCode("");
+            setContactError(null);
+            setCodeError(null);
+            setPasswordError(null);
+            setResendCooldown(0);
+            setVerifying(false);
+            setResetting(false);
+        }
+    };
 
     // ---------- LOGIN ----------
     async function handleLogin(e: React.FormEvent<HTMLFormElement>, role: string) {
@@ -88,31 +123,77 @@ export default function LoginPageClient() {
     }
 
     // ---------- FORGOT PASSWORD ----------
-    async function handleSendCode(e: React.FormEvent) {
-        e.preventDefault();
+    async function requestResetCode(currentContact: string) {
+        const trimmed = currentContact.trim();
+        const normalized = normalizeResetContact(trimmed);
+        if (!normalized) {
+            setContactError("Enter a valid email address or PH mobile number.");
+            return false;
+        }
+
+        setContactError(null);
+        setContact(trimmed);
         setVerifying(true);
         try {
             const res = await fetch("/api/auth/request-reset", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contact: contact.trim() }),
+                body: JSON.stringify({ contact: trimmed }),
             });
             const data = await res.json();
             if (res.ok) {
                 toast.success("Verification code sent via Email/SMS!");
                 setTokenSent(true);
-            } else {
-                toast.error(data.error || "Account not found");
+                setResendCooldown(60);
+                return true;
             }
+            toast.error(data.error || "Account not found");
+            return false;
         } catch {
             toast.error("Network error. Try again.");
+            return false;
         } finally {
             setVerifying(false);
         }
     }
 
+    async function handleSendCode(e: React.FormEvent) {
+        e.preventDefault();
+        await requestResetCode(contact);
+    }
+
+    async function handleResendCode() {
+        if (verifying || resendCooldown > 0) return;
+        await requestResetCode(contact);
+    }
+
     async function handleReset(e: React.FormEvent) {
         e.preventDefault();
+        const trimmedCode = code.trim();
+        const passwordValue = newPassword.trim();
+
+        if (!/^\d{6}$/.test(trimmedCode)) {
+            setCodeError("Enter the 6-digit code we sent.");
+            return;
+        }
+
+        if (passwordValue.length < 8) {
+            setPasswordError("Password must be at least 8 characters.");
+            return;
+        }
+
+        if (!/[A-Za-z]/.test(passwordValue) || !/\d/.test(passwordValue)) {
+            setPasswordError("Include letters and numbers for a stronger password.");
+            return;
+        }
+
+        if (passwordValue !== confirmPassword) {
+            setPasswordError("Passwords do not match.");
+            return;
+        }
+
+        setCodeError(null);
+        setPasswordError(null);
         setResetting(true);
         try {
             const res = await fetch("/api/auth/reset-password", {
@@ -120,19 +201,20 @@ export default function LoginPageClient() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contact: contact.trim(),
-                    code: code.trim(), // ✅ include the verification code
-                    newPassword,
+                    code: trimmedCode, // ✅ include the verification code
+                    newPassword: passwordValue,
                 }),
             });
             const data = await res.json();
             if (res.ok) {
                 toast.success("Password reset successful!");
-                setForgotOpen(false);
-                setTokenSent(false);
-                setContact("");
-                setNewPassword("");
-                setCode("");
+                handleForgotToggle(false);
             } else {
+                if (typeof data.error === "string") {
+                    const lower = data.error.toLowerCase();
+                    if (lower.includes("code")) setCodeError(data.error);
+                    if (lower.includes("password")) setPasswordError(data.error);
+                }
                 toast.error(data.error || "Reset failed");
             }
         } catch {
@@ -316,7 +398,7 @@ export default function LoginPageClient() {
             </p>
 
             {/* 🔒 Forgot Password Modal */}
-            <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+            <Dialog open={forgotOpen} onOpenChange={handleForgotToggle}>
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="text-green-700">Reset Password</DialogTitle>
@@ -329,20 +411,34 @@ export default function LoginPageClient() {
 
                     {!tokenSent ? (
                         <form onSubmit={handleSendCode} className="mt-2 space-y-4">
-                            <Input
-                                value={contact}
-                                onChange={(e) => setContact(e.target.value)}
-                                placeholder="Enter email or phone number"
-                                required
-                            />
-                            <DialogFooter>
+                            <div className="space-y-2">
+                                <Input
+                                    value={contact}
+                                    onChange={(e) => {
+                                        setContact(e.target.value);
+                                        if (contactError) setContactError(null);
+                                    }}
+                                    placeholder="Enter email or phone number"
+                                    disabled={verifying}
+                                    required
+                                />
+                                {contactError && (
+                                    <p className="text-sm text-red-600">{contactError}</p>
+                                )}
+                                <p className="text-xs text-slate-500">
+                                    We&apos;ll send a 6-digit code to your email or mobile number.
+                                </p>
+                            </div>
+                            <DialogFooter className="flex-col gap-2 sm:flex-row">
                                 <Button
                                     type="submit"
                                     disabled={verifying}
                                     className="w-full bg-green-600 text-white hover:bg-green-700"
                                 >
                                     {verifying ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+                                        </>
                                     ) : (
                                         "Send Reset Code"
                                     )}
@@ -350,37 +446,129 @@ export default function LoginPageClient() {
                             </DialogFooter>
                         </form>
                     ) : (
-                        <form onSubmit={handleReset} className="mt-2 space-y-4">
-                            <Input
-                                placeholder="Enter 6-digit code"
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                required
-                            />
-                            <Input
-                                type="password"
-                                placeholder="New Password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                required
-                            />
-                            <DialogFooter>
-                                <Button
-                                    type="submit"
-                                    disabled={resetting}
-                                    className="w-full bg-green-600 text-white hover:bg-green-700"
-                                >
-                                    {resetting ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        "Update Password"
-                                    )}
-                                </Button>
-                            </DialogFooter>
-                        </form>
+                        <>
+                            <div className="space-y-2 rounded-lg border border-dashed border-green-200 bg-green-50/60 px-3 py-2 text-xs text-slate-600">
+                                <span className="font-medium text-green-700">Code sent to {maskedContact}</span>
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className="text-[0.7rem] uppercase tracking-wide text-slate-500">{contact}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setTokenSent(false);
+                                            setCode("");
+                                            setNewPassword("");
+                                            setConfirmPassword("");
+                                            setCodeError(null);
+                                            setPasswordError(null);
+                                            setResendCooldown(0);
+                                        }}
+                                        className="text-xs font-medium text-green-700 underline-offset-2 hover:underline"
+                                    >
+                                        Use a different contact
+                                    </button>
+                                </div>
+                            </div>
+                            <form onSubmit={handleReset} className="mt-4 space-y-4">
+                                <div className="space-y-3">
+                                    <div className="flex flex-col gap-2 sm:flex-row">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handleResendCode}
+                                            disabled={verifying || resendCooldown > 0}
+                                            className="flex-1"
+                                        >
+                                            {verifying ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+                                                </>
+                                            ) : resendCooldown > 0 ? (
+                                                `Resend in ${resendCooldown}s`
+                                            ) : (
+                                                "Resend code"
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Input
+                                            placeholder="Enter 6-digit code"
+                                            value={code}
+                                            inputMode="numeric"
+                                            maxLength={6}
+                                            onChange={(e) => {
+                                                setCode(e.target.value);
+                                                if (codeError) setCodeError(null);
+                                            }}
+                                            required
+                                        />
+                                        {codeError && <p className="text-sm text-red-600">{codeError}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="New Password"
+                                            value={newPassword}
+                                            minLength={8}
+                                            onChange={(e) => {
+                                                setNewPassword(e.target.value);
+                                                if (passwordError) setPasswordError(null);
+                                            }}
+                                            required
+                                        />
+                                        <Input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Confirm New Password"
+                                            value={confirmPassword}
+                                            minLength={8}
+                                            onChange={(e) => {
+                                                setConfirmPassword(e.target.value);
+                                                if (passwordError) setPasswordError(null);
+                                            }}
+                                            required
+                                        />
+                                        {passwordError && (
+                                            <p className="text-sm text-red-600">{passwordError}</p>
+                                        )}
+                                        <p className="text-xs text-slate-500">
+                                            Password must be at least 8 characters and include both letters and numbers.
+                                        </p>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button
+                                        type="submit"
+                                        disabled={resetting}
+                                        className="w-full bg-green-600 text-white hover:bg-green-700"
+                                    >
+                                        {resetting ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Updating...
+                                            </>
+                                        ) : (
+                                            "Update Password"
+                                        )}
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </>
                     )}
                 </DialogContent>
             </Dialog>
         </div>
     );
+}
+
+function maskContact(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (trimmed.includes("@")) {
+        const [local, domain] = trimmed.split("@");
+        if (!domain) return trimmed;
+        const visible = local.slice(0, 2);
+        return `${visible}***@${domain}`;
+    }
+    if (trimmed.length >= 4) {
+        return `***${trimmed.slice(-4)}`;
+    }
+    return trimmed;
 }

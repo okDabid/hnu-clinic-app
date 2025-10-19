@@ -4,14 +4,41 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { normalizeResetContact } from "@/lib/password-reset";
 
 export async function POST(req: Request) {
     try {
         const { contact, code, newPassword } = await req.json();
 
-        if (!contact || !code || !newPassword) {
+        if (typeof contact !== "string" || typeof code !== "string" || typeof newPassword !== "string") {
             return NextResponse.json(
                 { error: "Missing contact, code, or new password." },
+                { status: 400 }
+            );
+        }
+
+        const normalized = normalizeResetContact(contact);
+
+        if (!normalized) {
+            return NextResponse.json(
+                { error: "Enter a valid email address or PH mobile number." },
+                { status: 400 }
+            );
+        }
+
+        const sanitizedCode = code.trim();
+        const trimmedPassword = newPassword.trim();
+
+        if (!/^\d{6}$/.test(sanitizedCode)) {
+            return NextResponse.json(
+                { error: "Enter the 6-digit verification code." },
+                { status: 400 }
+            );
+        }
+
+        if (trimmedPassword.length < 8) {
+            return NextResponse.json(
+                { error: "New password must be at least 8 characters." },
                 { status: 400 }
             );
         }
@@ -19,8 +46,8 @@ export async function POST(req: Request) {
         // Find a valid (unexpired) token for this contact + code
         const resetRecord = await prisma.passwordResetToken.findFirst({
             where: {
-                contact,
-                token: code,
+                contact: normalized.normalized,
+                token: sanitizedCode,
                 expiresAt: { gt: new Date() },
             },
             orderBy: { createdAt: "desc" },
@@ -42,8 +69,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Account not found." }, { status: 404 });
         }
 
+        const passwordMatches = await bcrypt.compare(trimmedPassword, user.password);
+
+        if (passwordMatches) {
+            return NextResponse.json(
+                { error: "New password must be different from the current password." },
+                { status: 400 }
+            );
+        }
+
         // Hash the new password
-        const hashed = await bcrypt.hash(newPassword, 10);
+        const hashed = await bcrypt.hash(trimmedPassword, 10);
 
         // Update password
         await prisma.users.update({
