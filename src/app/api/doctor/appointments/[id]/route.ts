@@ -232,6 +232,15 @@ export async function PATCH(
             }
 
             const now = manilaNow();
+            const earliestMoveDay = startOfManilaDay(formatManilaISODate(now));
+
+            if (appointmentDate < earliestMoveDay) {
+                return NextResponse.json(
+                    { error: "Cannot move to a past date" },
+                    { status: 400 }
+                );
+            }
+
             if (appointmentStart <= now) {
                 return NextResponse.json(
                     { error: "Cannot move to a past schedule" },
