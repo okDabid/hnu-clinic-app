@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
         if (!normalized) {
             return NextResponse.json(
-                { error: "Enter a valid email address or PH mobile number." },
+                { error: "Enter a valid email address." },
                 { status: 400 }
             );
         }

@@ -3,10 +3,7 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
-import {
-    formatPhoneForSms,
-    normalizeResetContact,
-} from "@/lib/password-reset";
+import { normalizeResetContact } from "@/lib/password-reset";
 
 export async function POST(req: Request) {
     try {
@@ -14,7 +11,7 @@ export async function POST(req: Request) {
 
         if (typeof contact !== "string") {
             return NextResponse.json(
-                { error: "Contact (email or phone) required." },
+                { error: "Contact email is required." },
                 { status: 400 }
             );
         }
@@ -23,60 +20,38 @@ export async function POST(req: Request) {
 
         if (!normalized) {
             return NextResponse.json(
-                { error: "Enter a valid email address or PH mobile number." },
+                { error: "Enter a valid email address." },
                 { status: 400 }
             );
         }
 
         console.log("⚙️ Starting password reset for:", normalized.normalized);
 
-        // 🔍 Find user by email or phone
+        // 🔍 Find user by email
         const user = await prisma.users.findFirst({
             where: {
-                OR:
-                    normalized.type === "EMAIL"
-                        ? [
-                              {
-                                  student: {
-                                      is: {
-                                          email: {
-                                              equals: normalized.normalized,
-                                              mode: "insensitive",
-                                          },
-                                      },
-                                  },
-                              },
-                              {
-                                  employee: {
-                                      is: {
-                                          email: {
-                                              equals: normalized.normalized,
-                                              mode: "insensitive",
-                                          },
-                                      },
-                                  },
-                              },
-                          ]
-                        : [
-                              {
-                                  student: {
-                                      is: {
-                                          contactno: {
-                                              in: normalized.variants,
-                                          },
-                                      },
-                                  },
-                              },
-                              {
-                                  employee: {
-                                      is: {
-                                          contactno: {
-                                              in: normalized.variants,
-                                          },
-                                      },
-                                  },
-                              },
-                          ],
+                OR: [
+                    {
+                        student: {
+                            is: {
+                                email: {
+                                    equals: normalized.normalized,
+                                    mode: "insensitive",
+                                },
+                            },
+                        },
+                    },
+                    {
+                        employee: {
+                            is: {
+                                email: {
+                                    equals: normalized.normalized,
+                                    mode: "insensitive",
+                                },
+                            },
+                        },
+                    },
+                ],
             },
             include: {
                 student: { select: { fname: true, lname: true } },
@@ -86,7 +61,7 @@ export async function POST(req: Request) {
 
         if (!user) {
             return NextResponse.json(
-                { error: "No account found with that contact." },
+                { error: "No account found with that email." },
                 { status: 404 }
             );
         }
@@ -125,9 +100,7 @@ export async function POST(req: Request) {
             });
         });
 
-        // ✉️ EMAIL HANDLER
-        if (normalized.type === "EMAIL") {
-            const htmlContent = `
+        const htmlContent = `
         <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
           <div style="text-align: center; margin-bottom: 20px;">
             <div style="display: inline-block; background-color: #ffffff; border-radius: 50%; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -159,62 +132,12 @@ export async function POST(req: Request) {
         </div>
       `;
 
-            await sendEmail({
-                to: normalized.normalized,
-                subject: "Password Reset Code",
-                html: htmlContent,
-                fromName: "HNU Clinic",
-            });
-        }
-
-        // 📱 SMS HANDLER (Semaphore)
-        else {
-            const API_KEY = process.env.SEMAPHORE_API_KEY;
-            const SENDER_NAME = process.env.SEMAPHORE_SENDER_NAME || "HNUCLINIC";
-
-            if (!API_KEY) {
-                console.error("❌ Missing SEMAPHORE_API_KEY");
-                return NextResponse.json(
-                    { error: "SMS service not configured." },
-                    { status: 500 }
-                );
-            }
-
-            const smsNumber = formatPhoneForSms(normalized.normalized);
-
-            console.log("📞 Sending SMS to:", smsNumber);
-
-            const payload = {
-                apikey: API_KEY,
-                number: smsNumber,
-                message: `Your HNU Clinic password reset code is ${code}. Valid for 10 minutes.`,
-                sendername: SENDER_NAME,
-            };
-
-            try {
-                const resp = await fetch("https://api.semaphore.co/api/v4/messages", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                });
-
-                const result = await resp.json().catch(() => ({}));
-                console.log("📩 Semaphore API response:", result);
-
-                if (!resp.ok || result.status === "Failed") {
-                    return NextResponse.json(
-                        { error: "Failed to send SMS.", details: result },
-                        { status: 502 }
-                    );
-                }
-            } catch (err: unknown) {
-                console.error("❌ SMS send failed:", err);
-                return NextResponse.json(
-                    { error: "Failed to send SMS.", details: String(err) },
-                    { status: 502 }
-                );
-            }
-        }
+        await sendEmail({
+            to: normalized.normalized,
+            subject: "Password Reset Code",
+            html: htmlContent,
+            fromName: "HNU Clinic",
+        });
 
         return NextResponse.json({
             success: true,
