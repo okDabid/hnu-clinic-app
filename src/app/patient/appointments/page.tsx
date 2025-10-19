@@ -846,7 +846,7 @@ export default function PatientAppointmentsPage() {
                             <CardTitle className="text-lg">Important reminders</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm text-white/90">
-                            <p>Bring your clinic ID and arrive 10 minutes early for screening and verification.</p>
+                            <p>Bring your Student/Employee ID and arrive 10 minutes early for screening and verification.</p>
                             <p>If you can no longer attend, submit a reschedule or cancellation so another patient can use the slot.</p>
                             <p>Watch your notifications for approvals, movement updates, and doctor instructions.</p>
                         </CardContent>
@@ -950,7 +950,7 @@ export default function PatientAppointmentsPage() {
                                                                                 "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
                                                                                 "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
                                                                                 isSelected &&
-                                                                                    "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
+                                                                                "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
                                                                             )}
                                                                             aria-pressed={isSelected}
                                                                         >
