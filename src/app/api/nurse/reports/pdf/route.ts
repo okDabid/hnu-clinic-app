@@ -361,7 +361,7 @@ function createReportHtml(report: ReportsResponse) {
             <div class="header-accent"></div>
             <header>
                 <h1 class="brand-title">Holy Name University Clinic</h1>
-                <p class="brand-subtitle">Quarterly Nursing Report</p>
+                <p class="brand-subtitle">Quarterly Report</p>
                 <div class="header-meta">
                     <div class="meta-block">
                         <span class="meta-label">Quarter</span>
@@ -489,7 +489,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Failed to generate report PDF" }, { status: 500 });
     } finally {
         if (browser) {
-            await browser.close().catch(() => {});
+            await browser.close().catch(() => { });
         }
     }
 }
