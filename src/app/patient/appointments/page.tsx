@@ -163,6 +163,19 @@ function humanizeService(value: string | null | undefined) {
 
 export default function PatientAppointmentsPage() {
     const [minBookingDate, setMinBookingDate] = useState(() => computeMinBookingDate());
+    const earliestScheduledMessage = useMemo(() => {
+        const label = formatDateOnly(minBookingDate);
+        return label
+            ? `Appointments must be scheduled on or after ${label}.`
+            : "Appointments must be scheduled at least 3 days in advance.";
+    }, [minBookingDate]);
+
+    const earliestBookedMessage = useMemo(() => {
+        const label = formatDateOnly(minBookingDate);
+        return label
+            ? `Appointments must be booked on or after ${label}.`
+            : `Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`;
+    }, [minBookingDate]);
 
     useEffect(() => {
         const updateMinDate = () =>
@@ -244,7 +257,7 @@ export default function PatientAppointmentsPage() {
         }
 
         if (rescheduleDate && rescheduleDate < minBookingDate) {
-            toast.error(`Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`);
+            toast.error(earliestBookedMessage);
             return;
         }
 
@@ -459,7 +472,7 @@ export default function PatientAppointmentsPage() {
         }
 
         if (date < minBookingDate) {
-            toast.error(`Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`);
+            toast.error(earliestBookedMessage);
             return;
         }
 
@@ -606,7 +619,7 @@ export default function PatientAppointmentsPage() {
             actions={
                 <div className="hidden items-center gap-3 rounded-2xl border border-green-100 bg-white/80 px-4 py-2 text-xs font-medium text-green-700 shadow-sm md:flex">
                     <CalendarDays className="h-4 w-4" />
-                    Earliest booking: {minBookingDate}
+                    Earliest booking: {formatDateOnly(minBookingDate) || minBookingDate}
                 </div>
             }
         >
@@ -614,7 +627,7 @@ export default function PatientAppointmentsPage() {
                 <AppointmentPanel
                     icon={CalendarDays}
                     title="Request an appointment"
-                    description="Choose the clinic, provider, and time that works for you. Appointments must be scheduled at least 3 days in advance."
+                    description={`Choose the clinic, provider, and time that works for you. ${earliestScheduledMessage}`}
                 >
                     <form className="space-y-5" onSubmit={handleSubmit}>
                         <div className="grid gap-2">
@@ -992,7 +1005,7 @@ export default function PatientAppointmentsPage() {
                         <DialogTitle className="text-lg font-semibold text-green-700">Reschedule appointment</DialogTitle>
                         <DialogDescription>
                             {rescheduleTarget
-                                ? `Select a new slot for your appointment with ${rescheduleTarget.doctor}. Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`
+                                ? `Select a new slot for your appointment with ${rescheduleTarget.doctor}. ${earliestBookedMessage}`
                                 : "Choose a new schedule for your appointment."}
                         </DialogDescription>
                     </DialogHeader>

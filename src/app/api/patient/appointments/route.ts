@@ -8,8 +8,18 @@ import {
     startOfManilaDay,
     endOfManilaDay,
     manilaNow,
+    formatManilaISODate,
 } from "@/lib/time";
 import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
+
+const MIN_BOOKING_LEAD_DAYS = 3;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+function computeEarliestBookingStart(now: Date): Date {
+    const future = new Date(now.getTime() + MIN_BOOKING_LEAD_DAYS * DAY_IN_MS);
+    const earliestDate = formatManilaISODate(future);
+    return startOfManilaDay(earliestDate);
+}
 
 export async function GET() {
     try {
@@ -102,14 +112,15 @@ export async function POST(req: Request) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
         const now = manilaNow();
+        const earliestBookingStart = computeEarliestBookingStart(now);
 
         if (!(appointment_timestart < appointment_timeend))
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
 
-        const minLeadTimeMs = 3 * 24 * 60 * 60 * 1000; // 3 days
-        if (appointment_timestart.getTime() - now.getTime() < minLeadTimeMs) {
+        if (appointment_timestart < earliestBookingStart) {
+            const earliestDate = formatManilaISODate(earliestBookingStart);
             return NextResponse.json(
-                { message: "Appointments must be scheduled at least 3 days in advance" },
+                { message: `Appointments must be scheduled on or after ${earliestDate}` },
                 { status: 400 }
             );
         }
@@ -223,15 +234,16 @@ export async function PATCH(req: Request) {
         const appointment_date = startOfManilaDay(date);
         const appointment_timestart = buildManilaDate(date, time_start);
         const appointment_timeend = buildManilaDate(date, time_end);
+        const earliestBookingStart = computeEarliestBookingStart(now);
 
         if (!(appointment_timestart < appointment_timeend)) {
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
         }
 
-        const minLeadTimeMs = 3 * 24 * 60 * 60 * 1000; // 3 days
-        if (appointment_timestart.getTime() - now.getTime() < minLeadTimeMs) {
+        if (appointment_timestart < earliestBookingStart) {
+            const earliestDate = formatManilaISODate(earliestBookingStart);
             return NextResponse.json(
-                { message: "Appointments must be scheduled at least 3 days in advance" },
+                { message: `Appointments must be scheduled on or after ${earliestDate}` },
                 { status: 400 }
             );
         }
