@@ -30,8 +30,8 @@ A role-based health record and appointment platform built with Next.js for the H
   - `src/app/doctor` centralizes consultation management, appointment queues, and account tools.
   - `src/app/nurse` covers clinic assignments, stock auditing (`inventory/page.tsx`), dispensing, records, and account administration.
   - `src/app/scholar` aggregates scholar tasks and account preferences.
-- **Operational APIs:** the `src/app/api` tree encapsulates contact messaging, SMS notifications, password resets, appointment workflows, and meta lookups for clinics, doctors, and availability.
-- **Shared foundations:** `src/lib` holds Prisma accessors, NextAuth configuration, email/SMS utilities, and helper functions reused in UI and API layers.
+- **Operational APIs:** the `src/app/api` tree encapsulates contact messaging, email notifications, password resets, appointment workflows, and meta lookups for clinics, doctors, and availability.
+- **Shared foundations:** `src/lib` holds Prisma accessors, NextAuth configuration, email utilities, and helper functions reused in UI and API layers.
 
 ## 🔐 Authentication & Validation
 - **NextAuth Credentials strategy** verifies users against Prisma via `authorize`, encodes role and status claims into JWT callbacks, and injects them into the session object for client-side gating (`src/lib/auth.ts`).
@@ -58,7 +58,7 @@ src/
 │  └─ providers.tsx    # Global NextAuth + toast providers
 ├─ components/         # shadcn/ui-derived primitives and composite widgets
 ├─ hooks/              # Reusable React hooks for data fetching and UX helpers
-├─ lib/                # Auth, Prisma, email, SMS, time utilities, and shared helpers
+├─ lib/                # Auth, Prisma, email, time utilities, and shared helpers
 ├─ types/              # Shared TypeScript enums and domain types
 prisma/
 ├─ schema.prisma       # Data model definitions
@@ -71,7 +71,6 @@ prisma/
 | `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
 | `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
 | `EMAIL_USER`, `EMAIL_PASS` | SMTP credentials for contact emails (`src/app/api/contact/route.ts`, `src/lib/email.ts`). |
-| `SEMAPHORE_API_KEY`, `SEMAPHORE_SENDER`, `SEMAPHORE_SENDER_NAME` | Semaphore SMS API credentials for notifications (`src/lib/sms.ts`, `src/app/api/auth/request-reset/route.ts`, `src/app/api/sms/send/route.ts`). |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 
