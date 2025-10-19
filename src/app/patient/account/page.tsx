@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
+import { validateAndNormalizeContacts } from "@/lib/validation";
 
 
 // ✅ Enum ↔ Label Mappings
@@ -242,19 +243,39 @@ export default function PatientAccountPage() {
             toast.error("First and Last Name are required.");
             return;
         }
+        const contactValidation = validateAndNormalizeContacts({
+            email: profile.email,
+            contactNumber: profile.contactno,
+            emergencyNumber: profile.emergencyco_num,
+        });
+
+        if (!contactValidation.success) {
+            toast.error(contactValidation.error);
+            return;
+        }
+
+        const updatedProfile = {
+            ...profile,
+            email: contactValidation.email,
+            contactno: contactValidation.contactNumber,
+            emergencyco_num: contactValidation.emergencyNumber,
+        };
+
+        setProfile(updatedProfile);
+
         try {
             setProfileLoading(true);
             const payload = {
-                ...profile,
+                ...updatedProfile,
                 department:
                     profileType === "student"
-                        ? reverseDepartmentEnumMap[profile.department || ""] || null
-                        : profile.department || null,
+                        ? reverseDepartmentEnumMap[updatedProfile.department || ""] || null
+                        : updatedProfile.department || null,
                 year_level:
                     profileType === "student"
-                        ? reverseYearLevelEnumMap[profile.year_level || ""] || null
+                        ? reverseYearLevelEnumMap[updatedProfile.year_level || ""] || null
                         : null,
-                bloodtype: reverseBloodTypeEnumMap[profile.bloodtype || ""] || null,
+                bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
             const res = await fetch("/api/patient/account/me", {
@@ -420,24 +441,42 @@ export default function PatientAccountPage() {
                                                             <AlertDialogAction
                                                                 className="rounded-xl bg-green-600 text-sm font-semibold hover:bg-green-700"
                                                                 onClick={async () => {
-                                                                    setProfile({ ...profile, date_of_birth: tempDOB });
+                                                                    const contactValidation = validateAndNormalizeContacts({
+                                                                        email: profile.email,
+                                                                        contactNumber: profile.contactno,
+                                                                        emergencyNumber: profile.emergencyco_num,
+                                                                    });
+
+                                                                    if (!contactValidation.success) {
+                                                                        toast.error(contactValidation.error);
+                                                                        return;
+                                                                    }
+
+                                                                    const updatedProfile = {
+                                                                        ...profile,
+                                                                        email: contactValidation.email,
+                                                                        contactno: contactValidation.contactNumber,
+                                                                        emergencyco_num: contactValidation.emergencyNumber,
+                                                                        date_of_birth: tempDOB,
+                                                                    };
+
+                                                                    setProfile(updatedProfile);
                                                                     setShowDOBConfirm(false);
-                    
+
                                                                     // ✅ Immediately save to the DB
                                                                     try {
                                                                         setProfileLoading(true);
                                                                         const payload = {
-                                                                            ...profile,
-                                                                            date_of_birth: tempDOB,
-                                                                            bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                                                                            ...updatedProfile,
+                                                                            bloodtype: reverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
                                                                         };
-                    
+
                                                                         const res = await fetch("/api/patient/account/me", {
                                                                             method: "PUT",
                                                                             headers: { "Content-Type": "application/json" },
                                                                             body: JSON.stringify({ profile: payload }),
                                                                         });
-                    
+
                                                                         const data = await res.json();
                                                                         if (data.error) {
                                                                             toast.error(data.error);
