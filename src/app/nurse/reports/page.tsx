@@ -121,6 +121,40 @@ const patientMixConfig = {
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
 
+function downloadPdf(blob: Blob, filename: string) {
+    if (typeof window === "undefined") return;
+
+    const anchor = document.createElement("a");
+    const supportsDownload = "download" in anchor;
+    const userAgent = window.navigator.userAgent;
+    const isIos = /iPad|iPhone|iPod/.test(userAgent);
+    const isMobileSafari = isIos && /Safari/.test(userAgent);
+
+    if (supportsDownload && !isMobileSafari) {
+        const url = URL.createObjectURL(blob);
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.style.display = "none";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        const result = reader.result;
+        if (typeof result === "string") {
+            const newWindow = window.open(result, "_blank");
+            if (!newWindow) {
+                window.location.href = result;
+            }
+        }
+    };
+    reader.readAsDataURL(blob);
+}
+
 export default function NurseReportsPage() {
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState(currentYear);
@@ -242,14 +276,10 @@ export default function NurseReportsPage() {
                                 }
 
                                 const blob = await response.blob();
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement("a");
-                                link.href = url;
-                                link.download = `nurse-quarterly-report-${year}-q${quarter}.pdf`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                URL.revokeObjectURL(url);
+                                downloadPdf(
+                                    blob,
+                                    `nurse-quarterly-report-${year}-q${quarter}.pdf`
+                                );
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 if (typeof window !== "undefined") {
