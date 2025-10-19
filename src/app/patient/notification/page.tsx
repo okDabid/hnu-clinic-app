@@ -5,6 +5,7 @@ import {
     Bell,
     CheckCircle2,
     CalendarCheck,
+    CalendarClock,
     ClipboardCheck,
     Info,
     Mail,
@@ -49,6 +50,12 @@ const statusUpdates = [
         title: "Approved status",
         description:
             "Your visit is confirmed. The doctor is expecting you, so arrive a little early to complete any forms before your scheduled time.",
+    },
+    {
+        icon: CalendarClock,
+        title: "Moved status",
+        description:
+            "The clinic rescheduled your visit. Check the Appointments tab for the updated date and time and make sure the new slot still works for you.",
     },
     {
         icon: ClipboardCheck,
