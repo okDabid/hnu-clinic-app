@@ -166,14 +166,14 @@ export default function PatientAppointmentsPage() {
     const earliestScheduledMessage = useMemo(() => {
         const label = formatDateOnly(minBookingDate);
         return label
-            ? `Appointments must be scheduled on or after ${label}.`
+            ? `Appointments must be scheduled on ${label} at earliest.`
             : "Appointments must be scheduled at least 3 days in advance.";
     }, [minBookingDate]);
 
     const earliestBookedMessage = useMemo(() => {
         const label = formatDateOnly(minBookingDate);
         return label
-            ? `Appointments must be booked on or after ${label}.`
+            ? `Appointments must be booked on ${label} at earliest.`
             : `Appointments must be booked at least ${MIN_BOOKING_LEAD_DAYS} days in advance.`;
     }, [minBookingDate]);
 
