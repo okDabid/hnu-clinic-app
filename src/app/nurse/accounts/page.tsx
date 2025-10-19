@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
+import { validateAndNormalizeContacts } from "@/lib/validation";
 
 // 🔹 Types aligned with API
 type User = {
@@ -322,8 +323,28 @@ export default function NurseAccountsPage() {
             return;
         }
 
+        const contactValidation = validateAndNormalizeContacts({
+            email: profile.email,
+            contactNumber: profile.contactno,
+            emergencyNumber: profile.emergencyco_num,
+        });
+
+        if (!contactValidation.success) {
+            toast.error(contactValidation.error);
+            return;
+        }
+
+        const updatedProfile = {
+            ...profile,
+            email: contactValidation.email,
+            contactno: contactValidation.contactNumber,
+            emergencyco_num: contactValidation.emergencyNumber,
+        };
+
+        setProfile(updatedProfile);
+
         // 🧩 If user is trying to set DOB for the first time but hasn't confirmed yet
-        if (!profile.date_of_birth && tempDOB) {
+        if (!updatedProfile.date_of_birth && tempDOB) {
             setShowDOBConfirm(true);
             return;
         }
@@ -332,8 +353,8 @@ export default function NurseAccountsPage() {
             setProfileLoading(true);
 
             const payload = {
-                ...profile,
-                bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                ...updatedProfile,
+                bloodtype: reverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
             };
 
             // 🔒 Prevent DOB modification if it was already set
@@ -504,16 +525,34 @@ export default function NurseAccountsPage() {
                                                         <AlertDialogAction
                                                             className="bg-green-600 hover:bg-green-700"
                                                             onClick={async () => {
-                                                                setProfile({ ...profile, date_of_birth: tempDOB });
+                                                                const contactValidation = validateAndNormalizeContacts({
+                                                                    email: profile.email,
+                                                                    contactNumber: profile.contactno,
+                                                                    emergencyNumber: profile.emergencyco_num,
+                                                                });
+
+                                                                if (!contactValidation.success) {
+                                                                    toast.error(contactValidation.error);
+                                                                    return;
+                                                                }
+
+                                                                const updatedProfile = {
+                                                                    ...profile,
+                                                                    email: contactValidation.email,
+                                                                    contactno: contactValidation.contactNumber,
+                                                                    emergencyco_num: contactValidation.emergencyNumber,
+                                                                    date_of_birth: tempDOB,
+                                                                };
+
+                                                                setProfile(updatedProfile);
                                                                 setShowDOBConfirm(false);
 
                                                                 // ✅ Immediately save to the DB
                                                                 try {
                                                                     setProfileLoading(true);
                                                                     const payload = {
-                                                                        ...profile,
-                                                                        date_of_birth: tempDOB,
-                                                                        bloodtype: reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                                                                        ...updatedProfile,
+                                                                        bloodtype: reverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
                                                                     };
 
                                                                     const res = await fetch("/api/nurse/accounts/me", {

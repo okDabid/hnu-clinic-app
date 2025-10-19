@@ -28,6 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { validateAndNormalizeContacts } from "@/lib/validation";
 
 const departmentEnumMap: Record<string, string> = {
     EDUCATION: "College of Education",
@@ -275,10 +276,30 @@ export default function ScholarAccountPage() {
                 return;
             }
 
+            const contactValidation = validateAndNormalizeContacts({
+                email: profile.email,
+                contactNumber: profile.contactno,
+                emergencyNumber: profile.emergencyco_num,
+            });
+
+            if (!contactValidation.success) {
+                toast.error(contactValidation.error);
+                return;
+            }
+
+            const updatedProfile = {
+                ...profile,
+                email: contactValidation.email,
+                contactno: contactValidation.contactNumber,
+                emergencyco_num: contactValidation.emergencyNumber,
+            };
+
+            setProfile(updatedProfile);
+
             try {
                 setUpdating(true);
 
-                const payload = formatRequestPayload(profile);
+                const payload = formatRequestPayload(updatedProfile);
                 const res = await fetch("/api/scholar/account/me", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
@@ -334,9 +355,30 @@ export default function ScholarAccountPage() {
     const confirmDateOfBirth = useCallback(async () => {
         if (!profile || !tempDOB) return;
 
+        const contactValidation = validateAndNormalizeContacts({
+            email: profile.email,
+            contactNumber: profile.contactno,
+            emergencyNumber: profile.emergencyco_num,
+        });
+
+        if (!contactValidation.success) {
+            toast.error(contactValidation.error);
+            return;
+        }
+
+        const updatedProfile = {
+            ...profile,
+            email: contactValidation.email,
+            contactno: contactValidation.contactNumber,
+            emergencyco_num: contactValidation.emergencyNumber,
+            date_of_birth: tempDOB,
+        };
+
+        setProfile(updatedProfile);
+
         try {
             setDobSaving(true);
-            const payload = formatRequestPayload({ ...profile, date_of_birth: tempDOB });
+            const payload = formatRequestPayload(updatedProfile);
             const res = await fetch("/api/scholar/account/me", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
+import { validateAndNormalizeContacts } from "@/lib/validation";
 
 import {
     AlertDialog,
@@ -134,11 +135,31 @@ export default function DoctorAccountPage() {
             return;
         }
 
+        const contactValidation = validateAndNormalizeContacts({
+            email: profile.email,
+            contactNumber: profile.contactno,
+            emergencyNumber: profile.emergencyco_num,
+        });
+
+        if (!contactValidation.success) {
+            toast.error(contactValidation.error);
+            return;
+        }
+
+        const updatedProfile = {
+            ...profile,
+            email: contactValidation.email,
+            contactno: contactValidation.contactNumber,
+            emergencyco_num: contactValidation.emergencyNumber,
+        };
+
+        setProfile(updatedProfile);
+
         try {
             setProfileLoading(true);
             const payload = {
-                ...profile,
-                bloodtype: reverseBloodTypeEnumMap[profile.bloodtype || ""] || null,
+                ...updatedProfile,
+                bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
             const res = await fetch("/api/doctor/account/me", {
@@ -157,9 +178,9 @@ export default function DoctorAccountPage() {
                 // 🩸 Update local state to reflect readable blood type again
                 setProfile((prev) => ({
                     ...prev!,
-                    ...profile,
+                    ...updatedProfile,
                     bloodtype:
-                        profile.bloodtype ||
+                        updatedProfile.bloodtype ||
                         (data.profile?.bloodtype
                             ? bloodTypeEnumMap[data.profile.bloodtype] || prev?.bloodtype
                             : prev?.bloodtype),
@@ -288,16 +309,36 @@ export default function DoctorAccountPage() {
                                                         <AlertDialogAction
                                                             className="bg-green-600 hover:bg-green-700"
                                                             onClick={async () => {
-                                                                setProfile({ ...profile, date_of_birth: tempDOB });
+                                                                const contactValidation = validateAndNormalizeContacts({
+                                                                    email: profile.email,
+                                                                    contactNumber: profile.contactno,
+                                                                    emergencyNumber: profile.emergencyco_num,
+                                                                });
+
+                                                                if (!contactValidation.success) {
+                                                                    toast.error(contactValidation.error);
+                                                                    return;
+                                                                }
+
+                                                                const updatedProfile = {
+                                                                    ...profile,
+                                                                    email: contactValidation.email,
+                                                                    contactno: contactValidation.contactNumber,
+                                                                    emergencyco_num: contactValidation.emergencyNumber,
+                                                                    date_of_birth: tempDOB,
+                                                                };
+
+                                                                setProfile(updatedProfile);
                                                                 setShowDOBConfirm(false);
 
                                                                 try {
                                                                     setProfileLoading(true);
                                                                     const payload = {
-                                                                        ...profile,
-                                                                        date_of_birth: tempDOB,
+                                                                        ...updatedProfile,
                                                                         bloodtype:
-                                                                            reverseBloodTypeEnumMap[profile?.bloodtype || ""] || null,
+                                                                            reverseBloodTypeEnumMap[
+                                                                                updatedProfile?.bloodtype || ""
+                                                                            ] || null,
                                                                     };
 
                                                                     const res = await fetch("/api/doctor/account/me", {
