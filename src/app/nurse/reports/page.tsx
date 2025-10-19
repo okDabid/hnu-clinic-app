@@ -6,6 +6,7 @@ import {
     BarChart2,
     CalendarRange,
     DownloadCloud,
+    FileDown,
     Loader2,
     PieChart,
 } from "lucide-react";
@@ -42,46 +43,24 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart";
 import { formatManilaDateTime } from "@/lib/time";
+import {
+    NURSE_QUARTER_LABELS,
+    NURSE_REPORT_QUARTERS,
+    type ReportsResponse,
+    type PatientTypeKey,
+    type QuarterNumber,
+} from "@/lib/reports/nurse-quarterly";
+import { toast } from "sonner";
 
-type PatientTypeKey = "Student" | "Employee" | "Unknown";
+const QUARTER_OPTIONS = NURSE_REPORT_QUARTERS.map((quarter) => ({
+    label: NURSE_QUARTER_LABELS[quarter],
+    value: String(quarter),
+})) satisfies ReadonlyArray<{ label: string; value: string }>;
 
-type DiagnosisCount = {
-    diagnosis: string;
-    count: number;
-};
-
-type QuarterReport = {
-    quarter: number;
-    label: string;
-    startDate: string;
-    endDate: string;
-    consultations: number;
-    uniquePatients: number;
-    patientTypeCounts: Record<PatientTypeKey, number>;
-    diagnosisCounts: DiagnosisCount[];
-};
-
-type ReportsResponse = {
-    year: number;
-    quarters: QuarterReport[];
-    totals: {
-        consultations: number;
-        uniquePatients: number;
-    };
-    selectedQuarter: QuarterReport;
-    yearlyTopDiagnoses: DiagnosisCount[];
-};
-
-const QUARTER_OPTIONS = [
-    { label: "Q1", value: "1" },
-    { label: "Q2", value: "2" },
-    { label: "Q3", value: "3" },
-    { label: "Q4", value: "4" },
-] as const;
-
-function getCurrentQuarter() {
+function getCurrentQuarter(): QuarterNumber {
     const now = new Date();
-    return Math.floor(now.getMonth() / 3) + 1;
+    const computed = (Math.floor(now.getMonth() / 3) + 1) as QuarterNumber;
+    return NURSE_REPORT_QUARTERS.includes(computed) ? computed : NURSE_REPORT_QUARTERS[0];
 }
 
 function formatRange(start: string, end: string) {
@@ -131,10 +110,11 @@ const numberFormatter = new Intl.NumberFormat("en-PH");
 export default function NurseReportsPage() {
     const currentYear = new Date().getFullYear();
     const [year, setYear] = useState(currentYear);
-    const [quarter, setQuarter] = useState(getCurrentQuarter());
+    const [quarter, setQuarter] = useState<QuarterNumber>(getCurrentQuarter() as QuarterNumber);
     const [data, setData] = useState<ReportsResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [exportingPdf, setExportingPdf] = useState(false);
 
     const years = useMemo(() => {
         return Array.from({ length: 5 }, (_, index) => currentYear - index);
@@ -222,48 +202,103 @@ export default function NurseReportsPage() {
 
     const hasData = !!data && data.quarters.some((item) => item.consultations > 0);
 
+    const handleExportJson = () => {
+        if (!data) return;
+        const exportQuarter = quarter ?? data.selectedQuarter.quarter;
+        const reportDate = new Date();
+        const blob = new Blob(
+            [
+                JSON.stringify(
+                    {
+                        generatedAt: reportDate.toISOString(),
+                        filters: {
+                            year,
+                            quarter: exportQuarter,
+                        },
+                        data,
+                    },
+                    null,
+                    2
+                ),
+            ],
+            { type: "application/json" }
+        );
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `nurse-quarterly-report-${year}-q${exportQuarter}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportPdf = async () => {
+        if (!data) return;
+        setExportingPdf(true);
+        const exportQuarter = quarter ?? data.selectedQuarter.quarter;
+
+        try {
+            const params = new URLSearchParams({ year: String(year) });
+            if (typeof exportQuarter === "number") {
+                params.set("quarter", String(exportQuarter));
+            }
+
+            const response = await fetch(`/api/nurse/reports/export?${params.toString()}`);
+
+            if (!response.ok) {
+                const body = await response.json().catch(() => null);
+                const message = body?.error ?? "Failed to export quarterly report.";
+                throw new Error(message);
+            }
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `nurse-quarterly-report-${year}-q${exportQuarter}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success("Quarterly report exported as PDF.");
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to export quarterly report.";
+            toast.error(message);
+        } finally {
+            setExportingPdf(false);
+        }
+    };
+
     return (
         <NurseLayout
             title="Quarterly Reports"
             description="Generate patient and illness insights for any quarter to prepare compliance-ready summaries."
             actions={
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
-                    onClick={() => {
-                        if (!data) return;
-                        const reportDate = new Date();
-                        const blob = new Blob(
-                            [
-                                JSON.stringify(
-                                    {
-                                        generatedAt: reportDate.toISOString(),
-                                        filters: {
-                                            year,
-                                            quarter,
-                                        },
-                                        data,
-                                    },
-                                    null,
-                                    2
-                                ),
-                            ],
-                            { type: "application/json" }
-                        );
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement("a");
-                        link.href = url;
-                        link.download = `nurse-quarterly-report-${year}-q${quarter}.json`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
-                    }}
-                    disabled={!data}
-                >
-                    <DownloadCloud className="mr-2 h-4 w-4" /> Export JSON
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button
+                        size="sm"
+                        className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                        onClick={handleExportPdf}
+                        disabled={!data || exportingPdf}
+                    >
+                        {exportingPdf ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <FileDown className="mr-2 h-4 w-4" />
+                        )}
+                        {exportingPdf ? "Preparing PDF…" : "Export PDF"}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
+                        onClick={handleExportJson}
+                        disabled={!data}
+                    >
+                        <DownloadCloud className="mr-2 h-4 w-4" /> Export JSON
+                    </Button>
+                </div>
             }
         >
             <section className="space-y-6">
@@ -307,7 +342,7 @@ export default function NurseReportsPage() {
                                 <Select
                                     value={String(quarter)}
                                     onValueChange={(value) => {
-                                        setQuarter(Number(value));
+                                        setQuarter(Number(value) as QuarterNumber);
                                     }}
                                 >
                                     <SelectTrigger className="w-[140px] rounded-xl border-green-200 bg-white/90">
