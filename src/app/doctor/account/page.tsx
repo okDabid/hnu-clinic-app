@@ -203,7 +203,7 @@ export default function DoctorAccountPage() {
 
     return (
         <DoctorLayout
-            title="Account management"
+            title="Account Management"
             description="Keep your clinic profile accurate, secure, and ready for seamless coordination."
         >
             <div className="mx-auto w-full max-w-4xl space-y-10">
@@ -211,7 +211,7 @@ export default function DoctorAccountPage() {
                     <AccountCard
                         description="Update your personal details, emergency contacts, and credentials to keep clinic records current."
                         onPasswordSubmit={handlePasswordSubmit}
-                        contentClassName="space-y-6 pt-6 text-sm text-muted-foreground"
+                        contentClassName="space-y-6 pt-6"
                     >
                         <form onSubmit={handleProfileUpdate} className="space-y-6">
                             {/* Basic Info */}

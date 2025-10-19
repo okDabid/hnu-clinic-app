@@ -362,7 +362,7 @@ export default function ScholarAccountPage() {
 
     return (
         <ScholarLayout
-            title="Account settings"
+            title="Account Management"
             description="Review your personal information, keep emergency contacts current, and manage your clinic credentials."
         >
             <section className="space-y-6">
@@ -475,11 +475,11 @@ export default function ScholarAccountPage() {
                                             setProfile((prev) =>
                                                 prev
                                                     ? {
-                                                          ...prev,
-                                                          department: value,
-                                                          program: "",
-                                                          year_level: "",
-                                                      }
+                                                        ...prev,
+                                                        department: value,
+                                                        program: "",
+                                                        year_level: "",
+                                                    }
                                                     : prev
                                             )
                                         }
