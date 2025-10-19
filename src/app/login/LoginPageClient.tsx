@@ -398,7 +398,7 @@ export default function LoginPageClient() {
             </div>
 
             <p className="relative pb-8 text-center text-xs text-slate-500">
-                © {new Date().getFullYear()} HNU Clinic Capstone Project. All rights reserved.
+                © {new Date().getFullYear()} HNU Clinic Capstone Project
             </p>
 
             {/* 🔒 Forgot Password Modal */}
@@ -456,21 +456,21 @@ export default function LoginPageClient() {
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <button
                                         type="button"
-                                            onClick={() => {
-                                                setTokenSent(false);
-                                                setCode("");
-                                                setNewPassword("");
-                                                setConfirmPassword("");
-                                                setCodeError(null);
-                                                setPasswordError(null);
-                                                setResendCooldown(0);
-                                                setShowResetPassword(false);
-                                                setShowResetConfirmPassword(false);
-                                            }}
-                                            className="text-xs font-medium text-green-700 underline-offset-2 hover:underline"
-                                        >
-                                            Use a different contact
-                                        </button>
+                                        onClick={() => {
+                                            setTokenSent(false);
+                                            setCode("");
+                                            setNewPassword("");
+                                            setConfirmPassword("");
+                                            setCodeError(null);
+                                            setPasswordError(null);
+                                            setResendCooldown(0);
+                                            setShowResetPassword(false);
+                                            setShowResetConfirmPassword(false);
+                                        }}
+                                        className="text-xs font-medium text-green-700 underline-offset-2 hover:underline"
+                                    >
+                                        Use a different contact
+                                    </button>
                                 </div>
                             </div>
                             <form onSubmit={handleReset} className="mt-4 space-y-4">
