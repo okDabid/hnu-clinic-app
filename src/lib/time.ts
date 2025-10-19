@@ -1,16 +1,13 @@
 // src/lib/time.ts
 
 const PH_TIME_ZONE = "Asia/Manila";
-// The managed database cluster runs in Asia/Singapore. Manila shares the same UTC offset
-// (+08:00), so we explicitly pin every conversion to that offset to avoid relying on the
-// host environment configuration.
 const PH_UTC_OFFSET = "+08:00";
 
+// Regex patterns for detecting ISO/TZ/time/date shapes
 const ISO_TZ_PATTERN = /(Z|[+-]\d{2}:\d{2})$/i;
 const TIME_ONLY_PATTERN = /^\d{2}:\d{2}$/;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const DATETIME_NO_TZ_PATTERN =
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/;
+const DATETIME_NO_TZ_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/;
 
 function normalizeToPhilippineISO(value: string): string {
     const trimmed = value.trim();
@@ -54,12 +51,11 @@ function parsePhilippineDate(value: TimeInput): Date | null {
 }
 
 /**
- * ✅ Build a Manila-local Date that Prisma can store correctly in UTC.
- * We normalise the value so that the Singapore-hosted database and the
- * Manila-facing application use the same local wall clock time.
+ * ✅ Safely build a Manila-local Date (used for DB writes)
  */
 export function buildManilaDate(date: string, time: string): Date {
-    return new Date(`${date}T${time}:00${PH_UTC_OFFSET}`);
+    const normalized = `${date}T${time}:00${PH_UTC_OFFSET}`;
+    return new Date(normalized);
 }
 
 export function startOfManilaDay(date: string): Date {
@@ -71,7 +67,7 @@ export function endOfManilaDay(date: string): Date {
 }
 
 /**
- * ✅ Range overlap check (used for appointments)
+ * ✅ Range overlap check (appointments)
  */
 export function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
     return aStart < bEnd && bStart < aEnd;
@@ -93,7 +89,7 @@ export function format12Hour(date: Date | string): string {
 }
 
 /**
- * ✅ Convert "HH:mm" → readable 12-hour format (used in dropdowns)
+ * ✅ Convert "HH:mm" → 12-hour format for dropdowns
  */
 export function formatTimeString12(time: string): string {
     const parsed = parsePhilippineDate(time);
@@ -101,42 +97,37 @@ export function formatTimeString12(time: string): string {
 }
 
 /**
- * ✅ Format a full time range (used in patient and doctor pages)
+ * ✅ Format full time range ("2:00 PM – 3:30 PM")
  */
 export function formatTimeRange(start: TimeInput, end: TimeInput): string {
     const startDate = parsePhilippineDate(start);
     const endDate = parsePhilippineDate(end);
 
-    const startText = startDate
-        ? startDate.toLocaleTimeString("en-PH", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-              timeZone: PH_TIME_ZONE,
-          })
-        : "";
+    const opts: Intl.DateTimeFormatOptions = {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: PH_TIME_ZONE,
+    };
 
-    const endText = endDate
-        ? endDate.toLocaleTimeString("en-PH", {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-              timeZone: PH_TIME_ZONE,
-          })
-        : "";
+    const startText = startDate ? startDate.toLocaleTimeString("en-PH", opts) : "";
+    const endText = endDate ? endDate.toLocaleTimeString("en-PH", opts) : "";
 
     if (startText && endText) return `${startText} – ${endText}`;
     return startText || endText || "";
 }
 
-const manilaISOFormatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: PH_TIME_ZONE,
-});
-
+/**
+ * ✅ Format a Date → "YYYY-MM-DD" in Manila time
+ */
 export function formatManilaISODate(date: Date): string {
-    return manilaISOFormatter.format(date);
+    const formatter = new Intl.DateTimeFormat("en-CA", { timeZone: PH_TIME_ZONE });
+    return formatter.format(date);
 }
 
+/**
+ * ✅ Convert Date string → HH:mm (24-hour) in Manila time
+ */
 export function toManilaTimeString(dateStr: string): string {
     const date = parsePhilippineDate(dateStr);
     if (!date) return "";
@@ -150,8 +141,7 @@ export function toManilaTimeString(dateStr: string): string {
 }
 
 /**
- * ✅ Convert UTC timestamp → Manila-local date string ("YYYY-MM-DD")
- * e.g. "2025-10-12T16:00:00Z" → "2025-10-13"
+ * ✅ Convert UTC timestamp → "YYYY-MM-DD" Manila local
  */
 export function toManilaDateString(dateStr: string): string {
     const date = parsePhilippineDate(dateStr);
@@ -161,9 +151,10 @@ export function toManilaDateString(dateStr: string): string {
 }
 
 /**
- * ✅ Return the current Date instance pinned to Manila local time
+ * ✅ Return a Date pinned to Manila local time (independent of host)
  */
 export function manilaNow(): Date {
+    const now = new Date();
     const formatter = new Intl.DateTimeFormat("en-CA", {
         timeZone: PH_TIME_ZONE,
         year: "numeric",
@@ -175,21 +166,16 @@ export function manilaNow(): Date {
         hour12: false,
     });
 
-    const parts = formatter.formatToParts(new Date());
-    const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    const parts = Object.fromEntries(
+        formatter.formatToParts(now).map((p) => [p.type, p.value])
+    );
 
-    const year = lookup.year;
-    const month = lookup.month;
-    const day = lookup.day;
-    const hour = lookup.hour;
-    const minute = lookup.minute;
-    const second = lookup.second;
-
+    const { year, month, day, hour, minute, second } = parts;
     return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}${PH_UTC_OFFSET}`);
 }
 
 /**
- * ✅ Format a date/time value into a Manila-localized string
+ * ✅ Format Manila-localized date/time string (for display)
  */
 export function formatManilaDateTime(
     value: string | Date | null | undefined,
@@ -208,13 +194,6 @@ export function formatManilaDateTime(
         hour12: true,
     };
 
-    const finalOptions = { ...baseOptions, ...options } as Intl.DateTimeFormatOptions;
-
-    for (const key of Object.keys(finalOptions) as (keyof Intl.DateTimeFormatOptions)[]) {
-        if (finalOptions[key] === undefined) {
-            delete finalOptions[key];
-        }
-    }
-
-    return date.toLocaleString("en-PH", finalOptions);
+    const merged = { ...baseOptions, ...options };
+    return date.toLocaleString("en-PH", merged);
 }

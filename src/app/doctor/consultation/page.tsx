@@ -169,23 +169,6 @@ export default function DoctorConsultationPage() {
         <DoctorLayout
             title="Consultation availability"
             description="Manage your duty hours, adjust clinic assignments, and publish new consultation slots."
-            actions={
-                <Button
-                    className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
-                    onClick={() => {
-                        setDialogOpen(true);
-                        setEditingSlot(null);
-                        setFormData({
-                            clinic_id: "",
-                            available_date: "",
-                            available_timestart: "",
-                            available_timeend: "",
-                        });
-                    }}
-                >
-                    <PlusCircle className="mr-2 h-4 w-4" /> New availability
-                </Button>
-            }
         >
             <div className="space-y-6">
                 {/* Consultation Section */}
