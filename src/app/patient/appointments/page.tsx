@@ -948,9 +948,8 @@ export default function PatientAppointmentsPage() {
                                                                             onClick={() => handleSlotSelection(doctor, slot)}
                                                                             className={cn(
                                                                                 "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
-                                                                                "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
-                                                                                isSelected &&
-                                                                                "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
+                                                                                "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
+                                                                                isSelected && "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
                                                                             )}
                                                                             aria-pressed={isSelected}
                                                                         >
