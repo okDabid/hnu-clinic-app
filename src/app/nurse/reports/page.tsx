@@ -140,84 +140,43 @@ function buildReportFilename(year: number, quarter?: number | null) {
         : `${base}.pdf`;
 }
 
-async function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
+function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
     if (typeof window === "undefined") return;
 
-    const renderPdfInIframe = (url: string) => {
-        const newWindow = window.open("", "_blank");
-        if (!newWindow) {
-            return false;
-        }
+    const url = URL.createObjectURL(blob);
 
-        newWindow.document.write(
-            `<iframe src="${url}#toolbar=1" frameborder="0" style="border:0;position:fixed;top:0;left:0;width:100%;height:100%;"></iframe>`
-        );
-        return true;
-    };
-
-    const triggerObjectUrlDownload = (url: string) => {
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.style.display = "none";
-
-        if (isMobile) {
-            link.rel = "noopener";
-            link.target = "_blank";
-        }
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
+    const scheduleCleanup = () => {
         window.setTimeout(() => {
             URL.revokeObjectURL(url);
         }, 1000);
     };
 
-    if (isMobile && isIOSDevice()) {
-        try {
-            const dataUrl = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onerror = () => {
-                    reject(reader.error ?? new Error("Failed to read PDF contents"));
-                };
-                reader.onloadend = () => {
-                    if (typeof reader.result === "string") {
-                        resolve(reader.result);
-                    } else {
-                        reject(new Error("Failed to prepare PDF for preview"));
-                    }
-                };
-                reader.readAsDataURL(blob);
-            });
+    if (isIOSDevice()) {
+        const newWindow = window.open(url, "_blank");
 
-            if (renderPdfInIframe(dataUrl)) {
-                return;
-            }
-
-            window.location.href = dataUrl;
-            return;
-        } catch (error) {
-            console.warn("Falling back to standard download flow after iOS preview failure", error);
-        }
-    }
-
-    if (isMobile) {
-        const url = URL.createObjectURL(blob);
-        if (renderPdfInIframe(url)) {
-            window.setTimeout(() => {
-                URL.revokeObjectURL(url);
-            }, 1000);
-            return;
+        if (!newWindow) {
+            window.location.href = url;
         }
 
-        triggerObjectUrlDownload(url);
+        scheduleCleanup();
         return;
     }
 
-    const url = URL.createObjectURL(blob);
-    triggerObjectUrlDownload(url);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+
+    if (isMobile) {
+        link.rel = "noopener";
+        link.target = "_blank";
+    }
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    scheduleCleanup();
 }
 
 export default function NurseReportsPage() {
@@ -344,7 +303,7 @@ export default function NurseReportsPage() {
                                 const mobile = isMobileDevice();
                                 const filename = buildReportFilename(year, quarter);
 
-                                await downloadBlob(blob, filename, mobile);
+                                downloadBlob(blob, filename, mobile);
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 if (typeof window !== "undefined") {
