@@ -329,7 +329,7 @@ export default function NurseReportsPage() {
             }
         >
             <section className="space-y-6">
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-transparent bg-white/80 shadow-sm md:border-green-100/70">
                     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div>
                             <CardTitle className="text-xl font-semibold text-green-700">
@@ -402,7 +402,7 @@ export default function NurseReportsPage() {
 
                 {selectedQuarter ? (
                     <section className="grid gap-5 lg:grid-cols-3">
-                        <Card className="rounded-3xl border-green-100/70 bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
+                        <Card className="rounded-3xl border-transparent bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md md:border-green-100/70">
                             <CardHeader className="gap-3">
                                 <CardTitle className="flex items-center gap-3 text-lg">
                                     <BarChart2 className="h-5 w-5" />
@@ -430,7 +430,7 @@ export default function NurseReportsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                        <Card className="rounded-3xl border-transparent bg-white/90 shadow-sm md:border-green-100/70">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg text-green-700">
                                     <CalendarRange className="h-5 w-5 text-green-600" />
@@ -461,7 +461,7 @@ export default function NurseReportsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                        <Card className="rounded-3xl border-transparent bg-white/90 shadow-sm md:border-green-100/70">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg text-green-700">
                                     <PieChart className="h-5 w-5 text-green-600" />
@@ -495,7 +495,7 @@ export default function NurseReportsPage() {
 
                 {hasData ? (
                     <section className="grid gap-5 lg:grid-cols-2">
-                        <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                        <Card className="rounded-3xl border-transparent bg-white/90 shadow-sm md:border-green-100/70">
                             <CardHeader>
                                 <CardTitle className="text-lg text-green-700">Quarterly patient volume</CardTitle>
                                 <CardDescription>
@@ -531,7 +531,7 @@ export default function NurseReportsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                        <Card className="rounded-3xl border-transparent bg-white/90 shadow-sm md:border-green-100/70">
                             <CardHeader>
                                 <CardTitle className="text-lg text-green-700">Patient mix by quarter</CardTitle>
                                 <CardDescription>
@@ -576,7 +576,7 @@ export default function NurseReportsPage() {
                         </Card>
                     </section>
                 ) : (
-                    <Card className="rounded-3xl border-green-100/70 bg-white/80 text-center text-sm text-muted-foreground shadow-sm">
+                    <Card className="rounded-3xl border-transparent bg-white/80 text-center text-sm text-muted-foreground shadow-sm md:border-green-100/70">
                         <CardContent className="py-10">
                             There are no consultations logged for the selected year yet. Choose a different period to see
                             insights.
@@ -585,7 +585,7 @@ export default function NurseReportsPage() {
                 )}
 
                 {topDiagnoses.length ? (
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-transparent bg-white/90 shadow-sm md:border-green-100/70">
                         <CardHeader>
                             <CardTitle className="text-lg text-green-700">
                                 Leading illnesses for {selectedQuarter?.label} {data?.year}
