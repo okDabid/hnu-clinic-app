@@ -947,17 +947,19 @@ export default function PatientAppointmentsPage() {
                                                                             type="button"
                                                                             onClick={() => handleSlotSelection(doctor, slot)}
                                                                             className={cn(
-                                                                                "flex items-center justify-between rounded-2xl border px-3 py-2 text-sm font-medium transition",
+                                                                                "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
                                                                                 "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
                                                                                 isSelected &&
                                                                                     "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
                                                                             )}
                                                                             aria-pressed={isSelected}
                                                                         >
-                                                                            <span>{formatTimeRange(slot.start, slot.end)}</span>
+                                                                            <span className="leading-tight">
+                                                                                {formatTimeRange(slot.start, slot.end)}
+                                                                            </span>
                                                                             <span
                                                                                 className={cn(
-                                                                                    "text-xs font-medium",
+                                                                                    "text-xs font-medium leading-tight",
                                                                                     isSelected ? "text-white/80" : "text-muted-foreground"
                                                                                 )}
                                                                             >
