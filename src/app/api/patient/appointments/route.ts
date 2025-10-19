@@ -11,6 +11,10 @@ import {
 } from "@/lib/time";
 import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
 
+const MIN_BOOKING_LEAD_DAYS = 3;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const MIN_LEAD_TIME_MS = MIN_BOOKING_LEAD_DAYS * DAY_IN_MS;
+
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
@@ -106,10 +110,11 @@ export async function POST(req: Request) {
         if (!(appointment_timestart < appointment_timeend))
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
 
-        const minLeadTimeMs = 3 * 24 * 60 * 60 * 1000; // 3 days
-        if (appointment_timestart.getTime() - now.getTime() < minLeadTimeMs) {
+        if (appointment_timestart.getTime() - now.getTime() < MIN_LEAD_TIME_MS) {
             return NextResponse.json(
-                { message: "Appointments must be scheduled at least 3 days in advance" },
+                {
+                    message: `Appointments must be scheduled at least ${MIN_BOOKING_LEAD_DAYS} days in advance`,
+                },
                 { status: 400 }
             );
         }
@@ -228,10 +233,11 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
         }
 
-        const minLeadTimeMs = 3 * 24 * 60 * 60 * 1000; // 3 days
-        if (appointment_timestart.getTime() - now.getTime() < minLeadTimeMs) {
+        if (appointment_timestart.getTime() - now.getTime() < MIN_LEAD_TIME_MS) {
             return NextResponse.json(
-                { message: "Appointments must be scheduled at least 3 days in advance" },
+                {
+                    message: `Appointments must be scheduled at least ${MIN_BOOKING_LEAD_DAYS} days in advance`,
+                },
                 { status: 400 }
             );
         }
