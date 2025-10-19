@@ -1,6 +1,6 @@
 // src/lib/time.ts
 
-const PH_TIME_ZONE = "Asia/Manila";
+export const PH_TIME_ZONE = "Asia/Manila";
 const PH_UTC_OFFSET = "+08:00";
 
 // Regex patterns for detecting ISO/TZ/time/date shapes
@@ -76,6 +76,24 @@ export function startOfManilaDay(date: string): Date {
 
 export function endOfManilaDay(date: string): Date {
     return new Date(`${date}T23:59:59${PH_UTC_OFFSET}`);
+}
+
+/**
+ * ✅ Manila weekday helper — always resolve using local (UTC+8) noon
+ */
+export function getManilaWeekday(value: TimeInput): number {
+    const date = parsePhilippineDate(value);
+    if (!date) return Number.NaN;
+
+    const isoDate = formatManilaISODate(date);
+    const safeMidday = new Date(`${isoDate}T12:00:00${PH_UTC_OFFSET}`);
+    return safeMidday.getUTCDay();
+}
+
+export function isManilaWeekend(value: TimeInput): boolean {
+    const weekday = getManilaWeekday(value);
+    if (Number.isNaN(weekday)) return false;
+    return weekday === 0 || weekday === 6;
 }
 
 /**

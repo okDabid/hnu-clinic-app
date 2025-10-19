@@ -45,7 +45,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatManilaDateTime } from "@/lib/time";
+import { formatManilaDateTime, formatManilaISODate, manilaNow } from "@/lib/time";
 
 const STATUS_ORDER = ["Pending", "Approved", "Moved", "Completed", "Cancelled"] as const;
 
@@ -92,8 +92,7 @@ function normalizeStatus(value: string): AppointmentStatus | null {
 }
 
 function isToday(date: string) {
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
-    return date === today;
+    return date === formatManilaISODate(manilaNow());
 }
 
 function formatDateOnly(value: string) {

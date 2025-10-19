@@ -705,7 +705,7 @@ export default function PatientAppointmentsPage() {
                                     <dd className="mt-1 text-sm font-medium text-green-800">
                                         {date && selectedSlot ? (
                                             <span>
-                                                {new Date(date).toLocaleDateString()} · {formatTimeRange(selectedSlot.start, selectedSlot.end)}
+                                                {formatDateOnly(date)} · {formatTimeRange(selectedSlot.start, selectedSlot.end)}
                                             </span>
                                         ) : (
                                             "Choose a date and time"

@@ -29,7 +29,13 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { formatManilaDateTime, formatManilaISODate, formatTimeRange, manilaNow } from "@/lib/time";
+import {
+    formatManilaDateTime,
+    formatManilaISODate,
+    formatTimeRange,
+    manilaNow,
+    toManilaDateString,
+} from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 
 const STATUS_ORDER = ["Pending", "Approved", "Moved", "Completed", "Cancelled"] as const;
@@ -111,9 +117,9 @@ const STATUS_BADGE_CLASSES: Record<AppointmentStatus, string> = {
 const ACTIVE_STATUSES: AppointmentStatus[] = ["Pending", "Approved", "Moved"];
 
 function isToday(value: string) {
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
-    const date = new Date(value).toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
-    return today === date;
+    const today = formatManilaISODate(manilaNow());
+    const date = toManilaDateString(value);
+    return Boolean(date) && date === today;
 }
 
 function formatDateOnly(value: string) {

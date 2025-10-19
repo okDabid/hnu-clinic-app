@@ -7,6 +7,7 @@ import {
     buildManilaDate,
     endOfManilaDay,
     formatManilaISODate,
+    getManilaWeekday,
     manilaNow,
     startOfManilaDay,
 } from "@/lib/time";
@@ -112,7 +113,9 @@ export async function POST(req: Request) {
             current.setUTCDate(current.getUTCDate() + i);
 
             const manilaDate = formatManilaISODate(current);
-            const weekday = new Date(`${manilaDate}T00:00:00+08:00`).getUTCDay();
+            const weekday = getManilaWeekday(manilaDate);
+
+            if (Number.isNaN(weekday)) continue;
 
             if (!allowedDays.has(weekday)) continue;
 

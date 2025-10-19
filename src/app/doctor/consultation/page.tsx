@@ -314,11 +314,7 @@ export default function DoctorConsultationPage() {
                                         <TableBody>
                                             {slots.map((slot) => (
                                                 <TableRow key={slot.availability_id} className="hover:bg-green-50 transition">
-                                                    <TableCell>
-                                                        {new Date(slot.available_date).toLocaleDateString("en-CA", {
-                                                            timeZone: "Asia/Manila",
-                                                        })}
-                                                    </TableCell>
+                                                    <TableCell>{toManilaDateString(slot.available_date)}</TableCell>
                                                     <TableCell>{format12Hour(slot.available_timestart)}</TableCell>
                                                     <TableCell>{format12Hour(slot.available_timeend)}</TableCell>
                                                     <TableCell>{slot.clinic.clinic_name}</TableCell>
