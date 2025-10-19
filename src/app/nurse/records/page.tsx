@@ -588,7 +588,7 @@ export default function NurseRecordsPage() {
                         }
                     }}
                 >
-                    <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
+                    <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[80vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
                         {selectedRecord ? (
                             <div className="space-y-6">
                                 <DialogHeader>
