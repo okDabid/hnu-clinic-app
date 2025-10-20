@@ -627,7 +627,6 @@ export async function GET(
 
         const html = renderCertificateHtml(context);
 
-        const executablePath = await chromium.executablePath();
         const browser = await puppeteer.launch({
             args: chromium.args,
             defaultViewport: { width: 1280, height: 720 },
