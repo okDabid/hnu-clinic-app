@@ -62,7 +62,7 @@ export default function NurseDashboardPage() {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-2">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-500">Welcome back</p>
-                        <h3 className="text-3xl font-semibold text-green-700 md:text-4xl">Hello, {firstName}</h3>
+                        <h3 className="text-3xl font-semibold text-green-700 md:text-4xl">Good day, Nurse {firstName}</h3>
                         <p className="max-w-2xl text-sm text-muted-foreground">
                             Keep the clinic running smoothly with instant visibility into schedules, stock levels, and patient coordination. Use the quick tools below to support the care team.
                         </p>

@@ -88,7 +88,7 @@ export default function ScholarDashboardPage() {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-3">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-500">Welcome back</p>
-                        <h3 className="text-3xl font-semibold text-green-700 md:text-4xl">Hi, {firstName}</h3>
+                        <h3 className="text-3xl font-semibold text-green-700 md:text-4xl">Good day, Scholar {firstName}</h3>
                         <p className="max-w-2xl text-sm text-muted-foreground">
                             Keep the clinic desk synchronized—double-check booking requests, guide students through intake, and
                             flag any priority concerns early so the team can respond quickly.
