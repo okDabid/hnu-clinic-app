@@ -50,9 +50,17 @@ import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import {
+    useDoctorAvailabilityBulk,
+    useMetaClinics,
+    useMetaDoctors,
+    type ClinicMeta,
+    type DoctorMeta,
+} from "@/hooks/useMeta";
+import { fetchJsonWithRetry } from "@/lib/http";
 
-type Clinic = { clinic_id: string; clinic_name: string };
-type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
+type Clinic = ClinicMeta;
+type Doctor = DoctorMeta;
 type Slot = { start: string; end: string };
 type Appointment = {
     id: string;
@@ -191,13 +199,22 @@ export default function PatientAppointmentsPage() {
     }, []);
 
     // Form state
-    const [clinics, setClinics] = useState<Clinic[]>([]);
-    const [doctors, setDoctors] = useState<Doctor[]>([]);
-    const [doctorAvailability, setDoctorAvailability] = useState<
-        Record<string, { slots: Slot[]; loading: boolean; error: string | null }>
-    >({});
-    const [loadingClinics, setLoadingClinics] = useState(true);
-    const [loadingDoctors, setLoadingDoctors] = useState(false);
+    const { clinics, isLoading: loadingClinics, error: clinicsError } = useMetaClinics();
+    const {
+        doctors,
+        isLoading: loadingDoctors,
+        error: doctorsError,
+    } = useMetaDoctors(clinicId ? clinicId : null);
+    const {
+        availabilityByDoctor,
+        isLoading: loadingAvailability,
+        isValidating: validatingAvailability,
+        error: availabilityError,
+    } = useDoctorAvailabilityBulk({
+        clinicId: clinicId || null,
+        date: date || null,
+        doctorIds: doctors.map((doctor) => doctor.user_id),
+    });
     const [submitting, setSubmitting] = useState(false);
 
     const [clinicId, setClinicId] = useState("");
@@ -346,129 +363,35 @@ export default function PatientAppointmentsPage() {
         }
     }
 
-    // Load clinics
     useEffect(() => {
-        (async () => {
-            try {
-                setLoadingClinics(true);
-                const res = await fetch("/api/meta/clinics");
-                const data = await res.json();
-                setClinics(data);
-            } catch {
-                toast.error("Failed to load clinics");
-            } finally {
-                setLoadingClinics(false);
-            }
-        })();
-    }, []);
+        if (clinicsError) {
+            toast.error("Failed to load clinics");
+        }
+    }, [clinicsError]);
 
-    // Load doctors
     useEffect(() => {
-        if (!clinicId) {
-            setDoctors([]);
-            setDoctorId("");
-            return;
+        if (doctorsError) {
+            toast.error("Failed to load doctors");
         }
-        (async () => {
-            try {
-                setLoadingDoctors(true);
-                const params = new URLSearchParams({ clinic_id: clinicId });
-                const res = await fetch(`/api/meta/doctors?${params}`);
-                const data = await res.json();
-                setDoctors(data);
-            } catch {
-                toast.error("Failed to load doctors");
-            } finally {
-                setLoadingDoctors(false);
-            }
-        })();
-    }, [clinicId]);
+    }, [doctorsError]);
 
-    // Load availability for doctors when clinic/date change
     useEffect(() => {
-        if (!clinicId || doctors.length === 0) {
-            setDoctorAvailability({});
-            return;
+        if (availabilityError) {
+            toast.error("Failed to load availability");
         }
+    }, [availabilityError]);
 
-        if (!date) {
-            const emptyAvailability: Record<string, { slots: Slot[]; loading: boolean; error: string | null }> = {};
-            doctors.forEach((doctor) => {
-                emptyAvailability[doctor.user_id] = {
-                    slots: [],
-                    loading: false,
-                    error: null,
-                };
-            });
-            setDoctorAvailability(emptyAvailability);
-            return;
-        }
-
-        let cancelled = false;
-
-        setDoctorAvailability((prev) => {
-            const next: typeof prev = {};
-            doctors.forEach((doctor) => {
-                const existing = prev[doctor.user_id];
-                next[doctor.user_id] = {
-                    slots: existing?.slots ?? [],
-                    loading: true,
-                    error: null,
-                };
-            });
-            return next;
-        });
-
-        const loadAvailability = async (doctor: Doctor) => {
-            try {
-                const params = new URLSearchParams({
-                    clinic_id: clinicId,
-                    doctor_user_id: doctor.user_id,
-                    date,
-                });
-                const res = await fetch(`/api/meta/doctor-availability?${params}`);
-                const data = await res.json();
-
-                if (cancelled) return;
-
-                setDoctorAvailability((prev) => ({
-                    ...prev,
-                    [doctor.user_id]: {
-                        slots: data?.slots || [],
-                        loading: false,
-                        error: null,
-                    },
-                }));
-            } catch {
-                if (cancelled) return;
-
-                setDoctorAvailability((prev) => ({
-                    ...prev,
-                    [doctor.user_id]: {
-                        slots: [],
-                        loading: false,
-                        error: "Failed to load availability",
-                    },
-                }));
-            }
-        };
-
-        doctors.forEach((doctor) => {
-            void loadAvailability(doctor);
-        });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [clinicId, date, doctors]);
-
-    const selectedDoctorAvailability = doctorId ? doctorAvailability[doctorId] : undefined;
-    const slots = useMemo(() => selectedDoctorAvailability?.slots ?? [], [selectedDoctorAvailability]);
-    const loadingSlots = selectedDoctorAvailability?.loading ?? false;
-    const selectedDoctorAvailabilityError = selectedDoctorAvailability?.error ?? null;
+    const availabilityRequestPending = Boolean(
+        date && doctors.length > 0 && (loadingAvailability || validatingAvailability)
+    );
+    const availabilityErrorMessage = availabilityError ? "Failed to load availability" : null;
+    const selectedDoctorSlots = doctorId ? availabilityByDoctor[doctorId] ?? [] : [];
+    const slots = selectedDoctorSlots;
+    const loadingSlots = Boolean(date && doctorId && availabilityRequestPending && selectedDoctorSlots.length === 0);
+    const selectedDoctorAvailabilityError = date ? availabilityErrorMessage : null;
     const selectedSlot = useMemo(() => slots.find((s) => s.start === timeStart), [slots, timeStart]);
     const selectedDoctor = useMemo(() => doctors.find((d) => d.user_id === doctorId) || null, [doctorId, doctors]);
-    const selectedClinic = useMemo(
+    const selectedClinic: Clinic | null = useMemo(
         () => clinics.find((clinic) => clinic.clinic_id === clinicId) ?? null,
         [clinics, clinicId]
     );
@@ -530,8 +453,10 @@ export default function PatientAppointmentsPage() {
                     doctor_user_id: rescheduleTarget.doctorId,
                     date: rescheduleDate,
                 });
-                const res = await fetch(`/api/meta/doctor-availability?${params}`);
-                const data = await res.json();
+                const data = await fetchJsonWithRetry<{ slots: Slot[] }>(
+                    `/api/meta/doctor-availability?${params}`,
+                    { method: "GET" }
+                );
                 setRescheduleSlots(data?.slots || []);
             } catch {
                 toast.error("Failed to load reschedule slots");
@@ -613,9 +538,7 @@ export default function PatientAppointmentsPage() {
     async function loadAppointments() {
         try {
             setLoadingAppointments(true);
-            const res = await fetch("/api/patient/appointments");
-            if (!res.ok) throw new Error("Failed to load appointments");
-            const data = await res.json();
+            const data = await fetchJsonWithRetry<Appointment[]>("/api/patient/appointments", { method: "GET" });
             setAppointments(Array.isArray(data) ? data : []);
         } catch {
             toast.error("Could not load your appointments");
@@ -893,10 +816,15 @@ export default function PatientAppointmentsPage() {
 
                                     <div className="space-y-3">
                                         {doctors.map((doctor) => {
-                                            const availability = doctorAvailability[doctor.user_id];
-                                            const doctorSlots = availability?.slots ?? [];
-                                            const doctorLoading = date ? availability?.loading ?? false : false;
-                                            const doctorError = date ? availability?.error ?? null : null;
+                                            const doctorSlots = availabilityByDoctor[doctor.user_id] ?? [];
+                                            const hasAvailabilityEntry = Object.prototype.hasOwnProperty.call(
+                                                availabilityByDoctor,
+                                                doctor.user_id
+                                            );
+                                            const doctorLoading = Boolean(
+                                                date && availabilityRequestPending && !hasAvailabilityEntry
+                                            );
+                                            const doctorError = date ? availabilityErrorMessage : null;
                                             const isActiveDoctor = doctor.user_id === doctorId;
 
                                             return (

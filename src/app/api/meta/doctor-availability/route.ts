@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
+import { computeSlotsForDoctor } from "@/lib/doctor-availability";
 
 /**
  * GET /api/meta/doctor-availability
@@ -55,44 +56,7 @@ export async function GET(req: Request) {
                 appointment_timeend: true,
             },
         });
-
-        const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
-            aStart < bEnd && bStart < aEnd;
-
-        // Format to HH:mm in Manila
-        const fmtHHmmManila = (d: Date) =>
-            new Intl.DateTimeFormat("en-GB", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-                timeZone: "Asia/Manila",
-            }).format(d);
-
-        // 3) Generate 15-minute slots
-        const SLOT_MIN = 15;
-        const slots: { start: string; end: string }[] = [];
-
-        for (const avail of availabilities) {
-            let current = new Date(avail.available_timestart);
-
-            while (current < avail.available_timeend) {
-                const next = new Date(current.getTime() + SLOT_MIN * 60 * 1000);
-
-                if (next <= avail.available_timeend) {
-                    const isBlocked = appointments.some((appt) =>
-                        overlaps(current, next, appt.appointment_timestart, appt.appointment_timeend)
-                    );
-
-                    if (!isBlocked) {
-                        slots.push({
-                            start: fmtHHmmManila(current),
-                            end: fmtHHmmManila(next),
-                        });
-                    }
-                }
-                current = new Date(current.getTime() + SLOT_MIN * 60 * 1000);
-            }
-        }
+        const slots = computeSlotsForDoctor(availabilities, appointments);
 
         return NextResponse.json({ slots });
     } catch (err) {

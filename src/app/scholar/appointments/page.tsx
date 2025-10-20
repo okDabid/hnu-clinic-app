@@ -37,6 +37,9 @@ import {
     toManilaDateString,
 } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
+import { useDoctorAvailabilityBulk, useMetaClinics, useMetaDoctors } from "@/hooks/useMeta";
+import type { TimeSlot } from "@/lib/doctor-availability";
+import { fetchJsonWithRetry, HttpError } from "@/lib/http";
 
 const STATUS_ORDER = ["Pending", "Approved", "Moved", "Completed", "Cancelled"] as const;
 
@@ -65,23 +68,6 @@ type ScholarAppointment = {
     remarks: string;
     createdAt: string;
     updatedAt: string;
-};
-
-type ClinicOption = {
-    clinic_id: string;
-    clinic_name: string;
-    clinic_location?: string | null;
-};
-
-type DoctorOption = {
-    user_id: string;
-    name: string;
-    specialization: string | null;
-};
-
-type SlotOption = {
-    start: string;
-    end: string;
 };
 
 type PatientOption = {
@@ -157,21 +143,50 @@ export default function ScholarAppointmentsPage() {
     const [patientSearch, setPatientSearch] = useState("");
     const [selectedPatientId, setSelectedPatientId] = useState("");
 
-    const [clinics, setClinics] = useState<ClinicOption[]>([]);
-    const [loadingClinics, setLoadingClinics] = useState(false);
     const [createClinicId, setCreateClinicId] = useState("");
 
-    const [doctors, setDoctors] = useState<DoctorOption[]>([]);
-    const [loadingDoctors, setLoadingDoctors] = useState(false);
     const [createDoctorId, setCreateDoctorId] = useState("");
 
-    const [slots, setSlots] = useState<SlotOption[]>([]);
-    const [loadingSlots, setLoadingSlots] = useState(false);
     const [createTimeStart, setCreateTimeStart] = useState("");
 
     const [createService, setCreateService] = useState("");
     const [createDate, setCreateDate] = useState(() => formatManilaISODate(manilaNow()));
     const [createRemarks, setCreateRemarks] = useState("");
+
+    const { clinics, isLoading: loadingClinics, error: clinicsError } = useMetaClinics();
+    const {
+        doctors,
+        isLoading: loadingDoctors,
+        isValidating: validatingDoctors,
+        error: doctorsError,
+    } = useMetaDoctors(createDialogOpen ? (createClinicId || null) : null);
+    const {
+        availabilityByDoctor: slotAvailability,
+        isLoading: loadingSlotAvailability,
+        isValidating: validatingSlotAvailability,
+        error: slotError,
+    } = useDoctorAvailabilityBulk({
+        clinicId: createDialogOpen ? (createClinicId || null) : null,
+        date: createDialogOpen ? (createDate || null) : null,
+        doctorIds: createDoctorId ? [createDoctorId] : [],
+    });
+
+    const slots = useMemo<TimeSlot[]>(() => {
+        if (!createDoctorId) {
+            return [];
+        }
+        return slotAvailability[createDoctorId] ?? [];
+    }, [slotAvailability, createDoctorId]);
+    const loadingSlots = Boolean(
+        createDialogOpen &&
+            createClinicId &&
+            createDoctorId &&
+            createDate &&
+            (loadingSlotAvailability || validatingSlotAvailability) &&
+            slots.length === 0
+    );
+    const doctorsPending = loadingDoctors || validatingDoctors;
+    const slotErrorMessage = slotError ? "Failed to load available slots" : null;
 
     const resetCreateForm = useCallback(() => {
         const today = formatManilaISODate(manilaNow());
@@ -179,8 +194,6 @@ export default function ScholarAppointmentsPage() {
         setPatientSearch("");
         setCreateClinicId("");
         setCreateDoctorId("");
-        setDoctors([]);
-        setSlots([]);
         setCreateDate(today);
         setCreateTimeStart("");
         setCreateService("");
@@ -192,63 +205,44 @@ export default function ScholarAppointmentsPage() {
             setLoadingPatients(true);
             const query = new URLSearchParams();
             query.set("status", "active");
-            const res = await fetch(`/api/scholar/patients?${query.toString()}`, {
-                cache: "no-store",
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                toast.error(data?.error ?? "Failed to fetch patient list");
-                return;
-            }
+            const data = await fetchJsonWithRetry<PatientRecordResponse[]>(
+                `/api/scholar/patients?${query.toString()}`,
+                { method: "GET" }
+            );
 
             const options: PatientOption[] = Array.isArray(data)
                 ? (data as PatientRecordResponse[])
-                    .filter((record) => typeof record.userId === "string" && record.userId.length > 0)
-                    .map((record) => ({
-                        userId: record.userId as string,
-                        name: record.fullName ?? "Unnamed patient",
-                        identifier: record.patientId ?? "",
-                        type: record.patientType ?? "Patient",
-                    }))
+                      .filter((record) => typeof record.userId === "string" && record.userId.length > 0)
+                      .map((record) => ({
+                          userId: record.userId as string,
+                          name: record.fullName ?? "Unnamed patient",
+                          identifier: record.patientId ?? "",
+                          type: record.patientType ?? "Patient",
+                      }))
                 : [];
 
             setPatientOptions(options);
             setPatientsLoaded(true);
         } catch (err) {
             console.error(err);
-            toast.error("Unable to load patients");
+            if (err instanceof HttpError) {
+                const body = err.body as { message?: string } | null | undefined;
+                toast.error(body?.message ?? "Failed to fetch patient list");
+            } else {
+                toast.error("Unable to load patients");
+            }
         } finally {
             setLoadingPatients(false);
-        }
-    }, []);
-
-    const loadClinicOptions = useCallback(async () => {
-        try {
-            setLoadingClinics(true);
-            const res = await fetch("/api/meta/clinics", { cache: "no-store" });
-            const data = await res.json();
-            if (!res.ok) {
-                toast.error(data?.error ?? "Failed to fetch clinics");
-                return;
-            }
-            setClinics(Array.isArray(data) ? (data as ClinicOption[]) : []);
-        } catch (err) {
-            console.error(err);
-            toast.error("Unable to load clinics");
-        } finally {
-            setLoadingClinics(false);
         }
     }, []);
 
     const loadAppointments = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await fetch("/api/scholar/appointments?status=all", { cache: "no-store" });
-            const data = await res.json();
-            if (!res.ok) {
-                toast.error(data?.error ?? "Failed to load appointments");
-                return;
-            }
+            const data = await fetchJsonWithRetry<ScholarAppointment[]>(
+                "/api/scholar/appointments?status=all",
+                { method: "GET" }
+            );
             setAppointments(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
@@ -273,83 +267,40 @@ export default function ScholarAppointmentsPage() {
             loadPatientOptions();
         }
 
-        if (clinics.length === 0 && !loadingClinics) {
-            loadClinicOptions();
-        }
     }, [
         createDialogOpen,
         resetCreateForm,
         loadPatientOptions,
         patientsLoaded,
         loadingPatients,
-        loadClinicOptions,
-        clinics.length,
-        loadingClinics,
     ]);
 
     useEffect(() => {
         if (!createDialogOpen || !createClinicId) {
             if (!createClinicId) {
-                setDoctors([]);
                 setCreateDoctorId("");
             }
             return;
         }
-
-        (async () => {
-            try {
-                setLoadingDoctors(true);
-                const params = new URLSearchParams({ clinic_id: createClinicId });
-                const res = await fetch(`/api/meta/doctors?${params.toString()}`, { cache: "no-store" });
-                const data = await res.json();
-                if (!res.ok) {
-                    toast.error(data?.message ?? "Failed to load doctors");
-                    return;
-                }
-                setDoctors(Array.isArray(data) ? (data as DoctorOption[]) : []);
-            } catch (err) {
-                console.error(err);
-                toast.error("Unable to load doctors");
-            } finally {
-                setLoadingDoctors(false);
-            }
-        })();
     }, [createDialogOpen, createClinicId]);
 
     useEffect(() => {
-        if (!createDialogOpen || !createClinicId || !createDoctorId || !createDate) {
-            if (!createDoctorId) {
-                setSlots([]);
-                setCreateTimeStart("");
-            }
-            return;
+        if (clinicsError) {
+            toast.error("Failed to load clinics");
         }
+    }, [clinicsError]);
 
-        (async () => {
-            try {
-                setLoadingSlots(true);
-                const params = new URLSearchParams({
-                    clinic_id: createClinicId,
-                    doctor_user_id: createDoctorId,
-                    date: createDate,
-                });
-                const res = await fetch(`/api/meta/doctor-availability?${params.toString()}`, {
-                    cache: "no-store",
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    toast.error(data?.message ?? "Failed to load available slots");
-                    return;
-                }
-                setSlots(Array.isArray(data?.slots) ? (data.slots as SlotOption[]) : []);
-            } catch (err) {
-                console.error(err);
-                toast.error("Unable to load available slots");
-            } finally {
-                setLoadingSlots(false);
-            }
-        })();
-    }, [createDialogOpen, createClinicId, createDoctorId, createDate]);
+    useEffect(() => {
+        if (doctorsError) {
+            toast.error("Failed to load doctors");
+        }
+    }, [doctorsError]);
+
+    useEffect(() => {
+        if (slotError) {
+            toast.error("Failed to load available slots");
+        }
+    }, [slotError]);
 
     useEffect(() => {
         if (!createDialogOpen) return;
@@ -822,7 +773,6 @@ export default function ScholarAppointmentsPage() {
                                             setCreateClinicId(value);
                                             setCreateDoctorId("");
                                             setCreateService("");
-                                            setSlots([]);
                                             setCreateTimeStart("");
                                         }}
                                         disabled={loadingClinics}
@@ -863,24 +813,23 @@ export default function ScholarAppointmentsPage() {
                                         onValueChange={(value) => {
                                             setCreateDoctorId(value);
                                             setCreateService("");
-                                            setSlots([]);
                                             setCreateTimeStart("");
                                         }}
-                                        disabled={loadingDoctors || !createClinicId}
+                                        disabled={doctorsPending || !createClinicId}
                                     >
                                         <SelectTrigger className="rounded-xl border-green-200">
                                             <SelectValue
                                                 placeholder={
                                                     !createClinicId
                                                         ? "Select a clinic first"
-                                                        : loadingDoctors
+                                                        : doctorsPending
                                                             ? "Loading doctors..."
                                                             : "Select a doctor"
                                                 }
                                             />
                                         </SelectTrigger>
                                         <SelectContent className="max-h-60">
-                                            {loadingDoctors ? (
+                                            {doctorsPending ? (
                                                 <SelectItem value="loading" disabled>
                                                     Loading doctors...
                                                 </SelectItem>
@@ -927,14 +876,20 @@ export default function ScholarAppointmentsPage() {
                                                 placeholder={
                                                     !createDoctorId
                                                         ? "Select a doctor first"
-                                                        : loadingSlots
+                                                        : slotErrorMessage
+                                                            ? "Unable to load slots"
+                                                            : loadingSlots
                                                             ? "Checking availability..."
                                                             : "Select time slot"
                                                 }
                                             />
                                         </SelectTrigger>
                                         <SelectContent className="max-h-60">
-                                            {loadingSlots ? (
+                                            {slotErrorMessage ? (
+                                                <SelectItem value="error" disabled>
+                                                    {slotErrorMessage}
+                                                </SelectItem>
+                                            ) : loadingSlots ? (
                                                 <SelectItem value="loading" disabled>
                                                     Checking availability...
                                                 </SelectItem>
