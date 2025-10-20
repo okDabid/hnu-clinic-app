@@ -7,6 +7,7 @@ import {
     CalendarDays,
     CheckCircle2,
     Clock3,
+    FileText,
     Loader2,
     MoreHorizontal,
     Move,
@@ -59,7 +60,10 @@ type Appointment = {
     status: string;
     clinic?: string;
     hasConsultation: boolean;
+    patientType: "Student" | "Employee" | "Unknown";
 };
+
+type DoctorSpecialization = "Physician" | "Dentist";
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
     Pending: "Awaiting review",
@@ -148,6 +152,8 @@ export default function DoctorAppointmentsPage() {
     const [actionSubmitting, setActionSubmitting] = useState(false);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
+    const [specialization, setSpecialization] = useState<DoctorSpecialization | null>(null);
+    const [certificateLoadingId, setCertificateLoadingId] = useState<string | null>(null);
 
     const loadAppointments = useCallback(async () => {
         try {
@@ -167,6 +173,24 @@ export default function DoctorAppointmentsPage() {
     useEffect(() => {
         loadAppointments();
     }, [loadAppointments]);
+
+    useEffect(() => {
+        async function loadProfile() {
+            try {
+                const res = await fetch("/api/doctor/account/me", { cache: "no-store" });
+                if (!res.ok) return;
+                const data = await res.json();
+                const spec = data?.specialization;
+                if (spec === "Physician" || spec === "Dentist") {
+                    setSpecialization(spec);
+                }
+            } catch (error) {
+                console.warn("Failed to fetch doctor specialization", error);
+            }
+        }
+
+        loadProfile();
+    }, []);
 
     const searchTerm = search.trim().toLowerCase();
 
@@ -276,6 +300,69 @@ export default function DoctorAppointmentsPage() {
         } catch (error) {
             console.error(error);
             toast.error("Failed to complete appointment");
+        }
+    }
+
+    function buildPatientSlug(name: string) {
+        return (
+            name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "") || "patient"
+        );
+    }
+
+    async function handleGenerateCertificate(appointment: Appointment) {
+        if (!specialization) {
+            toast.error(
+                "Set your specialization in your account profile before generating certificates."
+            );
+            return;
+        }
+
+        setCertificateLoadingId(appointment.id);
+        try {
+            const res = await fetch(
+                `/api/doctor/appointments/${appointment.id}/certificate`,
+                {
+                    method: "GET",
+                }
+            );
+
+            if (!res.ok) {
+                let message = "Failed to generate certificate";
+                const contentType = res.headers.get("content-type") ?? "";
+                if (contentType.includes("application/json")) {
+                    try {
+                        const data = await res.json();
+                        if (data?.error) message = data.error;
+                    } catch (parseError) {
+                        console.warn("Failed to parse certificate error", parseError);
+                    }
+                }
+                toast.error(message);
+                return;
+            }
+
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const prefix =
+                specialization === "Dentist"
+                    ? "dental-certificate"
+                    : "medical-certificate";
+            link.href = url;
+            link.download = `${prefix}-${buildPatientSlug(appointment.patientName)}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success("Certificate downloaded");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to generate certificate");
+        } finally {
+            setCertificateLoadingId(null);
         }
     }
 
@@ -504,6 +591,14 @@ export default function DoctorAppointmentsPage() {
                                             const canApprove = status === "Pending";
                                             const canComplete = status === "Approved" || status === "Moved";
                                             const canManage = status ? status !== "Completed" && status !== "Cancelled" : true;
+                                            const certificateLabel = specialization === "Dentist"
+                                                ? "Generate dental certificate"
+                                                : "Generate medical certificate";
+                                            const canGenerateCertificate =
+                                                appointment.patientType === "Student" &&
+                                                status === "Completed" &&
+                                                appointment.hasConsultation;
+                                            const isCertificateLoading = certificateLoadingId === appointment.id;
 
                                             return (
                                                 <TableRow key={appointment.id} className="text-sm">
@@ -559,6 +654,24 @@ export default function DoctorAppointmentsPage() {
                                                                 >
                                                                     <Stethoscope className="mr-2 h-4 w-4" /> Complete
                                                                 </DropdownMenuItem>
+                                                                {specialization ? (
+                                                                    <DropdownMenuItem
+                                                                        onClick={() => handleGenerateCertificate(appointment)}
+                                                                        disabled={!canGenerateCertificate || isCertificateLoading}
+                                                                    >
+                                                                        {isCertificateLoading ? (
+                                                                            <>
+                                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                                Preparing certificate
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <FileText className="mr-2 h-4 w-4" />
+                                                                                {certificateLabel}
+                                                                            </>
+                                                                        )}
+                                                                    </DropdownMenuItem>
+                                                                ) : null}
                                                                 <DropdownMenuItem
                                                                     onClick={() => {
                                                                         if (!canManage) return;

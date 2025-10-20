@@ -54,6 +54,11 @@ export async function GET() {
             time: phTime(a.appointment_timestart),
             status: a.status,
             hasConsultation: Boolean(a.consultation),
+            patientType: a.patient.student
+                ? "Student"
+                : a.patient.employee
+                    ? "Employee"
+                    : "Unknown",
         }));
 
         return NextResponse.json(formatted);
