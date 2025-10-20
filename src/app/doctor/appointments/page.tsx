@@ -8,6 +8,7 @@ import {
     CheckCircle2,
     Clock3,
     Loader2,
+    FileText,
     MoreHorizontal,
     Move,
     RefreshCcw,
@@ -33,6 +34,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -135,6 +137,24 @@ function parseStartDate(appointment: Appointment) {
     return new Date(iso);
 }
 
+function extractFilename(disposition: string | null) {
+    if (!disposition) return null;
+    const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+    if (match) {
+        return decodeURIComponent(match[1] ?? match[2] ?? "").trim() || null;
+    }
+    return null;
+}
+
+function slugifyName(value: string) {
+    return value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "")
+        .replace(/-{2,}/g, "-")
+        .slice(0, 64) || "certificate";
+}
+
 export default function DoctorAppointmentsPage() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -148,6 +168,7 @@ export default function DoctorAppointmentsPage() {
     const [actionSubmitting, setActionSubmitting] = useState(false);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
+    const [generatingId, setGeneratingId] = useState<string | null>(null);
 
     const loadAppointments = useCallback(async () => {
         try {
@@ -276,6 +297,50 @@ export default function DoctorAppointmentsPage() {
         } catch (error) {
             console.error(error);
             toast.error("Failed to complete appointment");
+        }
+    }
+
+    async function handleGenerateCertificate(appointment: Appointment) {
+        if (generatingId) return;
+
+        try {
+            setGeneratingId(appointment.id);
+            const res = await fetch(`/api/doctor/appointments/${appointment.id}/certificate`, {
+                cache: "no-store",
+            });
+
+            if (!res.ok) {
+                let message = "Failed to generate certificate";
+                try {
+                    const data = (await res.json()) as { error?: string };
+                    if (data?.error) message = data.error;
+                } catch (jsonError) {
+                    console.error(jsonError);
+                }
+                toast.error(message);
+                return;
+            }
+
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const disposition = res.headers.get("Content-Disposition");
+            const filename =
+                extractFilename(disposition) ?? `clinic-certificate-${slugifyName(appointment.patientName)}.pdf`;
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            toast.success("Certificate downloaded");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to generate certificate");
+        } finally {
+            setGeneratingId(null);
         }
     }
 
@@ -504,6 +569,7 @@ export default function DoctorAppointmentsPage() {
                                             const canApprove = status === "Pending";
                                             const canComplete = status === "Approved" || status === "Moved";
                                             const canManage = status ? status !== "Completed" && status !== "Cancelled" : true;
+                                            const isGenerating = generatingId === appointment.id;
 
                                             return (
                                                 <TableRow key={appointment.id} className="text-sm">
@@ -559,6 +625,22 @@ export default function DoctorAppointmentsPage() {
                                                                 >
                                                                     <Stethoscope className="mr-2 h-4 w-4" /> Complete
                                                                 </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleGenerateCertificate(appointment)}
+                                                                    disabled={Boolean(generatingId)}
+                                                                >
+                                                                    {isGenerating ? (
+                                                                        <>
+                                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                            Generating...
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <FileText className="mr-2 h-4 w-4" /> Download certificate
+                                                                        </>
+                                                                    )}
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
                                                                 <DropdownMenuItem
                                                                     onClick={() => {
                                                                         if (!canManage) return;
