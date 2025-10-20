@@ -1,6 +1,9 @@
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_NUMBER_REGEX = /^09\d{9}$/;
 
+/**
+ * Normalizes user-entered phone numbers to the 11-digit 09XXXXXXXXX format.
+ */
 export function sanitizePhoneNumber(value: string): string {
     if (!value) return "";
 
@@ -39,6 +42,9 @@ type ContactValidationError = {
 
 export type ContactValidationResult = ContactValidationSuccess | ContactValidationError;
 
+/**
+ * Validates and normalizes email and contact numbers for profile forms.
+ */
 export function validateAndNormalizeContacts(input: ContactValidationInput): ContactValidationResult {
     const email = (input.email ?? "").trim();
 

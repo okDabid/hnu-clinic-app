@@ -4,7 +4,9 @@ import { ReactNode, useEffect } from "react";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { Toaster, toast } from "sonner";
 
-// 🔹 SessionWatcher: watches session status
+/**
+ * Monitors the session and signs out users whose accounts become inactive.
+ */
 function SessionWatcher() {
     const { data: session } = useSession();
 
@@ -18,6 +20,9 @@ function SessionWatcher() {
     return null;
 }
 
+/**
+ * Sets up global providers for authentication, toasts, and session feedback.
+ */
 export default function Providers({ children }: { children: ReactNode }) {
     useEffect(() => {
         const url = new URL(window.location.href);
@@ -46,7 +51,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         <SessionProvider>
             {children}
             <Toaster richColors position="top-center" />
-            <SessionWatcher /> {/* ✅ runs globally */}
+            <SessionWatcher /> {/* runs globally */}
         </SessionProvider>
     );
 }

@@ -49,7 +49,7 @@ export async function GET() {
                         ? `${a.patient.employee.fname} ${a.patient.employee.lname}`
                         : a.patient.username,
             clinic: a.clinic.clinic_name,
-            // ✅ FIXED: Convert UTC → PH properly
+            // FIXED: Convert UTC → PH properly
             date: phDate(a.appointment_timestart),
             time: phTime(a.appointment_timestart),
             status: a.status,

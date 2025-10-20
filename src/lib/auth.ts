@@ -2,12 +2,12 @@
 import type { NextAuthOptions, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
-import bcrypt from "bcryptjs"; // ✅ non-blocking, faster in serverless
+import bcrypt from "bcryptjs"; // non-blocking, faster in serverless
 import { prisma } from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
 import { withDb } from "@/lib/withDb";
 
-/** --- Extend next-auth types --- */
+/** Extend next-auth types used by the application. */
 declare module "next-auth" {
     interface User {
         status?: AccountStatus;
@@ -47,7 +47,7 @@ interface AppSession extends Session {
     };
 }
 
-/** --- Main NextAuth configuration --- */
+/** Main NextAuth configuration. */
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -58,6 +58,7 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
                 role: { label: "Role", type: "text" },
             },
+            // Validate user-provided credentials against stored records.
             async authorize(credentials): Promise<AppUser | null> {
                 if (!credentials) throw new Error("Missing credentials.");
 
@@ -69,7 +70,7 @@ export const authOptions: NextAuthOptions = {
                 }
                 const role = roleStr as Role;
 
-                // 🔍 Find user (indexed query)
+                // Find user (indexed query)
                 const user = await withDb(() =>
                     prisma.users.findFirst({
                         where: {
@@ -96,11 +97,11 @@ export const authOptions: NextAuthOptions = {
                 if (user.status === AccountStatus.Inactive)
                     throw new Error("This account is inactive. Please contact the administrator.");
 
-                // 🔐 Password verification (non-blocking)
+                // Password verification (non-blocking)
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) throw new Error("Invalid password.");
 
-                // ✅ Return user payload
+                // Return user payload
                 return {
                     id: user.user_id,
                     name: user.student
@@ -116,6 +117,7 @@ export const authOptions: NextAuthOptions = {
     ],
 
     callbacks: {
+        // Populate JWT tokens with the fields required by the client.
         async jwt({ token, user }): Promise<AppJWT> {
             if (user) {
                 const u = user as AppUser;
@@ -125,7 +127,7 @@ export const authOptions: NextAuthOptions = {
                 token.status = u.status;
                 token.lastChecked = Date.now();
             } else if (token.id) {
-                // ⚙️ Refresh account status every 5 min only
+                // Refresh account status every five minutes to keep status in sync
                 const now = Date.now();
                 const lastChecked = (token as AppJWT).lastChecked ?? 0;
 
@@ -143,6 +145,7 @@ export const authOptions: NextAuthOptions = {
             return token as AppJWT;
         },
 
+        // Shape the session response using the token values.
         async session({ session, token }): Promise<AppSession> {
             const t = token as AppJWT;
             if (session.user) {

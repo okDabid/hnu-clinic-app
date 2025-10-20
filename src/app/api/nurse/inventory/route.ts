@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MedCategory, MedType, DosageUnit } from "@prisma/client";
 
-// ✅ GET stays the same (no changes)
+// GET stays the same (no changes)
 export async function GET() {
     try {
         const now = new Date();
@@ -136,7 +136,7 @@ export async function GET() {
     }
 }
 
-// ✅ POST updated to support enums + strength
+// POST updated to support enums + strength
 export async function POST(req: Request) {
     try {
         const body = await req.json();
@@ -151,7 +151,7 @@ export async function POST(req: Request) {
             unit?: DosageUnit;
         };
 
-        // 🔒 Validate required fields
+        // Validate required fields
         if (!clinic_id || !item_name || !quantity || !expiry) {
             return NextResponse.json(
                 { error: "Required fields: clinic_id, item_name, quantity, expiry" },
@@ -173,7 +173,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Clinic does not exist" }, { status: 404 });
         }
 
-        // 🔎 Check if item already exists in this clinic (same name + category + type)
+        // Check if item already exists in this clinic (same name + category + type)
         const existingItem = await prisma.medInventory.findFirst({
             where: { clinic_id, item_name },
         });
@@ -201,7 +201,7 @@ export async function POST(req: Request) {
             return NextResponse.json(updatedItem);
         }
 
-        // 📝 Create new item with enums + optional strength/unit
+        // Create new item with enums + optional strength/unit
         const newItem = await prisma.medInventory.create({
             data: {
                 clinic_id,

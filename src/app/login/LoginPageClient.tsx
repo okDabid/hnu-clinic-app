@@ -100,7 +100,7 @@ export default function LoginPageClient() {
 
             toast.success("Successful login!", { position: "top-center" });
 
-            // 🚀 Redirect by role
+            // Redirect by role
             switch (payload.role) {
                 case "NURSE":
                     router.push("/nurse");
@@ -205,7 +205,7 @@ export default function LoginPageClient() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contact: contact.trim(),
-                    code: trimmedCode, // ✅ include the verification code
+                    code: trimmedCode, // include the verification code
                     newPassword: passwordValue,
                 }),
             });
@@ -278,7 +278,7 @@ export default function LoginPageClient() {
                 )}
             </Button>
 
-            {/* ✅ Forgot password opens modal */}
+            {/* Forgot password opens modal */}
             <p className="mt-3 text-center text-sm">
                 <button
                     type="button"
@@ -401,7 +401,7 @@ export default function LoginPageClient() {
                 © {new Date().getFullYear()} HNU Clinic Capstone Project
             </p>
 
-            {/* 🔒 Forgot Password Modal */}
+            {/* Forgot Password Modal */}
             <Dialog open={forgotOpen} onOpenChange={handleForgotToggle}>
                 <DialogContent className="max-w-sm">
                     <DialogHeader>

@@ -37,7 +37,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-// ✅ Types
+// Types
 type ArchivedReplenishment = {
     replenishment_id: string;
     med_id: string;
@@ -81,12 +81,12 @@ export default function NurseInventoryPage() {
     const [statusFilter, setStatusFilter] = useState("All");
     const [clinicFilter, setClinicFilter] = useState("All");
 
-    // 🧩 Separate loading states
+    // Separate loading states
     const [loadingInventory, setLoadingInventory] = useState(false);
     const [savingStock, setSavingStock] = useState(false);
     // no menu state needed; navigation handled by NurseLayout
 
-    // 🔹 Load inventory
+    // Load inventory
     async function loadInventory() {
         try {
             setLoadingInventory(true);
@@ -113,7 +113,7 @@ export default function NurseInventoryPage() {
         }
     }
 
-    // 🔹 Load clinics
+    // Load clinics
     async function loadClinics() {
         try {
             const res = await fetch("/api/nurse/clinic", { cache: "no-store" });
@@ -124,7 +124,7 @@ export default function NurseInventoryPage() {
         }
     }
 
-    // 🔹 Load enums
+    // Load enums
     async function loadEnums() {
         try {
             const res = await fetch("/api/enums", { cache: "no-store" });
@@ -143,7 +143,7 @@ export default function NurseInventoryPage() {
         loadEnums();
     }, []);
 
-    // ✅ Status checker
+    // Status checker
     const getBadgeStyles = (status: string) => {
         switch (status) {
             case "Expired":
@@ -158,7 +158,7 @@ export default function NurseInventoryPage() {
         }
     };
 
-    // ✅ Apply filters
+    // Apply filters
     const filteredItems = items.filter((i) => {
         const matchesSearch =
             i.item_name.toLowerCase().includes(search.toLowerCase()) ||

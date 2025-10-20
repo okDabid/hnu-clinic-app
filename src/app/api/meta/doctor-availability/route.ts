@@ -5,9 +5,9 @@ import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
 /**
  * GET /api/meta/doctor-availability
  * Query params:
- *   - clinic_id
- *   - doctor_user_id
- *   - date (YYYY-MM-DD, Manila)
+ * - clinic_id
+ * - doctor_user_id
+ * - date (YYYY-MM-DD, Manila)
  *
  * Returns: Array of available time slots (15 mins each)
  */
@@ -25,7 +25,7 @@ export async function GET(req: Request) {
             );
         }
 
-        // ✅ Manila-local day bounds (works in UTC prod)
+        // Manila-local day bounds (works in UTC prod)
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
 
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
         const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
             aStart < bEnd && bStart < aEnd;
 
-        // ✅ Format to HH:mm in Manila
+        // Format to HH:mm in Manila
         const fmtHHmmManila = (d: Date) =>
             new Intl.DateTimeFormat("en-GB", {
                 hour: "2-digit",

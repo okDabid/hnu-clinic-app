@@ -51,7 +51,7 @@ type Profile = {
     emergencyco_relation?: string | null;
 };
 
-// 🔹 Blood Type Mappings
+// Blood Type Mappings
 const bloodTypeEnumMap: Record<string, string> = {
     A_POS: "A+",
     A_NEG: "A-",
@@ -75,7 +75,7 @@ export default function DoctorAccountPage() {
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
 
 
-    // 🔹 Load Profile
+    // Load Profile
     const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/doctor/account/me", {
@@ -90,7 +90,7 @@ export default function DoctorAccountPage() {
                 return;
             }
 
-            // 🩸 Normalize blood type no matter what format the backend sends
+            // Normalize blood type no matter what format the backend sends
             const bloodTypeValue =
                 typeof data.profile?.bloodtype === "string"
                     ? bloodTypeEnumMap[data.profile.bloodtype] || data.profile.bloodtype
@@ -125,7 +125,7 @@ export default function DoctorAccountPage() {
         loadProfile();
     }, [loadProfile]);
 
-    // 🔹 Update Profile
+    // Update Profile
     async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!profile) return;
@@ -175,7 +175,7 @@ export default function DoctorAccountPage() {
             } else {
                 toast.success("Profile updated successfully!");
 
-                // 🩸 Update local state to reflect readable blood type again
+                // Update local state to reflect readable blood type again
                 setProfile((prev) => ({
                     ...prev!,
                     ...updatedProfile,
@@ -253,7 +253,7 @@ export default function DoctorAccountPage() {
                                     <Label className="block mb-1 font-medium">Status</Label>
                                     <Input value={profile.status} disabled />
                                 </div>
-                                {/* 🗓️ Date of Birth */}
+                                {/* Date of Birth */}
                                 <div>
                                     <Label className="block mb-1 font-medium">Date of Birth</Label>
 
@@ -284,7 +284,7 @@ export default function DoctorAccountPage() {
                                                 You can only set this once. Once saved, it cannot be changed.
                                             </p>
 
-                                            {/* 🔒 Confirmation Dialog */}
+                                            {/* Confirmation Dialog */}
                                             <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
                                                 <AlertDialogContent className="max-w-sm sm:max-w-md">
                                                     <AlertDialogHeader>
@@ -352,7 +352,7 @@ export default function DoctorAccountPage() {
                                                                         toast.error(data.error);
                                                                     } else {
                                                                         toast.success("Date of Birth saved!");
-                                                                        await loadProfile(); // 🔄 refresh profile
+                                                                        await loadProfile(); // refresh profile
                                                                     }
                                                                 } catch {
                                                                     toast.error("Failed to save Date of Birth");

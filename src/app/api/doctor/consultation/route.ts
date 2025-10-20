@@ -15,7 +15,7 @@ const DEFAULT_WEEKS = 4;
 const MAX_WEEKS = 12;
 
 /**
- * ✅ GET — Fetch all consultation slots for logged-in doctor
+ * GET — Fetch all consultation slots for logged-in doctor
  */
 export async function GET() {
     try {
@@ -51,7 +51,7 @@ export async function GET() {
 }
 
 /**
- * ✅ POST — Create new consultation slot (Manila-local)
+ * POST — Create new consultation slot (Manila-local)
  */
 export async function POST(req: Request) {
     try {
@@ -181,7 +181,7 @@ export async function POST(req: Request) {
 }
 
 /**
- * ✅ PUT — Update existing consultation slot (Manila-local)
+ * PUT — Update existing consultation slot (Manila-local)
  */
 export async function PUT(req: Request) {
     try {

@@ -21,6 +21,9 @@ export const metadata = {
   description: "Health Record & Appointment System for HNU Clinic",
 };
 
+/**
+ * Renders the root HTML structure and shared providers for the app.
+ */
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html

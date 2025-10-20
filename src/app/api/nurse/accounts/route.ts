@@ -99,7 +99,7 @@ export async function POST(req: Request) {
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-        // ✅ Create user safely (NOW includes specialization)
+        // Create the user record, including specialization when provided
         const newUser = await prisma.users.create({
             data: {
                 username: finalUsername,

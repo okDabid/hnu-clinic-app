@@ -232,7 +232,7 @@ export async function PUT(req: Request) {
         if (user.role !== Role.PATIENT)
             return NextResponse.json({ error: "Not a patient" }, { status: 403 });
 
-        // 🛡️ 1. Detect if DOB is already set and prevent changes
+        // 1. Detect if DOB is already set and prevent changes
         const isStudent = Boolean(user.student);
         const isEmployee = Boolean(user.employee);
         const existingProfile = user.student ?? user.employee;
@@ -247,7 +247,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // 🧩 2. Build proper update input (like before)
+        // 2. Build proper update input (like before)
         if (isStudent) {
             const data = buildStudentUpdateInput(profile);
 

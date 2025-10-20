@@ -7,13 +7,13 @@ import { Role } from "@prisma/client";
 
 export async function PUT(req: Request) {
     try {
-        // 🔒 1. Check authentication
+        // 1. Check authentication
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // 📨 2. Parse incoming data
+        // 2. Parse incoming data
         const { oldPassword, newPassword } = await req.json();
 
         if (!oldPassword || !newPassword) {
@@ -23,7 +23,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // 👤 3. Find user
+        // 3. Find user
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
         });
@@ -32,7 +32,7 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // 🧱 4. Role guard – only SCHOLAR
+        // 4. Role guard – only SCHOLAR
         if (user.role !== Role.SCHOLAR) {
             return NextResponse.json(
                 { error: "Forbidden: Not a scholar" },
@@ -40,7 +40,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // 🔐 5. Verify old password
+        // 5. Verify old password
         const isValid = await bcrypt.compare(oldPassword, user.password);
         if (!isValid) {
             return NextResponse.json(
@@ -49,7 +49,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // ✅ 6. Hash and update password
+        // 6. Hash and update password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
         await prisma.users.update({

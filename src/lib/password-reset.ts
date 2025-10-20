@@ -8,6 +8,9 @@ export interface NormalizedContact {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Ensures the reset contact is a valid email and returns normalized variants.
+ */
 export function normalizeResetContact(input: string): NormalizedContact | null {
     const raw = input.trim();
 

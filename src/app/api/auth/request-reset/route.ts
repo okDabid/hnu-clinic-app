@@ -25,9 +25,9 @@ export async function POST(req: Request) {
             );
         }
 
-        console.log("⚙️ Starting password reset for:", normalized.normalized);
+        console.log("Starting password reset for:", normalized.normalized);
 
-        // 🔍 Find user by email
+        // Find user by email
         const user = await prisma.users.findFirst({
             where: {
                 OR: [
@@ -66,16 +66,16 @@ export async function POST(req: Request) {
             );
         }
 
-        // 👤 Display name
+        // Display name
         let fullName = user.username;
         if (user.student) fullName = `${user.student.fname} ${user.student.lname}`;
         if (user.employee) fullName = `${user.employee.fname} ${user.employee.lname}`;
 
-        // 🎟️ Generate OTP and expiry
+        // Generate OTP and expiry
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-        // 💾 Atomic token handling with rate limit
+        // Atomic token handling with rate limit
         await prisma.$transaction(async (tx) => {
             const existing = await tx.passwordResetToken.findFirst({
                 where: { userId: user.user_id, expiresAt: { gt: new Date() } },

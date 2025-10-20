@@ -541,7 +541,7 @@ export default function PatientAppointmentsPage() {
         })();
     }, [rescheduleTarget, rescheduleDate]);
 
-    // ✅ Dynamic service options: each label has a unique value
+    // Dynamic service options: each label has a unique value
     const availableServices = useMemo(
         () => getServiceOptionsForSpecialization(selectedDoctor?.specialization ?? null),
         [selectedDoctor]
@@ -552,7 +552,7 @@ export default function PatientAppointmentsPage() {
         return match?.label ?? null;
     }, [availableServices, serviceType]);
 
-    // ✅ Submit appointment
+    // Submit appointment
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!clinicId || !doctorId || !serviceType || !date || !selectedSlot) {

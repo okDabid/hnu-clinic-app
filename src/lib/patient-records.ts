@@ -49,11 +49,17 @@ export type PatientRecordEntry = {
     } | null;
 };
 
+/**
+ * Combines the provided name parts into a single display name.
+ */
 function normalizeName(fname?: string | null, mname?: string | null, lname?: string | null) {
     const nameParts = [fname, mname, lname].filter(Boolean);
     return nameParts.join(" ");
 }
 
+/**
+ * Shapes a user record into the lean staff summary used in responses.
+ */
 function buildStaffSummary(
     user?: {
         user_id: string;
@@ -73,6 +79,9 @@ function buildStaffSummary(
     };
 }
 
+/**
+ * Retrieves all active patient records with their most recent appointment data.
+ */
 export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
     const appointmentSelection = {
         where: {

@@ -15,7 +15,7 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // ✅ Fetch clinics
+        // Fetch clinics
         const clinics = await prisma.clinic.findMany({
             select: {
                 clinic_id: true,

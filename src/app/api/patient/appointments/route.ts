@@ -105,7 +105,7 @@ export async function POST(req: Request) {
         if (!doctor || doctor.role !== Role.DOCTOR)
             return NextResponse.json({ message: "Doctor not found" }, { status: 404 });
 
-        // ✅ Build PH-local timestamps
+        // Build PH-local timestamps
         const appointment_date = startOfManilaDay(date);
         const appointment_timestart = buildManilaDate(date, time_start);
         const appointment_timeend = buildManilaDate(date, time_end);
@@ -125,7 +125,7 @@ export async function POST(req: Request) {
             );
         }
 
-        // ✅ Check if within availability
+        // Check if within availability
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id,
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
 
-        // ✅ Check overlapping appointments
+        // Check overlapping appointments
         const existing = await prisma.appointment.findMany({
             where: {
                 doctor_user_id,
@@ -167,7 +167,7 @@ export async function POST(req: Request) {
         if (conflict)
             return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
 
-        // ✅ Create the appointment
+        // Create the appointment
         const created = await prisma.appointment.create({
             data: {
                 patient_user_id,

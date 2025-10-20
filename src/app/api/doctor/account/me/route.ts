@@ -129,7 +129,7 @@ export async function PUT(req: Request) {
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existing.date_of_birth ?? null;
 
-        // 🛡️ Prevent DOB change once set
+        // Prevent DOB change once set
         if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
             return NextResponse.json(
                 { error: "Date of birth cannot be changed once set." },
@@ -139,7 +139,7 @@ export async function PUT(req: Request) {
 
         const data = buildEmployeeUpdateInput(profile);
 
-        // 🧹 Remove unchanged / null / empty fields safely
+        // Remove unchanged / null / empty fields safely
         if (existingDOB) delete data.date_of_birth;
 
         (Object.keys(data) as (keyof Prisma.EmployeeUpdateInput)[]).forEach(
@@ -157,7 +157,7 @@ export async function PUT(req: Request) {
             }
         );
 
-        // ✅ Nothing to update
+        // Nothing to update
         if (Object.keys(data).length === 0) {
             return NextResponse.json({
                 success: true,
@@ -166,7 +166,7 @@ export async function PUT(req: Request) {
             });
         }
 
-        // 🔍 Duplicate checks
+        // Duplicate checks
         if (data.contactno) {
             const duplicateContact = await prisma.employee.findFirst({
                 where: {
@@ -197,7 +197,7 @@ export async function PUT(req: Request) {
             }
         }
 
-        // ✅ Safe update
+        // Safe update
         const updated = await prisma.employee.update({
             where: { user_id: session.user.id },
             data,

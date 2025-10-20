@@ -59,7 +59,7 @@ function parsePhilippineDate(value: TimeInput): Date | null {
 }
 
 /**
- * ✅ Safely build a Manila-local Date (for Prisma/DB writes)
+ * Safely build a Manila-local Date (for Prisma/DB writes)
  * This ensures that 10:00 AM PH will always be stored as the same UTC instant.
  */
 export function buildManilaDate(date: string, time: string): Date {
@@ -68,7 +68,7 @@ export function buildManilaDate(date: string, time: string): Date {
 }
 
 /**
- * ✅ Manila-local day boundaries (safe for DB filtering)
+ * Manila-local day boundaries (safe for DB filtering)
  */
 export function startOfManilaDay(date: string): Date {
     return new Date(`${date}T00:00:00${PH_UTC_OFFSET}`);
@@ -79,7 +79,7 @@ export function endOfManilaDay(date: string): Date {
 }
 
 /**
- * ✅ Manila weekday helper — always resolve using local (UTC+8) noon
+ * Manila weekday helper — always resolve using local (UTC+8) noon
  */
 export function getManilaWeekday(value: TimeInput): number {
     const date = parsePhilippineDate(value);
@@ -97,14 +97,14 @@ export function isManilaWeekend(value: TimeInput): boolean {
 }
 
 /**
- * ✅ Range overlap check (appointments)
+ * Range overlap check (appointments)
  */
 export function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
     return aStart < bEnd && bStart < aEnd;
 }
 
 /**
- * ✅ Convert Date → 12-hour format (e.g. "2:30 PM")
+ * Convert Date → 12-hour format (e.g. "2:30 PM")
  */
 export function format12Hour(date: Date | string): string {
     const parsed = parsePhilippineDate(date);
@@ -119,7 +119,7 @@ export function format12Hour(date: Date | string): string {
 }
 
 /**
- * ✅ Convert "HH:mm" → 12-hour format for dropdowns
+ * Convert "HH:mm" → 12-hour format for dropdowns
  */
 export function formatTimeString12(time: string): string {
     const parsed = parsePhilippineDate(time);
@@ -127,7 +127,7 @@ export function formatTimeString12(time: string): string {
 }
 
 /**
- * ✅ Format full time range ("2:00 PM – 3:30 PM")
+ * Format full time range ("2:00 PM – 3:30 PM")
  */
 export function formatTimeRange(start: TimeInput, end: TimeInput): string {
     const startDate = parsePhilippineDate(start);
@@ -148,14 +148,14 @@ export function formatTimeRange(start: TimeInput, end: TimeInput): string {
 }
 
 /**
- * ✅ Format a Date → "YYYY-MM-DD" in Manila time
+ * Format a Date → "YYYY-MM-DD" in Manila time
  */
 export function formatManilaISODate(date: Date): string {
     return date.toLocaleDateString("en-CA", { timeZone: PH_TIME_ZONE });
 }
 
 /**
- * ✅ Convert Date string → HH:mm (24-hour) in Manila time
+ * Convert Date string → HH:mm (24-hour) in Manila time
  */
 export function toManilaTimeString(dateStr: string): string {
     const date = parsePhilippineDate(dateStr);
@@ -170,7 +170,7 @@ export function toManilaTimeString(dateStr: string): string {
 }
 
 /**
- * ✅ Convert UTC timestamp → "YYYY-MM-DD" Manila local
+ * Convert UTC timestamp → "YYYY-MM-DD" Manila local
  */
 export function toManilaDateString(dateStr: string): string {
     const date = parsePhilippineDate(dateStr);
@@ -180,7 +180,7 @@ export function toManilaDateString(dateStr: string): string {
 }
 
 /**
- * ✅ Return a Date pinned to Manila local time (independent of host)
+ * Return a Date pinned to Manila local time (independent of host)
  */
 export function manilaNow(): Date {
     const now = new Date();
@@ -205,7 +205,7 @@ export function manilaNow(): Date {
 }
 
 /**
- * ✅ Format Manila-localized date/time string (for display)
+ * Format Manila-localized date/time string (for display)
  */
 export function formatManilaDateTime(
     value: string | Date | null | undefined,
@@ -229,7 +229,7 @@ export function formatManilaDateTime(
 }
 
 /**
- * ✅ Convert Date (UTC or ISO) to database-safe UTC string.
+ * Convert Date (UTC or ISO) to database-safe UTC string.
  * Use this when saving to Prisma if your DB column is UTC.
  */
 export function toDatabaseUTC(date: Date | string): string {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-// ✅ define minimal relation types manually
+// define minimal relation types manually
 type UserRelation = {
     user: {
         user_id: string;

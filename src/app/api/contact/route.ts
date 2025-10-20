@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   try {
     const { name, email, message } = (await req.json()) as ContactFormData;
 
-    // 🧾 Validate inputs
+    // Validate inputs
     if (!name || !email || !message) {
       return NextResponse.json(
         { error: "All fields are required. Please fill out the form completely." },
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✉️ Configure mail transporter
+    // Configure mail transporter
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       },
     });
 
-    // 🌿 Themed HTML email
+    // Themed HTML email
     const htmlContent = `
       <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
         <h1 style="color: #16a34a; text-align: center; margin-bottom: 8px;">HNU Clinic</h1>
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    // 📤 Mail configuration
+    // Mail configuration
     const mailOptions = {
       from: `"HNU Clinic Contact Form" <${process.env.EMAIL_USER}>`,
       replyTo: email,
@@ -66,27 +66,27 @@ export async function POST(req: Request) {
       html: htmlContent,
     };
 
-    // 🚀 Send email
+    // Send email
     const info: SentMessageInfo = await transporter.sendMail(mailOptions);
 
-    console.log("✅ Email sent:", info.messageId);
+    console.log("Email sent:", info.messageId);
 
     return NextResponse.json({
-      message: "✅ Message sent successfully! Thank you for contacting HNU Clinic.",
+      message: "Message sent successfully! Thank you for contacting HNU Clinic.",
     });
   } catch (error) {
-    // 🧠 Type-safe error handling
+    // Type-safe error handling
     if (error instanceof Error) {
-      console.error("❌ Email error:", error.message);
+      console.error("Email error:", error.message);
       return NextResponse.json(
-        { error: `❌ Failed to send message: ${error.message}` },
+        { error: `Failed to send message: ${error.message}` },
         { status: 500 }
       );
     }
 
-    console.error("❌ Unknown error occurred while sending email.");
+    console.error("Unknown error occurred while sending email.");
     return NextResponse.json(
-      { error: "❌ An unexpected error occurred. Please try again later." },
+      { error: "An unexpected error occurred. Please try again later." },
       { status: 500 }
     );
   }

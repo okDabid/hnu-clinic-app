@@ -2,7 +2,9 @@ import nodemailer from "nodemailer";
 
 let cachedTransporter: nodemailer.Transporter | null = null;
 
-// 🔄 Reuse SMTP connection (for performance)
+/**
+ * Returns a cached Nodemailer transporter instance to avoid repeated setup.
+ */
 async function getTransporter() {
     if (cachedTransporter) return cachedTransporter;
 
@@ -54,9 +56,9 @@ export async function sendEmail({
 
     try {
         await transporter.verify();
-        console.log("✅ Gmail transporter ready");
+        console.log("Gmail transporter ready");
     } catch (verifyErr) {
-        console.error("⚠️ Gmail transporter verify failed:", verifyErr);
+        console.error("Gmail transporter verification failed:", verifyErr);
     }
 
     try {
@@ -66,9 +68,9 @@ export async function sendEmail({
             subject,
             html,
         });
-        console.log("📧 Email sent:", info.messageId);
+        console.log("Email sent:", info.messageId);
     } catch (err) {
-        console.error("❌ Email send failed, retrying once:", err);
+        console.error("Email send failed, retrying once:", err);
         await new Promise((res) => setTimeout(res, 2000));
         const info = await transporter.sendMail({
             from: `"${fromName}" <${EMAIL_USER}>`,
@@ -76,6 +78,6 @@ export async function sendEmail({
             subject,
             html,
         });
-        console.log("📧 Email sent after retry:", info.messageId);
+        console.log("Email sent after retry:", info.messageId);
     }
 }

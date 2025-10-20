@@ -3,10 +3,13 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { AccountStatus } from "@prisma/client";
 
+/**
+ * Guards protected routes by validating the session token and role access.
+ */
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // ⛔️ Allow all public and auth routes without token
+    // Allow all public and auth routes without token
     const publicPaths = [
         "/login",
         "/forgot-password",
@@ -20,10 +23,10 @@ export async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // ✅ Extract session token
+    // Extract session token
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-    // ⛔️ No token → redirect to login page
+    // No token → redirect to login page
     if (!token) {
         // For API routes, return 401 JSON instead of redirect
         if (pathname.startsWith("/api")) {
@@ -35,11 +38,11 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // ✅ If token exists
+    // If token exists
     const role = token.role as string | undefined;
     const status = token.status as AccountStatus | undefined;
 
-    // 🚫 Block inactive users
+    // Block inactive users
     if (status === "Inactive") {
         if (pathname.startsWith("/api")) {
             return NextResponse.json(
@@ -50,7 +53,7 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/login?error=inactive", req.url));
     }
 
-    // 🔐 Role-based route guards
+    // Role-based route guards
     const roleGuardMap: Record<string, string> = {
         "/nurse": "NURSE",
         "/doctor": "DOCTOR",
@@ -71,11 +74,11 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    // ✅ Allow if all checks pass
+    // Allow if all checks pass
     return NextResponse.next();
 }
 
-// ✅ Apply only to protected routes
+// Apply only to protected routes
 export const config = {
     matcher: [
         "/nurse/:path*",

@@ -11,8 +11,8 @@ declare module "next-auth" {
     }
 
     interface User extends DefaultUser {
-        id: string;       // ✅ add id
-        role: string;     // ✅ make required
+        id: string;       // add id
+        role: string;     // make required
         name?: string | null;
     }
 }

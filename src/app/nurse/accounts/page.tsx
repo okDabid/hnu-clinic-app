@@ -42,7 +42,7 @@ import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
-// 🔹 Types aligned with API
+// Types aligned with API
 type User = {
     user_id: string;
     accountId: string;
@@ -128,7 +128,7 @@ export default function NurseAccountsPage() {
     const [specialization, setSpecialization] = useState<"Physician" | "Dentist" | null>(null);
 
 
-    // 🔹 Fetch users (deduplicated but allows same visible ID across different roles)
+    // Fetch users (deduplicated but allows same visible ID across different roles)
     async function loadUsers() {
         try {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
@@ -139,7 +139,7 @@ export default function NurseAccountsPage() {
                 return;
             }
 
-            // ✅ Deduplicate by combo of accountId + role (unique user in DB)
+            // Deduplicate by combo of accountId + role (unique user in DB)
             const seen = new Set<string>();
             const usersData: User[] = [];
 
@@ -164,7 +164,7 @@ export default function NurseAccountsPage() {
                 }
             }
 
-            // ✅ Sort by role then ID
+            // Sort by role then ID
             const sorted = orderBy(
                 usersData,
                 [
@@ -185,7 +185,7 @@ export default function NurseAccountsPage() {
     }
 
 
-    // 🔹 Fetch own profile
+    // Fetch own profile
     const loadProfile = useCallback(async () => {
         try {
             const res = await fetch("/api/nurse/accounts/me", {
@@ -200,7 +200,7 @@ export default function NurseAccountsPage() {
                 return;
             }
 
-            // 🩸 Normalize blood type no matter what format the backend sends
+            // Normalize blood type no matter what format the backend sends
             const bloodTypeValue =
                 typeof data.profile?.bloodtype === "string"
                     ? bloodTypeEnumMap[data.profile.bloodtype] || data.profile.bloodtype
@@ -226,7 +226,7 @@ export default function NurseAccountsPage() {
                 emergencyco_relation: data.profile?.emergencyco_relation || "",
             };
 
-            // ✅ Save to both profile states
+            // Save to both profile states
             setProfile(newProfile);
             setOriginalProfile(newProfile); // store the original snapshot for DOB lock
         } catch (err) {
@@ -250,7 +250,7 @@ export default function NurseAccountsPage() {
             u.fullName.toLowerCase().includes(search.toLowerCase())
     );
 
-    // 🔹 Create user
+    // Create user
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -314,7 +314,7 @@ export default function NurseAccountsPage() {
         }
     }
 
-    // 🔹 Update own profile
+    // Update own profile
     async function handleProfileUpdate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
@@ -343,7 +343,7 @@ export default function NurseAccountsPage() {
 
         setProfile(updatedProfile);
 
-        // 🧩 If user is trying to set DOB for the first time but hasn't confirmed yet
+        // If user is trying to set DOB for the first time but hasn't confirmed yet
         if (!updatedProfile.date_of_birth && tempDOB) {
             setShowDOBConfirm(true);
             return;
@@ -357,7 +357,7 @@ export default function NurseAccountsPage() {
                 bloodtype: reverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
             };
 
-            // 🔒 Prevent DOB modification if it was already set
+            // Prevent DOB modification if it was already set
             if (originalProfile?.date_of_birth) {
                 payload.date_of_birth = originalProfile.date_of_birth;
             }
@@ -408,7 +408,7 @@ export default function NurseAccountsPage() {
     );
 
 
-    // 🔹 Toggle status
+    // Toggle status
     async function handleToggle(user_id: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
         try {
@@ -421,12 +421,12 @@ export default function NurseAccountsPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                // ❌ Backend returned an error (e.g., 403)
+                // Backend returned an error (e.g., 403)
                 toast.error(data.error || "Failed to update user status", { position: "top-center" });
                 return;
             }
 
-            // ✅ Successful update
+            // Successful update
             toast.success(data.message || `User ${newStatus}`, { position: "top-center" });
             loadUsers();
         } catch (err) {
@@ -501,7 +501,7 @@ export default function NurseAccountsPage() {
                                                 You can only set this once. Once saved, it cannot be changed.
                                             </p>
 
-                                            {/* 🔒 Confirmation Dialog (shown only when user saves) */}
+                                            {/* Confirmation Dialog (shown only when user saves) */}
                                             <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
                                                 <AlertDialogContent className="max-w-sm sm:max-w-md">
                                                     <AlertDialogHeader>
@@ -547,7 +547,7 @@ export default function NurseAccountsPage() {
                                                                 setProfile(updatedProfile);
                                                                 setShowDOBConfirm(false);
 
-                                                                // ✅ Immediately save to the DB
+                                                                // Immediately save to the DB
                                                                 try {
                                                                     setProfileLoading(true);
                                                                     const payload = {

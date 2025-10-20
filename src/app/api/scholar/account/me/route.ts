@@ -182,7 +182,7 @@ export async function PUT(req: Request) {
                 { status: 404 }
             );
 
-        // 🔒 Prevent changing DOB once set
+        // Prevent changing DOB once set
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existingProfile.date_of_birth ?? null;
 
@@ -193,7 +193,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // 🧱 Build update data (without using any)
+        // Build update data (without using any)
         const data = buildStudentUpdateInput(profile);
         if (existingDOB && "date_of_birth" in data) {
             delete data.date_of_birth;

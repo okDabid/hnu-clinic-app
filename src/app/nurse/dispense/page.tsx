@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { formatManilaDateTime } from "@/lib/time";
 
-// 🔹 Extend Dispense type to include batch usage
+// Extend Dispense type to include batch usage
 type Dispense = {
     dispense_id: string;
     quantity: number;

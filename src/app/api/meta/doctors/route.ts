@@ -18,7 +18,7 @@ export async function GET(req: Request) {
             );
         }
 
-        // ✅ Get all doctors available in the clinic
+        // Get all doctors available in the clinic
         const availabilities = await prisma.doctorAvailability.findMany({
             where: { clinic_id },
             select: { doctor_user_id: true },
@@ -28,7 +28,7 @@ export async function GET(req: Request) {
         const doctorIds = availabilities.map((a) => a.doctor_user_id);
         if (doctorIds.length === 0) return NextResponse.json([]);
 
-        // ✅ Optional specialization filter based on service_type
+        // Optional specialization filter based on service_type
         let specializationFilter: "Physician" | "Dentist" | undefined;
         if (service_type) {
             if (service_type.toLowerCase().includes("dental")) {
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
             }
         }
 
-        // ✅ Fetch doctors (with optional filter)
+        // Fetch doctors (with optional filter)
         const doctors = await prisma.users.findMany({
             where: {
                 user_id: { in: doctorIds },
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
             orderBy: { username: "asc" },
         });
 
-        // ✅ Build final data (include specialization)
+        // Build final data (include specialization)
         const shaped = doctors.map((d) => ({
             user_id: d.user_id,
             name:

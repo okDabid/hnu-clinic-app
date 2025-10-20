@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Role, Gender, Prisma, BloodType } from "@prisma/client";
 
-// 🩸 Blood type mapping (text ⇄ enum)
+// Blood type mapping (text ⇄ enum)
 const bloodTypeMap: Record<string, BloodType> = {
     "A+": BloodType.A_POS,
     "A-": BloodType.A_NEG,
@@ -61,10 +61,10 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;
     if (typeof raw.emergencyco_relation === "string") data.emergencyco_relation = raw.emergencyco_relation;
 
-    // ✅ Always update email if provided
+    // Always update email if provided
     if (typeof raw.email === "string") data.email = raw.email.trim();
 
-    // ✅ Convert "A+" → enum
+    // Convert "A+" → enum
     if (typeof raw.bloodtype === "string") {
         const mapped =
             bloodTypeMap[raw.bloodtype] ||
@@ -144,17 +144,17 @@ export async function PUT(req: Request) {
         if (user.role !== Role.NURSE || !user.employee)
             return NextResponse.json({ error: "Not a nurse" }, { status: 403 });
 
-        // 🧱 Build update data
+        // Build update data
         const data = buildEmployeeUpdateInput(profile);
 
-        // 🔒 Prevent modifying DOB if already set
+        // Prevent modifying DOB if already set
         if (user.employee.date_of_birth && data.date_of_birth) {
             delete data.date_of_birth;
         }
 
         const current = user.employee;
 
-        // 🧠 Prevent duplicate or blank email updates
+        // Prevent duplicate or blank email updates
         if (
             typeof data.email === "string" &&
             (data.email.trim() === "" || data.email === current.email)
@@ -162,7 +162,7 @@ export async function PUT(req: Request) {
             delete data.email;
         }
 
-        // 🧠 Prevent duplicate or blank contact updates
+        // Prevent duplicate or blank contact updates
         if (
             typeof data.contactno === "string" &&
             (data.contactno.trim() === "" || data.contactno === current.contactno)
@@ -170,7 +170,7 @@ export async function PUT(req: Request) {
             delete data.contactno;
         }
 
-        // 🪵 Debug log
+        // Debug log
         console.log("[Employee Update Data]", data);
 
         // No actual changes?

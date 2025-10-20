@@ -7,7 +7,7 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params; // ✅ must await
+        const { id } = await params; // must await
 
         if (!id) {
             return NextResponse.json({ error: "Clinic ID is required" }, { status: 400 });
@@ -47,7 +47,7 @@ export async function PUT(
             return NextResponse.json({ error: "No fields provided to update" }, { status: 400 });
         }
 
-        // ✅ Prevent renaming to an existing clinic
+        // Prevent renaming to an existing clinic
         if (clinic_name) {
             const duplicate = await prisma.clinic.findFirst({
                 where: { clinic_name, NOT: { clinic_id: id } },

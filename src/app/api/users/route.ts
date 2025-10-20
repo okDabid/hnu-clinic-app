@@ -61,16 +61,16 @@ export async function POST(req: Request) {
             createdId = username;
         }
 
-        // 1️⃣ Create User first
+        // Create User first
         const user = await prisma.users.create({
             data: {
                 username: username!,
                 password: hashedPassword,
-                role, // ✅ now typed as Role
+                role, // now typed as Role
             },
         });
 
-        // 2️⃣ Attach profile
+        // Attach profile
         let finalId = createdId;
 
         if (role === "NURSE" || role === "DOCTOR") {
@@ -183,7 +183,7 @@ export async function PATCH(req: Request) {
 
         await prisma.users.update({
             where: { user_id: userId },
-            data: { status }, // ✅ typed properly
+            data: { status }, // typed properly
         });
 
         return NextResponse.json({ success: true });

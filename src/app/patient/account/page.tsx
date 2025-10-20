@@ -32,7 +32,7 @@ import { AccountPasswordResult } from "@/components/account/account-password-dia
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
 
-// ✅ Enum ↔ Label Mappings
+// Enum ↔ Label Mappings
 const departmentEnumMap: Record<string, string> = {
     EDUCATION: "College of Education",
     ARTS_AND_SCIENCES: "College of Arts and Sciences",
@@ -78,7 +78,7 @@ const reverseBloodTypeEnumMap = Object.fromEntries(
     Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
 );
 
-// ✅ Type Definition
+// Type Definition
 type Profile = {
     user_id: string;
     username: string;
@@ -103,7 +103,7 @@ type Profile = {
     emergencyco_relation?: string | null;
 };
 
-// ✅ Options
+// Options
 const departmentOptions = [
     "College of Education",
     "College of Arts and Sciences",
@@ -417,7 +417,7 @@ export default function PatientAccountPage() {
                                                     You can only set this once. Once saved, it cannot be changed.
                                                 </p>
                     
-                                                {/* 🔒 Confirmation Dialog (only shows when user confirms) */}
+                                                {/* Confirmation Dialog (only shows when user confirms) */}
                                                 <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
                                                     <AlertDialogContent className="max-w-sm rounded-3xl border border-green-100/80 bg-white/95 sm:max-w-md">
                                                         <AlertDialogHeader>
@@ -463,7 +463,7 @@ export default function PatientAccountPage() {
                                                                     setProfile(updatedProfile);
                                                                     setShowDOBConfirm(false);
 
-                                                                    // ✅ Immediately save to the DB
+                                                                    // Immediately save to the DB
                                                                     try {
                                                                         setProfileLoading(true);
                                                                         const payload = {
@@ -510,7 +510,7 @@ export default function PatientAccountPage() {
                                     <div><Label className="block mb-1 font-medium">Last Name</Label><Input value={profile.lname} onChange={(e) => setProfile({ ...profile, lname: e.target.value })} /></div>
                                 </div>
                     
-                                {/* 🎓 Student Academic Info */}
+                                {/* Student Academic Info */}
                                 {profileType === "student" && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
@@ -576,7 +576,7 @@ export default function PatientAccountPage() {
                                     </div>
                                 )}
                     
-                                {/* 💼 Employee Info */}
+                                {/* Employee Info */}
                                 {profileType === "employee" && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>

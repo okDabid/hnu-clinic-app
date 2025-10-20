@@ -5,7 +5,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// ✅ Request validation schema
+// Request validation schema
 const BodySchema = z.object({
     oldPassword: z.string().min(1, "Current password is required."),
     newPassword: z
@@ -18,7 +18,7 @@ const BodySchema = z.object({
         .refine((s) => /[^\w\s]/.test(s), "Must contain a symbol."),
 });
 
-// ✅ PUT handler
+// PUT handler
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -39,13 +39,13 @@ export async function PUT(req: Request) {
 
         const { oldPassword, newPassword } = parsed.data;
 
-        // 🔎 Fetch user
+        // Fetch user
         const user = await prisma.users.findUnique({ where: { user_id: userId } });
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // ✅ Verify old password
+        // Verify old password
         const oldPasswordValid = await bcrypt.compare(oldPassword, user.password);
         if (!oldPasswordValid) {
             return NextResponse.json(
@@ -54,7 +54,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // ❌ Prevent reusing the same password
+        // Prevent reusing the same password
         const isSamePassword = await bcrypt.compare(newPassword, user.password);
         if (isSamePassword) {
             return NextResponse.json(
@@ -63,7 +63,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // ✅ Hash and update password
+        // Hash and update password
         const newHash = await bcrypt.hash(newPassword, 12);
         await prisma.users.update({
             where: { user_id: userId },
@@ -80,10 +80,10 @@ export async function PUT(req: Request) {
     }
 }
 
-// ✅ Add GET handler for debugging
+// Add GET handler for debugging
 export async function GET() {
     return NextResponse.json({ message: "Password route is live" });
 }
 
-// ✅ Ensure bcrypt runs on Node runtime (not edge)
+// Ensure bcrypt runs on Node runtime (not edge)
 export const runtime = "nodejs";

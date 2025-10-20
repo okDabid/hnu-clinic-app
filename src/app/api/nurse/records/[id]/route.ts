@@ -4,7 +4,7 @@ import { patientRecordPatchSchema, updatePatientRecordEntry } from "@/lib/patien
 
 export async function PATCH(
     req: Request,
-    { params }: { params: Promise<{ id: string }> } // ✅ FIXED for Next.js 14+
+    { params }: { params: Promise<{ id: string }> } // FIXED for Next.js 14+
 ) {
     try {
         // Must await params in Next.js 14 dynamic routes

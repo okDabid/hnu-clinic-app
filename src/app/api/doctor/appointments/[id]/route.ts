@@ -162,13 +162,13 @@ function shapeResponse(appointment: {
     };
 }
 
-// ✅ Use Promise in context parameter (Next.js 14+ correct typing)
+// Use Promise in context parameter (Next.js 14+ correct typing)
 export async function PATCH(
     request: Request,
     context: { params: Promise<{ id: string }> }
 ) {
     try {
-        // ✅ Await the promise for params
+        // Await the promise for params
         const { id } = await context.params;
 
         const session = await getServerSession(authOptions);
@@ -417,7 +417,7 @@ export async function PATCH(
             return NextResponse.json({ message: "Appointment cancelled" });
         }
 
-        // ✅ Map frontend actions to Prisma enum
+        // Map frontend actions to Prisma enum
         let newStatus: AppointmentStatus;
         switch (action) {
             case "approve":
@@ -430,7 +430,7 @@ export async function PATCH(
                 return NextResponse.json({ error: "Invalid action" }, { status: 400 });
         }
 
-        // ✅ Update appointment and include relations
+        // Update appointment and include relations
         const updated = await prisma.appointment.update({
             where: { appointment_id: id },
             data: {

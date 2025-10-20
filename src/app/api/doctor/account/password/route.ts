@@ -22,7 +22,7 @@ export async function PUT(req: Request) {
             );
         }
 
-        // 🔹 Fetch doctor user
+        // Fetch doctor user
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
         });
@@ -35,13 +35,13 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Forbidden: Not a doctor" }, { status: 403 });
         }
 
-        // 🔹 Check old password
+        // Check old password
         const isValid = await bcrypt.compare(oldPassword, user.password);
         if (!isValid) {
             return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
         }
 
-        // 🔹 Hash and update new password
+        // Hash and update new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await prisma.users.update({
             where: { user_id: user.user_id },
