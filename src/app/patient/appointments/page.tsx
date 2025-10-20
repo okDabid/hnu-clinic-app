@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     AlertCircle,
     Ban,
@@ -50,6 +50,9 @@ import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { fetchJson } from "@/lib/fetch-json";
+import { useCachedResource } from "@/hooks/use-cached-resource";
+import { CacheEntry, getCacheEntry, setCacheEntry } from "@/lib/cache";
 
 type Clinic = { clinic_id: string; clinic_name: string };
 type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
@@ -76,6 +79,11 @@ function toInputDate(date: Date): string {
 }
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+const CLINICS_CACHE_TTL = 12 * 60 * 60 * 1000; // 12 hours
+const DOCTORS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const AVAILABILITY_CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+const APPOINTMENTS_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
 function computeMinBookingDate(): string {
     const base = manilaNow();
@@ -191,13 +199,32 @@ export default function PatientAppointmentsPage() {
     }, []);
 
     // Form state
-    const [clinics, setClinics] = useState<Clinic[]>([]);
-    const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const fetchClinics = useCallback(
+        () =>
+            fetchJson<Clinic[]>("/api/meta/clinics", {
+                credentials: "same-origin",
+                timeout: 12000,
+            }),
+        []
+    );
+
+    const {
+        data: clinicData,
+        loading: loadingClinics,
+        error: clinicsError,
+    } = useCachedResource<Clinic[]>({
+        cacheKey: "meta:clinics",
+        fetcher: fetchClinics,
+        ttl: CLINICS_CACHE_TTL,
+        storage: "local",
+    });
+
+    const clinics = useMemo(() => clinicData ?? [], [clinicData]);
+
     const [doctorAvailability, setDoctorAvailability] = useState<
         Record<string, { slots: Slot[]; loading: boolean; error: string | null }>
     >({});
-    const [loadingClinics, setLoadingClinics] = useState(true);
-    const [loadingDoctors, setLoadingDoctors] = useState(false);
+
     const [submitting, setSubmitting] = useState(false);
 
     const [clinicId, setClinicId] = useState("");
@@ -206,9 +233,78 @@ export default function PatientAppointmentsPage() {
     const [date, setDate] = useState<string>("");
     const [timeStart, setTimeStart] = useState<string>("");
 
+    const fetchDoctors = useCallback(() => {
+        if (!clinicId) return Promise.resolve<Doctor[]>([]);
+        const params = new URLSearchParams({ clinic_id: clinicId });
+        return fetchJson<Doctor[]>(`/api/meta/doctors?${params.toString()}`, {
+            credentials: "same-origin",
+            timeout: 12000,
+        });
+    }, [clinicId]);
+
+    const {
+        data: doctorData,
+        loading: loadingDoctorsRaw,
+        error: doctorsError,
+    } = useCachedResource<Doctor[]>({
+        cacheKey: clinicId ? `meta:doctors:${clinicId}` : "meta:doctors:unselected",
+        fetcher: fetchDoctors,
+        enabled: Boolean(clinicId),
+        ttl: DOCTORS_CACHE_TTL,
+        storage: "session",
+    });
+
+    const doctors = useMemo(() => (clinicId ? doctorData ?? [] : []), [clinicId, doctorData]);
+    const loadingDoctors = clinicId ? loadingDoctorsRaw : false;
+
     // My appointments
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
-    const [loadingAppointments, setLoadingAppointments] = useState(true);
+    const fetchAppointments = useCallback(
+        () =>
+            fetchJson<Appointment[]>("/api/patient/appointments", {
+                credentials: "same-origin",
+                timeout: 15000,
+            }),
+        []
+    );
+
+    const {
+        data: appointmentData,
+        loading: loadingAppointments,
+        error: appointmentsError,
+        refresh: refreshAppointments,
+    } = useCachedResource<Appointment[]>({
+        cacheKey: "patient:appointments",
+        fetcher: fetchAppointments,
+        ttl: APPOINTMENTS_CACHE_TTL,
+        storage: "session",
+    });
+
+    const appointments = useMemo(() => appointmentData ?? [], [appointmentData]);
+
+    useEffect(() => {
+        if (clinicsError) {
+            toast.error(clinicsError.message || "Failed to load clinics", {
+                description: "Using any cached data that may be available.",
+            });
+        }
+    }, [clinicsError]);
+
+    useEffect(() => {
+        if (doctorsError) {
+            toast.error(doctorsError.message || "Failed to load doctors", {
+                description: "Check your connection or try another clinic.",
+            });
+        }
+    }, [doctorsError]);
+
+    useEffect(() => {
+        if (appointmentsError) {
+            toast.error(appointmentsError.message || "Could not load your appointments", {
+                description: "We will keep any cached details visible while offline.",
+            });
+        }
+    }, [appointmentsError]);
+
     const [searchAppointments, setSearchAppointments] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
 
@@ -303,7 +399,7 @@ export default function PatientAppointmentsPage() {
             }
             toast.success("Appointment rescheduled");
             closeRescheduleDialog();
-            loadAppointments();
+            void loadAppointments();
         } catch {
             toast.error("Unable to reschedule appointment");
         } finally {
@@ -338,51 +434,13 @@ export default function PatientAppointmentsPage() {
             }
             toast.success("Appointment cancelled");
             closeCancelDialog();
-            loadAppointments();
+            void loadAppointments();
         } catch {
             toast.error("Unable to cancel appointment");
         } finally {
             setCancelSubmitting(false);
         }
     }
-
-    // Load clinics
-    useEffect(() => {
-        (async () => {
-            try {
-                setLoadingClinics(true);
-                const res = await fetch("/api/meta/clinics");
-                const data = await res.json();
-                setClinics(data);
-            } catch {
-                toast.error("Failed to load clinics");
-            } finally {
-                setLoadingClinics(false);
-            }
-        })();
-    }, []);
-
-    // Load doctors
-    useEffect(() => {
-        if (!clinicId) {
-            setDoctors([]);
-            setDoctorId("");
-            return;
-        }
-        (async () => {
-            try {
-                setLoadingDoctors(true);
-                const params = new URLSearchParams({ clinic_id: clinicId });
-                const res = await fetch(`/api/meta/doctors?${params}`);
-                const data = await res.json();
-                setDoctors(data);
-            } catch {
-                toast.error("Failed to load doctors");
-            } finally {
-                setLoadingDoctors(false);
-            }
-        })();
-    }, [clinicId]);
 
     // Load availability for doctors when clinic/date change
     useEffect(() => {
@@ -404,57 +462,81 @@ export default function PatientAppointmentsPage() {
             return;
         }
 
-        let cancelled = false;
+        type CachedAvailability = { slots: Slot[] };
 
-        setDoctorAvailability((prev) => {
-            const next: typeof prev = {};
-            doctors.forEach((doctor) => {
-                const existing = prev[doctor.user_id];
-                next[doctor.user_id] = {
-                    slots: existing?.slots ?? [],
-                    loading: true,
-                    error: null,
-                };
-            });
-            return next;
-        });
+        const fetchTargets: Array<{
+            doctor: Doctor;
+            cacheKey: string;
+            cached: CacheEntry<CachedAvailability> | null;
+        }> = [];
 
-        const loadAvailability = async (doctor: Doctor) => {
-            try {
-                const params = new URLSearchParams({
-                    clinic_id: clinicId,
-                    doctor_user_id: doctor.user_id,
-                    date,
-                });
-                const res = await fetch(`/api/meta/doctor-availability?${params}`);
-                const data = await res.json();
-
-                if (cancelled) return;
-
-                setDoctorAvailability((prev) => ({
-                    ...prev,
-                    [doctor.user_id]: {
-                        slots: data?.slots || [],
-                        loading: false,
-                        error: null,
-                    },
-                }));
-            } catch {
-                if (cancelled) return;
-
-                setDoctorAvailability((prev) => ({
-                    ...prev,
-                    [doctor.user_id]: {
-                        slots: [],
-                        loading: false,
-                        error: "Failed to load availability",
-                    },
-                }));
-            }
-        };
+        const initialState: Record<string, { slots: Slot[]; loading: boolean; error: string | null }> = {};
 
         doctors.forEach((doctor) => {
-            void loadAvailability(doctor);
+            const cacheKey = `doctor-availability:${clinicId}:${doctor.user_id}:${date}`;
+            const cached = getCacheEntry<CachedAvailability>(cacheKey, "session");
+            const expired = cached ? Date.now() > cached.timestamp + cached.ttl : false;
+
+            initialState[doctor.user_id] = {
+                slots: cached?.value.slots ?? [],
+                loading: !cached || expired,
+                error: null,
+            };
+
+            if (!cached || expired) {
+                fetchTargets.push({ doctor, cacheKey, cached });
+            }
+        });
+
+        setDoctorAvailability(initialState);
+
+        if (fetchTargets.length === 0) {
+            return;
+        }
+
+        let cancelled = false;
+
+        fetchTargets.forEach(({ doctor, cacheKey, cached }) => {
+            const params = new URLSearchParams({
+                clinic_id: clinicId,
+                doctor_user_id: doctor.user_id,
+                date,
+            });
+
+            fetchJson<{ slots: Slot[] }>(`/api/meta/doctor-availability?${params.toString()}`, {
+                credentials: "same-origin",
+                timeout: 12000,
+            })
+                .then((data) => {
+                    if (cancelled) return;
+                    const slots = Array.isArray(data?.slots) ? data.slots : [];
+                    setDoctorAvailability((prev) => ({
+                        ...prev,
+                        [doctor.user_id]: {
+                            slots,
+                            loading: false,
+                            error: null,
+                        },
+                    }));
+                    setCacheEntry(cacheKey, { slots }, AVAILABILITY_CACHE_TTL, "session");
+                })
+                .catch((error) => {
+                    if (cancelled) return;
+                    const fallbackSlots = cached?.value.slots ?? [];
+                    setDoctorAvailability((prev) => ({
+                        ...prev,
+                        [doctor.user_id]: {
+                            slots: fallbackSlots,
+                            loading: false,
+                            error:
+                                fallbackSlots.length > 0
+                                    ? "Showing cached availability (may be outdated)"
+                                    : error instanceof Error
+                                      ? error.message || "Failed to load availability"
+                                      : "Failed to load availability",
+                        },
+                    }));
+                });
         });
 
         return () => {
@@ -522,23 +604,60 @@ export default function PatientAppointmentsPage() {
             return;
         }
 
-        (async () => {
-            try {
-                setLoadingRescheduleSlots(true);
-                const params = new URLSearchParams({
-                    clinic_id: rescheduleTarget.clinicId,
-                    doctor_user_id: rescheduleTarget.doctorId,
-                    date: rescheduleDate,
-                });
-                const res = await fetch(`/api/meta/doctor-availability?${params}`);
-                const data = await res.json();
-                setRescheduleSlots(data?.slots || []);
-            } catch {
-                toast.error("Failed to load reschedule slots");
-            } finally {
-                setLoadingRescheduleSlots(false);
-            }
-        })();
+        const cacheKey = `doctor-availability:${rescheduleTarget.clinicId}:${rescheduleTarget.doctorId}:${rescheduleDate}`;
+        const cached = getCacheEntry<{ slots: Slot[] }>(cacheKey, "session");
+        const expired = cached ? Date.now() > cached.timestamp + cached.ttl : false;
+
+        if (cached && !expired) {
+            setRescheduleSlots(cached.value.slots ?? []);
+            setLoadingRescheduleSlots(false);
+            return;
+        }
+
+        if (cached && expired) {
+            setRescheduleSlots(cached.value.slots ?? []);
+        } else {
+            setRescheduleSlots([]);
+        }
+
+        let cancelled = false;
+        setLoadingRescheduleSlots(true);
+
+        const params = new URLSearchParams({
+            clinic_id: rescheduleTarget.clinicId,
+            doctor_user_id: rescheduleTarget.doctorId,
+            date: rescheduleDate,
+        });
+
+        fetchJson<{ slots: Slot[] }>(`/api/meta/doctor-availability?${params.toString()}`, {
+            credentials: "same-origin",
+            timeout: 12000,
+        })
+            .then((data) => {
+                if (cancelled) return;
+                const slots = Array.isArray(data?.slots) ? data.slots : [];
+                setRescheduleSlots(slots);
+                setCacheEntry(cacheKey, { slots }, AVAILABILITY_CACHE_TTL, "session");
+            })
+            .catch((error) => {
+                if (cancelled) return;
+                if (cached?.value.slots?.length) {
+                    toast.warning("Showing cached reschedule slots", {
+                        description: "Connection issues prevented fetching the latest availability.",
+                    });
+                } else {
+                    toast.error(error instanceof Error ? error.message || "Failed to load reschedule slots" : "Failed to load reschedule slots");
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoadingRescheduleSlots(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [rescheduleTarget, rescheduleDate]);
 
     // Dynamic service options: each label has a unique value
@@ -595,7 +714,7 @@ export default function PatientAppointmentsPage() {
             }
 
             toast.success("Appointment request submitted! Status: Pending");
-            loadAppointments();
+            void loadAppointments();
 
             setClinicId("");
             setDoctorId("");
@@ -609,24 +728,9 @@ export default function PatientAppointmentsPage() {
         }
     }
 
-    // Fetch appointments
-    async function loadAppointments() {
-        try {
-            setLoadingAppointments(true);
-            const res = await fetch("/api/patient/appointments");
-            if (!res.ok) throw new Error("Failed to load appointments");
-            const data = await res.json();
-            setAppointments(Array.isArray(data) ? data : []);
-        } catch {
-            toast.error("Could not load your appointments");
-        } finally {
-            setLoadingAppointments(false);
-        }
-    }
-
-    useEffect(() => {
-        loadAppointments();
-    }, []);
+    const loadAppointments = useCallback(() => {
+        return refreshAppointments({ ignoreCache: true, silent: false }).catch(() => null);
+    }, [refreshAppointments]);
 
     const appointmentSearch = searchAppointments.trim().toLowerCase();
 

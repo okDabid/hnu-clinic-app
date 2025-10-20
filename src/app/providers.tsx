@@ -4,6 +4,8 @@ import { ReactNode, useEffect } from "react";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { Toaster, toast } from "sonner";
 
+import { NetworkStatusToast } from "@/components/ui/network-status-toast";
+
 /**
  * Monitors the session and signs out users whose accounts become inactive.
  */
@@ -51,6 +53,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         <SessionProvider>
             {children}
             <Toaster richColors position="top-center" />
+            <NetworkStatusToast />
             <SessionWatcher /> {/* runs globally */}
         </SessionProvider>
     );
