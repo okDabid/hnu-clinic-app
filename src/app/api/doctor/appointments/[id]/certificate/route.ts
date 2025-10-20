@@ -139,16 +139,16 @@ function renderCertificateHtml(context: CertificateContext) {
     const introLine =
         context.certificateType === "dental"
             ? `This is to certify that <strong>${escapeHtml(
-                  context.patientName
-              )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Health Services Department.`
+                context.patientName
+            )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Health Services Department.`
             : `This is to certify that <strong>${escapeHtml(
-                  context.patientName
-              )}</strong>, a student of Holy Name University, was examined at the Health Services Department.`;
+                context.patientName
+            )}</strong>, a student of Holy Name University, was examined at the Health Services Department.`;
 
     const assessmentLine = context.diagnosis
         ? `The assessment was noted as <strong>${escapeHtml(
-              context.diagnosis
-          )}</strong>.`
+            context.diagnosis
+        )}</strong>.`
         : `The assessment findings are on record with the attending clinician.`;
 
     const recommendationLine = context.findings
@@ -333,29 +333,29 @@ function renderCertificateHtml(context: CertificateContext) {
         <div class="section-title">Patient Information</div>
         <div class="details">
           <div class="detail-line"><span class="detail-label">Name:</span><span class="detail-value">${escapeHtml(
-              context.patientName
-          )}</span></div>
+        context.patientName
+    )}</span></div>
           <div class="detail-line"><span class="detail-label">Age:</span><span class="detail-value">${escapeHtml(
-              context.age || "Not provided"
-          )}</span></div>
+        context.age || "Not provided"
+    )}</span></div>
           <div class="detail-line"><span class="detail-label">Sex:</span><span class="detail-value">${escapeHtml(
-              context.sex || "Not provided"
-          )}</span></div>
+        context.sex || "Not provided"
+    )}</span></div>
           <div class="detail-line"><span class="detail-label">Student status:</span><span class="detail-value">${escapeHtml(
-              context.patientType
-          )}</span></div>
+        context.patientType
+    )}</span></div>
           <div class="detail-line"><span class="detail-label">Program:</span><span class="detail-value">${escapeHtml(
-              context.program || "Not recorded"
-          )}</span></div>
+        context.program || "Not recorded"
+    )}</span></div>
           <div class="detail-line"><span class="detail-label">Year level:</span><span class="detail-value">${escapeHtml(
-              context.yearLevel || "Not recorded"
-          )}</span></div>
+        context.yearLevel || "Not recorded"
+    )}</span></div>
           <div class="detail-line"><span class="detail-label">Department:</span><span class="detail-value">${escapeHtml(
-              context.department || "Not recorded"
-          )}</span></div>
+        context.department || "Not recorded"
+    )}</span></div>
           <div class="detail-line"><span class="detail-label">Address:</span><span class="detail-value">${escapeHtml(
-              context.address || "Not recorded"
-          )}</span></div>
+        context.address || "Not recorded"
+    )}</span></div>
         </div>
       </section>
 
@@ -366,8 +366,8 @@ function renderCertificateHtml(context: CertificateContext) {
         <p class="statement">${reasonLine}</p>
         <p class="statement">Doctor's remarks: ${recommendationLine}</p>
         <p class="statement">Consultation recorded on ${escapeHtml(
-            context.consultationDate
-        )}.</p>
+        context.consultationDate
+    )}.</p>
       </section>
 
       <section>
@@ -388,8 +388,8 @@ function renderCertificateHtml(context: CertificateContext) {
       <footer>
         <span>Valid until: ${escapeHtml(formatDateLong(context.validUntil))}</span>
         <span class="certificate-id">Certificate ID: ${escapeHtml(
-            context.certificateId
-        )}</span>
+        context.certificateId
+    )}</span>
       </footer>
     </main>
   </body>
@@ -418,7 +418,13 @@ export async function GET(
         const appointmentId = params.id;
         const appointment = await prisma.appointment.findUnique({
             where: { appointment_id: appointmentId },
-            include: {
+            select: {
+                appointment_id: true,
+                patient_user_id: true,
+                doctor_user_id: true, // ✅ add this line
+                appointment_timestart: true,
+                status: true,
+
                 clinic: { select: { clinic_name: true } },
                 doctor: {
                     select: {
@@ -472,16 +478,12 @@ export async function GET(
                                 date_of_birth: true,
                                 gender: true,
                                 address: true,
-                                department: true,
                                 allergies: true,
                                 medical_cond: true,
                             },
                         },
                     },
                 },
-                patient_user_id: true,
-                status: true,
-                appointment_timestart: true,
             },
         });
 
@@ -541,24 +543,24 @@ export async function GET(
 
         const medcert = existingCert
             ? await prisma.medCert.update({
-                  where: { certificate_id: existingCert.certificate_id },
-                  data: {
-                      issue_date: now,
-                      valid_until: validity,
-                      status: MedcertStatus.Valid,
-                      issued_by_user_id: session.user.id,
-                  },
-              })
+                where: { certificate_id: existingCert.certificate_id },
+                data: {
+                    issue_date: now,
+                    valid_until: validity,
+                    status: MedcertStatus.Valid,
+                    issued_by_user_id: session.user.id,
+                },
+            })
             : await prisma.medCert.create({
-                  data: {
-                      consultation_id: appointment.consultation.consultation_id,
-                      patient_user_id: appointment.patient_user_id,
-                      issued_by_user_id: session.user.id,
-                      issue_date: now,
-                      valid_until: validity,
-                      status: MedcertStatus.Valid,
-                  },
-              });
+                data: {
+                    consultation_id: appointment.consultation.consultation_id,
+                    patient_user_id: appointment.patient_user_id,
+                    issued_by_user_id: session.user.id,
+                    issue_date: now,
+                    valid_until: validity,
+                    status: MedcertStatus.Valid,
+                },
+            });
 
         const age = computeAge(studentProfile.date_of_birth, now);
         const sex = studentProfile.gender ? titleCase(studentProfile.gender) : "";
@@ -576,10 +578,10 @@ export async function GET(
         const doctorEmployee = appointment.doctor.employee;
         const doctorName = doctorEmployee
             ? titleCase(
-                  [doctorEmployee.fname, doctorEmployee.mname, doctorEmployee.lname]
-                      .filter(Boolean)
-                      .join(" ") || appointment.doctor.username
-              )
+                [doctorEmployee.fname, doctorEmployee.mname, doctorEmployee.lname]
+                    .filter(Boolean)
+                    .join(" ") || appointment.doctor.username
+            )
             : appointment.doctor.username.startsWith("Dr.")
                 ? appointment.doctor.username
                 : `Dr. ${appointment.doctor.username}`;
@@ -650,13 +652,12 @@ export async function GET(
                 pdfBuffer instanceof ArrayBuffer
                     ? pdfBuffer
                     : pdfBuffer.buffer.slice(
-                          pdfBuffer.byteOffset,
-                          pdfBuffer.byteOffset + pdfBuffer.byteLength
-                      );
+                        pdfBuffer.byteOffset,
+                        pdfBuffer.byteOffset + pdfBuffer.byteLength
+                    );
 
-            const filename = `${
-                context.certificateType === "dental" ? "dental" : "medical"
-            }-certificate-${slugify(patientName)}.pdf`;
+            const filename = `${context.certificateType === "dental" ? "dental" : "medical"
+                }-certificate-${slugify(patientName)}.pdf`;
 
             return new Response(pdfArrayBuffer as ArrayBuffer, {
                 status: 200,
