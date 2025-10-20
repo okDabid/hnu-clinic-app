@@ -153,13 +153,28 @@ function shapeResponse(appointment: {
     };
     consultation: { consultation_id: string } | null;
 }) {
+    const patientType = appointment.patient.student
+        ? "Student"
+        : appointment.patient.employee
+            ? "Employee"
+            : "Unknown";
+
+    const timeOnly =
+        formatManilaDateTime(appointment.appointment_timestart, {
+            year: undefined,
+            month: undefined,
+            day: undefined,
+        }) ?? "";
+
     return {
         id: appointment.appointment_id,
         status: appointment.status,
         clinic: appointment.clinic.clinic_name,
-        patient: formatPatientName(appointment.patient),
-        time: formatManilaDateTime(appointment.appointment_timestart),
-        consultation: appointment.consultation?.consultation_id ?? null,
+        patientName: formatPatientName(appointment.patient),
+        date: formatManilaISODate(appointment.appointment_timestart),
+        time: timeOnly,
+        hasConsultation: Boolean(appointment.consultation),
+        patientType,
     };
 }
 

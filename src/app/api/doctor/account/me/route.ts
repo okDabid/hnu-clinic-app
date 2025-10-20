@@ -94,6 +94,7 @@ export async function GET() {
             username: user.username,
             role: user.role,
             status: user.status,
+            specialization: user.specialization ?? null,
             profile: user.employee ?? null,
         });
     } catch (err) {
