@@ -398,8 +398,10 @@ function renderCertificateHtml(context: CertificateContext) {
 
 export async function GET(
     _request: Request,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
+    const isLocal = !process.env.AWS_REGION && !process.env.VERCEL;
+    const { id } = await context.params;
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
@@ -415,7 +417,7 @@ export async function GET(
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const appointmentId = params.id;
+        const appointmentId = id;
         const appointment = await prisma.appointment.findUnique({
             where: { appointment_id: appointmentId },
             select: {
@@ -629,7 +631,11 @@ export async function GET(
         const browser = await puppeteer.launch({
             args: chromium.args,
             defaultViewport: { width: 1280, height: 720 },
-            executablePath: executablePath || undefined,
+            executablePath: isLocal
+                ? process.platform === "win32"
+                    ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+                    : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                : await chromium.executablePath(),
             headless: true,
         });
 
