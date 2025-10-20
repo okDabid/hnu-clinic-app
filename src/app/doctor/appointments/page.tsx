@@ -145,6 +145,7 @@ export default function DoctorAppointmentsPage() {
     const [newTimeStart, setNewTimeStart] = useState("");
     const [newTimeEnd, setNewTimeEnd] = useState("");
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [actionSubmitting, setActionSubmitting] = useState(false);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
 
@@ -286,6 +287,7 @@ export default function DoctorAppointmentsPage() {
         setNewDate("");
         setNewTimeStart("");
         setNewTimeEnd("");
+        setActionSubmitting(false);
     };
 
     async function handleActionSubmit() {
@@ -303,6 +305,7 @@ export default function DoctorAppointmentsPage() {
         }
 
         try {
+            setActionSubmitting(true);
             const res = await fetch(`/api/doctor/appointments/${selectedAppt.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
@@ -328,12 +331,17 @@ export default function DoctorAppointmentsPage() {
         } catch (error) {
             console.error(error);
             toast.error("Action failed");
+        } finally {
+            setActionSubmitting(false);
         }
     }
 
     const handleDialogOpenChange = (open: boolean) => {
         if (!open) {
+            if (actionSubmitting) return;
             resetDialogState();
+        } else {
+            setDialogOpen(true);
         }
     };
 
@@ -622,6 +630,7 @@ export default function DoctorAppointmentsPage() {
                                     value={newDate}
                                     onChange={(event) => setNewDate(event.target.value)}
                                     className="rounded-xl border-green-200"
+                                    disabled={actionSubmitting}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -631,6 +640,7 @@ export default function DoctorAppointmentsPage() {
                                     value={newTimeStart}
                                     onChange={(event) => setNewTimeStart(event.target.value)}
                                     className="rounded-xl border-green-200"
+                                    disabled={actionSubmitting}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -640,6 +650,7 @@ export default function DoctorAppointmentsPage() {
                                     value={newTimeEnd}
                                     onChange={(event) => setNewTimeEnd(event.target.value)}
                                     className="rounded-xl border-green-200"
+                                    disabled={actionSubmitting}
                                 />
                             </div>
                         </div>
@@ -651,17 +662,32 @@ export default function DoctorAppointmentsPage() {
                             value={reason}
                             onChange={(event) => setReason(event.target.value)}
                             className="rounded-xl border-green-200"
+                            disabled={actionSubmitting}
                         />
                     </div>
                     <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                        <Button type="button" variant="outline" className="rounded-xl" onClick={resetDialogState}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl"
+                            onClick={resetDialogState}
+                            disabled={actionSubmitting}
+                        >
                             Close
                         </Button>
                         <Button
                             className="rounded-xl bg-green-600 text-white hover:bg-green-700"
                             onClick={handleActionSubmit}
+                            disabled={actionSubmitting}
                         >
-                            Save changes
+                            {actionSubmitting ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    {actionType === "cancel" ? "Cancelling..." : "Saving..."}
+                                </>
+                            ) : (
+                                "Save changes"
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

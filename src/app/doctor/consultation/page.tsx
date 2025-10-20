@@ -49,6 +49,7 @@ type Availability = {
 
 export default function DoctorConsultationPage() {
     const [loading, setLoading] = useState(false);
+    const [savingDutyHours, setSavingDutyHours] = useState(false);
     const [slots, setSlots] = useState<Availability[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [formData, setFormData] = useState({
@@ -126,6 +127,7 @@ export default function DoctorConsultationPage() {
         const method = isEditing ? "PUT" : "POST";
 
         try {
+            setSavingDutyHours(true);
             setLoading(true);
             const res = await fetch("/api/doctor/consultation", {
                 method,
@@ -162,6 +164,7 @@ export default function DoctorConsultationPage() {
             toast.error("Failed to save duty hours");
         } finally {
             setLoading(false);
+            setSavingDutyHours(false);
         }
     }
 
@@ -285,8 +288,14 @@ export default function DoctorConsultationPage() {
                                                 disabled={loading}
                                                 className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                                             >
-                                                {loading && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                                                {editingSlot ? "Save Changes" : "Generate"}
+                                                {savingDutyHours && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                                                {savingDutyHours
+                                                    ? editingSlot
+                                                        ? "Saving..."
+                                                        : "Generating..."
+                                                    : editingSlot
+                                                        ? "Save Changes"
+                                                        : "Generate"}
                                             </Button>
                                         </DialogFooter>
                                     </form>

@@ -14,6 +14,11 @@ import {
 } from "@/lib/time";
 import { sendEmail } from "@/lib/email";
 
+const EMAIL_BACKGROUND_COLOR = "#f0fdf4";
+const EMAIL_BORDER_COLOR = "#bbf7d0";
+const EMAIL_TEXT_COLOR = "#065f46";
+const EMAIL_ACCENT_COLOR = "#047857";
+
 function escapeHtml(input: string) {
     return input
         .replace(/&/g, "&amp;")
@@ -80,7 +85,7 @@ function buildStatusEmail({
     switch (status) {
         case AppointmentStatus.Approved:
             heading = "Appointment Approved";
-            intro = `Good news, <strong>${safeName}</strong>! Your appointment has been approved.`;
+            intro = `Good news, <strong>${safeName}</strong>! <span style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Your appointment has been approved.</span>`;
             subject = "Your appointment has been approved";
             break;
         case AppointmentStatus.Cancelled:
@@ -108,16 +113,16 @@ function buildStatusEmail({
         .map(
             (row) => `
                 <tr>
-                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">${row.label}</td>
-                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${row.value}</td>
+                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">${row.label}</td>
+                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${row.value}</td>
                 </tr>
             `
         )
         .join("");
 
     const html = `
-        <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0; color: #065f46;">
-            <h2 style="margin-top: 0; color: #047857;">${heading}</h2>
+        <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: ${EMAIL_BACKGROUND_COLOR}; padding: 24px; border-radius: 16px; border: 1px solid ${EMAIL_BORDER_COLOR}; color: ${EMAIL_TEXT_COLOR};">
+            <h2 style="margin-top: 0; color: ${EMAIL_ACCENT_COLOR};">${heading}</h2>
             <p>${intro}</p>
             <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
                 <tbody>
@@ -332,23 +337,23 @@ export async function PATCH(
                 const oldSchedule = formatManilaDateTime(appointment.appointment_timestart);
                 const newSchedule = formatManilaDateTime(updated.appointment_timestart);
                 const html = `
-                    <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0; color: #065f46;">
-                        <h2 style="margin-top: 0; color: #047857;">Appointment Update</h2>
+                    <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: ${EMAIL_BACKGROUND_COLOR}; padding: 24px; border-radius: 16px; border: 1px solid ${EMAIL_BORDER_COLOR}; color: ${EMAIL_TEXT_COLOR};">
+                        <h2 style="margin-top: 0; color: ${EMAIL_ACCENT_COLOR};">Appointment Update</h2>
                         <p>Hello <strong>${escapeHtml(patientName)}</strong>,</p>
                         <p>Your appointment at <strong>${escapeHtml(updated.clinic.clinic_name)}</strong> has been moved by your doctor.</p>
                         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
                             <tbody>
                                 <tr>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">Previous Schedule</td>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${escapeHtml(oldSchedule)}</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">Previous Schedule</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${escapeHtml(oldSchedule)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">New Schedule</td>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${escapeHtml(newSchedule)}</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">New Schedule</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${escapeHtml(newSchedule)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">Doctor's Note</td>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${escapeHtml(trimmedReason)}</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">Doctor's Note</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${escapeHtml(trimmedReason)}</td>
                                 </tr>
                             </tbody>
                         </table>
