@@ -14,6 +14,11 @@ import {
 } from "@/lib/time";
 import { sendEmail } from "@/lib/email";
 
+const EMAIL_BACKGROUND_COLOR = "#f0fdf4";
+const EMAIL_BORDER_COLOR = "#bbf7d0";
+const EMAIL_TEXT_COLOR = "#065f46";
+const EMAIL_ACCENT_COLOR = "#047857";
+
 function escapeHtml(input: string) {
     return input
         .replace(/&/g, "&amp;")
@@ -49,56 +54,70 @@ function getPatientEmail(patient: {
     );
 }
 
+function formatDoctorName(doctor: {
+    username: string;
+    employee: { fname: string | null; lname: string | null } | null;
+}) {
+    if (doctor.employee?.fname && doctor.employee?.lname) {
+        return `Dr. ${doctor.employee.fname} ${doctor.employee.lname}`;
+    }
+    return doctor.username.startsWith("Dr.") ? doctor.username : `Dr. ${doctor.username}`;
+}
+
 function buildStatusEmail({
     status,
     patientName,
     clinicName,
     schedule,
+    doctorName,
     cancelReason,
 }: {
     status: AppointmentStatus;
     patientName: string;
     clinicName: string;
     schedule: string;
+    doctorName: string;
     cancelReason?: string | null;
 }): { subject: string; html: string } | null {
     const safeName = escapeHtml(patientName);
     const safeClinic = escapeHtml(clinicName);
     const safeSchedule = escapeHtml(schedule);
+    const safeDoctor = escapeHtml(doctorName);
     const safeReason = cancelReason ? escapeHtml(cancelReason) : null;
 
     const rows = [
         { label: "Clinic", value: safeClinic },
+        { label: "Doctor", value: safeDoctor },
         { label: "Schedule", value: safeSchedule },
     ];
 
     let heading = "";
     let intro = "";
-    let outro = "Thank you,<br/>HNU Clinic";
+    let outro = `Thank you,<br/>${safeDoctor}<br/>HNU Clinic`;
     let subject = "";
 
     switch (status) {
         case AppointmentStatus.Approved:
             heading = "Appointment Approved";
-            intro = `Good news, <strong>${safeName}</strong>! Your appointment has been approved.`;
+            intro = `<span style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Good news, <strong style="color: inherit;">${safeName}</strong>! <strong style="color: inherit;">${safeDoctor}</strong> has approved your appointment.</span>`;
             subject = "Your appointment has been approved";
             break;
         case AppointmentStatus.Cancelled:
             heading = "Appointment Cancelled";
-            intro = `Hello <strong>${safeName}</strong>, your appointment has been cancelled by the clinic.`;
+            intro = `<span style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Hello <strong style="color: inherit;">${safeName}</strong>, <strong style="color: inherit;">${safeDoctor}</strong> has cancelled your appointment.</span>`;
             subject = "Your appointment has been cancelled";
             if (safeReason) {
                 rows.push({ label: "Cancellation Reason", value: safeReason });
             }
             outro =
-                "If you still need assistance, please book another schedule through the patient portal.";
+                `If you still need assistance, please book another schedule through the patient portal.<br/><br/>Thank you,<br/>${safeDoctor}<br/>HNU Clinic`;
             break;
         case AppointmentStatus.Completed:
             heading = "Appointment Completed";
-            intro = `Hello <strong>${safeName}</strong>, your appointment has been marked as completed.`;
+            intro = `<span style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Hello <strong style="color: inherit;">${safeName}</strong>, <strong style="color: inherit;">${safeDoctor}</strong> has marked your appointment as completed.</span>`;
             subject = "Your appointment has been completed";
             outro =
-                "We hope you had a good visit. You can review your consultation notes and next steps inside the patient portal.";
+                `We hope you had a good visit. You can review your consultation notes and next steps inside the patient portal.<br/><br/>Thank you,<br/>${safeDoctor}<br/>HNU Clinic`;
             break;
         default:
             return null;
@@ -108,16 +127,16 @@ function buildStatusEmail({
         .map(
             (row) => `
                 <tr>
-                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">${row.label}</td>
-                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${row.value}</td>
+                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">${row.label}</td>
+                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${row.value}</td>
                 </tr>
             `
         )
         .join("");
 
     const html = `
-        <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0; color: #065f46;">
-            <h2 style="margin-top: 0; color: #047857;">${heading}</h2>
+        <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: ${EMAIL_BACKGROUND_COLOR}; padding: 24px; border-radius: 16px; border: 1px solid ${EMAIL_BORDER_COLOR}; color: ${EMAIL_TEXT_COLOR};">
+            <h2 style="margin-top: 0; color: ${EMAIL_ACCENT_COLOR};">${heading}</h2>
             <p>${intro}</p>
             <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
                 <tbody>
@@ -195,6 +214,12 @@ export async function PATCH(
                     },
                 },
                 clinic: { select: { clinic_name: true } },
+                doctor: {
+                    select: {
+                        username: true,
+                        employee: { select: { fname: true, lname: true } },
+                    },
+                },
             },
         });
 
@@ -322,38 +347,49 @@ export async function PATCH(
                     },
                     clinic: { select: { clinic_name: true } },
                     consultation: { select: { consultation_id: true } },
+                    doctor: {
+                        select: {
+                            username: true,
+                            employee: { select: { fname: true, lname: true } },
+                        },
+                    },
                 },
             });
 
             const patientName = formatPatientName(updated.patient);
-            const patientEmail = getPatientEmail(appointment.patient);
+            const patientEmail = getPatientEmail(updated.patient);
+            const doctorName = formatDoctorName(updated.doctor);
 
             if (patientEmail) {
                 const oldSchedule = formatManilaDateTime(appointment.appointment_timestart);
                 const newSchedule = formatManilaDateTime(updated.appointment_timestart);
                 const html = `
-                    <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0; color: #065f46;">
-                        <h2 style="margin-top: 0; color: #047857;">Appointment Update</h2>
-                        <p>Hello <strong>${escapeHtml(patientName)}</strong>,</p>
-                        <p>Your appointment at <strong>${escapeHtml(updated.clinic.clinic_name)}</strong> has been moved by your doctor.</p>
+                    <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: ${EMAIL_BACKGROUND_COLOR}; padding: 24px; border-radius: 16px; border: 1px solid ${EMAIL_BORDER_COLOR}; color: ${EMAIL_TEXT_COLOR};">
+                        <h2 style="margin-top: 0; color: ${EMAIL_ACCENT_COLOR};">Appointment Update</h2>
+                        <p style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Hello <strong style="color: inherit;">${escapeHtml(patientName)}</strong>, <strong style="color: inherit;">${escapeHtml(doctorName)}</strong> has updated your appointment.</p>
+                        <p>Your visit at <strong>${escapeHtml(updated.clinic.clinic_name)}</strong> has been moved.</p>
                         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
                             <tbody>
                                 <tr>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">Previous Schedule</td>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${escapeHtml(oldSchedule)}</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">Doctor</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${escapeHtml(doctorName)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">New Schedule</td>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${escapeHtml(newSchedule)}</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">Previous Schedule</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${escapeHtml(oldSchedule)}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0; font-weight: 600;">Doctor's Note</td>
-                                    <td style="padding: 8px; border: 1px solid #bbf7d0;">${escapeHtml(trimmedReason)}</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">New Schedule</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${escapeHtml(newSchedule)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR}; font-weight: 600;">Doctor's Note</td>
+                                    <td style="padding: 8px; border: 1px solid ${EMAIL_BORDER_COLOR};">${escapeHtml(trimmedReason)}</td>
                                 </tr>
                             </tbody>
                         </table>
                         <p>Please log in to your patient portal if you need to reschedule again or have any questions.</p>
-                        <p style="margin-bottom: 0;">Thank you,<br/>HNU Clinic</p>
+                        <p style="margin-bottom: 0;">Thank you,<br/>${escapeHtml(doctorName)}<br/>HNU Clinic</p>
                     </div>
                 `;
 
@@ -391,6 +427,7 @@ export async function PATCH(
                     patientName: formatPatientName(appointment.patient),
                     clinicName: appointment.clinic.clinic_name,
                     schedule: formatManilaDateTime(appointment.appointment_timestart),
+                    doctorName: formatDoctorName(appointment.doctor),
                     cancelReason: reason,
                 });
 
@@ -446,6 +483,12 @@ export async function PATCH(
                 },
                 clinic: { select: { clinic_name: true } },
                 consultation: { select: { consultation_id: true } },
+                doctor: {
+                    select: {
+                        username: true,
+                        employee: { select: { fname: true, lname: true } },
+                    },
+                },
             },
         });
 
@@ -456,6 +499,7 @@ export async function PATCH(
                 patientName: formatPatientName(updated.patient),
                 clinicName: updated.clinic.clinic_name,
                 schedule: formatManilaDateTime(updated.appointment_timestart),
+                doctorName: formatDoctorName(updated.doctor),
             });
 
             if (emailPayload) {
