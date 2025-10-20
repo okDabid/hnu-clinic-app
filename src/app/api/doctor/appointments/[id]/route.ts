@@ -292,7 +292,7 @@ export async function PATCH(
 
             if (!withinAvailability) {
                 return NextResponse.json(
-                    { error: "Selected time is outside doctor's availability" },
+                    { error: "Selected time is outside doctor's availability." },
                     { status: 400 }
                 );
             }
