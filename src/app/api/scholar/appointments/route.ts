@@ -320,7 +320,7 @@ export async function POST(req: Request) {
                 appointment_timeend,
                 remarks: remarks.length > 0 ? remarks : null,
                 service_type: service_type as ServiceType,
-                status: AppointmentStatus.Approved,
+                status: AppointmentStatus.Pending,
             },
             select: {
                 appointment_id: true,
