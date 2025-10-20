@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -163,10 +164,14 @@ function shapeResponse(appointment: {
     };
 }
 
-export async function PATCH(
-    request: Request,
-    { params }: { params: { id: string } }
-) {
+type PatchRouteContext = {
+    params: {
+        id: string;
+    };
+};
+
+export async function PATCH(request: NextRequest, context: PatchRouteContext) {
+    const { params } = context;
     try {
         const { id } = params;
         const session = await getServerSession(authOptions);
