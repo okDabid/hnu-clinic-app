@@ -225,6 +225,12 @@ function renderCertificateHtml(context: CertificateContext) {
         flex-direction: column;
       }
 
+      main.medical .field-line .field-label::before {
+        content: "☐";
+        margin-right: 4px;
+        font-size: 11px;
+      }
+
       header {
         text-align: center;
         margin-bottom: 6px;
@@ -323,6 +329,20 @@ function renderCertificateHtml(context: CertificateContext) {
         flex-basis: 110px;
       }
 
+      .patient-info .field-line {
+        font-size: 11.4px;
+        gap: 4px;
+      }
+
+      .patient-info .field-label {
+        font-size: 10.2px;
+        flex-basis: 108px;
+      }
+
+      .patient-info .field-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+
       .checkbox-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -414,7 +434,7 @@ function renderCertificateHtml(context: CertificateContext) {
     </style>
   </head>
   <body>
-    <main>
+    <main class="${isDental ? "certificate dental" : "certificate medical"}">
       <header>
         <div class="institution">Holy Name University</div>
         <div class="department">Health Services Department</div>
@@ -427,7 +447,7 @@ function renderCertificateHtml(context: CertificateContext) {
         <span class="underline">${escapeHtml(context.issueDateDisplay)}</span>
       </div>
 
-      <section>
+      <section class="patient-info">
         <div class="section-title">Patient Information</div>
         <div class="field-line">
           <span class="field-label">Name</span>
