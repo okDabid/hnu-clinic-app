@@ -737,7 +737,7 @@ export default function NurseAccountsPage() {
                 )}
 
                 {/* Create User */}
-                <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b">
                         <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                             Create New User
@@ -870,7 +870,7 @@ export default function NurseAccountsPage() {
                             {/* Submit */}
                             <Button
                                 type="submit"
-                                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
                                 disabled={loading}
                             >
                                 {loading && <Loader2 className="h-5 w-5 animate-spin" />}
@@ -882,7 +882,7 @@ export default function NurseAccountsPage() {
 
 
                 {/* Manage Users */}
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">Manage Existing Users</CardTitle>
                         <div className="relative w-full md:w-72">
