@@ -51,6 +51,8 @@ import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/se
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
+import PatientAppointmentsLoading from "./loading";
+
 type Clinic = { clinic_id: string; clinic_name: string };
 type Doctor = { user_id: string; name: string; specialization: "Physician" | "Dentist" | null };
 type Slot = { start: string; end: string };
@@ -209,6 +211,8 @@ export default function PatientAppointmentsPage() {
     // My appointments
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loadingAppointments, setLoadingAppointments] = useState(true);
+    const [clinicsLoaded, setClinicsLoaded] = useState(false);
+    const [appointmentsLoaded, setAppointmentsLoaded] = useState(false);
     const [searchAppointments, setSearchAppointments] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
 
@@ -224,6 +228,8 @@ export default function PatientAppointmentsPage() {
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
     const [cancelSubmitting, setCancelSubmitting] = useState(false);
+
+    const initializing = !(clinicsLoaded && appointmentsLoaded);
 
     const handleClinicChange = (nextClinicId: string) => {
         setClinicId(nextClinicId);
@@ -358,6 +364,7 @@ export default function PatientAppointmentsPage() {
                 toast.error("Failed to load clinics");
             } finally {
                 setLoadingClinics(false);
+                setClinicsLoaded(true);
             }
         })();
     }, []);
@@ -621,6 +628,7 @@ export default function PatientAppointmentsPage() {
             toast.error("Could not load your appointments");
         } finally {
             setLoadingAppointments(false);
+            setAppointmentsLoaded(true);
         }
     }
 
@@ -707,6 +715,10 @@ export default function PatientAppointmentsPage() {
         });
         return sorted[0] ?? null;
     }, [upcomingAppointments]);
+
+    if (initializing) {
+        return <PatientAppointmentsLoading />;
+    }
 
     return (
         <PatientLayout

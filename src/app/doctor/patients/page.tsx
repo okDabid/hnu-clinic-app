@@ -31,6 +31,8 @@ import { Badge } from "@/components/ui/badge";
 import { formatManilaDateTime } from "@/lib/time";
 import { BLOOD_TYPES } from "@/lib/patient-records-update";
 
+import DoctorPatientsLoading from "./loading";
+
 type PatientRecord = {
     id: string;
     userId: string;
@@ -199,6 +201,7 @@ export default function DoctorPatientsPage() {
     const [typeFilter, setTypeFilter] = useState("All");
     const [appointmentFilter, setAppointmentFilter] = useState("All");
     const [loadingRecords, setLoadingRecords] = useState(false);
+    const [initializing, setInitializing] = useState(true);
     const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
     const [savingNotesPatientId, setSavingNotesPatientId] = useState<string | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -221,6 +224,7 @@ export default function DoctorPatientsPage() {
             toast.error(error instanceof Error ? error.message : "Failed to load patient records");
         } finally {
             setLoadingRecords(false);
+            setInitializing(false);
         }
     }, []);
 
@@ -349,6 +353,10 @@ export default function DoctorPatientsPage() {
         } finally {
             setSavingNotesPatientId(null);
         }
+    }
+
+    if (initializing) {
+        return <DoctorPatientsLoading />;
     }
 
     return (

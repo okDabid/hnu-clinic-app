@@ -37,6 +37,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+import NurseInventoryLoading from "./loading";
+
 // Types
 type ArchivedReplenishment = {
     replenishment_id: string;
@@ -84,6 +86,11 @@ export default function NurseInventoryPage() {
     // Separate loading states
     const [loadingInventory, setLoadingInventory] = useState(false);
     const [savingStock, setSavingStock] = useState(false);
+    const [inventoryLoaded, setInventoryLoaded] = useState(false);
+    const [clinicsLoaded, setClinicsLoaded] = useState(false);
+    const [enumsLoaded, setEnumsLoaded] = useState(false);
+
+    const initializing = !(inventoryLoaded && clinicsLoaded && enumsLoaded);
     // no menu state needed; navigation handled by NurseLayout
 
     // Load inventory
@@ -110,6 +117,7 @@ export default function NurseInventoryPage() {
             toast.error("Failed to load inventory.");
         } finally {
             setLoadingInventory(false);
+            setInventoryLoaded(true);
         }
     }
 
@@ -121,6 +129,8 @@ export default function NurseInventoryPage() {
             setClinics(data);
         } catch {
             toast.error("Failed to load clinics.");
+        } finally {
+            setClinicsLoaded(true);
         }
     }
 
@@ -134,6 +144,8 @@ export default function NurseInventoryPage() {
             setMedTypes(data.medTypes);
         } catch {
             toast.error("Failed to load enums.");
+        } finally {
+            setEnumsLoaded(true);
         }
     }
 
@@ -181,6 +193,10 @@ export default function NurseInventoryPage() {
     });
 
 
+
+    if (initializing) {
+        return <NurseInventoryLoading />;
+    }
 
     return (
         <NurseLayout

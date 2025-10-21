@@ -25,6 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+import NurseClinicLoading from "./loading";
+
 type Clinic = {
     clinic_id: string;
     clinic_name: string;
@@ -36,11 +38,22 @@ export default function NurseClinicPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
     const [loading, setLoading] = useState(false);
+    const [initializing, setInitializing] = useState(true);
 
     async function loadClinics() {
-        const res = await fetch("/api/nurse/clinic");
-        const data = await res.json();
-        setClinics(data);
+        try {
+            const res = await fetch("/api/nurse/clinic");
+            if (!res.ok) {
+                throw new Error("Failed to load clinics");
+            }
+            const data = await res.json();
+            setClinics(data);
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to load clinics");
+        } finally {
+            setInitializing(false);
+        }
     }
 
     useEffect(() => {
@@ -101,6 +114,10 @@ export default function NurseClinicPage() {
         } else {
             toast.error("Failed to update clinic");
         }
+    }
+
+    if (initializing) {
+        return <NurseClinicLoading />;
     }
 
     return (

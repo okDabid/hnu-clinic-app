@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/chart";
 import { formatManilaDateTime } from "@/lib/time";
 
+import NurseReportsLoading from "./loading";
+
 type PatientTypeKey = "Student" | "Employee" | "Unknown";
 
 type DiagnosisCount = {
@@ -187,6 +189,7 @@ export default function NurseReportsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [exportingPdf, setExportingPdf] = useState(false);
+    const [initializing, setInitializing] = useState(true);
 
     const years = useMemo(() => {
         return Array.from({ length: 5 }, (_, index) => currentYear - index);
@@ -232,6 +235,7 @@ export default function NurseReportsPage() {
             } finally {
                 if (!ignore) {
                     setLoading(false);
+                    setInitializing(false);
                 }
             }
         }
@@ -273,6 +277,10 @@ export default function NurseReportsPage() {
     }, [selectedQuarter]);
 
     const hasData = !!data && data.quarters.some((item) => item.consultations > 0);
+
+    if (initializing) {
+        return <NurseReportsLoading />;
+    }
 
     return (
         <NurseLayout

@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/table";
 import { formatManilaDateTime } from "@/lib/time";
 
+import DoctorDispenseLoading from "./loading";
+
 type DispenseRecord = {
     dispense_id: string;
     quantity: number;
@@ -100,6 +102,7 @@ export default function DoctorDispensePage() {
     const [dispenses, setDispenses] = useState<DispenseRecord[]>([]);
     const [consultations, setConsultations] = useState<ConsultationOption[]>([]);
     const [medicines, setMedicines] = useState<MedicineOption[]>([]);
+    const [initializing, setInitializing] = useState(true);
     const [form, setForm] = useState({
         consultation_id: "",
         med_id: "",
@@ -131,6 +134,7 @@ export default function DoctorDispensePage() {
                 toast.error("Failed to load dispense data");
             } finally {
                 setLoading(false);
+                setInitializing(false);
             }
         }
 
@@ -191,6 +195,10 @@ export default function DoctorDispensePage() {
         } finally {
             setSubmitting(false);
         }
+    }
+
+    if (initializing) {
+        return <DoctorDispenseLoading />;
     }
 
     return (

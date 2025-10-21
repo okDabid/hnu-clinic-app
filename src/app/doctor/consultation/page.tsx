@@ -33,6 +33,8 @@ import {
     toManilaTimeString,
 } from "@/lib/time";
 
+import DoctorConsultationLoading from "./loading";
+
 
 type Clinic = {
     clinic_id: string;
@@ -52,6 +54,7 @@ export default function DoctorConsultationPage() {
     const [savingDutyHours, setSavingDutyHours] = useState(false);
     const [slots, setSlots] = useState<Availability[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
+    const [initializing, setInitializing] = useState(true);
     const [formData, setFormData] = useState({
         clinic_id: "",
         available_date: "",
@@ -77,6 +80,7 @@ export default function DoctorConsultationPage() {
             toast.error("Failed to load consultation slots");
         } finally {
             setLoading(false);
+            setInitializing(false);
         }
     }
 
@@ -166,6 +170,10 @@ export default function DoctorConsultationPage() {
             setLoading(false);
             setSavingDutyHours(false);
         }
+    }
+
+    if (initializing) {
+        return <DoctorConsultationLoading />;
     }
 
     return (

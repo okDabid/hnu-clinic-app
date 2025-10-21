@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { formatManilaDateTime } from "@/lib/time";
 
+import NurseDispenseLoading from "./loading";
+
 // Extend Dispense type to include batch usage
 type Dispense = {
     dispense_id: string;
@@ -43,11 +45,21 @@ type Dispense = {
 
 export default function NurseDispensePage() {
     const [dispenses, setDispenses] = useState<Dispense[]>([]);
+    const [initializing, setInitializing] = useState(true);
 
     async function loadDispenses() {
-        const res = await fetch("/api/nurse/dispense", { cache: "no-store" });
-        const data = await res.json();
-        setDispenses(data);
+        try {
+            const res = await fetch("/api/nurse/dispense", { cache: "no-store" });
+            if (!res.ok) {
+                throw new Error("Failed to load dispense records");
+            }
+            const data = await res.json();
+            setDispenses(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setInitializing(false);
+        }
     }
 
     useEffect(() => {
@@ -55,6 +67,10 @@ export default function NurseDispensePage() {
     }, []);
 
 
+
+    if (initializing) {
+        return <NurseDispenseLoading />;
+    }
 
     return (
         <NurseLayout

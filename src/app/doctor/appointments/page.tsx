@@ -48,6 +48,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatManilaDateTime, formatManilaISODate, manilaNow } from "@/lib/time";
 
+import DoctorAppointmentsLoading from "./loading";
+
 const STATUS_ORDER = ["Pending", "Approved", "Moved", "Completed", "Cancelled"] as const;
 
 type AppointmentStatus = (typeof STATUS_ORDER)[number];
@@ -142,6 +144,7 @@ function parseStartDate(appointment: Appointment) {
 export default function DoctorAppointmentsPage() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [initializing, setInitializing] = useState(true);
     const [actionType, setActionType] = useState<"cancel" | "move" | null>(null);
     const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
     const [reason, setReason] = useState("");
@@ -167,6 +170,7 @@ export default function DoctorAppointmentsPage() {
             toast.error("Failed to load appointments");
         } finally {
             setLoading(false);
+            setInitializing(false);
         }
     }, []);
 
@@ -431,6 +435,10 @@ export default function DoctorAppointmentsPage() {
             setDialogOpen(true);
         }
     };
+
+    if (initializing) {
+        return <DoctorAppointmentsLoading />;
+    }
 
     return (
         <DoctorLayout

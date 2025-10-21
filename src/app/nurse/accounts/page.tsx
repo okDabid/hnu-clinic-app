@@ -42,6 +42,8 @@ import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
+import NurseAccountsLoading from "./loading";
+
 // Types aligned with API
 type User = {
     user_id: string;
@@ -118,6 +120,9 @@ export default function NurseAccountsPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
 
+    const [profileLoaded, setProfileLoaded] = useState(false);
+    const [usersLoaded, setUsersLoaded] = useState(false);
+
     const [currentPage, setCurrentPage] = useState(1);
 
     const [originalProfile, setOriginalProfile] = useState<Profile | null>(null);
@@ -126,6 +131,8 @@ export default function NurseAccountsPage() {
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
 
     const [specialization, setSpecialization] = useState<"Physician" | "Dentist" | null>(null);
+
+    const initializing = !(profileLoaded && usersLoaded);
 
 
     // Fetch users (deduplicated but allows same visible ID across different roles)
@@ -181,6 +188,8 @@ export default function NurseAccountsPage() {
         } catch (err) {
             console.error("Failed to load users:", err);
             toast.error("Failed to load users", { position: "top-center" });
+        } finally {
+            setUsersLoaded(true);
         }
     }
 
@@ -232,6 +241,8 @@ export default function NurseAccountsPage() {
         } catch (err) {
             console.error("Failed to load profile:", err);
             toast.error("Failed to load profile");
+        } finally {
+            setProfileLoaded(true);
         }
     }, []);
 
@@ -437,6 +448,10 @@ export default function NurseAccountsPage() {
 
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+    if (initializing) {
+        return <NurseAccountsLoading />;
+    }
 
     return (
         <NurseLayout

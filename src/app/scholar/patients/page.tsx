@@ -29,6 +29,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatManilaDateTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
+import ScholarPatientsLoading from "./loading";
+
 const DEPARTMENT_LABELS: Record<string, string> = {
     EDUCATION: "College of Education",
     ARTS_AND_SCIENCES: "College of Arts and Sciences",
@@ -159,6 +161,7 @@ function formatDOB(value: string | null | undefined) {
 export default function ScholarPatientsPage() {
     const [records, setRecords] = useState<PatientRecord[]>([]);
     const [loading, setLoading] = useState(true);
+    const [initializing, setInitializing] = useState(true);
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("active");
@@ -184,6 +187,7 @@ export default function ScholarPatientsPage() {
             toast.error("Unable to load patients");
         } finally {
             setLoading(false);
+            setInitializing(false);
         }
     }, []);
 
@@ -249,6 +253,10 @@ export default function ScholarPatientsPage() {
     function closeDetails() {
         setDetailOpen(false);
         setSelected(null);
+    }
+
+    if (initializing) {
+        return <ScholarPatientsLoading />;
     }
 
     return (
