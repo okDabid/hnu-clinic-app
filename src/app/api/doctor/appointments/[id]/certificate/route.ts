@@ -118,46 +118,101 @@ type CertificateContext = {
     ptrNumber: string;
 };
 
-function renderConditionItems(label: string, items: string[]) {
-    if (!items.length) {
-        return `<div class="detail-line"><span class="detail-label">${label}:</span><span class="detail-value muted">Not recorded</span></div>`;
-    }
-
-    const rendered = items
-        .map((item) => `<span class="chip">${escapeHtml(titleCase(item))}</span>`)
-        .join(" ");
-
-    return `<div class="detail-line"><span class="detail-label">${label}:</span><span class="detail-value">${rendered}</span></div>`;
-}
-
 function renderCertificateHtml(context: CertificateContext) {
-    const heading =
-        context.certificateType === "dental"
-            ? "Dental Certificate"
-            : "Medical Certificate";
+    const placeholder = (value?: string, fallback = "Not recorded") => {
+        if (value && value.trim()) {
+            return escapeHtml(value);
+        }
+        return `<span class="placeholder">${escapeHtml(fallback)}</span>`;
+    };
 
-    const introLine =
-        context.certificateType === "dental"
-            ? `This is to certify that <strong>${escapeHtml(
-                context.patientName
-            )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Health Services Department.`
-            : `This is to certify that <strong>${escapeHtml(
-                context.patientName
-            )}</strong>, a student of Holy Name University, was examined at the Health Services Department.`;
+    const isDental = context.certificateType === "dental";
+    const heading = isDental ? "DENTAL CERTIFICATE" : "MEDICAL CERTIFICATE";
 
-    const assessmentLine = context.diagnosis
-        ? `The assessment was noted as <strong>${escapeHtml(
-            context.diagnosis
-        )}</strong>.`
-        : `The assessment findings are on record with the attending clinician.`;
+    const introLine = isDental
+        ? `This is to certify that <strong>${escapeHtml(
+              context.patientName
+          )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Health Services Department.`
+        : `This is to certify that <strong>${escapeHtml(
+              context.patientName
+          )}</strong>, a student of Holy Name University, was examined at the Health Services Department.`;
 
-    const recommendationLine = context.findings
-        ? escapeHtml(context.findings)
-        : "No additional remarks were recorded.";
+    const normalizedMedical = context.medicalConditions.map((condition) =>
+        condition.toLowerCase()
+    );
+    const matchedMedicalIndices = new Set<number>();
 
-    const reasonLine = context.reason
-        ? `Reason for visit: ${escapeHtml(context.reason)}.`
-        : "Reason for visit: Not specified.";
+    const matchesCondition = (keywords: string[]) =>
+        keywords.some((keyword) =>
+            normalizedMedical.some((condition, index) => {
+                if (condition.includes(keyword)) {
+                    matchedMedicalIndices.add(index);
+                    return true;
+                }
+                return false;
+            })
+        );
+
+    const medicalHistoryOptions: { label: string; keywords: string[] }[] = [
+        { label: "Asthma", keywords: ["asthma"] },
+        {
+            label: "Hypertension",
+            keywords: ["hypertension", "high blood"],
+        },
+        { label: "Cancer", keywords: ["cancer"] },
+        { label: "Epilepsy", keywords: ["epilepsy", "seizure"] },
+        { label: "Diabetes", keywords: ["diabetes"] },
+        {
+            label: "Heart Disease",
+            keywords: ["heart", "cardio", "cardiac"],
+        },
+        {
+            label: "Kidney Disease",
+            keywords: ["kidney", "renal"],
+        },
+        {
+            label: "Nervous/Mental Disorder",
+            keywords: ["mental", "nervous", "anxiety", "depression", "psychiatric"],
+        },
+    ];
+
+    const renderCheckbox = (label: string, checked: boolean) => `
+        <div class="checkbox">
+          <span class="box">${checked ? "☑" : "☐"}</span>
+          <span class="text">${escapeHtml(label)}</span>
+        </div>
+    `;
+
+    const medicalHistoryBoxes = medicalHistoryOptions
+        .map((option) => renderCheckbox(option.label, matchesCondition(option.keywords)))
+        .join("");
+
+    const remainingMedical = context.medicalConditions
+        .filter((_, index) => !matchedMedicalIndices.has(index))
+        .map((value) => titleCase(value))
+        .join(", ");
+
+    const allergiesList = context.allergies
+        .map((value) => titleCase(value))
+        .join(", ");
+
+    const impression = placeholder(context.diagnosis, "Not recorded");
+    const recommendation = placeholder(
+        context.findings,
+        isDental
+            ? "No dental recommendations were provided."
+            : "No medical recommendations were provided."
+    );
+
+    const noteParts: string[] = [];
+    if (context.reason) {
+        noteParts.push(`Reason for visit: ${context.reason}.`);
+    }
+    noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
+    const notes = placeholder(
+        noteParts.map((entry) => entry.trim()).join(" "),
+        "No additional notes were recorded."
+    );
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -188,41 +243,61 @@ function renderCertificateHtml(context: CertificateContext) {
         padding: 0.75in 0.8in;
         display: flex;
         flex-direction: column;
-        gap: 18px;
       }
 
       header {
         text-align: center;
-        border-bottom: 2px solid #111827;
-        padding-bottom: 18px;
-        margin-bottom: 12px;
+        margin-bottom: 18px;
       }
 
       .institution {
         font-size: 16px;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        margin-bottom: 4px;
       }
 
       .department {
         font-size: 14px;
-        margin: 0;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
+      }
+
+      .address {
+        font-size: 13px;
+        margin-top: 2px;
       }
 
       h1 {
         font-size: 28px;
-        margin: 12px 0 4px;
-        letter-spacing: 0.1em;
+        margin: 16px 0 0;
+        letter-spacing: 0.18em;
       }
 
-      .meta-row {
+      .date-line {
+        font-size: 14px;
         display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        margin-top: 4px;
+        justify-content: flex-end;
+        margin-bottom: 16px;
+        gap: 8px;
+      }
+
+      .underline {
+        border-bottom: 1px solid #111827;
+        padding: 0 6px 2px;
+        min-width: 140px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 20px;
+      }
+
+      .placeholder {
+        font-style: italic;
+        color: #6b7280;
+      }
+
+      section {
+        margin-bottom: 20px;
       }
 
       .section-title {
@@ -230,59 +305,62 @@ function renderCertificateHtml(context: CertificateContext) {
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        margin: 16px 0 8px;
+        margin-bottom: 10px;
       }
 
-      .details {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px 18px;
-        font-size: 13px;
-      }
-
-      .detail-line {
+      .field-line {
         display: flex;
-        gap: 6px;
-        align-items: baseline;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        margin-bottom: 8px;
       }
 
-      .detail-label {
+      .field-label {
+        width: 160px;
         font-weight: 600;
-        min-width: 110px;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        font-size: 11px;
-        color: #374151;
+        font-size: 12px;
       }
 
-      .detail-value {
-        flex: 1;
-        font-size: 13px;
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px 14px;
       }
 
-      .muted {
-        color: #6b7280;
-        font-style: italic;
+      .field-grid .field-line {
+        margin-bottom: 0;
       }
 
-      .chip {
-        display: inline-block;
-        border: 1px solid #d1d5db;
-        border-radius: 999px;
-        padding: 2px 10px;
-        font-size: 11px;
-        margin-right: 6px;
-        margin-bottom: 4px;
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 20px;
+        margin-bottom: 12px;
+      }
+
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+      }
+
+      .checkbox .box {
+        font-size: 16px;
+        line-height: 1;
       }
 
       .statement {
         font-size: 14px;
-        line-height: 1.6;
         text-align: justify;
+        margin-bottom: 10px;
       }
 
-      .statement strong {
-        font-weight: 700;
+      .notes {
+        min-height: 60px;
       }
 
       .signature-block {
@@ -294,6 +372,7 @@ function renderCertificateHtml(context: CertificateContext) {
       .signature {
         text-align: center;
         font-size: 13px;
+        min-width: 260px;
       }
 
       .signature .line {
@@ -301,17 +380,20 @@ function renderCertificateHtml(context: CertificateContext) {
         margin-bottom: 6px;
         padding-bottom: 4px;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
       }
 
       footer {
         margin-top: auto;
-        font-size: 11px;
-        color: #6b7280;
+        font-size: 12px;
+        color: #374151;
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        gap: 6px;
       }
 
-      .certificate-id {
+      footer .certificate-id {
         font-family: "Courier New", monospace;
         letter-spacing: 0.08em;
       }
@@ -322,74 +404,169 @@ function renderCertificateHtml(context: CertificateContext) {
       <header>
         <div class="institution">Holy Name University</div>
         <div class="department">Health Services Department</div>
+        <div class="address">Tagbilaran City, Bohol</div>
         <h1>${escapeHtml(heading)}</h1>
-        <div class="meta-row">
-          <span>Date Issued: ${escapeHtml(context.issueDateDisplay)}</span>
-          <span>Clinic: ${escapeHtml(context.clinicName)}</span>
-        </div>
       </header>
+
+      <div class="date-line">
+        <span>Date:</span>
+        <span class="underline">${escapeHtml(context.issueDateDisplay)}</span>
+      </div>
 
       <section>
         <div class="section-title">Patient Information</div>
-        <div class="details">
-          <div class="detail-line"><span class="detail-label">Name:</span><span class="detail-value">${escapeHtml(
-        context.patientName
-    )}</span></div>
-          <div class="detail-line"><span class="detail-label">Age:</span><span class="detail-value">${escapeHtml(
-        context.age || "Not provided"
-    )}</span></div>
-          <div class="detail-line"><span class="detail-label">Sex:</span><span class="detail-value">${escapeHtml(
-        context.sex || "Not provided"
-    )}</span></div>
-          <div class="detail-line"><span class="detail-label">Student status:</span><span class="detail-value">${escapeHtml(
-        context.patientType
-    )}</span></div>
-          <div class="detail-line"><span class="detail-label">Program:</span><span class="detail-value">${escapeHtml(
-        context.program || "Not recorded"
-    )}</span></div>
-          <div class="detail-line"><span class="detail-label">Year level:</span><span class="detail-value">${escapeHtml(
-        context.yearLevel || "Not recorded"
-    )}</span></div>
-          <div class="detail-line"><span class="detail-label">Department:</span><span class="detail-value">${escapeHtml(
-        context.department || "Not recorded"
-    )}</span></div>
-          <div class="detail-line"><span class="detail-label">Address:</span><span class="detail-value">${escapeHtml(
-        context.address || "Not recorded"
-    )}</span></div>
+        <div class="field-line">
+          <span class="field-label">Name</span>
+          <span class="underline">${placeholder(context.patientName)}</span>
+        </div>
+        <div class="field-line">
+          <span class="field-label">Address</span>
+          <span class="underline">${placeholder(context.address, "Not provided")}</span>
+        </div>
+        <div class="field-grid">
+          <div class="field-line">
+            <span class="field-label">Age</span>
+            <span class="underline">${placeholder(context.age, "Not provided")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Sex</span>
+            <span class="underline">${placeholder(context.sex, "Not provided")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Program</span>
+            <span class="underline">${placeholder(context.program, "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Year Level</span>
+            <span class="underline">${placeholder(context.yearLevel, "Not recorded")}</span>
+          </div>
         </div>
       </section>
 
       <section>
-        <div class="section-title">Consultation Summary</div>
-        <p class="statement">${introLine}</p>
-        <p class="statement">${assessmentLine}</p>
-        <p class="statement">${reasonLine}</p>
-        <p class="statement">Doctor's remarks: ${recommendationLine}</p>
-        <p class="statement">Consultation recorded on ${escapeHtml(
-        context.consultationDate
-    )}.</p>
+        <div class="section-title">Vital Signs</div>
+        <div class="field-grid">
+          <div class="field-line">
+            <span class="field-label">BP</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">HR</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">RR</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Temp</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Weight</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Height</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">SpO₂</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Clinic</span>
+            <span class="underline">${placeholder(context.clinicName)}</span>
+          </div>
+        </div>
       </section>
 
       <section>
-        <div class="section-title">Health Declarations</div>
-        ${renderConditionItems("Allergies", context.allergies)}
-        ${renderConditionItems("Medical Conditions", context.medicalConditions)}
+        <div class="section-title">Medical History</div>
+        <div class="checkbox-grid">
+          ${medicalHistoryBoxes}
+        </div>
+        <div class="field-line">
+          <span class="field-label">Others</span>
+          <span class="underline">${placeholder(remainingMedical)}</span>
+        </div>
       </section>
+
+      <section>
+        <div class="section-title">COVID-19 Vaccination</div>
+        <div class="field-line">
+          <span class="field-label">Vaccine</span>
+          <span class="underline">${placeholder("", "Not recorded")}</span>
+        </div>
+        <div class="field-grid">
+          <div class="field-line">
+            <span class="field-label">Dose 1</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Dose 2</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">1st Booster</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">2nd Booster</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Allergies</div>
+        <div class="field-line">
+          <span class="field-label">Food / Drug</span>
+          <span class="underline">${placeholder(
+              allergiesList,
+              "No allergies declared"
+          )}</span>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Clinical Impression</div>
+        <div class="field-line">
+          <span class="field-label">Impression</span>
+          <span class="underline">${impression}</span>
+        </div>
+        <div class="field-line">
+          <span class="field-label">Recommendation</span>
+          <span class="underline">${recommendation}</span>
+        </div>
+        <div class="field-line notes">
+          <span class="field-label">Notes</span>
+          <span class="underline">${notes}</span>
+        </div>
+      </section>
+
+      <p class="statement">${introLine}</p>
 
       <div class="signature-block">
         <div class="signature">
           <div class="line">${escapeHtml(context.doctorName)}</div>
           <div>${escapeHtml(context.doctorTitle)}</div>
-          <div>License No.: ${escapeHtml(context.licenseNumber || "Not provided")}</div>
-          <div>PTR No.: ${escapeHtml(context.ptrNumber || "Not provided")}</div>
+          <div>License No.: ${placeholder(
+              context.licenseNumber,
+              "Not provided"
+          )}</div>
+          <div>PTR No.: ${placeholder(context.ptrNumber, "Not provided")}</div>
         </div>
       </div>
 
       <footer>
-        <span>Valid until: ${escapeHtml(formatDateLong(context.validUntil))}</span>
-        <span class="certificate-id">Certificate ID: ${escapeHtml(
-        context.certificateId
-    )}</span>
+        <div>Valid until: ${escapeHtml(formatDateLong(context.validUntil))}</div>
+        <div class="certificate-id">Certificate ID: ${escapeHtml(
+            context.certificateId
+        )}</div>
+        <div>
+          This certificate is issued for any school-related activity and is valid for one (1) year from the date of issuance.
+        </div>
       </footer>
     </main>
   </body>
@@ -537,7 +714,7 @@ export async function GET(
 
         const now = manilaNow();
         const validity = new Date(now);
-        validity.setUTCDate(validity.getUTCDate() + 3);
+        validity.setUTCFullYear(validity.getUTCFullYear() + 1);
 
         const existingCert = await prisma.medCert.findFirst({
             where: { consultation_id: appointment.consultation.consultation_id },
