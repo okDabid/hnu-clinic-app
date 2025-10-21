@@ -118,9 +118,22 @@ type CertificateContext = {
     ptrNumber: string;
 };
 
+function formatBlankableValue(value: string | null | undefined) {
+    if (!value) {
+        return "";
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.toLowerCase() === "not recorded") {
+        return "";
+    }
+
+    return escapeHtml(trimmed);
+}
+
 function renderConditionItems(label: string, items: string[]) {
     if (!items.length) {
-        return `<div class="detail-line"><span class="detail-label">${label}:</span><span class="detail-value muted">Not recorded</span></div>`;
+        return `<div class="detail-line"><span class="detail-label">${label}:</span><span class="detail-value blank"></span></div>`;
     }
 
     const rendered = items
@@ -292,8 +305,11 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       .signature {
-        text-align: center;
         font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
       }
 
       .signature .line {
@@ -301,6 +317,40 @@ function renderCertificateHtml(context: CertificateContext) {
         margin-bottom: 6px;
         padding-bottom: 4px;
         font-weight: 600;
+        text-align: center;
+        width: 100%;
+      }
+
+      .signature .credentials {
+        margin-top: 4px;
+        width: 100%;
+        display: grid;
+        row-gap: 6px;
+      }
+
+      .signature .credential-line {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        align-items: end;
+        column-gap: 8px;
+        font-size: 12px;
+      }
+
+      .signature .credential-line .value {
+        border-bottom: 1px solid #111827;
+        min-height: 16px;
+      }
+
+      .signature .credential-line .value::after {
+        content: "";
+        display: block;
+      }
+
+      .detail-value.blank {
+        display: inline-block;
+        min-width: 120px;
+        min-height: 16px;
+        border-bottom: 1px solid #e5e7eb;
       }
 
       footer {
@@ -344,17 +394,17 @@ function renderCertificateHtml(context: CertificateContext) {
           <div class="detail-line"><span class="detail-label">Student status:</span><span class="detail-value">${escapeHtml(
         context.patientType
     )}</span></div>
-          <div class="detail-line"><span class="detail-label">Program:</span><span class="detail-value">${escapeHtml(
-        context.program || "Not recorded"
+          <div class="detail-line"><span class="detail-label">Program:</span><span class="detail-value">${formatBlankableValue(
+        context.program
     )}</span></div>
-          <div class="detail-line"><span class="detail-label">Year level:</span><span class="detail-value">${escapeHtml(
-        context.yearLevel || "Not recorded"
+          <div class="detail-line"><span class="detail-label">Year level:</span><span class="detail-value">${formatBlankableValue(
+        context.yearLevel
     )}</span></div>
-          <div class="detail-line"><span class="detail-label">Department:</span><span class="detail-value">${escapeHtml(
-        context.department || "Not recorded"
+          <div class="detail-line"><span class="detail-label">Department:</span><span class="detail-value">${formatBlankableValue(
+        context.department
     )}</span></div>
-          <div class="detail-line"><span class="detail-label">Address:</span><span class="detail-value">${escapeHtml(
-        context.address || "Not recorded"
+          <div class="detail-line"><span class="detail-label">Address:</span><span class="detail-value">${formatBlankableValue(
+        context.address
     )}</span></div>
         </div>
       </section>
@@ -380,8 +430,16 @@ function renderCertificateHtml(context: CertificateContext) {
         <div class="signature">
           <div class="line">${escapeHtml(context.doctorName)}</div>
           <div>${escapeHtml(context.doctorTitle)}</div>
-          <div>License No.: ${escapeHtml(context.licenseNumber || "Not provided")}</div>
-          <div>PTR No.: ${escapeHtml(context.ptrNumber || "Not provided")}</div>
+          <div class="credentials">
+            <div class="credential-line">
+              <span>License No.:</span>
+              <span class="value"></span>
+            </div>
+            <div class="credential-line">
+              <span>PTR No.:</span>
+              <span class="value"></span>
+            </div>
+          </div>
         </div>
       </div>
 
