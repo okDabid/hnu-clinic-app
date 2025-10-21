@@ -161,7 +161,7 @@ function renderCertificateHtml(context: CertificateContext) {
 
     const renderCheckbox = (label: string) => `
         <div class="checkbox">
-          <span class="box">☐</span>
+          <span class="box" aria-hidden="true"></span>
           <span class="text">${escapeHtml(label)}</span>
         </div>
     `;
@@ -358,8 +358,12 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       .checkbox .box {
-        font-size: 14px;
-        line-height: 1;
+        width: 11px;
+        height: 11px;
+        border: 1px solid #111827;
+        display: inline-block;
+        margin-top: 1px;
+        flex-shrink: 0;
       }
 
       .statement {
