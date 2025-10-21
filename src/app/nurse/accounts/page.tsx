@@ -358,8 +358,8 @@ export default function NurseAccountsPage() {
             gender: gender as "Male" | "Female",
             employee_id:
                 role === "NURSE" ||
-                role === "DOCTOR" ||
-                (role === "PATIENT" && patientType === "employee")
+                    role === "DOCTOR" ||
+                    (role === "PATIENT" && patientType === "employee")
                     ? employeeId || null
                     : null,
             student_id:
@@ -571,33 +571,33 @@ export default function NurseAccountsPage() {
 
     const pendingIdentifier = pendingPayload
         ? (() => {
-              if (pendingPayload.role === "SCHOLAR") {
-                  return { label: "School ID", value: pendingPayload.school_id ?? "—" };
-              }
-              if (pendingPayload.role === "NURSE" || pendingPayload.role === "DOCTOR") {
-                  return { label: "Employee ID", value: pendingPayload.employee_id ?? "—" };
-              }
-              if (pendingPayload.role === "PATIENT") {
-                  if (pendingPayload.patientType === "student") {
-                      return { label: "Student ID", value: pendingPayload.student_id ?? "—" };
-                  }
-                  if (pendingPayload.patientType === "employee") {
-                      return { label: "Employee ID", value: pendingPayload.employee_id ?? "—" };
-                  }
-                  return { label: "Patient Type", value: "Not specified" };
-              }
-              return null;
-          })()
+            if (pendingPayload.role === "SCHOLAR") {
+                return { label: "School ID", value: pendingPayload.school_id ?? "—" };
+            }
+            if (pendingPayload.role === "NURSE" || pendingPayload.role === "DOCTOR") {
+                return { label: "Employee ID", value: pendingPayload.employee_id ?? "—" };
+            }
+            if (pendingPayload.role === "PATIENT") {
+                if (pendingPayload.patientType === "student") {
+                    return { label: "Student ID", value: pendingPayload.student_id ?? "—" };
+                }
+                if (pendingPayload.patientType === "employee") {
+                    return { label: "Employee ID", value: pendingPayload.employee_id ?? "—" };
+                }
+                return { label: "Patient Type", value: "Not specified" };
+            }
+            return null;
+        })()
         : null;
 
     const pendingDOBLabel = pendingPayload?.date_of_birth
         ? (() => {
-              const parsed = new Date(pendingPayload.date_of_birth);
-              if (Number.isNaN(parsed.getTime())) {
-                  return pendingPayload.date_of_birth;
-              }
-              return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(parsed);
-          })()
+            const parsed = new Date(pendingPayload.date_of_birth);
+            if (Number.isNaN(parsed.getTime())) {
+                return pendingPayload.date_of_birth;
+            }
+            return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(parsed);
+        })()
         : "—";
 
     const pendingPatientTypeLabel = pendingPayload?.patientType
@@ -1140,7 +1140,7 @@ export default function NurseAccountsPage() {
                                         <CheckCircle2 className="h-5 w-5" /> Account created
                                     </DialogTitle>
                                     <DialogDescription>
-                                        Share the temporary credentials securely. The password will not be shown again after
+                                        Share the temporary password securely. The password will not be shown again after
                                         closing this dialog.
                                     </DialogDescription>
                                 </DialogHeader>
