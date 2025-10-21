@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AccountStatus, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -42,7 +43,13 @@ export async function GET(req: Request) {
         const doctors = await prisma.users.findMany({
             where: {
                 user_id: { in: doctorIds },
-                role: "DOCTOR",
+                role: Role.DOCTOR,
+                status: AccountStatus.Active,
+                employee: {
+                    is: {
+                        status: AccountStatus.Active,
+                    },
+                },
                 ...(specializationFilter && { specialization: specializationFilter }),
             },
             select: {
