@@ -1182,7 +1182,6 @@ export default function NurseAccountsPage() {
                                     <TableRow>
                                         <TableHead>User ID</TableHead>
                                         <TableHead>Role</TableHead>
-                                        <TableHead>Details</TableHead>
                                         <TableHead>Full Name</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
@@ -1195,19 +1194,21 @@ export default function NurseAccountsPage() {
                                             .map((user) => (
                                                 <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-green-50 transition">
                                                     <TableCell className="whitespace-nowrap text-xs sm:text-sm">{user.user_id}</TableCell>
-                                                    <TableCell>{user.role}</TableCell>
-                                                    <TableCell>
-                                                        {user.role === "DOCTOR" ? (
-                                                            user.specialization ? (
-                                                                <Badge className="border-green-200 bg-green-50 text-green-700">
-                                                                    {user.specialization}
-                                                                </Badge>
-                                                            ) : (
-                                                                <span className="text-xs text-gray-500">No specialization</span>
-                                                            )
-                                                        ) : (
-                                                            <span className="text-xs text-gray-400">—</span>
-                                                        )}
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-gray-900">{user.role}</span>
+                                                            {user.role === "DOCTOR" && (
+                                                                user.specialization ? (
+                                                                    <span className="text-xs font-medium text-green-700">
+                                                                        {user.specialization}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-xs italic text-gray-500">
+                                                                        No specialization
+                                                                    </span>
+                                                                )
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>{user.fullName}</TableCell>
                                                     <TableCell>
