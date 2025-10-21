@@ -19,6 +19,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { normalizeResetContact } from "@/lib/password-reset";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
@@ -236,7 +237,7 @@ export default function LoginPageClient() {
                 placeholder={placeholder}
                 required
                 disabled={!!loadingRole}
-                className="h-11 rounded-xl border-green-100 bg-white/90 text-slate-700 placeholder:text-slate-400 focus-visible:ring-green-500/50"
+                className="h-11 rounded-xl border-green-100 bg-white/90 text-slate-700 placeholder:text-slate-400 focus-visible:ring-green-500/50 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-100"
             />
 
             <div className="relative">
@@ -245,7 +246,7 @@ export default function LoginPageClient() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     required
-                    className="h-11 rounded-xl border-green-100 bg-white/90 pr-12 text-slate-700 placeholder:text-slate-400 focus-visible:ring-green-500/50"
+                    className="h-11 rounded-xl border-green-100 bg-white/90 pr-12 text-slate-700 placeholder:text-slate-400 focus-visible:ring-green-500/50 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-100"
                     disabled={!!loadingRole}
                 />
                 <Button
@@ -254,7 +255,7 @@ export default function LoginPageClient() {
                     size="icon"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={!!loadingRole}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent dark:text-slate-300"
                 >
                     {showPassword ? (
                         <EyeOff className="h-5 w-5" />
@@ -267,7 +268,7 @@ export default function LoginPageClient() {
             <Button
                 type="submit"
                 disabled={loadingRole === role}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-green-600 font-medium text-white shadow-md shadow-green-200 transition hover:bg-green-700"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-green-600 font-medium text-white shadow-md shadow-green-200 transition hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400"
             >
                 {loadingRole === role ? (
                     <>
@@ -283,7 +284,7 @@ export default function LoginPageClient() {
                 <button
                     type="button"
                     onClick={() => setForgotOpen(true)}
-                    className="font-medium text-green-800 underline-offset-4 transition hover:underline"
+                    className="font-medium text-green-800 underline-offset-4 transition hover:underline dark:text-emerald-300"
                 >
                     Forgot password?
                 </button>
@@ -293,7 +294,8 @@ export default function LoginPageClient() {
 
     // ---------- RENDER ----------
     return (
-        <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-white to-green-200">
+        <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-white to-green-200 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+            <ThemeToggle size="sm" className="absolute right-6 top-6 z-20" />
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-green-300/40 blur-3xl" />
                 <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-green-300/40 blur-3xl" />
@@ -301,11 +303,11 @@ export default function LoginPageClient() {
 
             <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-between gap-12 px-6 py-12 lg:flex-row lg:items-center lg:py-24">
                 <div className="mx-auto max-w-2xl text-center lg:mx-0 lg:max-w-lg lg:text-left">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1 text-sm font-medium text-green-700 shadow-sm">
-                        <span className="h-2 w-2 rounded-full bg-green-500" />
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1 text-sm font-medium text-green-700 shadow-sm dark:bg-slate-900/70 dark:text-emerald-200">
+                        <span className="h-2 w-2 rounded-full bg-green-500 dark:bg-emerald-400" />
                         Secure Access Portal
                     </span>
-                    <h1 className="mt-6 text-3xl font-bold text-green-600 sm:text-4xl md:text-5xl">
+                    <h1 className="mt-6 text-3xl font-bold text-green-600 sm:text-4xl md:text-5xl dark:text-emerald-200">
                         Welcome back to HNU Clinic
                     </h1>
                     <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
@@ -315,13 +317,13 @@ export default function LoginPageClient() {
 
                     <dl className="mt-8 grid gap-4 text-left sm:grid-cols-2">
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
-                            <dt className="text-sm font-medium text-green-700">Multi-role support</dt>
+                            <dt className="text-sm font-medium text-green-700 dark:text-emerald-200">Multi-role support</dt>
                             <dd className="mt-1 text-sm text-slate-600">
                                 Access tailored dashboards for doctors, nurses, scholars, and patients.
                             </dd>
                         </div>
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
-                            <dt className="text-sm font-medium text-green-700">Privacy first</dt>
+                            <dt className="text-sm font-medium text-green-700 dark:text-emerald-200">Privacy first</dt>
                             <dd className="mt-1 text-sm text-slate-600">
                                 Your information is protected with secure authentication measures.
                             </dd>
@@ -333,11 +335,11 @@ export default function LoginPageClient() {
                     <Card
                         className={`relative z-10 overflow-hidden border-0 bg-white/90 shadow-xl backdrop-blur-xl transition-opacity ${loadingRole ? "opacity-60" : ""}`}
                     >
-                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-400 via-lime-400 to-green-500" />
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-400 via-lime-400 to-green-500 dark:from-emerald-500 dark:via-emerald-400 dark:to-emerald-600" />
                         <CardContent className="p-8">
                             <div className="mb-6 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-green-900">Sign in</h2>
+                                    <h2 className="text-xl font-semibold text-green-900 dark:text-emerald-200">Sign in</h2>
                                     <p className="text-sm text-slate-500">
                                         Use your assigned credentials to access the clinic portal.
                                     </p>
@@ -348,27 +350,27 @@ export default function LoginPageClient() {
                             </div>
 
                             <Tabs defaultValue="doctor" className="w-full">
-                                <TabsList className="flex flex-wrap w-full grid-cols-2 gap-2 rounded-xl bg-green-100/60 p-1 text-sm sm:grid-cols-4">
+                                <TabsList className="flex flex-wrap w-full grid-cols-2 gap-2 rounded-xl bg-green-100/60 p-1 text-sm sm:grid-cols-4 dark:bg-slate-900/70">
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700 dark:data-[state=active]:bg-slate-900/80 dark:data-[state=active]:text-emerald-200"
                                         value="doctor"
                                     >
                                         Doctor
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700 dark:data-[state=active]:bg-slate-900/80 dark:data-[state=active]:text-emerald-200"
                                         value="nurse"
                                     >
                                         Nurse
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700 dark:data-[state=active]:bg-slate-900/80 dark:data-[state=active]:text-emerald-200"
                                         value="scholar"
                                     >
                                         Scholar
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700 dark:data-[state=active]:bg-slate-900/80 dark:data-[state=active]:text-emerald-200"
                                         value="patient"
                                     >
                                         Patient
@@ -403,9 +405,9 @@ export default function LoginPageClient() {
 
             {/* Forgot Password Modal */}
             <Dialog open={forgotOpen} onOpenChange={handleForgotToggle}>
-                <DialogContent className="max-w-sm">
+                <DialogContent className="max-w-sm dark:bg-slate-950">
                     <DialogHeader>
-                        <DialogTitle className="text-green-700">Reset Password</DialogTitle>
+                        <DialogTitle className="text-green-700 dark:text-emerald-200">Reset Password</DialogTitle>
                         <DialogDescription className="text-gray-600">
                             {tokenSent
                                 ? "Enter the 6 digit code sent to your email and set your new password."
@@ -437,7 +439,7 @@ export default function LoginPageClient() {
                                 <Button
                                     type="submit"
                                     disabled={verifying}
-                                    className="w-full bg-green-600 text-white hover:bg-green-700"
+                                    className="w-full bg-green-600 text-white hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400"
                                 >
                                     {verifying ? (
                                         <>
@@ -467,7 +469,7 @@ export default function LoginPageClient() {
                                             setShowResetPassword(false);
                                             setShowResetConfirmPassword(false);
                                         }}
-                                        className="text-xs font-medium text-green-700 underline-offset-2 hover:underline"
+                                        className="text-xs font-medium text-green-700 underline-offset-2 hover:underline dark:text-emerald-300"
                                     >
                                         Use a different contact
                                     </button>
@@ -519,7 +521,7 @@ export default function LoginPageClient() {
                                                     setNewPassword(e.target.value);
                                                     if (passwordError) setPasswordError(null);
                                                 }}
-                                                className="pr-12"
+                                            className="pr-12"
                                                 required
                                             />
                                             <Button
@@ -527,7 +529,7 @@ export default function LoginPageClient() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => setShowResetPassword((prev) => !prev)}
-                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
+                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent dark:text-slate-300"
                                             >
                                                 {showResetPassword ? (
                                                     <EyeOff className="h-5 w-5" />
@@ -546,7 +548,7 @@ export default function LoginPageClient() {
                                                     setConfirmPassword(e.target.value);
                                                     if (passwordError) setPasswordError(null);
                                                 }}
-                                                className="pr-12"
+                                            className="pr-12"
                                                 required
                                             />
                                             <Button
@@ -556,7 +558,7 @@ export default function LoginPageClient() {
                                                 onClick={() =>
                                                     setShowResetConfirmPassword((prev) => !prev)
                                                 }
-                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent"
+                                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-500 hover:bg-transparent dark:text-slate-300"
                                             >
                                                 {showResetConfirmPassword ? (
                                                     <EyeOff className="h-5 w-5" />
@@ -577,7 +579,7 @@ export default function LoginPageClient() {
                                     <Button
                                         type="submit"
                                         disabled={resetting}
-                                        className="w-full bg-green-600 text-white hover:bg-green-700"
+                                        className="w-full bg-green-600 text-white hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400"
                                     >
                                         {resetting ? (
                                             <>

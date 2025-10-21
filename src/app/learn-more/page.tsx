@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Users,
     Code2,
@@ -61,9 +62,9 @@ export default function LearnMorePage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+        <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
             {/* Header */}
-            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
+            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100 dark:bg-slate-950/80 dark:border-slate-800">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
                     {/* Logo + Title */}
                     <div className="flex items-center gap-1">
@@ -79,48 +80,58 @@ export default function LearnMorePage() {
                                 priority
                                 className="md:w-14 md:h-14"
                             />
-                            <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none">
+                            <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none dark:text-emerald-300">
                                 HNU Clinic
                             </h1>
                         </Link>
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                    <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
                         {navigation.map((item) => (
-                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="text-gray-700 hover:text-green-600 transition dark:text-slate-200 dark:hover:text-emerald-300"
+                            >
                                 {item.label}
                             </Link>
                         ))}
+                        <ThemeToggle className="hidden lg:inline-flex" />
                         <Link href="/login">
-                            <Button className="bg-green-600 hover:bg-green-700 shadow-sm">Login</Button>
+                            <Button className="bg-green-600 hover:bg-green-700 shadow-sm dark:bg-emerald-500 dark:hover:bg-emerald-400">
+                                Login
+                            </Button>
                         </Link>
                     </nav>
 
                     {/* Mobile Nav Toggle */}
-                    <button
-                        className="md:hidden p-2"
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        aria-label={menuOpen ? "Close menu" : "Open menu"}
-                    >
-                        {menuOpen ? (
-                            <X className="w-6 h-6 text-green-600" />
-                        ) : (
-                            <Menu className="w-6 h-6 text-green-600" />
-                        )}
-                    </button>
+                    <div className="flex items-center gap-2 md:hidden">
+                        <ThemeToggle size="sm" />
+                        <button
+                            className="p-2 text-green-600 dark:text-emerald-300"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label={menuOpen ? "Close menu" : "Open menu"}
+                        >
+                            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile Dropdown */}
                 {menuOpen && (
-                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95">
+                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95 dark:bg-slate-950/95">
                         {navigation.map((item) => (
-                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600">
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="text-gray-700 hover:text-green-600 dark:text-slate-200 dark:hover:text-emerald-300"
+                            >
                                 {item.label}
                             </Link>
                         ))}
                         <Link href="/login">
-                            <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
+                            <Button className="w-full bg-green-600 hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Login</Button>
                         </Link>
                     </div>
                 )}
@@ -128,26 +139,29 @@ export default function LearnMorePage() {
 
             {/* Hero Section */}
             <section className="relative overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50" />
-                <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.12),_transparent_65%)]" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900" />
+                <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.12),_transparent_65%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.25),_transparent_65%)]" />
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-6 md:px-12 py-16 md:py-24 gap-12">
                     <div className="max-w-xl space-y-6 text-center md:text-left">
-                        <span className="inline-flex items-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                        <span className="inline-flex items-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700 dark:border-slate-800 dark:bg-slate-950/80 dark:text-emerald-200">
                             Platform Overview
                         </span>
-                        <h2 className="text-3xl md:text-5xl font-bold text-green-700 leading-tight">
+                        <h2 className="text-3xl md:text-5xl font-bold text-green-700 leading-tight dark:text-emerald-200">
                             HNU Clinic’s digital system keeps campus healthcare organized, secure, and accessible.
                         </h2>
-                        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                        <p className="text-gray-700 text-base md:text-lg leading-relaxed dark:text-slate-200">
                             From streamlined appointment requests to comprehensive visit documentation, the platform supports every stage of the patient journey for students, faculty, and staff.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                             <Link href="/login">
-                                <Button size="lg" className="bg-green-600 hover:bg-green-700 shadow-md">
+                                <Button size="lg" className="bg-green-600 hover:bg-green-700 shadow-md dark:bg-emerald-500 dark:hover:bg-emerald-400">
                                     Go to Portal
                                 </Button>
                             </Link>
-                            <Link href="/about" className="flex items-center justify-center gap-2 text-green-700 text-sm font-medium hover:text-green-800">
+                            <Link
+                                href="/about"
+                                className="flex items-center justify-center gap-2 text-green-700 text-sm font-medium hover:text-green-800 dark:text-emerald-300 dark:hover:text-emerald-200"
+                            >
                                 <span>Discover our clinic team</span>
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
@@ -194,7 +208,7 @@ export default function LearnMorePage() {
             </section>
 
             {/* Technologies Used */}
-            <section className="py-16 md:py-20 px-6 md:px-12 bg-white">
+            <section className="py-16 md:py-20 px-6 md:px-12 bg-white dark:bg-slate-950">
                 <div className="max-w-6xl mx-auto space-y-10">
                     <div className="text-center space-y-4">
                         <Code2 className="w-12 h-12 text-green-600 mx-auto" />

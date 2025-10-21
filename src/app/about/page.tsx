@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Menu,
     X,
@@ -51,9 +52,9 @@ export default function AboutPage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+        <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
             {/* Header */}
-            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
+            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100 dark:bg-slate-950/80 dark:border-slate-800">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
                     {/* Logo + Title */}
                     <div className="flex items-center gap-1">
@@ -69,47 +70,54 @@ export default function AboutPage() {
                                 priority
                                 className="md:w-14 md:h-14"
                             />
-                            <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none">
+                            <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none dark:text-emerald-300">
                                 HNU Clinic
                             </h1>
                         </Link>
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                    <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
                         {navigation.map((item) => (
-                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="text-gray-700 hover:text-green-600 transition dark:text-slate-200 dark:hover:text-emerald-300"
+                            >
                                 {item.label}
                             </Link>
                         ))}
+                        <ThemeToggle className="hidden lg:inline-flex" />
                         <Link href="/login">
-                            <Button className="bg-green-600 hover:bg-green-700 shadow-sm">Login</Button>
+                            <Button className="bg-green-600 hover:bg-green-700 shadow-sm dark:bg-emerald-500 dark:hover:bg-emerald-400">
+                                Login
+                            </Button>
                         </Link>
                     </nav>
 
                     {/* Mobile Menu Button */}
-                    <button
-                        className="md:hidden p-2"
-                        onClick={() => setMenuOpen(!menuOpen)}
-                    >
-                        {menuOpen ? (
-                            <X className="w-6 h-6 text-green-600" />
-                        ) : (
-                            <Menu className="w-6 h-6 text-green-600" />
-                        )}
-                    </button>
+                    <div className="flex items-center gap-2 md:hidden">
+                        <ThemeToggle size="sm" />
+                        <button className="p-2 text-green-600 dark:text-emerald-300" onClick={() => setMenuOpen(!menuOpen)}>
+                            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile Dropdown Nav */}
                 {menuOpen && (
-                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95">
+                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95 dark:bg-slate-950/95">
                         {navigation.map((item) => (
-                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="text-gray-700 hover:text-green-600 transition dark:text-slate-200 dark:hover:text-emerald-300"
+                            >
                                 {item.label}
                             </Link>
                         ))}
                         <Link href="/login">
-                            <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
+                            <Button className="w-full bg-green-600 hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Login</Button>
                         </Link>
                     </div>
                 )}
