@@ -252,6 +252,7 @@ export async function GET() {
                 email: u.student?.email ?? u.employee?.email ?? null,
                 contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,
+                specialization: u.specialization,
             };
         });
 

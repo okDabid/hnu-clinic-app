@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import orderBy from "lodash/orderBy";
 import { toast } from "sonner";
 import { Ban, CheckCircle2, Loader2, Search } from "lucide-react";
@@ -32,6 +32,14 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -41,6 +49,7 @@ import {
 import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
+import { cn } from "@/lib/utils";
 
 import NurseAccountsLoading from "./loading";
 
@@ -51,7 +60,11 @@ type User = {
     role: string;
     status: "Active" | "Inactive";
     fullName: string;
+    specialization: "Physician" | "Dentist" | null;
 };
+
+type RoleFilterValue = "ALL" | "SCHOLAR" | "NURSE" | "DOCTOR" | "PATIENT";
+type StatusFilterValue = "ALL" | "Active" | "Inactive";
 
 type CreateUserPayload = {
     role: string;
@@ -116,6 +129,8 @@ export default function NurseAccountsPage() {
     const [role, setRole] = useState("");
     const [gender, setGender] = useState<"Male" | "Female" | "">("");
     const [patientType, setPatientType] = useState<"student" | "employee" | "">("");
+    const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("ALL");
+    const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
 
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
@@ -131,6 +146,12 @@ export default function NurseAccountsPage() {
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
 
     const [specialization, setSpecialization] = useState<"Physician" | "Dentist" | null>(null);
+    const [pendingPayload, setPendingPayload] = useState<CreateUserPayload | null>(null);
+    const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+    const [createdCredentials, setCreatedCredentials] = useState<{ id: string; password: string } | null>(null);
+    const [showCreateSuccess, setShowCreateSuccess] = useState(false);
+
+    const formRef = useRef<HTMLFormElement | null>(null);
 
     const initializing = !(profileLoaded && usersLoaded);
 
@@ -167,6 +188,7 @@ export default function NurseAccountsPage() {
                             u.fullName ||
                             [u.fname, u.mname, u.lname].filter(Boolean).join(" ") ||
                             "Unnamed",
+                        specialization: u.specialization ?? null,
                     });
                 }
             }
@@ -254,68 +276,156 @@ export default function NurseAccountsPage() {
         loadUsers();
     }, []);
 
-    const filteredUsers = users.filter(
-        (u) =>
-            u.user_id.toLowerCase().includes(search.toLowerCase()) ||
-            u.role.toLowerCase().includes(search.toLowerCase()) ||
-            u.fullName.toLowerCase().includes(search.toLowerCase())
+    useEffect(() => {
+        if (role !== "PATIENT") {
+            setPatientType("");
+        }
+        if (role !== "DOCTOR") {
+            setSpecialization(null);
+        }
+    }, [role]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [roleFilter, statusFilter]);
+
+    const filteredUsers = useMemo(
+        () =>
+            users.filter((u) => {
+                const normalizedQuery = search.toLowerCase();
+                const matchesQuery =
+                    u.user_id.toLowerCase().includes(normalizedQuery) ||
+                    u.role.toLowerCase().includes(normalizedQuery) ||
+                    u.fullName.toLowerCase().includes(normalizedQuery);
+
+                const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+                const matchesStatus = statusFilter === "ALL" || u.status === statusFilter;
+
+                return matchesQuery && matchesRole && matchesStatus;
+            }),
+        [users, search, roleFilter, statusFilter]
     );
 
     // Create user
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        const formData = new FormData(e.currentTarget);
+
+        if (!role) {
+            toast.error("Please select a role for the new account.", { position: "top-center" });
+            return;
+        }
+
+        if (!gender) {
+            toast.error("Please choose a gender for the new account.", { position: "top-center" });
+            return;
+        }
+
+        if (role === "PATIENT" && !patientType) {
+            toast.error("Please specify whether the patient is a student or employee.", {
+                position: "top-center",
+            });
+            return;
+        }
+
+        if (role === "DOCTOR" && !specialization) {
+            toast.error("Please select a specialization for the doctor.", { position: "top-center" });
+            return;
+        }
+
+        const formElement = e.currentTarget;
+        formRef.current = formElement;
+        const formData = new FormData(formElement);
+
+        const getTrimmedValue = (key: string) => {
+            const value = formData.get(key);
+            return typeof value === "string" ? value.trim() : "";
+        };
+
+        const fname = getTrimmedValue("fname");
+        const mnameRaw = getTrimmedValue("mname");
+        const lname = getTrimmedValue("lname");
+        const date_of_birth = getTrimmedValue("date_of_birth");
+        const employeeId = getTrimmedValue("employee_id");
+        const studentId = getTrimmedValue("student_id");
+        const schoolId = getTrimmedValue("school_id");
 
         const payload: CreateUserPayload = {
             role,
-            fname: formData.get("fname") as string,
-            mname: formData.get("mname") as string,
-            lname: formData.get("lname") as string,
-            date_of_birth: formData.get("date_of_birth") as string,
+            fname,
+            mname: mnameRaw || null,
+            lname,
+            date_of_birth,
             gender: gender as "Male" | "Female",
             employee_id:
                 role === "NURSE" ||
                     role === "DOCTOR" ||
                     (role === "PATIENT" && patientType === "employee")
-                    ? (formData.get("employee_id") as string)
+                    ? employeeId || null
                     : null,
             student_id:
-                role === "PATIENT" && patientType === "student"
-                    ? (formData.get("student_id") as string)
-                    : null,
-            school_id: role === "SCHOLAR" ? (formData.get("school_id") as string) : null,
+                role === "PATIENT" && patientType === "student" ? (studentId || null) : null,
+            school_id: role === "SCHOLAR" ? (schoolId || null) : null,
             patientType: patientType || null,
             specialization: role === "DOCTOR" ? specialization : null,
         };
+
+        setPendingPayload(payload);
+        setShowCreateConfirm(true);
+    }
+
+    const handleCreateDialogChange = (open: boolean) => {
+        if (!open && !loading) {
+            setPendingPayload(null);
+        }
+        setShowCreateConfirm(open);
+    };
+
+    const handleCreateSuccessChange = (open: boolean) => {
+        if (!open) {
+            setShowCreateSuccess(false);
+            setCreatedCredentials(null);
+            return;
+        }
+
+        setShowCreateSuccess(true);
+    };
+
+    async function handleConfirmCreate() {
+        if (!pendingPayload) return;
 
         try {
             setLoading(true);
             const res = await fetch("/api/nurse/accounts", {
                 method: "POST",
-                body: JSON.stringify(payload),
+                body: JSON.stringify(pendingPayload),
                 headers: { "Content-Type": "application/json" },
             });
             const data: CreateUserResponse = await res.json();
 
             if (data.error) {
                 toast.error(data.error, { position: "top-center" });
-            } else {
-                toast.success(
-                    <div className="text-left space-y-1">
-                        <p className="font-semibold text-green-700">Account Created!</p>
-                        <p>
-                            <span className="font-medium">ID:</span>{" "}
-                            <span className="text-green-800">{data.id}</span>
-                        </p>
-                        <p>
-                            <span className="font-medium">Password:</span>{" "}
-                            <span className="text-green-800">{data.password}</span>
-                        </p>
-                    </div>,
-                    { position: "top-center", duration: 6000 }
-                );
-                loadUsers();
+                return;
             }
+
+            if (data.id || data.password) {
+                setCreatedCredentials({
+                    id: data.id ?? "Unavailable",
+                    password: data.password ?? "Unavailable",
+                });
+            } else {
+                setCreatedCredentials(null);
+            }
+
+            setShowCreateSuccess(true);
+
+            formRef.current?.reset();
+            setRole("");
+            setGender("");
+            setPatientType("");
+            setSpecialization(null);
+            setPendingPayload(null);
+            setShowCreateConfirm(false);
+            await loadUsers();
         } catch {
             toast.error("Something went wrong. Please try again.", {
                 position: "top-center",
@@ -448,6 +558,53 @@ export default function NurseAccountsPage() {
 
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+    const roleLabelMap: Record<string, string> = {
+        SCHOLAR: "Working Scholar",
+        NURSE: "Nurse",
+        DOCTOR: "Doctor",
+        PATIENT: "Patient",
+    };
+
+    const pendingFullName = pendingPayload
+        ? [pendingPayload.fname, pendingPayload.mname, pendingPayload.lname].filter(Boolean).join(" ")
+        : "";
+
+    const pendingIdentifier = pendingPayload
+        ? (() => {
+            if (pendingPayload.role === "SCHOLAR") {
+                return { label: "School ID", value: pendingPayload.school_id ?? "—" };
+            }
+            if (pendingPayload.role === "NURSE" || pendingPayload.role === "DOCTOR") {
+                return { label: "Employee ID", value: pendingPayload.employee_id ?? "—" };
+            }
+            if (pendingPayload.role === "PATIENT") {
+                if (pendingPayload.patientType === "student") {
+                    return { label: "Student ID", value: pendingPayload.student_id ?? "—" };
+                }
+                if (pendingPayload.patientType === "employee") {
+                    return { label: "Employee ID", value: pendingPayload.employee_id ?? "—" };
+                }
+                return { label: "Patient Type", value: "Not specified" };
+            }
+            return null;
+        })()
+        : null;
+
+    const pendingDOBLabel = pendingPayload?.date_of_birth
+        ? (() => {
+            const parsed = new Date(pendingPayload.date_of_birth);
+            if (Number.isNaN(parsed.getTime())) {
+                return pendingPayload.date_of_birth;
+            }
+            return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(parsed);
+        })()
+        : "—";
+
+    const pendingPatientTypeLabel = pendingPayload?.patientType
+        ? pendingPayload.patientType === "student"
+            ? "Student"
+            : "Employee"
+        : null;
 
     if (initializing) {
         return <NurseAccountsLoading />;
@@ -760,7 +917,7 @@ export default function NurseAccountsPage() {
                     </CardHeader>
 
                     <CardContent className="pt-6">
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
                             {/* Role Selection */}
                             <div className="space-y-2">
                                 <Label className="block mb-1 font-medium">Role</Label>
@@ -892,25 +1049,190 @@ export default function NurseAccountsPage() {
                                 {loading ? "Creating..." : "Create User"}
                             </Button>
                         </form>
+                        <AlertDialog open={showCreateConfirm} onOpenChange={handleCreateDialogChange}>
+                            <AlertDialogContent className="max-w-lg">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirm new user account</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Review the details below. Creating this account will immediately generate login credentials.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                {pendingPayload ? (
+                                    <div className="rounded-2xl border border-green-100 bg-green-50/60 p-4 text-sm text-gray-700">
+                                        <dl className="space-y-2">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <dt className="text-gray-500">Role</dt>
+                                                <dd className="font-semibold text-gray-900">
+                                                    {roleLabelMap[pendingPayload.role] ?? pendingPayload.role}
+                                                </dd>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <dt className="text-gray-500">Full Name</dt>
+                                                <dd className="text-right font-medium text-gray-900">
+                                                    {pendingFullName || "—"}
+                                                </dd>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <dt className="text-gray-500">Gender</dt>
+                                                <dd className="font-medium text-gray-900">{pendingPayload.gender}</dd>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <dt className="text-gray-500">Date of Birth</dt>
+                                                <dd className="font-medium text-gray-900">{pendingDOBLabel}</dd>
+                                            </div>
+                                            {pendingPatientTypeLabel && (
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <dt className="text-gray-500">Patient Type</dt>
+                                                    <dd className="font-medium text-gray-900">{pendingPatientTypeLabel}</dd>
+                                                </div>
+                                            )}
+                                            {pendingPayload.role === "DOCTOR" && (
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <dt className="text-gray-500">Specialization</dt>
+                                                    <dd className="font-medium text-gray-900">
+                                                        {pendingPayload.specialization ?? "—"}
+                                                    </dd>
+                                                </div>
+                                            )}
+                                            {pendingIdentifier && (
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <dt className="text-gray-500">{pendingIdentifier.label}</dt>
+                                                    <dd className="font-medium text-gray-900">
+                                                        {pendingIdentifier.value || "—"}
+                                                    </dd>
+                                                </div>
+                                            )}
+                                        </dl>
+                                        <p className="mt-4 text-xs text-gray-500">
+                                            A one-time password will be shown after confirming. Share it securely with the user.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-600">
+                                        Provide the new user details first to review them here.
+                                    </p>
+                                )}
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel disabled={loading}>Go back</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        disabled={loading || !pendingPayload}
+                                        onClick={handleConfirmCreate}
+                                        className={cn(
+                                            "bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-offset-2",
+                                            loading && "pointer-events-none opacity-80"
+                                        )}
+                                    >
+                                        {loading ? (
+                                            <span className="flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Creating...
+                                            </span>
+                                        ) : (
+                                            "Confirm & Create"
+                                        )}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        <Dialog open={showCreateSuccess} onOpenChange={handleCreateSuccessChange}>
+                            <DialogContent className="max-w-sm rounded-3xl border border-green-100/80 bg-white/95">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2 text-green-700">
+                                        <CheckCircle2 className="h-5 w-5" /> Account created
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        Share the temporary password securely. The password will not be shown again after
+                                        closing this dialog.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                {createdCredentials ? (
+                                    <div className="rounded-2xl border border-green-100 bg-green-50/70 p-4 text-sm text-gray-700">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="text-gray-500">User ID</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {createdCredentials.id}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between gap-4">
+                                            <span className="text-gray-500">Password</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {createdCredentials.password}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-yellow-100 bg-yellow-50/80 p-4 text-sm text-gray-700">
+                                        <p className="font-medium text-yellow-900">Account created successfully.</p>
+                                        <p className="mt-2 text-xs text-yellow-800">
+                                            The account is ready to use, but no credentials were returned by the server.
+                                        </p>
+                                    </div>
+                                )}
+                                <DialogFooter>
+                                    <Button
+                                        type="button"
+                                        className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                                        onClick={() => handleCreateSuccessChange(false)}
+                                    >
+                                        Done
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </CardContent>
                 </Card>
 
 
                 {/* Manage Users */}
                 <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
-                    <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">Manage Existing Users</CardTitle>
-                        <div className="relative w-full md:w-72">
-                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                            <Input
-                                placeholder="Search by ID, role, or name..."
-                                value={search}
-                                onChange={(e) => {
-                                    setSearch(e.target.value);
-                                    setCurrentPage(1);
-                                }}
-                                className="pl-8"
-                            />
+                    <CardHeader className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                Manage Existing Users
+                            </CardTitle>
+                            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end">
+                                <div className="relative w-full md:w-60 lg:w-72">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        placeholder="Search by ID, role, or name..."
+                                        value={search}
+                                        onChange={(e) => {
+                                            setSearch(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="pl-8"
+                                    />
+                                </div>
+                                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end md:w-auto">
+                                    <Select
+                                        value={roleFilter}
+                                        onValueChange={(val) => setRoleFilter(val as RoleFilterValue)}
+                                    >
+                                        <SelectTrigger className="h-10 border-green-200">
+                                            <SelectValue placeholder="All roles" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ALL">All roles</SelectItem>
+                                            <SelectItem value="DOCTOR">Doctor</SelectItem>
+                                            <SelectItem value="NURSE">Nurse</SelectItem>
+                                            <SelectItem value="PATIENT">Patient</SelectItem>
+                                            <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Select
+                                        value={statusFilter}
+                                        onValueChange={(val) => setStatusFilter(val as StatusFilterValue)}
+                                    >
+                                        <SelectTrigger className="h-10 border-green-200">
+                                            <SelectValue placeholder="All statuses" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="ALL">All statuses</SelectItem>
+                                            <SelectItem value="Active">Active</SelectItem>
+                                            <SelectItem value="Inactive">Inactive</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
                     </CardHeader>
 
@@ -933,7 +1255,22 @@ export default function NurseAccountsPage() {
                                             .map((user) => (
                                                 <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-green-50 transition">
                                                     <TableCell className="whitespace-nowrap text-xs sm:text-sm">{user.user_id}</TableCell>
-                                                    <TableCell>{user.role}</TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-gray-900">{user.role}</span>
+                                                            {user.role === "DOCTOR" && (
+                                                                user.specialization ? (
+                                                                    <span className="text-xs font-medium text-green-700">
+                                                                        {user.specialization}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-xs italic text-gray-500">
+                                                                        No specialization
+                                                                    </span>
+                                                                )
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
                                                     <TableCell>{user.fullName}</TableCell>
                                                     <TableCell>
                                                         <Badge
@@ -951,8 +1288,13 @@ export default function NurseAccountsPage() {
                                                             <AlertDialogTrigger asChild>
                                                                 <Button
                                                                     size="sm"
-                                                                    variant={user.status === "Active" ? "destructive" : "default"}
-                                                                    className="gap-2"
+                                                                    variant="outline"
+                                                                    className={cn(
+                                                                        "gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors",
+                                                                        user.status === "Active"
+                                                                            ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                                                            : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
+                                                                    )}
                                                                 >
                                                                     {user.status === "Active" ? (
                                                                         <>
@@ -972,18 +1314,26 @@ export default function NurseAccountsPage() {
                                                                     </AlertDialogTitle>
                                                                     <AlertDialogDescription>
                                                                         {user.status === "Active"
-                                                                            ? "This will prevent the user from signing in until reactivated."
-                                                                            : "This will allow the user to sign in and use the system."}
+                                                                            ? "The account will be signed out and unable to access the system until reactivated."
+                                                                            : "The account will regain access to the clinic system."}
                                                                     </AlertDialogDescription>
+                                                                    {user.role === "DOCTOR" && (
+                                                                        <p className="mt-3 rounded-lg bg-emerald-50/80 p-3 text-sm font-medium text-emerald-700">
+                                                                            {user.status === "Active"
+                                                                                ? "Deactivated doctors will no longer appear as options when patients book appointments."
+                                                                                : "Reactivated doctors will once again be available for patient appointment scheduling."}
+                                                                        </p>
+                                                                    )}
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter>
                                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                                     <AlertDialogAction
-                                                                        className={
+                                                                        className={cn(
+                                                                            "text-white focus:outline-none focus:ring-2 focus:ring-offset-2",
                                                                             user.status === "Active"
-                                                                                ? "bg-red-600 hover:bg-red-700"
-                                                                                : "bg-green-600 hover:bg-green-700"
-                                                                        }
+                                                                                ? "bg-red-600 hover:bg-red-700 focus:ring-red-200"
+                                                                                : "bg-green-600 hover:bg-green-700 focus:ring-green-200"
+                                                                        )}
                                                                         onClick={() => handleToggle(user.accountId, user.status)}
                                                                     >
                                                                         {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
@@ -996,7 +1346,7 @@ export default function NurseAccountsPage() {
                                             ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={5} className="text-center text-gray-500 py-6">
+                                            <TableCell colSpan={6} className="text-center text-gray-500 py-6">
                                                 No users found
                                             </TableCell>
                                         </TableRow>
