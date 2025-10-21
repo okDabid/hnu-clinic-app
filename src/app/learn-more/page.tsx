@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Users,
     Code2,
@@ -86,15 +87,18 @@ export default function LearnMorePage() {
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
                         {navigation.map((item) => (
-                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                            <Link key={item.label} href={item.href} className="text-gray-700 transition hover:text-green-600">
                                 {item.label}
                             </Link>
                         ))}
-                        <Link href="/login">
-                            <Button className="bg-green-600 hover:bg-green-700 shadow-sm">Login</Button>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <ThemeToggle className="border-none bg-transparent shadow-none hover:bg-green-100/70 dark:hover:bg-emerald-500/20" />
+                            <Link href="/login">
+                                <Button className="bg-green-600 text-white shadow-sm hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Login</Button>
+                            </Link>
+                        </div>
                     </nav>
 
                     {/* Mobile Nav Toggle */}
@@ -113,15 +117,16 @@ export default function LearnMorePage() {
 
                 {/* Mobile Dropdown */}
                 {menuOpen && (
-                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95">
+                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95 dark:bg-slate-900/95">
                         {navigation.map((item) => (
                             <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600">
                                 {item.label}
                             </Link>
                         ))}
                         <Link href="/login">
-                            <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
+                            <Button className="w-full bg-green-600 hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Login</Button>
                         </Link>
+                        <ThemeToggle className="ml-auto border-none bg-transparent shadow-none hover:bg-green-100/70 dark:hover:bg-emerald-500/20" />
                     </div>
                 )}
             </header>
