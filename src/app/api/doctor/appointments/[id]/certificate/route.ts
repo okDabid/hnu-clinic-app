@@ -322,28 +322,37 @@ function renderCertificateHtml(context: CertificateContext) {
 
       .field-line {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 10px;
         font-size: 14px;
         margin-bottom: 6px;
+        flex-wrap: wrap;
       }
 
       .field-label {
-        width: 160px;
+        flex: 0 0 150px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         font-size: 12px;
       }
 
+      .field-line .underline {
+        flex: 1 1 auto;
+      }
+
       .field-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 6px 12px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 6px 16px;
       }
 
       .field-grid .field-line {
         margin-bottom: 0;
+      }
+
+      .field-grid .field-label {
+        flex-basis: 120px;
       }
 
       .checkbox-grid {
@@ -840,8 +849,8 @@ export async function GET(
             medicalConditions,
             doctorName,
             doctorTitle,
-            licenseNumber: doctorEmployee?.employee_id ?? "",
-            ptrNumber: doctorEmployee?.contactno ?? "",
+            licenseNumber: "",
+            ptrNumber: "",
         };
 
         const html = renderCertificateHtml(context);
