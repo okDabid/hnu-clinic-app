@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Users,
     Code2,
@@ -63,7 +64,7 @@ export default function LearnMorePage() {
     return (
         <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
             {/* Header */}
-            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
+            <header className="w-full sticky top-0 z-50 border-b border-green-100 bg-white/80 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
                     {/* Logo + Title */}
                     <div className="flex items-center gap-1">
@@ -86,29 +87,33 @@ export default function LearnMorePage() {
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
                         {navigation.map((item) => (
                             <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
                                 {item.label}
                             </Link>
                         ))}
+                        <ThemeToggle />
                         <Link href="/login">
                             <Button className="bg-green-600 hover:bg-green-700 shadow-sm">Login</Button>
                         </Link>
                     </nav>
 
                     {/* Mobile Nav Toggle */}
-                    <button
-                        className="md:hidden p-2"
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        aria-label={menuOpen ? "Close menu" : "Open menu"}
-                    >
-                        {menuOpen ? (
-                            <X className="w-6 h-6 text-green-600" />
-                        ) : (
-                            <Menu className="w-6 h-6 text-green-600" />
-                        )}
-                    </button>
+                    <div className="flex items-center gap-2 md:hidden">
+                        <ThemeToggle />
+                        <button
+                            className="rounded-full p-2 transition hover:bg-green-100/60"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label={menuOpen ? "Close menu" : "Open menu"}
+                        >
+                            {menuOpen ? (
+                                <X className="w-6 h-6 text-green-600" />
+                            ) : (
+                                <Menu className="w-6 h-6 text-green-600" />
+                            )}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile Dropdown */}
@@ -119,6 +124,7 @@ export default function LearnMorePage() {
                                 {item.label}
                             </Link>
                         ))}
+                        <ThemeToggle className="self-start" />
                         <Link href="/login">
                             <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
                         </Link>

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -293,7 +295,10 @@ export default function LoginPageClient() {
 
     // ---------- RENDER ----------
     return (
-        <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-white to-green-200">
+        <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-white to-green-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+            <div className="absolute inset-x-0 top-0 z-10 flex justify-end px-6 py-6">
+                <ThemeToggle />
+            </div>
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-green-300/40 blur-3xl" />
                 <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-green-300/40 blur-3xl" />
