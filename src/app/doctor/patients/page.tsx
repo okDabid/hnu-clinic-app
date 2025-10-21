@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, BadgeCheck, Loader2, RefreshCcw, Search, Stethoscope, Users2 } from "lucide-react";
+import {
+    AlertCircle,
+    BadgeCheck,
+    FileText,
+    Loader2,
+    RefreshCcw,
+    Search,
+    Stethoscope,
+    Users2,
+} from "lucide-react";
 
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
@@ -204,6 +213,7 @@ export default function DoctorPatientsPage() {
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<PatientRecord | null>(null);
     const [activeTab, setActiveTab] = useState<"details" | "update" | "notes">("details");
+    const [generatingCertificateId, setGeneratingCertificateId] = useState<string | null>(null);
 
     const loadRecords = useCallback(async () => {
         try {
@@ -348,6 +358,57 @@ export default function DoctorPatientsPage() {
             }
         } finally {
             setSavingNotesPatientId(null);
+        }
+    }
+
+    async function handleGenerateCertificate(record: PatientRecord) {
+        if (!record.latestAppointment?.id) {
+            toast.error("No appointment available for certificate issuance");
+            return;
+        }
+
+        if (!record.latestAppointment?.consultation) {
+            toast.error("Add consultation notes before generating a certificate");
+            return;
+        }
+
+        setGeneratingCertificateId(record.id);
+
+        try {
+            const res = await fetch(`/api/doctor/patient-consultations/certificate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ appointment_id: record.latestAppointment.id }),
+            });
+
+            if (!res.ok) {
+                const error = await res.json().catch(() => null);
+                toast.error(error?.error ?? "Failed to generate certificate");
+                return;
+            }
+
+            const blob = await res.blob();
+            const disposition = res.headers.get("Content-Disposition") ?? "";
+            const match = disposition.match(/filename="?([^";]+)"?/i);
+            const filename = match?.[1] ?? "medical-certificate.pdf";
+
+            if (typeof window !== "undefined") {
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = url;
+                anchor.download = filename;
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+            }
+
+            toast.success("Certificate downloaded");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to generate certificate");
+        } finally {
+            setGeneratingCertificateId(null);
         }
     }
 
@@ -698,6 +759,31 @@ export default function DoctorPatientsPage() {
                                                         {" "}
                                                         {formatManilaDateTime(selectedRecord.latestAppointment.consultation.updatedAt) || "—"}
                                                     </p>
+                                                </div>
+                                            ) : null}
+
+                                            {selectedRecord.patientType === "Student" &&
+                                            selectedRecord.latestAppointment?.consultation ? (
+                                                <div className="mt-4 flex justify-end">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="border-green-600 text-green-700 hover:bg-green-50"
+                                                        onClick={() => handleGenerateCertificate(selectedRecord)}
+                                                        disabled={generatingCertificateId === selectedRecord.id}
+                                                    >
+                                                        {generatingCertificateId === selectedRecord.id ? (
+                                                            <>
+                                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                Generating...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <FileText className="mr-2 h-4 w-4" />
+                                                                Generate certificate
+                                                            </>
+                                                        )}
+                                                    </Button>
                                                 </div>
                                             ) : null}
                                         </div>
