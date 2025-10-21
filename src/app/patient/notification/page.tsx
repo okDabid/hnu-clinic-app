@@ -16,6 +16,8 @@ import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import PatientNotificationLoading from "./loading";
+
 const notificationHighlights = [
     {
         icon: Mail,
@@ -72,7 +74,11 @@ const statusUpdates = [
 ];
 
 export default function PatientNotificationPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+
+    if (status === "loading") {
+        return <PatientNotificationLoading />;
+    }
 
     const fullName = session?.user?.name ?? "Patient";
 

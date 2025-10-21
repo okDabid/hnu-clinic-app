@@ -39,6 +39,8 @@ import { toast } from "sonner";
 import { formatManilaDateTime } from "@/lib/time";
 import { BLOOD_TYPES } from "@/lib/patient-records-update";
 
+import NurseRecordsLoading from "./loading";
+
 type PatientRecord = {
     id: string;
     userId: string;
@@ -208,6 +210,7 @@ export default function NurseRecordsPage() {
     const [typeFilter, setTypeFilter] = useState("All");
     const [appointmentFilter, setAppointmentFilter] = useState("All");
     const [loadingRecords, setLoadingRecords] = useState(false);
+    const [initializing, setInitializing] = useState(true);
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<PatientRecord | null>(null);
     const [activeTab, setActiveTab] = useState<"details" | "update" | "notes">("details");
@@ -225,6 +228,7 @@ export default function NurseRecordsPage() {
             toast.error("Error loading records.");
         } finally {
             setLoadingRecords(false);
+            setInitializing(false);
         }
     }, []);
 
@@ -349,6 +353,10 @@ export default function NurseRecordsPage() {
         } finally {
             setSavingNotesPatientId(null);
         }
+    }
+
+    if (initializing) {
+        return <NurseRecordsLoading />;
     }
 
     return (

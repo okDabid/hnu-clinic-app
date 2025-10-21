@@ -31,6 +31,8 @@ import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
+import PatientAccountLoading from "./loading";
+
 
 // Enum ↔ Label Mappings
 const departmentEnumMap: Record<string, string> = {
@@ -168,6 +170,8 @@ export default function PatientAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
 
+    const [initializing, setInitializing] = useState(true);
+
     const [profileType, setProfileType] = useState<"student" | "employee" | null>(null);
 
     const [tempDOB, setTempDOB] = useState("");
@@ -215,6 +219,8 @@ export default function PatientAccountPage() {
             });
         } catch {
             toast.error("Failed to load profile");
+        } finally {
+            setInitializing(false);
         }
     }, []);
 
@@ -340,6 +346,10 @@ export default function PatientAccountPage() {
         },
         []
     );
+
+    if (initializing) {
+        return <PatientAccountLoading />;
+    }
 
     return (
         <PatientLayout

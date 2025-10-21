@@ -38,6 +38,8 @@ import {
 } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 
+import ScholarAppointmentsLoading from "./loading";
+
 const STATUS_ORDER = ["Pending", "Approved", "Moved", "Completed", "Cancelled"] as const;
 
 type AppointmentStatus = (typeof STATUS_ORDER)[number];
@@ -146,6 +148,7 @@ function formatTimeWindow(start: string, end: string) {
 export default function ScholarAppointmentsPage() {
     const [appointments, setAppointments] = useState<ScholarAppointment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [initializing, setInitializing] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -255,6 +258,7 @@ export default function ScholarAppointmentsPage() {
             toast.error("Unable to load appointments");
         } finally {
             setLoading(false);
+            setInitializing(false);
         }
     }, []);
 
@@ -539,6 +543,10 @@ export default function ScholarAppointmentsPage() {
         } finally {
             setCreateSubmitting(false);
         }
+    }
+
+    if (initializing) {
+        return <ScholarAppointmentsLoading />;
     }
 
     return (

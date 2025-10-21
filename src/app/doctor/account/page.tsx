@@ -12,6 +12,8 @@ import { AccountCard } from "@/components/account/account-card";
 import { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
+import DoctorAccountLoading from "./loading";
+
 import {
     AlertDialog,
     AlertDialogAction,
@@ -70,6 +72,7 @@ const reverseBloodTypeEnumMap = Object.fromEntries(
 export default function DoctorAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
+    const [initializing, setInitializing] = useState(true);
 
     const [tempDOB, setTempDOB] = useState("");
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
@@ -118,6 +121,8 @@ export default function DoctorAccountPage() {
         } catch (err) {
             console.error("Failed to load profile:", err);
             toast.error("Failed to load profile");
+        } finally {
+            setInitializing(false);
         }
     }, []);
 
@@ -221,6 +226,10 @@ export default function DoctorAccountPage() {
     );
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+    if (initializing) {
+        return <DoctorAccountLoading />;
+    }
 
     return (
         <DoctorLayout

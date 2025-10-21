@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/select";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
+import ScholarAccountLoading from "./loading";
+
 const departmentEnumMap: Record<string, string> = {
     EDUCATION: "College of Education",
     ARTS_AND_SCIENCES: "College of Arts and Sciences",
@@ -232,6 +234,7 @@ function formatRequestPayload(profile: Profile) {
 export default function ScholarAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(true);
+    const [initializing, setInitializing] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [dobConfirmOpen, setDobConfirmOpen] = useState(false);
     const [dobSaving, setDobSaving] = useState(false);
@@ -259,6 +262,7 @@ export default function ScholarAccountPage() {
             setProfile(null);
         } finally {
             setProfileLoading(false);
+            setInitializing(false);
         }
     }, []);
 
@@ -401,6 +405,10 @@ export default function ScholarAccountPage() {
             setDobSaving(false);
         }
     }, [loadProfile, profile, tempDOB]);
+
+    if (initializing) {
+        return <ScholarAccountLoading />;
+    }
 
     return (
         <ScholarLayout
