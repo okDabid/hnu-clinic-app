@@ -32,6 +32,14 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -140,6 +148,8 @@ export default function NurseAccountsPage() {
     const [specialization, setSpecialization] = useState<"Physician" | "Dentist" | null>(null);
     const [pendingPayload, setPendingPayload] = useState<CreateUserPayload | null>(null);
     const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+    const [createdCredentials, setCreatedCredentials] = useState<{ id: string; password: string } | null>(null);
+    const [showCreateSuccess, setShowCreateSuccess] = useState(false);
 
     const formRef = useRef<HTMLFormElement | null>(null);
 
@@ -370,6 +380,16 @@ export default function NurseAccountsPage() {
         setShowCreateConfirm(open);
     };
 
+    const handleCreateSuccessChange = (open: boolean) => {
+        if (!open) {
+            setShowCreateSuccess(false);
+            setCreatedCredentials(null);
+            return;
+        }
+
+        setShowCreateSuccess(true);
+    };
+
     async function handleConfirmCreate() {
         if (!pendingPayload) return;
 
@@ -387,20 +407,16 @@ export default function NurseAccountsPage() {
                 return;
             }
 
-            toast.success(
-                <div className="text-left space-y-1">
-                    <p className="font-semibold text-green-700">Account Created!</p>
-                    <p>
-                        <span className="font-medium">ID:</span>{" "}
-                        <span className="text-green-800">{data.id}</span>
-                    </p>
-                    <p>
-                        <span className="font-medium">Password:</span>{" "}
-                        <span className="text-green-800">{data.password}</span>
-                    </p>
-                </div>,
-                { position: "top-center", duration: 6000 }
-            );
+            if (data.id || data.password) {
+                setCreatedCredentials({
+                    id: data.id ?? "Unavailable",
+                    password: data.password ?? "Unavailable",
+                });
+            } else {
+                setCreatedCredentials(null);
+            }
+
+            setShowCreateSuccess(true);
 
             formRef.current?.reset();
             setRole("");
@@ -1117,6 +1133,51 @@ export default function NurseAccountsPage() {
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
+                        <Dialog open={showCreateSuccess} onOpenChange={handleCreateSuccessChange}>
+                            <DialogContent className="max-w-sm rounded-3xl border border-green-100/80 bg-white/95">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2 text-green-700">
+                                        <CheckCircle2 className="h-5 w-5" /> Account created
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        Share the temporary credentials securely. The password will not be shown again after
+                                        closing this dialog.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                {createdCredentials ? (
+                                    <div className="rounded-2xl border border-green-100 bg-green-50/70 p-4 text-sm text-gray-700">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <span className="text-gray-500">User ID</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {createdCredentials.id}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between gap-4">
+                                            <span className="text-gray-500">Password</span>
+                                            <span className="font-semibold text-gray-900">
+                                                {createdCredentials.password}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-2xl border border-yellow-100 bg-yellow-50/80 p-4 text-sm text-gray-700">
+                                        <p className="font-medium text-yellow-900">Account created successfully.</p>
+                                        <p className="mt-2 text-xs text-yellow-800">
+                                            The account is ready to use, but no credentials were returned by the server.
+                                        </p>
+                                    </div>
+                                )}
+                                <DialogFooter>
+                                    <Button
+                                        type="button"
+                                        className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                                        onClick={() => handleCreateSuccessChange(false)}
+                                    >
+                                        Done
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </CardContent>
                 </Card>
 
