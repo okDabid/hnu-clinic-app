@@ -111,7 +111,6 @@ type CertificateContext = {
     findings: string;
     reason: string;
     allergies: string[];
-    medicalConditions: string[];
     doctorName: string;
     doctorTitle: string;
     licenseNumber: string;
@@ -123,7 +122,19 @@ function renderCertificateHtml(context: CertificateContext) {
         if (value && value.trim()) {
             return escapeHtml(value);
         }
+
+        if (fallback === "Not recorded") {
+            return "&nbsp;";
+        }
+
         return `<span class="placeholder">${escapeHtml(fallback)}</span>`;
+    };
+
+    const credentialValue = (value?: string) => {
+        if (value && value.trim()) {
+            return escapeHtml(value);
+        }
+        return "&nbsp;";
     };
 
     const isDental = context.certificateType === "dental";
@@ -137,60 +148,29 @@ function renderCertificateHtml(context: CertificateContext) {
               context.patientName
           )}</strong>, a student of Holy Name University, was examined at the Health Services Department.`;
 
-    const normalizedMedical = context.medicalConditions.map((condition) =>
-        condition.toLowerCase()
-    );
-    const matchedMedicalIndices = new Set<number>();
-
-    const matchesCondition = (keywords: string[]) =>
-        keywords.some((keyword) =>
-            normalizedMedical.some((condition, index) => {
-                if (condition.includes(keyword)) {
-                    matchedMedicalIndices.add(index);
-                    return true;
-                }
-                return false;
-            })
-        );
-
-    const medicalHistoryOptions: { label: string; keywords: string[] }[] = [
-        { label: "Asthma", keywords: ["asthma"] },
-        {
-            label: "Hypertension",
-            keywords: ["hypertension", "high blood"],
-        },
-        { label: "Cancer", keywords: ["cancer"] },
-        { label: "Epilepsy", keywords: ["epilepsy", "seizure"] },
-        { label: "Diabetes", keywords: ["diabetes"] },
-        {
-            label: "Heart Disease",
-            keywords: ["heart", "cardio", "cardiac"],
-        },
-        {
-            label: "Kidney Disease",
-            keywords: ["kidney", "renal"],
-        },
-        {
-            label: "Nervous/Mental Disorder",
-            keywords: ["mental", "nervous", "anxiety", "depression", "psychiatric"],
-        },
+    const medicalHistoryOptions = [
+        "Asthma",
+        "Hypertension",
+        "Cancer",
+        "Epilepsy",
+        "Diabetes",
+        "Heart Disease",
+        "Kidney Disease",
+        "Nervous/Mental Disorder",
     ];
 
-    const renderCheckbox = (label: string, checked: boolean) => `
+    const renderCheckbox = (label: string) => `
         <div class="checkbox">
-          <span class="box">${checked ? "☑" : "☐"}</span>
+          <span class="box" aria-hidden="true"></span>
           <span class="text">${escapeHtml(label)}</span>
         </div>
     `;
 
     const medicalHistoryBoxes = medicalHistoryOptions
-        .map((option) => renderCheckbox(option.label, matchesCondition(option.keywords)))
+        .map((option) => renderCheckbox(option))
         .join("");
 
-    const remainingMedical = context.medicalConditions
-        .filter((_, index) => !matchedMedicalIndices.has(index))
-        .map((value) => titleCase(value))
-        .join(", ");
+    const remainingMedical = "";
 
     const allergiesList = context.allergies
         .map((value) => titleCase(value))
@@ -238,16 +218,22 @@ function renderCertificateHtml(context: CertificateContext) {
 
       main {
         width: 8.27in;
-        min-height: 11.69in;
+        min-height: 11in;
         margin: 0 auto;
-        padding: 0.75in 0.8in;
+        padding: 0.32in 0.4in;
         display: flex;
         flex-direction: column;
       }
 
+      main.medical .field-line .field-label::before {
+        content: "☐";
+        margin-right: 4px;
+        font-size: 11px;
+      }
+
       header {
         text-align: center;
-        margin-bottom: 18px;
+        margin-bottom: 6px;
       }
 
       .institution {
@@ -268,27 +254,27 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       h1 {
-        font-size: 28px;
-        margin: 16px 0 0;
-        letter-spacing: 0.18em;
+        font-size: 22px;
+        margin: 8px 0 0;
+        letter-spacing: 0.16em;
       }
 
       .date-line {
-        font-size: 14px;
+        font-size: 13.5px;
         display: flex;
         justify-content: flex-end;
-        margin-bottom: 16px;
-        gap: 8px;
+        margin-bottom: 8px;
+        gap: 6px;
       }
 
       .underline {
         border-bottom: 1px solid #111827;
         padding: 0 6px 2px;
-        min-width: 140px;
+        min-width: 110px;
         display: inline-flex;
         align-items: center;
         justify-content: flex-start;
-        min-height: 20px;
+        min-height: 16px;
       }
 
       .placeholder {
@@ -297,100 +283,152 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       section {
-        margin-bottom: 20px;
+        margin-bottom: 8px;
       }
 
       .section-title {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        margin-bottom: 10px;
+        margin-bottom: 4px;
       }
 
       .field-line {
         display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 14px;
-        margin-bottom: 8px;
+        align-items: flex-start;
+        gap: 5px;
+        font-size: 12.8px;
+        margin-bottom: 2px;
+        flex-wrap: wrap;
       }
 
       .field-label {
-        width: 160px;
+        flex: 0 0 115px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        font-size: 12px;
+        font-size: 10.8px;
+      }
+
+      .field-line .underline {
+        flex: 1 1 auto;
       }
 
       .field-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px 14px;
+        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+        gap: 3px 10px;
       }
 
       .field-grid .field-line {
         margin-bottom: 0;
       }
 
+      .field-grid .field-label {
+        flex-basis: 110px;
+      }
+
+      .patient-info .field-line {
+        font-size: 11.4px;
+        gap: 4px;
+      }
+
+      .patient-info .field-label {
+        font-size: 10.2px;
+        flex-basis: 108px;
+      }
+
+      .patient-info .field-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+
       .checkbox-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px 20px;
-        margin-bottom: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3px 8px;
+        margin-bottom: 4px;
       }
 
       .checkbox {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 14px;
+        gap: 5px;
+        font-size: 12.3px;
       }
 
       .checkbox .box {
-        font-size: 16px;
-        line-height: 1;
+        width: 11px;
+        height: 11px;
+        border: 1px solid #111827;
+        display: inline-block;
+        margin-top: 1px;
+        flex-shrink: 0;
       }
 
       .statement {
-        font-size: 14px;
+        font-size: 13px;
         text-align: justify;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
       }
 
       .notes {
-        min-height: 60px;
+        min-height: 38px;
       }
 
       .signature-block {
-        margin-top: 36px;
+        margin-top: 12px;
         display: flex;
         justify-content: flex-end;
       }
 
       .signature {
         text-align: center;
-        font-size: 13px;
-        min-width: 260px;
+        font-size: 11.8px;
+        min-width: 190px;
       }
 
       .signature .line {
         border-bottom: 1px solid #111827;
-        margin-bottom: 6px;
-        padding-bottom: 4px;
+        margin-bottom: 4px;
+        padding-bottom: 3px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
       }
 
+      .signature .credentials {
+        margin-top: 6px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3px 12px;
+        justify-items: start;
+      }
+
+      .signature .credential {
+        text-align: left;
+        font-size: 10.8px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .signature .credential .label {
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+
+      .signature .credential .underline {
+        min-width: 130px;
+      }
+
       footer {
         margin-top: auto;
-        font-size: 12px;
+        font-size: 10.8px;
         color: #374151;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 2px;
       }
 
       footer .certificate-id {
@@ -400,7 +438,7 @@ function renderCertificateHtml(context: CertificateContext) {
     </style>
   </head>
   <body>
-    <main>
+    <main class="${isDental ? "certificate dental" : "certificate medical"}">
       <header>
         <div class="institution">Holy Name University</div>
         <div class="department">Health Services Department</div>
@@ -413,7 +451,7 @@ function renderCertificateHtml(context: CertificateContext) {
         <span class="underline">${escapeHtml(context.issueDateDisplay)}</span>
       </div>
 
-      <section>
+      <section class="patient-info">
         <div class="section-title">Patient Information</div>
         <div class="field-line">
           <span class="field-label">Name</span>
@@ -551,11 +589,16 @@ function renderCertificateHtml(context: CertificateContext) {
         <div class="signature">
           <div class="line">${escapeHtml(context.doctorName)}</div>
           <div>${escapeHtml(context.doctorTitle)}</div>
-          <div>License No.: ${placeholder(
-              context.licenseNumber,
-              "Not provided"
-          )}</div>
-          <div>PTR No.: ${placeholder(context.ptrNumber, "Not provided")}</div>
+          <div class="credentials">
+            <div class="credential">
+              <span class="label">License No.</span>
+              <span class="underline">${credentialValue(context.licenseNumber)}</span>
+            </div>
+            <div class="credential">
+              <span class="label">PTR No.</span>
+              <span class="underline">${credentialValue(context.ptrNumber)}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -747,7 +790,6 @@ export async function GET(
         const department = humanizeEnum(studentProfile.department);
         const yearLevel = humanizeEnum(studentProfile.year_level);
         const allergies = buildConditionList(studentProfile.allergies);
-        const medicalConditions = buildConditionList(studentProfile.medical_cond);
         const patientName = titleCase(
             [studentProfile.fname, studentProfile.mname, studentProfile.lname]
                 .filter(Boolean)
@@ -795,11 +837,10 @@ export async function GET(
             findings: appointment.consultation.findings ?? "",
             reason: appointment.consultation.reason_of_visit ?? "",
             allergies,
-            medicalConditions,
             doctorName,
             doctorTitle,
-            licenseNumber: doctorEmployee?.employee_id ?? "",
-            ptrNumber: doctorEmployee?.contactno ?? "",
+            licenseNumber: "",
+            ptrNumber: "",
         };
 
         const html = renderCertificateHtml(context);
