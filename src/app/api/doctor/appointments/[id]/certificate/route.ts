@@ -220,14 +220,14 @@ function renderCertificateHtml(context: CertificateContext) {
         width: 8.27in;
         min-height: 11in;
         margin: 0 auto;
-        padding: 0.45in 0.5in;
+        padding: 0.32in 0.4in;
         display: flex;
         flex-direction: column;
       }
 
       header {
         text-align: center;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       }
 
       .institution {
@@ -248,27 +248,27 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       h1 {
-        font-size: 24px;
-        margin: 10px 0 0;
-        letter-spacing: 0.18em;
+        font-size: 22px;
+        margin: 8px 0 0;
+        letter-spacing: 0.16em;
       }
 
       .date-line {
-        font-size: 14px;
+        font-size: 13.5px;
         display: flex;
         justify-content: flex-end;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         gap: 6px;
       }
 
       .underline {
         border-bottom: 1px solid #111827;
         padding: 0 6px 2px;
-        min-width: 120px;
+        min-width: 110px;
         display: inline-flex;
         align-items: center;
         justify-content: flex-start;
-        min-height: 18px;
+        min-height: 16px;
       }
 
       .placeholder {
@@ -277,32 +277,32 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       section {
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
 
       .section-title {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
       }
 
       .field-line {
         display: flex;
         align-items: flex-start;
-        gap: 8px;
-        font-size: 13.5px;
-        margin-bottom: 4px;
+        gap: 5px;
+        font-size: 12.8px;
+        margin-bottom: 2px;
         flex-wrap: wrap;
       }
 
       .field-label {
-        flex: 0 0 135px;
+        flex: 0 0 115px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        font-size: 11.5px;
+        font-size: 10.8px;
       }
 
       .field-line .underline {
@@ -311,8 +311,8 @@ function renderCertificateHtml(context: CertificateContext) {
 
       .field-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 6px 14px;
+        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+        gap: 3px 10px;
       }
 
       .field-grid .field-line {
@@ -320,21 +320,21 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       .field-grid .field-label {
-        flex-basis: 120px;
+        flex-basis: 110px;
       }
 
       .checkbox-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 4px 14px;
-        margin-bottom: 8px;
+        gap: 3px 8px;
+        margin-bottom: 4px;
       }
 
       .checkbox {
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 13px;
+        gap: 5px;
+        font-size: 12.3px;
       }
 
       .checkbox .box {
@@ -343,50 +343,50 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       .statement {
-        font-size: 13.5px;
+        font-size: 13px;
         text-align: justify;
-        margin-bottom: 6px;
+        margin-bottom: 5px;
       }
 
       .notes {
-        min-height: 50px;
+        min-height: 38px;
       }
 
       .signature-block {
-        margin-top: 20px;
+        margin-top: 12px;
         display: flex;
         justify-content: flex-end;
       }
 
       .signature {
         text-align: center;
-        font-size: 12.5px;
-        min-width: 210px;
+        font-size: 11.8px;
+        min-width: 190px;
       }
 
       .signature .line {
         border-bottom: 1px solid #111827;
-        margin-bottom: 6px;
-        padding-bottom: 4px;
+        margin-bottom: 4px;
+        padding-bottom: 3px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
       }
 
       .signature .credentials {
-        margin-top: 10px;
+        margin-top: 6px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px 20px;
+        gap: 3px 12px;
         justify-items: start;
       }
 
       .signature .credential {
         text-align: left;
-        font-size: 11.5px;
+        font-size: 10.8px;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
       }
 
       .signature .credential .label {
@@ -395,16 +395,16 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       .signature .credential .underline {
-        min-width: 150px;
+        min-width: 130px;
       }
 
       footer {
         margin-top: auto;
-        font-size: 11.5px;
+        font-size: 10.8px;
         color: #374151;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 2px;
       }
 
       footer .certificate-id {
