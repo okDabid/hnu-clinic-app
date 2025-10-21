@@ -123,7 +123,19 @@ function renderCertificateHtml(context: CertificateContext) {
         if (value && value.trim()) {
             return escapeHtml(value);
         }
+
+        if (fallback === "Not recorded") {
+            return "&nbsp;";
+        }
+
         return `<span class="placeholder">${escapeHtml(fallback)}</span>`;
+    };
+
+    const credentialValue = (value?: string) => {
+        if (value && value.trim()) {
+            return escapeHtml(value);
+        }
+        return "&nbsp;";
     };
 
     const isDental = context.certificateType === "dental";
@@ -238,16 +250,16 @@ function renderCertificateHtml(context: CertificateContext) {
 
       main {
         width: 8.27in;
-        min-height: 11.69in;
+        min-height: 11in;
         margin: 0 auto;
-        padding: 0.75in 0.8in;
+        padding: 0.6in 0.65in;
         display: flex;
         flex-direction: column;
       }
 
       header {
         text-align: center;
-        margin-bottom: 18px;
+        margin-bottom: 12px;
       }
 
       .institution {
@@ -268,27 +280,27 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       h1 {
-        font-size: 28px;
-        margin: 16px 0 0;
-        letter-spacing: 0.18em;
+        font-size: 26px;
+        margin: 14px 0 0;
+        letter-spacing: 0.16em;
       }
 
       .date-line {
         font-size: 14px;
         display: flex;
         justify-content: flex-end;
-        margin-bottom: 16px;
-        gap: 8px;
+        margin-bottom: 12px;
+        gap: 6px;
       }
 
       .underline {
         border-bottom: 1px solid #111827;
         padding: 0 6px 2px;
-        min-width: 140px;
+        min-width: 130px;
         display: inline-flex;
         align-items: center;
         justify-content: flex-start;
-        min-height: 20px;
+        min-height: 18px;
       }
 
       .placeholder {
@@ -297,7 +309,7 @@ function renderCertificateHtml(context: CertificateContext) {
       }
 
       section {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
       }
 
       .section-title {
@@ -311,9 +323,9 @@ function renderCertificateHtml(context: CertificateContext) {
       .field-line {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         font-size: 14px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       }
 
       .field-label {
@@ -327,7 +339,7 @@ function renderCertificateHtml(context: CertificateContext) {
       .field-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px 14px;
+        gap: 6px 12px;
       }
 
       .field-grid .field-line {
@@ -337,8 +349,8 @@ function renderCertificateHtml(context: CertificateContext) {
       .checkbox-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px 20px;
-        margin-bottom: 12px;
+        gap: 6px 18px;
+        margin-bottom: 10px;
       }
 
       .checkbox {
@@ -356,15 +368,15 @@ function renderCertificateHtml(context: CertificateContext) {
       .statement {
         font-size: 14px;
         text-align: justify;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
       }
 
       .notes {
-        min-height: 60px;
+        min-height: 50px;
       }
 
       .signature-block {
-        margin-top: 36px;
+        margin-top: 28px;
         display: flex;
         justify-content: flex-end;
       }
@@ -372,7 +384,7 @@ function renderCertificateHtml(context: CertificateContext) {
       .signature {
         text-align: center;
         font-size: 13px;
-        min-width: 260px;
+        min-width: 240px;
       }
 
       .signature .line {
@@ -384,13 +396,38 @@ function renderCertificateHtml(context: CertificateContext) {
         letter-spacing: 0.06em;
       }
 
+      .signature .credentials {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 24px;
+        justify-items: start;
+      }
+
+      .signature .credential {
+        text-align: left;
+        font-size: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .signature .credential .label {
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+
+      .signature .credential .underline {
+        min-width: 150px;
+      }
+
       footer {
         margin-top: auto;
         font-size: 12px;
         color: #374151;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 4px;
       }
 
       footer .certificate-id {
@@ -551,11 +588,16 @@ function renderCertificateHtml(context: CertificateContext) {
         <div class="signature">
           <div class="line">${escapeHtml(context.doctorName)}</div>
           <div>${escapeHtml(context.doctorTitle)}</div>
-          <div>License No.: ${placeholder(
-              context.licenseNumber,
-              "Not provided"
-          )}</div>
-          <div>PTR No.: ${placeholder(context.ptrNumber, "Not provided")}</div>
+          <div class="credentials">
+            <div class="credential">
+              <span class="label">License No.</span>
+              <span class="underline">${credentialValue(context.licenseNumber)}</span>
+            </div>
+            <div class="credential">
+              <span class="label">PTR No.</span>
+              <span class="underline">${credentialValue(context.ptrNumber)}</span>
+            </div>
+          </div>
         </div>
       </div>
 
