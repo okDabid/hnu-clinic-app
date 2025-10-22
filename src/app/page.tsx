@@ -64,7 +64,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+    <div className="flex flex-col min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
       {/* Header */}
       <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
         <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
@@ -130,8 +130,8 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50" />
-        <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.12),_transparent_60%)]" />
+        <div className="absolute inset-0 -z-10 bg-linear-to-br from-green-100 via-white to-green-50" />
+        <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.12),transparent_60%)]" />
         <div className="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-24 gap-12">
           <div className="max-w-xl text-center md:text-left space-y-6">
             <span className="inline-flex items-center rounded-full bg-white shadow-sm border border-green-100 px-4 py-1 text-sm font-medium text-green-700">
@@ -258,7 +258,7 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <Card className="rounded-3xl border-none bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-xl">
+          <Card className="rounded-3xl border-none bg-linear-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-xl">
             <CardContent className="p-8 space-y-6">
               <h4 className="text-2xl font-semibold">Why patients trust the portal</h4>
               <ul className="space-y-4 text-sm md:text-base">
