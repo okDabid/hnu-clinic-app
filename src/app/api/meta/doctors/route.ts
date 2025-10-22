@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { AccountStatus, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { withDb } from "@/lib/withDb";
 
 /**
  * GET /api/meta/doctors?clinic_id=...&service_type=...
@@ -19,16 +20,6 @@ export async function GET(req: Request) {
             );
         }
 
-        // Get all doctors available in the clinic
-        const availabilities = await prisma.doctorAvailability.findMany({
-            where: { clinic_id },
-            select: { doctor_user_id: true },
-            distinct: ["doctor_user_id"],
-        });
-
-        const doctorIds = availabilities.map((a) => a.doctor_user_id);
-        if (doctorIds.length === 0) return NextResponse.json([]);
-
         // Optional specialization filter based on service_type
         let specializationFilter: "Physician" | "Dentist" | undefined;
         if (service_type) {
@@ -40,26 +31,32 @@ export async function GET(req: Request) {
         }
 
         // Fetch doctors (with optional filter)
-        const doctors = await prisma.users.findMany({
-            where: {
-                user_id: { in: doctorIds },
-                role: Role.DOCTOR,
-                status: AccountStatus.Active,
-                employee: {
-                    is: {
-                        status: AccountStatus.Active,
+        const doctors = await withDb(() =>
+            prisma.users.findMany({
+                where: {
+                    role: Role.DOCTOR,
+                    status: AccountStatus.Active,
+                    employee: {
+                        is: {
+                            status: AccountStatus.Active,
+                        },
                     },
+                    doctorAvail: {
+                        some: {
+                            clinic_id,
+                        },
+                    },
+                    ...(specializationFilter && { specialization: specializationFilter }),
                 },
-                ...(specializationFilter && { specialization: specializationFilter }),
-            },
-            select: {
-                user_id: true,
-                username: true,
-                specialization: true,
-                employee: { select: { fname: true, lname: true } },
-            },
-            orderBy: { username: "asc" },
-        });
+                select: {
+                    user_id: true,
+                    username: true,
+                    specialization: true,
+                    employee: { select: { fname: true, lname: true } },
+                },
+                orderBy: { username: "asc" },
+            })
+        );
 
         // Build final data (include specialization)
         const shaped = doctors.map((d) => ({
