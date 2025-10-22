@@ -64,10 +64,10 @@ type DispenseResponse = {
 function formatScholarName(
     scholar:
         | {
-              username: string;
-              student: { fname: string | null; mname: string | null; lname: string | null } | null;
-              employee: { fname: string | null; mname: string | null; lname: string | null } | null;
-          }
+            username: string;
+            student: { fname: string | null; mname: string | null; lname: string | null } | null;
+            employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+        }
         | null
 ) {
     if (!scholar) return "—";
@@ -235,7 +235,7 @@ export default function ScholarDispensePage() {
         >
             <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-br from-green-50 via-white to-green-100/60 shadow-sm">
+                    <Card className="rounded-3xl border border-green-100/70 bg-linear-to-br from-green-50 via-white to-green-100/60 shadow-sm">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Walk-ins recorded</CardTitle>
                         </CardHeader>
@@ -311,13 +311,13 @@ export default function ScholarDispensePage() {
 
                             <div className="space-y-2 sm:col-span-2">
                                 <Label className="font-medium text-green-700">Medicine</Label>
-                                    <Select
-                                        value={form.med_id}
-                                        onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
-                                    >
-                                        <SelectTrigger className="w-full rounded-xl border border-green-100/80 bg-white/80">
-                                            <SelectValue placeholder="Select medicine" />
-                                        </SelectTrigger>
+                                <Select
+                                    value={form.med_id}
+                                    onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
+                                >
+                                    <SelectTrigger className="w-full rounded-xl border border-green-100/80 bg-white/80">
+                                        <SelectValue placeholder="Select medicine" />
+                                    </SelectTrigger>
                                     <SelectContent>
                                         {medicines.length > 0 ? (
                                             medicines.map((medicine) => (
@@ -339,23 +339,23 @@ export default function ScholarDispensePage() {
                                 </Select>
                             </div>
 
-                                <div className="space-y-2">
-                                    <Label className="font-medium text-green-700">Quantity</Label>
-                                    <Input
-                                        type="number"
-                                        min={1}
-                                        value={form.quantity}
-                                        onChange={(event) => setForm((prev) => ({ ...prev, quantity: event.target.value }))}
-                                        placeholder="Enter quantity"
-                                        required
-                                        className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
-                                    />
-                                    {selectedMedicine ? (
-                                        <p className="text-xs text-muted-foreground">
-                                            Available stock: {selectedMedicine.quantity}
-                                        </p>
-                                    ) : null}
-                                </div>
+                            <div className="space-y-2">
+                                <Label className="font-medium text-green-700">Quantity</Label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={form.quantity}
+                                    onChange={(event) => setForm((prev) => ({ ...prev, quantity: event.target.value }))}
+                                    placeholder="Enter quantity"
+                                    required
+                                    className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
+                                />
+                                {selectedMedicine ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        Available stock: {selectedMedicine.quantity}
+                                    </p>
+                                ) : null}
+                            </div>
 
                             <div className="space-y-2 sm:col-span-2">
                                 <Label className="font-medium text-green-700">Notes</Label>

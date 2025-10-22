@@ -13,7 +13,7 @@ const NAV_ITEMS = [
     { href: "/scholar/account", label: "Account", icon: User },
     { href: "/scholar/appointments", label: "Appointments", icon: CalendarDays },
     { href: "/scholar/patients", label: "Patients", icon: Search },
-    { href: "/scholar/dispense", label: "Walk-in dispense", icon: Pill },
+    { href: "/scholar/dispense", label: "Dispense", icon: Pill },
 ] as const satisfies readonly PanelNavItem[];
 
 export type ScholarLayoutProps = PanelLayoutContentProps;
