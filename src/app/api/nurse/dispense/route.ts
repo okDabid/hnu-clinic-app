@@ -16,7 +16,15 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        const { med_id, consultation_id, quantity, walkInName, walkInContact, walkInNotes } = await req.json();
+        const {
+            med_id,
+            consultation_id,
+            quantity,
+            walkInName,
+            walkInContact,
+            walkInNotes,
+            scholarUserId,
+        } = await req.json();
 
         if (!med_id || quantity === undefined) {
             return NextResponse.json(
@@ -32,6 +40,13 @@ export async function POST(req: Request) {
             );
         }
 
+        if (!consultation_id && walkInName && !scholarUserId) {
+            return NextResponse.json(
+                { error: "Walk-in dispenses must include the assisting scholar" },
+                { status: 400 }
+            );
+        }
+
         const newDispense = await recordDispense({
             med_id,
             consultation_id: consultation_id ?? null,
@@ -43,6 +58,7 @@ export async function POST(req: Request) {
                     notes: walkInNotes ?? null,
                 }
                 : undefined,
+            scholar_user_id: walkInName ? scholarUserId ?? null : null,
         });
         return NextResponse.json(newDispense);
     } catch (err) {

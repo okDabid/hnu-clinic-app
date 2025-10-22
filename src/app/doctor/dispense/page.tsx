@@ -47,6 +47,12 @@ type DispenseRecord = {
     walk_in_name: string | null;
     walk_in_contact: string | null;
     walk_in_notes: string | null;
+    scholar: {
+        user_id: string;
+        username: string;
+        student: { fname: string | null; mname: string | null; lname: string | null } | null;
+        employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+    } | null;
     dispenseBatches: {
         id: string;
         quantity_used: number;
@@ -97,6 +103,28 @@ function formatDate(value: string | null | undefined) {
         minute: undefined,
     });
     return formatted || "—";
+}
+
+function formatStaffName(
+    staff:
+        | {
+              username: string;
+              student: { fname: string | null; mname: string | null; lname: string | null } | null;
+              employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+          }
+        | null
+) {
+    if (!staff) return "—";
+    const fromStudent = staff.student
+        ? [staff.student.fname, staff.student.mname, staff.student.lname].filter(Boolean).join(" ")
+        : "";
+    if (fromStudent) return fromStudent;
+
+    const fromEmployee = staff.employee
+        ? [staff.employee.fname, staff.employee.mname, staff.employee.lname].filter(Boolean).join(" ")
+        : "";
+
+    return fromEmployee || staff.username || "—";
 }
 
 export default function DoctorDispensePage() {
@@ -369,19 +397,20 @@ export default function DoctorDispensePage() {
                                 <div className="overflow-x-auto">
                                     <Table className="min-w-full text-sm">
                                         <TableHeader className="bg-green-100/70 text-green-700">
-                                            <TableRow>
-                                                <TableHead>Clinic</TableHead>
-                                                <TableHead>Recipient</TableHead>
-                                                <TableHead>Visit Type</TableHead>
-                                                <TableHead>Medicine</TableHead>
-                                                <TableHead>Quantity</TableHead>
-                                                <TableHead>Doctor</TableHead>
-                                                <TableHead>Nurse</TableHead>
-                                                <TableHead>Dispensed At</TableHead>
-                                                <TableHead>Batch Details</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
+                                        <TableRow>
+                                            <TableHead>Clinic</TableHead>
+                                            <TableHead>Recipient</TableHead>
+                                            <TableHead>Visit Type</TableHead>
+                                            <TableHead>Medicine</TableHead>
+                                            <TableHead>Quantity</TableHead>
+                                            <TableHead>Doctor</TableHead>
+                                            <TableHead>Nurse</TableHead>
+                                            <TableHead>Scholar</TableHead>
+                                            <TableHead>Dispensed At</TableHead>
+                                            <TableHead>Batch Details</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                             {dispenses.length > 0 ? (
                                                 dispenses.map((d) => (
                                                     <TableRow key={d.dispense_id} className="hover:bg-green-50">
@@ -417,6 +446,7 @@ export default function DoctorDispensePage() {
                                                         <TableCell>{d.quantity}</TableCell>
                                                         <TableCell>{d.consultation?.doctor?.username || "—"}</TableCell>
                                                         <TableCell>{d.consultation?.nurse?.username || "—"}</TableCell>
+                                                        <TableCell>{formatStaffName(d.scholar)}</TableCell>
                                                         <TableCell>{formatDateTime(d.createdAt)}</TableCell>
                                                         <TableCell>
                                                             {d.dispenseBatches.length > 0 ? (
@@ -436,9 +466,9 @@ export default function DoctorDispensePage() {
                                                 ))
                                             ) : (
                                                 <TableRow>
-                                                    <TableCell colSpan={9} className="py-6 text-center text-muted-foreground">
-                                                        No dispense records found
-                                                    </TableCell>
+                                                <TableCell colSpan={10} className="py-6 text-center text-muted-foreground">
+                                                    No dispense records found
+                                                </TableCell>
                                                 </TableRow>
                                             )}
                                         </TableBody>

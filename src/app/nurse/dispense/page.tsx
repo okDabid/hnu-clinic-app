@@ -37,6 +37,11 @@ type Dispense = {
     walk_in_name: string | null;
     walk_in_contact: string | null;
     walk_in_notes: string | null;
+    scholar: {
+        username: string;
+        student: { fname: string | null; mname: string | null; lname: string | null } | null;
+        employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+    } | null;
     dispenseBatches: {
         quantity_used: number;
         replenishment: {
@@ -69,6 +74,32 @@ export default function NurseDispensePage() {
         loadDispenses();
     }, []);
 
+    function formatStaffName(
+        staff:
+            | {
+                  username: string;
+                  student: { fname: string | null; mname: string | null; lname: string | null } | null;
+                  employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+              }
+            | null
+    ) {
+        if (!staff) return "—";
+
+        const fromStudent = staff.student
+            ? [staff.student.fname, staff.student.mname, staff.student.lname].filter(Boolean).join(" ")
+            : "";
+
+        if (fromStudent) {
+            return fromStudent;
+        }
+
+        const fromEmployee = staff.employee
+            ? [staff.employee.fname, staff.employee.mname, staff.employee.lname].filter(Boolean).join(" ")
+            : "";
+
+        return fromEmployee || staff.username || "—";
+    }
+
 
 
     if (initializing) {
@@ -99,6 +130,7 @@ export default function NurseDispensePage() {
                                         <TableHead>Quantity</TableHead>
                                         <TableHead>Doctor</TableHead>
                                         <TableHead>Nurse</TableHead>
+                                        <TableHead>Scholar</TableHead>
                                         <TableHead>Dispensed At</TableHead>
                                         <TableHead>Batch Details</TableHead>
                                     </TableRow>
@@ -143,6 +175,7 @@ export default function NurseDispensePage() {
                                                 <TableCell>
                                                     {d.consultation?.nurse?.username || "—"}
                                                 </TableCell>
+                                                <TableCell>{formatStaffName(d.scholar)}</TableCell>
                                                 <TableCell>{formatManilaDateTime(d.createdAt) || "—"}</TableCell>
                                                 <TableCell>
                                                     {d.dispenseBatches.length > 0 ? (
@@ -162,7 +195,7 @@ export default function NurseDispensePage() {
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={9} className="py-6 text-center text-gray-500">
+                                            <TableCell colSpan={10} className="py-6 text-center text-gray-500">
                                                 No dispense records found
                                             </TableCell>
                                         </TableRow>
