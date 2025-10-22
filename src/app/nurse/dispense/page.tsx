@@ -28,12 +28,15 @@ type Dispense = {
     };
     consultation: {
         appointment: {
-            patient: { username: string };
-            clinic: { clinic_name: string };
-        };
+            patient: { username: string } | null;
+            clinic: { clinic_name: string } | null;
+        } | null;
         doctor: { username: string } | null;
         nurse: { username: string } | null;
-    };
+    } | null;
+    walk_in_name: string | null;
+    walk_in_contact: string | null;
+    walk_in_notes: string | null;
     dispenseBatches: {
         quantity_used: number;
         replenishment: {
@@ -90,7 +93,8 @@ export default function NurseDispensePage() {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Clinic</TableHead>
-                                        <TableHead>Patient</TableHead>
+                                        <TableHead>Recipient</TableHead>
+                                        <TableHead>Visit Type</TableHead>
                                         <TableHead>Medicine</TableHead>
                                         <TableHead>Quantity</TableHead>
                                         <TableHead>Doctor</TableHead>
@@ -103,15 +107,41 @@ export default function NurseDispensePage() {
                                     {dispenses.length > 0 ? (
                                         dispenses.map((d) => (
                                             <TableRow key={d.dispense_id} className="transition hover:bg-green-50">
-                                                <TableCell>{d.med.clinic.clinic_name}</TableCell>
-                                                <TableCell>{d.consultation.appointment.patient.username}</TableCell>
+                                                <TableCell>
+                                                    {d.consultation?.appointment?.clinic?.clinic_name ??
+                                                        d.med.clinic.clinic_name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="font-medium text-gray-800">
+                                                            {d.consultation?.appointment?.patient?.username ??
+                                                                d.walk_in_name ??
+                                                                "—"}
+                                                        </span>
+                                                        {!d.consultation && (
+                                                            <>
+                                                                {d.walk_in_contact ? (
+                                                                    <span className="text-xs text-gray-500">
+                                                                        Contact: {d.walk_in_contact}
+                                                                    </span>
+                                                                ) : null}
+                                                                {d.walk_in_notes ? (
+                                                                    <span className="text-xs text-gray-500">
+                                                                        Notes: {d.walk_in_notes}
+                                                                    </span>
+                                                                ) : null}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>{d.consultation ? "Consultation" : "Walk-in"}</TableCell>
                                                 <TableCell>{d.med.item_name}</TableCell>
                                                 <TableCell>{d.quantity}</TableCell>
                                                 <TableCell>
-                                                    {d.consultation.doctor?.username || "—"}
+                                                    {d.consultation?.doctor?.username || "—"}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {d.consultation.nurse?.username || "—"}
+                                                    {d.consultation?.nurse?.username || "—"}
                                                 </TableCell>
                                                 <TableCell>{formatManilaDateTime(d.createdAt) || "—"}</TableCell>
                                                 <TableCell>
@@ -132,7 +162,7 @@ export default function NurseDispensePage() {
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={8} className="py-6 text-center text-gray-500">
+                                            <TableCell colSpan={9} className="py-6 text-center text-gray-500">
                                                 No dispense records found
                                             </TableCell>
                                         </TableRow>
