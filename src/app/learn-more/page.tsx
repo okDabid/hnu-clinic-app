@@ -61,7 +61,7 @@ export default function LearnMorePage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+        <div className="flex flex-col min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
             {/* Header */}
             <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
@@ -128,8 +128,8 @@ export default function LearnMorePage() {
 
             {/* Hero Section */}
             <section className="relative overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50" />
-                <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.12),_transparent_65%)]" />
+                <div className="absolute inset-0 -z-10 bg-linear-to-brrom-green-100 via-white to-green-50" />
+                <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,rgba(34,197,94,0.12),transparent_65%)]" />
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between px-6 md:px-12 py-16 md:py-24 gap-12">
                     <div className="max-w-xl space-y-6 text-center md:text-left">
                         <span className="inline-flex items-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
@@ -143,7 +143,7 @@ export default function LearnMorePage() {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                             <Link href="/login">
-                                <Button size="lg" className="bg-green-600 hover:bg-green-700 shadow-md">
+                                <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md">
                                     Go to Portal
                                 </Button>
                             </Link>
@@ -255,7 +255,7 @@ export default function LearnMorePage() {
                             ))}
                         </div>
                     </div>
-                    <Card className="rounded-3xl border-none bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-xl">
+                    <Card className="rounded-3xl border-none bg-linear-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-xl">
                         <CardContent className="p-8 space-y-5">
                             <h4 className="text-2xl font-semibold">Designed for confident clinic operations</h4>
                             <p className="text-sm md:text-base text-white/80 leading-relaxed">
@@ -326,7 +326,7 @@ export default function LearnMorePage() {
 
             {/* Call to action */}
             <section className="px-6 md:px-12 py-16">
-                <div className="max-w-5xl mx-auto rounded-3xl border border-green-200 bg-gradient-to-br from-green-100 via-white to-green-50 p-10 text-center shadow-lg">
+                <div className="max-w-5xl mx-auto rounded-3xl border border-green-200 bg-linear-to-br from-green-100 via-white to-green-50 p-10 text-center shadow-lg">
                     <h3 className="text-2xl md:text-3xl font-bold text-green-600">Ready to streamline clinic operations?</h3>
                     <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
                         Log in to the HNU Clinic portal to manage appointments, update records, and keep your team aligned with the latest patient information.
