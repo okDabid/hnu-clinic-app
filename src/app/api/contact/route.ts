@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import nodemailer, { SentMessageInfo } from "nodemailer";
+
+import { sendEmail } from "@/lib/email";
 
 interface ContactFormData {
   name: string;
@@ -18,17 +19,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    // Configure mail transporter
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
 
     // Themed HTML email
     const htmlContent = `
@@ -56,20 +46,22 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    // Mail configuration
-    const mailOptions = {
-      from: `"HNU Clinic Contact Form" <${process.env.EMAIL_USER}>`,
-      replyTo: email,
-      to: process.env.EMAIL_USER,
+    const inbox = process.env.EMAIL_USER;
+    if (!inbox) {
+      return NextResponse.json(
+        { error: "Email service is not configured." },
+        { status: 500 }
+      );
+    }
+
+    await sendEmail({
+      to: inbox,
       subject: `📩 New Inquiry from ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\nMessage:\n${message}`,
       html: htmlContent,
-    };
-
-    // Send email
-    const info: SentMessageInfo = await transporter.sendMail(mailOptions);
-
-    console.log("Email sent:", info.messageId);
+      fromName: "HNU Clinic Contact Form",
+      replyTo: email,
+      text: `Name: ${name}\nEmail: ${email}\nMessage:\n${message}`,
+    });
 
     return NextResponse.json({
       message: "Message sent successfully! Thank you for contacting HNU Clinic.",

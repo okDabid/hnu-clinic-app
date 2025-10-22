@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { withDb } from "@/lib/withDb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -16,15 +17,17 @@ export async function GET() {
         }
 
         // Fetch clinics
-        const clinics = await prisma.clinic.findMany({
-            select: {
-                clinic_id: true,
-                clinic_name: true,
-                clinic_location: true,
-                clinic_contactno: true,
-            },
-            orderBy: { clinic_name: "asc" },
-        });
+        const clinics = await withDb(() =>
+            prisma.clinic.findMany({
+                select: {
+                    clinic_id: true,
+                    clinic_name: true,
+                    clinic_location: true,
+                    clinic_contactno: true,
+                },
+                orderBy: { clinic_name: "asc" },
+            })
+        );
 
         return NextResponse.json(clinics);
     } catch (err) {

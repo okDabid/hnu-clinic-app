@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { withDb } from "@/lib/withDb";
 import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
 
 /**
@@ -29,32 +30,33 @@ export async function GET(req: Request) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
 
-        // 1) Availabilities for that clinic/doctor on that Manila day
-        const availabilities = await prisma.doctorAvailability.findMany({
-            where: {
-                clinic_id,
-                doctor_user_id,
-                available_date: { gte: dayStart, lte: dayEnd },
-            },
-            orderBy: { available_timestart: "asc" },
-        });
+        const [availabilities, appointments] = await withDb(async () =>
+            Promise.all([
+                prisma.doctorAvailability.findMany({
+                    where: {
+                        clinic_id,
+                        doctor_user_id,
+                        available_date: { gte: dayStart, lte: dayEnd },
+                    },
+                    orderBy: { available_timestart: "asc" },
+                }),
+                prisma.appointment.findMany({
+                    where: {
+                        doctor_user_id,
+                        appointment_timestart: { gte: dayStart, lte: dayEnd },
+                        status: { in: ["Pending", "Approved"] },
+                    },
+                    select: {
+                        appointment_timestart: true,
+                        appointment_timeend: true,
+                    },
+                }),
+            ])
+        );
 
         if (availabilities.length === 0) {
             return NextResponse.json({ slots: [] });
         }
-
-        // 2) Existing appointments that block slots (Manila day)
-        const appointments = await prisma.appointment.findMany({
-            where: {
-                doctor_user_id,
-                appointment_timestart: { gte: dayStart, lte: dayEnd },
-                status: { in: ["Pending", "Approved"] },
-            },
-            select: {
-                appointment_timestart: true,
-                appointment_timeend: true,
-            },
-        });
 
         const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
             aStart < bEnd && bStart < aEnd;
