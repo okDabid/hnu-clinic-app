@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -102,6 +103,28 @@ export default function ScholarDispensePage() {
         () => medicines.find((medicine) => medicine.med_id === form.med_id) ?? null,
         [form.med_id, medicines]
     );
+
+    const stats = useMemo(() => {
+        let latest: string | null = null;
+        let quantityTotal = 0;
+        const clinicsServed = new Set<string>();
+
+        for (const record of dispenses) {
+            quantityTotal += Number(record.quantity) || 0;
+            clinicsServed.add(record.med.clinic.clinic_name);
+
+            if (!latest || new Date(record.createdAt).getTime() > new Date(latest).getTime()) {
+                latest = record.createdAt;
+            }
+        }
+
+        return {
+            total: dispenses.length,
+            totalQuantity: quantityTotal,
+            clinics: clinicsServed.size,
+            latestDispense: latest,
+        };
+    }, [dispenses]);
 
     async function loadData() {
         try {
@@ -211,6 +234,49 @@ export default function ScholarDispensePage() {
             }
         >
             <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-br from-green-50 via-white to-green-100/60 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Walk-ins recorded</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pb-6">
+                            <p className="text-3xl font-bold text-green-700">{stats.total}</p>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                                Community members assisted directly by the scholar desk.
+                            </p>
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Medicines dispensed</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pb-6">
+                            <p className="text-3xl font-bold text-green-700">{stats.totalQuantity}</p>
+                            <p className="mt-2 text-xs text-muted-foreground">Total units provided for walk-in requests.</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Clinics supported</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pb-6">
+                            <p className="text-3xl font-bold text-green-700">{stats.clinics}</p>
+                            <p className="mt-2 text-xs text-muted-foreground">Origin clinics for the dispensed medicine.</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Last dispense</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pb-6">
+                            <p className="text-lg font-semibold text-green-700">
+                                {stats.latestDispense ? formatManilaDateTime(stats.latestDispense) : "Awaiting first record"}
+                            </p>
+                            <p className="mt-2 text-xs text-muted-foreground">Timestamps follow Manila local time.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
                 <Card className="rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
                     <CardHeader className="space-y-1 border-b border-green-100/70">
                         <CardTitle className="text-lg font-semibold text-green-700 sm:text-xl">
@@ -229,6 +295,7 @@ export default function ScholarDispensePage() {
                                     onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                                     placeholder="Enter walk-in's name"
                                     required
+                                    className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
                                 />
                             </div>
 
@@ -238,18 +305,19 @@ export default function ScholarDispensePage() {
                                     value={form.contact}
                                     onChange={(event) => setForm((prev) => ({ ...prev, contact: event.target.value }))}
                                     placeholder="Optional contact information"
+                                    className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
                                 />
                             </div>
 
                             <div className="space-y-2 sm:col-span-2">
                                 <Label className="font-medium text-green-700">Medicine</Label>
-                                <Select
-                                    value={form.med_id}
-                                    onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select medicine" />
-                                    </SelectTrigger>
+                                    <Select
+                                        value={form.med_id}
+                                        onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
+                                    >
+                                        <SelectTrigger className="w-full rounded-xl border border-green-100/80 bg-white/80">
+                                            <SelectValue placeholder="Select medicine" />
+                                        </SelectTrigger>
                                     <SelectContent>
                                         {medicines.length > 0 ? (
                                             medicines.map((medicine) => (
@@ -271,22 +339,23 @@ export default function ScholarDispensePage() {
                                 </Select>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="font-medium text-green-700">Quantity</Label>
-                                <Input
-                                    type="number"
-                                    min={1}
-                                    value={form.quantity}
-                                    onChange={(event) => setForm((prev) => ({ ...prev, quantity: event.target.value }))}
-                                    placeholder="Enter quantity"
-                                    required
-                                />
-                                {selectedMedicine ? (
-                                    <p className="text-xs text-muted-foreground">
-                                        Available stock: {selectedMedicine.quantity}
-                                    </p>
-                                ) : null}
-                            </div>
+                                <div className="space-y-2">
+                                    <Label className="font-medium text-green-700">Quantity</Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        value={form.quantity}
+                                        onChange={(event) => setForm((prev) => ({ ...prev, quantity: event.target.value }))}
+                                        placeholder="Enter quantity"
+                                        required
+                                        className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
+                                    />
+                                    {selectedMedicine ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            Available stock: {selectedMedicine.quantity}
+                                        </p>
+                                    ) : null}
+                                </div>
 
                             <div className="space-y-2 sm:col-span-2">
                                 <Label className="font-medium text-green-700">Notes</Label>
@@ -295,6 +364,7 @@ export default function ScholarDispensePage() {
                                     onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
                                     rows={3}
                                     placeholder="Optional context about the request"
+                                    className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
                                 />
                             </div>
 
@@ -327,41 +397,67 @@ export default function ScholarDispensePage() {
                         {dispenses.length > 0 ? (
                             <div className="overflow-x-auto">
                                 <Table className="min-w-full text-sm">
-                                    <TableHeader className="bg-green-100/70 text-green-700">
+                                    <TableHeader className="bg-green-50 text-green-700">
                                         <TableRow>
-                                            <TableHead>Clinic</TableHead>
-                                            <TableHead>Walk-in</TableHead>
-                                            <TableHead>Medicine</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Scholar</TableHead>
-                                            <TableHead>Dispensed At</TableHead>
+                                            <TableHead className="whitespace-nowrap">Clinic</TableHead>
+                                            <TableHead className="whitespace-nowrap">Walk-in</TableHead>
+                                            <TableHead className="whitespace-nowrap">Medicine</TableHead>
+                                            <TableHead className="whitespace-nowrap">Quantity</TableHead>
+                                            <TableHead className="whitespace-nowrap">Scholar</TableHead>
+                                            <TableHead className="whitespace-nowrap">Dispensed At</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {dispenses.map((dispense) => (
-                                            <TableRow key={dispense.dispense_id} className="hover:bg-green-50">
-                                                <TableCell>{dispense.med.clinic.clinic_name}</TableCell>
+                                            <TableRow key={dispense.dispense_id} className="transition hover:bg-green-50">
+                                                <TableCell>
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-[0.7rem] font-semibold text-green-700"
+                                                    >
+                                                        {dispense.med.clinic.clinic_name}
+                                                    </Badge>
+                                                </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="font-medium text-gray-800">
+                                                        <span className="font-semibold text-gray-900">
                                                             {dispense.walk_in_name ?? "—"}
                                                         </span>
                                                         {dispense.walk_in_contact ? (
-                                                            <span className="text-xs text-gray-500">
+                                                            <span className="text-xs text-muted-foreground">
                                                                 Contact: {dispense.walk_in_contact}
                                                             </span>
                                                         ) : null}
                                                         {dispense.walk_in_notes ? (
-                                                            <span className="text-xs text-gray-500">
+                                                            <span className="text-xs text-muted-foreground">
                                                                 Notes: {dispense.walk_in_notes}
                                                             </span>
                                                         ) : null}
                                                     </div>
                                                 </TableCell>
-                                                <TableCell>{dispense.med.item_name}</TableCell>
-                                                <TableCell>{dispense.quantity}</TableCell>
-                                                <TableCell>{formatScholarName(dispense.scholar)}</TableCell>
-                                                <TableCell>{formatManilaDateTime(dispense.createdAt) || "—"}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium text-gray-900">{dispense.med.item_name}</span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {dispense.med.clinic.clinic_name}
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge className="rounded-full bg-green-600/10 px-3 py-1 text-[0.75rem] font-semibold text-green-700">
+                                                        ×{dispense.quantity}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="text-sm font-medium text-gray-800">
+                                                        {formatScholarName(dispense.scholar)}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="text-sm text-muted-foreground">
+                                                        {formatManilaDateTime(dispense.createdAt) || "—"}
+                                                    </span>
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -140,6 +141,32 @@ export default function DoctorDispensePage() {
         quantity: "",
     });
 
+    const summary = useMemo(() => {
+        let walkInCount = 0;
+        let latest: string | null = null;
+        let quantityTotal = 0;
+
+        for (const record of dispenses) {
+            if (!record.consultation) {
+                walkInCount += 1;
+            }
+
+            quantityTotal += Number(record.quantity) || 0;
+
+            if (!latest || new Date(record.createdAt).getTime() > new Date(latest).getTime()) {
+                latest = record.createdAt;
+            }
+        }
+
+        return {
+            total: dispenses.length,
+            consultations: dispenses.length - walkInCount,
+            walkIns: walkInCount,
+            latestDispense: latest,
+            totalQuantity: quantityTotal,
+        };
+    }, [dispenses]);
+
     const selectedMedicine = useMemo(
         () => medicines.find((med) => med.med_id === form.med_id) || null,
         [medicines, form.med_id]
@@ -249,18 +276,54 @@ export default function DoctorDispensePage() {
         >
             <div className="space-y-6">
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
-                        <CardHeader className="space-y-1">
-                            <CardTitle className="text-base font-semibold text-green-700">
-                                Inventory snapshot
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                                {dispenses.length === 0
-                                    ? "No dispense activity logged yet today."
-                                    : `Recorded ${dispenses.length} dispense ${dispenses.length === 1 ? "entry" : "entries"} so far. Keep logging to maintain real-time inventory accuracy.`}
-                            </p>
-                        </CardHeader>
-                    </Card>
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-br from-green-50 via-white to-green-100/60 shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">Dispenses logged</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-6">
+                                <p className="text-3xl font-bold text-green-700">{summary.total}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    {summary.total > 0
+                                        ? `${summary.totalQuantity} items issued to patients`
+                                        : "No dispense activity recorded yet."}
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">Consultation-linked</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-6">
+                                <p className="text-3xl font-bold text-green-700">{summary.consultations}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    Medicines recorded directly against physician encounters.
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">Walk-ins coordinated</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-6">
+                                <p className="text-3xl font-bold text-green-700">{summary.walkIns}</p>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                    Requests fulfilled alongside the scholar walk-in workflow.
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">Last dispense</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-6">
+                                <p className="text-lg font-semibold text-green-700">
+                                    {summary.latestDispense ? formatDateTime(summary.latestDispense) : "Awaiting first record"}
+                                </p>
+                                <p className="mt-2 text-xs text-muted-foreground">Timestamps follow Manila local time.</p>
+                            </CardContent>
+                        </Card>
+                    </div>
                     <Card className="rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
                         <CardHeader className="space-y-1 border-b border-green-100/70">
                             <CardTitle className="text-lg font-semibold text-green-700 sm:text-xl">
@@ -280,7 +343,7 @@ export default function DoctorDispensePage() {
                                             setForm((prev) => ({ ...prev, consultation_id: value }))
                                         }
                                     >
-                                        <SelectTrigger className="w-full min-h-[90px] rounded-lg border border-green-100 px-4 py-3 text-base leading-relaxed whitespace-normal text-left">
+                                        <SelectTrigger className="w-full min-h-[90px] rounded-xl border border-green-100/80 bg-white/80 px-4 py-3 text-base leading-relaxed whitespace-normal text-left focus:ring-2 focus:ring-green-500">
                                             <SelectValue placeholder="Select consultation" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -321,7 +384,7 @@ export default function DoctorDispensePage() {
                                         value={form.med_id}
                                         onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
                                     >
-                                        <SelectTrigger className="w-full">
+                                        <SelectTrigger className="w-full rounded-xl border border-green-100/80 bg-white/80">
                                             <SelectValue placeholder="Select medicine" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -354,6 +417,7 @@ export default function DoctorDispensePage() {
                                         onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))}
                                         placeholder="Enter quantity"
                                         required
+                                        className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
                                     />
                                     {selectedMedicine ? (
                                         <p className="text-xs text-muted-foreground">
@@ -396,31 +460,36 @@ export default function DoctorDispensePage() {
                             ) : (
                                 <div className="overflow-x-auto">
                                     <Table className="min-w-full text-sm">
-                                        <TableHeader className="bg-green-100/70 text-green-700">
-                                        <TableRow>
-                                            <TableHead>Clinic</TableHead>
-                                            <TableHead>Recipient</TableHead>
-                                            <TableHead>Visit Type</TableHead>
-                                            <TableHead>Medicine</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Doctor</TableHead>
-                                            <TableHead>Nurse</TableHead>
-                                            <TableHead>Scholar</TableHead>
-                                            <TableHead>Dispensed At</TableHead>
-                                            <TableHead>Batch Details</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
+                                        <TableHeader className="bg-green-50 text-green-700">
+                                            <TableRow>
+                                                <TableHead className="whitespace-nowrap">Clinic</TableHead>
+                                                <TableHead className="whitespace-nowrap">Recipient</TableHead>
+                                                <TableHead className="whitespace-nowrap">Visit Type</TableHead>
+                                                <TableHead className="whitespace-nowrap">Medicine</TableHead>
+                                                <TableHead className="whitespace-nowrap">Quantity</TableHead>
+                                                <TableHead className="whitespace-nowrap">Doctor</TableHead>
+                                                <TableHead className="whitespace-nowrap">Nurse</TableHead>
+                                                <TableHead className="whitespace-nowrap">Scholar</TableHead>
+                                                <TableHead className="whitespace-nowrap">Dispensed At</TableHead>
+                                                <TableHead className="whitespace-nowrap">Batch Details</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
                                             {dispenses.length > 0 ? (
                                                 dispenses.map((d) => (
-                                                    <TableRow key={d.dispense_id} className="hover:bg-green-50">
+                                                    <TableRow key={d.dispense_id} className="transition hover:bg-green-50">
                                                         <TableCell>
-                                                            {d.consultation?.appointment?.clinic?.clinic_name ??
-                                                                d.med.clinic.clinic_name}
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-[0.7rem] font-semibold text-green-700"
+                                                            >
+                                                                {d.consultation?.appointment?.clinic?.clinic_name ??
+                                                                    d.med.clinic.clinic_name}
+                                                            </Badge>
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="flex flex-col gap-1">
-                                                                <span className="font-medium text-gray-800">
+                                                                <span className="font-semibold text-gray-900">
                                                                     {d.consultation?.appointment?.patient?.username ??
                                                                         d.walk_in_name ??
                                                                         "—"}
@@ -428,12 +497,12 @@ export default function DoctorDispensePage() {
                                                                 {!d.consultation && (
                                                                     <>
                                                                         {d.walk_in_contact ? (
-                                                                            <span className="text-xs text-gray-500">
+                                                                            <span className="text-xs text-muted-foreground">
                                                                                 Contact: {d.walk_in_contact}
                                                                             </span>
                                                                         ) : null}
                                                                         {d.walk_in_notes ? (
-                                                                            <span className="text-xs text-gray-500">
+                                                                            <span className="text-xs text-muted-foreground">
                                                                                 Notes: {d.walk_in_notes}
                                                                             </span>
                                                                         ) : null}
@@ -441,20 +510,67 @@ export default function DoctorDispensePage() {
                                                                 )}
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell>{d.consultation ? "Consultation" : "Walk-in"}</TableCell>
-                                                        <TableCell>{d.med.item_name}</TableCell>
-                                                        <TableCell>{d.quantity}</TableCell>
-                                                        <TableCell>{d.consultation?.doctor?.username || "—"}</TableCell>
-                                                        <TableCell>{d.consultation?.nurse?.username || "—"}</TableCell>
-                                                        <TableCell>{formatStaffName(d.scholar)}</TableCell>
-                                                        <TableCell>{formatDateTime(d.createdAt)}</TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={
+                                                                    d.consultation
+                                                                        ? "rounded-full border-green-200 bg-green-100/80 px-3 py-1 text-[0.7rem] font-semibold text-green-700"
+                                                                        : "rounded-full border-amber-200 bg-amber-50 px-3 py-1 text-[0.7rem] font-semibold text-amber-600"
+                                                                }
+                                                            >
+                                                                {d.consultation ? "Consultation" : "Walk-in"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-gray-900">{d.med.item_name}</span>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {d.med.clinic.clinic_name}
+                                                                </span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge className="rounded-full bg-green-600/10 px-3 py-1 text-[0.75rem] font-semibold text-green-700">
+                                                                ×{d.quantity}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="text-sm font-medium text-gray-800">
+                                                                {d.consultation?.doctor?.username || "—"}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="text-sm font-medium text-gray-800">
+                                                                {d.consultation?.nurse?.username || "—"}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="text-sm font-medium text-gray-800">
+                                                                {formatStaffName(d.scholar)}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {formatDateTime(d.createdAt)}
+                                                            </span>
+                                                        </TableCell>
                                                         <TableCell>
                                                             {d.dispenseBatches.length > 0 ? (
-                                                                <ul className="text-xs text-green-700 space-y-1">
+                                                                <ul className="space-y-2 text-xs text-muted-foreground">
                                                                     {d.dispenseBatches.map((batch) => (
-                                                                        <li key={batch.id}>
-                                                                            <span className="font-medium">{batch.quantity_used}</span>{" "}
-                                                                            used (Expiry: {formatDate(batch.replenishment.expiry_date)}, Received: {formatDate(batch.replenishment.date_received)})
+                                                                        <li
+                                                                            key={batch.id}
+                                                                            className="rounded-2xl border border-green-100 bg-green-50/60 px-3 py-2 shadow-sm"
+                                                                        >
+                                                                            <div className="flex items-center justify-between text-[0.7rem] font-semibold text-green-700">
+                                                                                <span>Batch usage</span>
+                                                                                <span>−{batch.quantity_used}</span>
+                                                                            </div>
+                                                                            <div className="mt-1 space-y-1 text-[0.65rem] text-muted-foreground">
+                                                                                <p>Expiry: {formatDate(batch.replenishment.expiry_date)}</p>
+                                                                                <p>Received: {formatDate(batch.replenishment.date_received)}</p>
+                                                                            </div>
                                                                         </li>
                                                                     ))}
                                                                 </ul>
@@ -466,9 +582,9 @@ export default function DoctorDispensePage() {
                                                 ))
                                             ) : (
                                                 <TableRow>
-                                                <TableCell colSpan={10} className="py-6 text-center text-muted-foreground">
-                                                    No dispense records found
-                                                </TableCell>
+                                                    <TableCell colSpan={10} className="py-6 text-center text-muted-foreground">
+                                                        No dispense records found
+                                                    </TableCell>
                                                 </TableRow>
                                             )}
                                         </TableBody>
