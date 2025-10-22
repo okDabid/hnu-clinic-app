@@ -29,6 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="en"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
       className={`${poppins.variable} ${inter.variable}`}
     >
       <body className="antialiased min-h-screen flex flex-col font-sans">

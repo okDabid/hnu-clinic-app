@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, X, Loader2, ShieldCheck, Clock, MapPin } from "lucide-react";
 
 // Lazy load lucide icons
@@ -64,9 +65,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
       {/* Header */}
-      <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
+      <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100 dark:bg-slate-950/80 dark:border-slate-800">
         <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
           {/* Logo + Title */}
           <div className="flex items-center gap-1">
@@ -82,47 +83,53 @@ export default function HomePage() {
                 priority
                 className="md:w-14 md:h-14"
               />
-              <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none">
+              <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none dark:text-emerald-300">
                 HNU Clinic
               </h1>
             </Link>
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+          <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
             {navigation.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-gray-700 hover:text-green-600 transition"
+                className="text-gray-700 hover:text-green-600 transition dark:text-slate-200 dark:hover:text-emerald-300"
               >
                 {item.label}
               </Link>
             ))}
+            <ThemeToggle className="hidden lg:inline-flex" />
             <Link href="/login">
-              <Button className="bg-green-600 hover:bg-green-700 shadow-sm">Login</Button>
+              <Button className="bg-green-600 hover:bg-green-700 shadow-sm dark:bg-emerald-500 dark:hover:bg-emerald-400">
+                Login
+              </Button>
             </Link>
           </nav>
 
           {/* Mobile Nav Toggle */}
-          <button
-            className="md:hidden p-2"
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle size="sm" />
+            <button
+              className="p-2 text-green-600 dark:text-emerald-300"
             onClick={() => setMenuOpen(!menuOpen)}
           >
-            {menuOpen ? <X className="w-6 h-6 text-green-600" /> : <Menu className="w-6 h-6 text-green-600" />}
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
+          </div>
         </div>
 
         {/* Mobile Dropdown */}
         {menuOpen && (
-          <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95">
+          <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95 dark:bg-slate-950/95">
             {navigation.map((item) => (
-              <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600">
+              <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 dark:text-slate-200 dark:hover:text-emerald-300">
                 {item.label}
               </Link>
             ))}
             <Link href="/login">
-              <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
+              <Button className="w-full bg-green-600 hover:bg-green-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">Login</Button>
             </Link>
           </div>
         )}
@@ -130,22 +137,22 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50" />
-        <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.12),_transparent_60%)]" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900" />
+        <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.12),_transparent_60%)] dark:bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.2),_transparent_60%)]" />
         <div className="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-24 gap-12">
           <div className="max-w-xl text-center md:text-left space-y-6">
-            <span className="inline-flex items-center rounded-full bg-white shadow-sm border border-green-100 px-4 py-1 text-sm font-medium text-green-700">
+            <span className="inline-flex items-center rounded-full bg-white shadow-sm border border-green-100 px-4 py-1 text-sm font-medium text-green-700 dark:bg-slate-950/80 dark:border-slate-800 dark:text-emerald-200">
               Comprehensive Care, Digitally Delivered
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold text-green-600 leading-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-green-600 leading-tight dark:text-emerald-200">
               Manage health records, book visits, and stay connected to your care team.
             </h2>
-            <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+            <p className="text-gray-700 text-base md:text-lg leading-relaxed dark:text-slate-200">
               The HNU Clinic platform streamlines appointments, consolidates health histories, and keeps patients informed every step of the way—securely and intuitively.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start w-full sm:w-auto">
               <Link href="/login" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md">
+                <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white shadow-md dark:bg-emerald-500 dark:hover:bg-emerald-400">
                   Book an Appointment
                 </Button>
               </Link>
@@ -153,7 +160,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto border-green-600 text-green-700 hover:bg-green-50"
+                  className="w-full sm:w-auto border-green-600 text-green-700 hover:bg-green-50 dark:border-emerald-400 dark:text-emerald-200 dark:hover:bg-slate-900/60"
                 >
                   Explore the Platform
                 </Button>
@@ -161,9 +168,9 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left sm:text-center">
               {[{ label: "24/7 Portal Access", value: "Always on" }, { label: "Integrated Health Records", value: "Unified" }, { label: "Secure Patient Data", value: "Encrypted" }].map((item) => (
-                <div key={item.label} className="rounded-xl bg-white/80 border border-green-100 px-4 py-3 shadow-sm">
-                  <p className="text-sm uppercase tracking-wide text-green-500 font-medium">{item.value}</p>
-                  <p className="text-gray-700 text-sm">{item.label}</p>
+                <div key={item.label} className="rounded-xl bg-white/80 border border-green-100 px-4 py-3 shadow-sm dark:bg-slate-900/70 dark:border-slate-800">
+                  <p className="text-sm uppercase tracking-wide text-green-500 font-medium dark:text-emerald-300">{item.value}</p>
+                  <p className="text-gray-700 text-sm dark:text-slate-200">{item.label}</p>
                 </div>
               ))}
             </div>
@@ -182,11 +189,11 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="bg-white py-16 md:py-20 px-6 md:px-12">
+      <section id="features" className="bg-white py-16 md:py-20 px-6 md:px-12 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-4">
-            <h3 className="text-2xl md:text-3xl font-bold text-green-600">Built for dependable clinic operations</h3>
-            <p className="text-gray-600">
+            <h3 className="text-2xl md:text-3xl font-bold text-green-600 dark:text-emerald-200">Built for dependable clinic operations</h3>
+            <p className="text-gray-600 dark:text-slate-300">
               HNU Clinic brings essential services together so patients and providers can focus on care—not coordination.
             </p>
           </div>
@@ -223,14 +230,17 @@ export default function HomePage() {
                 icon: MapPin,
               },
             ].map(({ title, description, icon: Icon }) => (
-              <Card key={title} className="rounded-2xl border-green-100 shadow-sm hover:shadow-md transition">
+              <Card
+                key={title}
+                className="rounded-2xl border-green-100 shadow-sm hover:shadow-md transition dark:border-emerald-900/60 dark:bg-slate-900"
+              >
                 <CardHeader className="flex flex-col items-start gap-4">
-                  <span className="inline-flex items-center justify-center rounded-full bg-green-50 p-3 text-green-600 shadow-sm">
+                  <span className="inline-flex items-center justify-center rounded-full bg-green-50 p-3 text-green-600 shadow-sm dark:bg-emerald-900/40 dark:text-emerald-300">
                     <Icon className="w-6 h-6" />
                   </span>
-                  <CardTitle className="text-lg md:text-xl text-green-700">{title}</CardTitle>
+                  <CardTitle className="text-lg md:text-xl text-green-700 dark:text-emerald-200">{title}</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0 text-gray-600 text-sm md:text-base leading-relaxed">
+                <CardContent className="pt-0 text-gray-600 text-sm md:text-base leading-relaxed dark:text-slate-300">
                   {description}
                 </CardContent>
               </Card>
@@ -243,22 +253,25 @@ export default function HomePage() {
       <section id="workflow" className="py-16 md:py-20 px-6 md:px-12">
         <div className="max-w-6xl mx-auto grid gap-12 md:grid-cols-2 items-center">
           <div className="space-y-6">
-            <h3 className="text-2xl md:text-3xl font-bold text-green-600">A trusted pathway from booking to follow-up</h3>
-            <p className="text-gray-600 leading-relaxed">
+            <h3 className="text-2xl md:text-3xl font-bold text-green-600 dark:text-emerald-200">A trusted pathway from booking to follow-up</h3>
+            <p className="text-gray-600 leading-relaxed dark:text-slate-300">
               Whether it is an annual assessment or urgent visit, the HNU Clinic workflow keeps each step organized so patients receive timely attention and healthcare teams have the insight they need.
             </p>
             <div className="grid gap-4">
               {["Reserve an appointment slot in minutes", "Arrive prepared with digital intake and reminders", "Receive coordinated care and documented outcomes"].map((step, index) => (
-                <div key={step} className="flex items-start gap-4 rounded-xl bg-white/80 border border-green-100 p-4 shadow-sm">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-600 text-white font-semibold">
+                <div
+                  key={step}
+                  className="flex items-start gap-4 rounded-xl bg-white/80 border border-green-100 p-4 shadow-sm dark:bg-slate-900/70 dark:border-slate-800"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-600 text-white font-semibold dark:bg-emerald-500">
                     {index + 1}
                   </span>
-                  <p className="text-gray-700 text-sm md:text-base leading-relaxed">{step}</p>
+                  <p className="text-gray-700 text-sm md:text-base leading-relaxed dark:text-slate-200">{step}</p>
                 </div>
               ))}
             </div>
           </div>
-          <Card className="rounded-3xl border-none bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-xl">
+          <Card className="rounded-3xl border-none bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-xl dark:from-slate-950 dark:via-emerald-900/40 dark:to-emerald-700">
             <CardContent className="p-8 space-y-6">
               <h4 className="text-2xl font-semibold">Why patients trust the portal</h4>
               <ul className="space-y-4 text-sm md:text-base">
@@ -284,27 +297,27 @@ export default function HomePage() {
       <section id="contact" className="py-16 md:py-20 px-6 md:px-12">
         <div className="max-w-6xl mx-auto grid gap-12 md:grid-cols-[1.2fr_1fr] items-center">
           <div className="space-y-4 text-center md:text-left">
-            <h3 className="text-2xl md:text-3xl font-bold text-green-600">Let’s coordinate your next clinic visit</h3>
-            <p className="text-gray-600 leading-relaxed">
+            <h3 className="text-2xl md:text-3xl font-bold text-green-600 dark:text-emerald-200">Let’s coordinate your next clinic visit</h3>
+            <p className="text-gray-600 leading-relaxed dark:text-slate-300">
               Share your details and our team will reach out with appointment options or answers to your questions. We’re here to support your wellness on campus.
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
-              <div className="rounded-xl border border-green-100 bg-white/80 p-4 text-left shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-green-700">Clinic Hours</p>
-                <p className="text-sm text-gray-700">Monday – Friday, 7:30 AM – 8:00 PM</p>
-                <p className="text-sm text-gray-700">Saturday, 8:00 AM – 11:00 AM</p>
+              <div className="rounded-xl border border-green-100 bg-white/80 p-4 text-left shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                <p className="text-xs uppercase tracking-wide text-green-700 dark:text-emerald-300">Clinic Hours</p>
+                <p className="text-sm text-gray-700 dark:text-slate-200">Monday – Friday, 7:30 AM – 8:00 PM</p>
+                <p className="text-sm text-gray-700 dark:text-slate-200">Saturday, 8:00 AM – 11:00 AM</p>
               </div>
-              <div className="rounded-xl border border-green-100 bg-white/80 p-4 text-left shadow-sm">
-                <p className="text-xs uppercase tracking-wide text-green-700">Location</p>
-                <p className="text-sm text-gray-700">Holy Name University campus clinic</p>
+              <div className="rounded-xl border border-green-100 bg-white/80 p-4 text-left shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                <p className="text-xs uppercase tracking-wide text-green-700 dark:text-emerald-300">Location</p>
+                <p className="text-sm text-gray-700 dark:text-slate-200">Holy Name University campus clinic</p>
               </div>
             </div>
           </div>
-          <Card className="rounded-2xl shadow-lg border-green-100 bg-white/90 backdrop-blur-sm">
+          <Card className="rounded-2xl shadow-lg border-green-100 bg-white/90 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
             <CardContent className="p-6 md:p-8 space-y-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="name">
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200" htmlFor="name">
                     Full Name
                   </label>
                   <Input
@@ -316,7 +329,7 @@ export default function HomePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="email">
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200" htmlFor="email">
                     Email Address
                   </label>
                   <Input
@@ -329,7 +342,7 @@ export default function HomePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700" htmlFor="message">
+                  <label className="text-sm font-medium text-gray-700 dark:text-slate-200" htmlFor="message">
                     Message
                   </label>
                   <Textarea
@@ -344,7 +357,7 @@ export default function HomePage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full p-4 md:p-5 bg-green-600 hover:bg-green-700 flex items-center justify-center text-base"
+                  className="w-full p-4 md:p-5 bg-green-600 hover:bg-green-700 flex items-center justify-center text-base dark:bg-emerald-500 dark:hover:bg-emerald-400"
                 >
                   {loading ? (
                     <>
@@ -362,20 +375,20 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-green-900 text-green-50">
+      <footer className="bg-green-900 text-green-50 dark:bg-slate-950 dark:text-slate-200">
         <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 grid gap-8 md:grid-cols-3">
           <div className="space-y-3">
             <p className="text-lg font-semibold">HNU Clinic</p>
-            <p className="text-sm text-green-100 leading-relaxed">
+            <p className="text-sm text-green-100 leading-relaxed dark:text-slate-400">
               Delivering compassionate, technology-enabled care to the Holy Name University community.
             </p>
           </div>
           <div className="space-y-3">
             <p className="text-lg font-semibold">Quick Links</p>
-            <ul className="space-y-2 text-sm text-green-100">
+            <ul className="space-y-2 text-sm text-green-100 dark:text-slate-400">
               {navigation.map((item) => (
                 <li key={item.label}>
-                  <Link href={item.href} className="hover:text-white transition">
+                  <Link href={item.href} className="hover:text-white transition dark:hover:text-emerald-300">
                     {item.label}
                   </Link>
                 </li>
@@ -384,15 +397,15 @@ export default function HomePage() {
           </div>
           <div className="space-y-3">
             <p className="text-lg font-semibold">Stay in Touch</p>
-            <p className="text-sm text-green-100 leading-relaxed">
+            <p className="text-sm text-green-100 leading-relaxed dark:text-slate-400">
               Visit the campus clinic or send us a message and our staff will guide you to the right service.
             </p>
-            <Link href="#contact" className="inline-flex text-sm text-white font-medium underline-offset-4 hover:underline">
+            <Link href="#contact" className="inline-flex text-sm text-white font-medium underline-offset-4 hover:underline dark:text-emerald-300">
               Contact the clinic team
             </Link>
           </div>
         </div>
-        <div className="border-t border-green-700/60 text-center py-4 text-xs text-green-200">
+        <div className="border-t border-green-700/60 text-center py-4 text-xs text-green-200 dark:border-slate-800 dark:text-slate-500">
           © {new Date().getFullYear()} HNU Clinic Capstone Project
         </div>
       </footer>

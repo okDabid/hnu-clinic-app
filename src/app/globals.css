@@ -136,6 +136,94 @@
   .font-display {
     font-family: var(--font-display), system-ui, sans-serif;
   }
+
+  .dark .text-gray-700 {
+    color: oklch(0.855 0.015 260.052);
+  }
+
+  .dark .text-gray-600 {
+    color: oklch(0.8 0.02 260.052);
+  }
+
+  .dark .text-green-600,
+  .dark .text-green-700 {
+    color: oklch(0.74 0.11 155.417);
+  }
+
+  .dark .text-green-800 {
+    color: oklch(0.7 0.11 155.417);
+  }
+
+  .dark .text-slate-600,
+  .dark .text-slate-700 {
+    color: oklch(0.82 0.02 260.052);
+  }
+
+  .dark .text-slate-500 {
+    color: oklch(0.78 0.02 260.052);
+  }
+
+  .dark .bg-white {
+    background-color: color-mix(in oklch, var(--card) 92%, transparent);
+  }
+
+  .dark .bg-white\/90 {
+    background-color: color-mix(in oklch, var(--card) 90%, transparent);
+  }
+
+  .dark .bg-white\/80 {
+    background-color: color-mix(in oklch, var(--card) 80%, transparent);
+  }
+
+  .dark .bg-white\/60 {
+    background-color: color-mix(in oklch, var(--card) 60%, transparent);
+  }
+
+  .dark .bg-white\/70 {
+    background-color: color-mix(in oklch, var(--card) 70%, transparent);
+  }
+
+  .dark .bg-green-50,
+  .dark .bg-green-100 {
+    background-color: color-mix(in oklch, var(--primary) 25%, var(--background));
+  }
+
+  .dark .bg-green-50\/60 {
+    background-color: color-mix(in oklch, var(--primary) 18%, var(--background));
+  }
+
+  .dark .bg-green-200\/40 {
+    background-color: color-mix(in oklch, var(--primary) 22%, transparent);
+  }
+
+  .dark .bg-green-300\/40 {
+    background-color: color-mix(in oklch, var(--primary) 30%, transparent);
+  }
+
+  .dark .border-green-100,
+  .dark .border-green-200 {
+    border-color: color-mix(in oklch, var(--primary) 35%, var(--background));
+  }
+
+  .dark .border-green-100\/80 {
+    border-color: color-mix(in oklch, var(--primary) 35%, var(--background));
+  }
+
+  .dark .bg-green-600 {
+    background-color: color-mix(in oklch, var(--primary) 80%, black 10%);
+  }
+
+  .dark .hover\:bg-green-700:hover {
+    background-color: color-mix(in oklch, var(--primary) 85%, black 18%);
+  }
+
+  .dark .bg-green-600:hover {
+    background-color: color-mix(in oklch, var(--primary) 85%, black 18%);
+  }
+
+  .dark .text-green-500 {
+    color: oklch(0.78 0.1 154.992);
+  }
 }
 
 html {

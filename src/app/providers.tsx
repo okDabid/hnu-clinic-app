@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect } from "react";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
 import { Toaster, toast } from "sonner";
 
 /**
@@ -48,10 +49,17 @@ export default function Providers({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <SessionProvider>
-            {children}
-            <Toaster richColors position="top-center" />
-            <SessionWatcher /> {/* runs globally */}
-        </SessionProvider>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <SessionProvider>
+                {children}
+                <Toaster richColors position="top-center" />
+                <SessionWatcher /> {/* runs globally */}
+            </SessionProvider>
+        </ThemeProvider>
     );
 }
