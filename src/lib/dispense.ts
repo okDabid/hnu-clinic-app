@@ -33,6 +33,26 @@ export async function listDispenses() {
                     nurse: { select: { username: true } },
                 },
             },
+            scholar: {
+                select: {
+                    user_id: true,
+                    username: true,
+                    student: {
+                        select: {
+                            fname: true,
+                            mname: true,
+                            lname: true,
+                        },
+                    },
+                    employee: {
+                        select: {
+                            fname: true,
+                            mname: true,
+                            lname: true,
+                        },
+                    },
+                },
+            },
             dispenseBatches: {
                 include: {
                     replenishment: {
@@ -44,7 +64,7 @@ export async function listDispenses() {
                 },
             },
         },
-        orderBy: { createdAt: "desc" }
+        orderBy: { createdAt: "desc" },
     });
 }
 
@@ -52,13 +72,44 @@ export async function recordDispense({
     med_id,
     consultation_id,
     quantity,
+    walkIn,
+    scholar_user_id,
 }: {
     med_id: string;
-    consultation_id: string;
+    consultation_id?: string | null;
     quantity: number;
+    walkIn?: {
+        name: string;
+        contact?: string | null;
+        notes?: string | null;
+    };
+    scholar_user_id?: string | null;
 }) {
-    if (!med_id || !consultation_id) {
-        throw new DispenseError("med_id and consultation_id are required", 400);
+    if (!med_id) {
+        throw new DispenseError("med_id is required", 400);
+    }
+
+    const walkInName = walkIn?.name?.trim();
+    const walkInContact = walkIn?.contact ? walkIn.contact.trim() : null;
+    const walkInNotes = walkIn?.notes ? walkIn.notes.trim() : null;
+
+    const hasConsultation = Boolean(consultation_id);
+    const hasWalkIn = Boolean(walkInName);
+
+    if (!hasConsultation && !hasWalkIn) {
+        throw new DispenseError("Either consultation_id or walk-in details are required", 400);
+    }
+
+    if (hasConsultation && hasWalkIn) {
+        throw new DispenseError("Provide either consultation_id or walk-in details, not both", 400);
+    }
+
+    if (hasWalkIn && !scholar_user_id) {
+        throw new DispenseError("Walk-in dispenses must be associated with a scholar", 400);
+    }
+
+    if (hasConsultation && scholar_user_id) {
+        throw new DispenseError("scholar_user_id is only allowed for walk-in dispenses", 400);
     }
 
     const qtyNeeded = Number(quantity);
@@ -132,7 +183,11 @@ export async function recordDispense({
         prisma.medDispense.create({
             data: {
                 med_id,
-                consultation_id,
+                consultation_id: hasConsultation ? consultation_id : null,
+                scholar_user_id: hasWalkIn ? scholar_user_id ?? null : null,
+                walk_in_name: hasWalkIn ? walkInName : null,
+                walk_in_contact: hasWalkIn ? walkInContact : null,
+                walk_in_notes: hasWalkIn ? walkInNotes : null,
                 quantity: qtyNeeded,
                 createdAt: timestamp,
                 dispenseBatches: { create: batchRecords },
@@ -153,6 +208,26 @@ export async function recordDispense({
                         },
                         doctor: { select: { username: true } },
                         nurse: { select: { username: true } },
+                    },
+                },
+                scholar: {
+                    select: {
+                        user_id: true,
+                        username: true,
+                        student: {
+                            select: {
+                                fname: true,
+                                mname: true,
+                                lname: true,
+                            },
+                        },
+                        employee: {
+                            select: {
+                                fname: true,
+                                mname: true,
+                                lname: true,
+                            },
+                        },
                     },
                 },
                 dispenseBatches: {

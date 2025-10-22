@@ -54,7 +54,7 @@ export async function GET() {
             await prisma.$transaction(ops);
         }
 
-        const [inventory, archivedReplenishments] = await Promise.all([
+        const [inventory, archivedReplenishments, dispenseTotals, walkInDispenses] = await Promise.all([
             prisma.medInventory.findMany({
                 include: {
                     clinic: { select: { clinic_name: true, clinic_location: true } },
@@ -78,7 +78,23 @@ export async function GET() {
                 },
                 orderBy: { expiry_date: "desc" },
             }),
+            prisma.medDispense.groupBy({
+                by: ["med_id"],
+                _sum: { quantity: true },
+            }),
+            prisma.medDispense.groupBy({
+                by: ["med_id"],
+                where: { consultation_id: null },
+                _sum: { quantity: true },
+            }),
         ]);
+
+        const totalDispensedMap = new Map(
+            dispenseTotals.map((record) => [record.med_id, record._sum.quantity ?? 0])
+        );
+        const walkInDispensedMap = new Map(
+            walkInDispenses.map((record) => [record.med_id, record._sum.quantity ?? 0])
+        );
 
         const archived = archivedReplenishments.map((rep) => ({
             replenishment_id: rep.replenishment_id,
@@ -126,6 +142,8 @@ export async function GET() {
                 ...item,
                 replenishments: activeReplenishments,
                 archivedReplenishments: archivedByMed[item.med_id] ?? [],
+                totalDispensed: totalDispensedMap.get(item.med_id) ?? 0,
+                walkInDispensed: walkInDispensedMap.get(item.med_id) ?? 0,
             };
         });
 

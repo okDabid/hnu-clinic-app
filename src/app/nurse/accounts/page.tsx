@@ -1050,7 +1050,7 @@ export default function NurseAccountsPage() {
                             </Button>
                         </form>
                         <AlertDialog open={showCreateConfirm} onOpenChange={handleCreateDialogChange}>
-                            <AlertDialogContent className="max-w-lg">
+                            <AlertDialogContent className="w-[95%] max-w-md rounded-3xl border">
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Confirm new user account</AlertDialogTitle>
                                     <AlertDialogDescription>
@@ -1134,7 +1134,7 @@ export default function NurseAccountsPage() {
                             </AlertDialogContent>
                         </AlertDialog>
                         <Dialog open={showCreateSuccess} onOpenChange={handleCreateSuccessChange}>
-                            <DialogContent className="max-w-sm rounded-3xl border border-green-100/80 bg-white/95">
+                            <DialogContent className="w-[95%] max-w-md rounded-3xl border border-green-100/80 bg-white/95">
                                 <DialogHeader>
                                     <DialogTitle className="flex items-center gap-2 text-green-700">
                                         <CheckCircle2 className="h-5 w-5" /> Account created

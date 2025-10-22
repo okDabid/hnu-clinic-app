@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Home, Search, User } from "lucide-react";
+import { CalendarDays, Home, Pill, Search, User } from "lucide-react";
 
 import {
     PanelLayout,
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     { href: "/scholar/account", label: "Account", icon: User },
     { href: "/scholar/appointments", label: "Appointments", icon: CalendarDays },
     { href: "/scholar/patients", label: "Patients", icon: Search },
+    { href: "/scholar/dispense", label: "Dispense", icon: Pill },
 ] as const satisfies readonly PanelNavItem[];
 
 export type ScholarLayoutProps = PanelLayoutContentProps;

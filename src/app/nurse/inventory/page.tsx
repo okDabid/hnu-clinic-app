@@ -65,6 +65,8 @@ type InventoryItem = {
     clinic: { clinic_name: string; clinic_location?: string };
     replenishments: { expiry_date: string; remaining_qty: number; status: string; daysLeft: number }[];
     archivedReplenishments: ArchivedReplenishment[];
+    totalDispensed: number;
+    walkInDispensed: number;
 };
 
 type Clinic = {
@@ -397,6 +399,8 @@ export default function NurseInventoryPage() {
                                             <TableHead>Item Type</TableHead>
                                             <TableHead>Strength</TableHead>
                                             <TableHead>Total Quantity</TableHead>
+                                            <TableHead>Dispensed (All Time)</TableHead>
+                                            <TableHead>Walk-in Dispensed</TableHead>
                                             <TableHead>Expiry Batches</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -412,6 +416,8 @@ export default function NurseInventoryPage() {
                                                         {item.strength ? `${item.strength} ${item.unit || ""}` : "-"}
                                                     </TableCell>
                                                     <TableCell>{item.quantity}</TableCell>
+                                                    <TableCell>{item.totalDispensed}</TableCell>
+                                                    <TableCell>{item.walkInDispensed}</TableCell>
                                                     <TableCell>
                                                         <div className="space-y-1">
                                                             {item.replenishments.length > 0 ? (
@@ -454,7 +460,7 @@ export default function NurseInventoryPage() {
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={7} className="text-center text-gray-500 py-6">
+                                                <TableCell colSpan={9} className="text-center text-gray-500 py-6">
                                                     No items found
                                                 </TableCell>
                                             </TableRow>
