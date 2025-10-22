@@ -176,20 +176,20 @@ model Consultation {
 }
 
 model MedDispense {
-  dispense_id      String          @id @default(dbgenerated("concat('DESP_', (floor((random() * (1000000)::double precision)))::integer)"))
-  med_id           String
-  consultation_id  String?
-  scholar_user_id  String?
-  walk_in_name     String?
-  walk_in_contact  String?
-  walk_in_notes    String?
-  quantity         Int
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @default(now()) @updatedAt
-  dispenseBatches  DispenseBatch[]
-  consultation     Consultation?   @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
-  med              MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
-  scholar          Users?          @relation("ScholarDispenses", fields: [scholar_user_id], references: [user_id])
+  dispense_id     String          @id @default(dbgenerated("concat('DESP_', (floor((random() * (1000000)::double precision)))::integer)"))
+  med_id          String
+  consultation_id String?
+  scholar_user_id String?
+  walk_in_name    String?
+  walk_in_contact String?
+  walk_in_notes   String?
+  quantity        Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+  dispenseBatches DispenseBatch[]
+  consultation    Consultation?   @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  med             MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  scholar         Users?          @relation("ScholarDispenses", fields: [scholar_user_id], references: [user_id])
 
   @@index([consultation_id])
   @@index([scholar_user_id])
