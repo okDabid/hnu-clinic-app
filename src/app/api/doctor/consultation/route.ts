@@ -34,7 +34,7 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 /**
  * GET — Fetch all consultation slots for logged-in doctor
  */
-export async function GET() {
+export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
@@ -51,15 +51,36 @@ export async function GET() {
 
         await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
 
+        const url = new URL(req.url);
+        const pageParam = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
+        const pageSizeParam = Number.parseInt(url.searchParams.get("pageSize") ?? "25", 10);
+
+        const pageSize = Number.isNaN(pageSizeParam)
+            ? 25
+            : Math.min(Math.max(pageSizeParam, 5), 100);
+        const requestedPage = Number.isNaN(pageParam) ? 1 : Math.max(pageParam, 1);
+
+        const where: Prisma.DoctorAvailabilityWhereInput = {
+            doctor_user_id: doctor.user_id,
+            archivedAt: null,
+        };
+
+        const total = await prisma.doctorAvailability.count({ where });
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        const page = Math.min(requestedPage, totalPages);
+        const skip = (page - 1) * pageSize;
+
         const slots = await prisma.doctorAvailability.findMany({
-            where: { doctor_user_id: doctor.user_id, archivedAt: null },
+            where,
             include: {
                 clinic: { select: { clinic_id: true, clinic_name: true } },
             },
             orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
+            skip,
+            take: pageSize,
         });
 
-        return NextResponse.json(slots);
+        return NextResponse.json({ data: slots, page, pageSize, total, totalPages });
     } catch (err) {
         console.error("[GET /api/doctor/consultation]", err);
         return NextResponse.json(
@@ -239,14 +260,6 @@ export async function POST(req: Request) {
 
         await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
 
-        const refreshed = await prisma.doctorAvailability.findMany({
-            where: { doctor_user_id: doctor.user_id, archivedAt: null },
-            include: {
-                clinic: { select: { clinic_id: true, clinic_name: true } },
-            },
-            orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
-        });
-
         const firstDay = generatedDates[0] ?? formatManilaISODate(monthStart);
         const lastDay =
             generatedDates[generatedDates.length - 1] ??
@@ -256,7 +269,7 @@ export async function POST(req: Request) {
             message: `Duty hours generated for ${generatedDates.length} day${
                 generatedDates.length === 1 ? "" : "s"
             } (${firstDay} to ${lastDay}).`,
-            slots: refreshed,
+            createdCount: generatedDates.length,
         });
     } catch (err) {
         console.error("[POST /api/doctor/consultation]", err);

@@ -8,10 +8,15 @@ import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import {
     buildManilaDate,
     endOfManilaDay,
+    formatManilaISODate,
     manilaNow,
     rangesOverlap,
     startOfManilaDay,
 } from "@/lib/time";
+import {
+    computeDoctorEarliestBookingStart,
+    DEFAULT_MIN_BOOKING_LEAD_DAYS,
+} from "@/lib/booking";
 
 function parseDate(value: string | null, type: "start" | "end") {
     if (!value) return null;
@@ -244,7 +249,7 @@ export async function POST(req: Request) {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: doctor_user_id },
-            select: { role: true },
+            select: { role: true, specialization: true },
         });
 
         if (!doctor || doctor.role !== Role.DOCTOR) {
@@ -257,6 +262,21 @@ export async function POST(req: Request) {
 
         if (!(appointment_timestart < appointment_timeend)) {
             return NextResponse.json({ error: "Invalid time range" }, { status: 400 });
+        }
+
+        const now = manilaNow();
+        const earliestBookingStart = computeDoctorEarliestBookingStart(
+            now,
+            doctor.specialization,
+            DEFAULT_MIN_BOOKING_LEAD_DAYS,
+        );
+
+        if (appointment_timestart < earliestBookingStart) {
+            const earliestDate = formatManilaISODate(earliestBookingStart);
+            return NextResponse.json(
+                { error: `Appointments must be scheduled on or after ${earliestDate}` },
+                { status: 400 },
+            );
         }
 
         const dayStart = appointment_date;
