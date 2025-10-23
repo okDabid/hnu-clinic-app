@@ -196,7 +196,27 @@ export async function POST(req: Request) {
         const lastGeneratedDate = generatedDates[generatedDates.length - 1];
         const rangeEnd = lastGeneratedDate
             ? endOfManilaDay(lastGeneratedDate)
-            : endOfManilaDay(formatManilaISODate(new Date(endExclusive.getTime() - DAY_IN_MS)));
+            : endOfManilaDay(
+                  formatManilaISODate(new Date(endExclusive.getTime() - DAY_IN_MS))
+              );
+
+        const existingForYear = await prisma.doctorAvailability.count({
+            where: {
+                doctor_user_id: doctor.user_id,
+                archivedAt: null,
+                available_date: { gte: rangeStart, lt: endExclusive },
+            },
+        });
+
+        if (existingForYear > 0) {
+            const currentYear = formatManilaISODate(rangeStart).slice(0, 4);
+            return NextResponse.json(
+                {
+                    error: `Duty hours for ${currentYear} have already been generated. Edit existing slots instead of creating a new set.`,
+                },
+                { status: 409 }
+            );
+        }
 
         const conflicting = await prisma.doctorAvailability.findMany({
             where: {
