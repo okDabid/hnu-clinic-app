@@ -2,7 +2,10 @@
 
 import { ReactNode, useEffect } from "react";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
+
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 /**
  * Monitors the session and signs out users whose accounts become inactive.
@@ -49,9 +52,11 @@ export default function Providers({ children }: { children: ReactNode }) {
 
     return (
         <SessionProvider>
-            {children}
-            <Toaster richColors position="top-center" />
-            <SessionWatcher /> {/* runs globally */}
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                {children}
+                <Toaster richColors position="top-center" />
+                <SessionWatcher /> {/* runs globally */}
+            </ThemeProvider>
         </SessionProvider>
     );
 }

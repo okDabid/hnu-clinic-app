@@ -112,6 +112,16 @@
   --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
   --sidebar-border: hsl(240 3.7% 15.9%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --surface-solid: oklch(0.26 0.03 256.36);
+  --surface-95: oklch(0.26 0.03 256.36 / 0.95);
+  --surface-90: oklch(0.26 0.03 256.36 / 0.9);
+  --surface-85: oklch(0.26 0.03 256.36 / 0.85);
+  --surface-80: oklch(0.26 0.03 256.36 / 0.8);
+  --surface-70: oklch(0.26 0.03 256.36 / 0.7);
+  --surface-60: oklch(0.26 0.03 256.36 / 0.6);
+  --surface-20: oklch(0.26 0.03 256.36 / 0.2);
+  --surface-15: oklch(0.26 0.03 256.36 / 0.15);
+  --surface-10: oklch(0.26 0.03 256.36 / 0.1);
 }
 
 @layer base {
@@ -135,6 +145,120 @@
 
   .font-display {
     font-family: var(--font-display), system-ui, sans-serif;
+  }
+
+  .dark .bg-white {
+    background-color: var(--surface-solid) !important;
+  }
+
+  .dark .bg-white\/95 {
+    background-color: var(--surface-95) !important;
+  }
+
+  .dark .bg-white\/90 {
+    background-color: var(--surface-90) !important;
+  }
+
+  .dark .bg-white\/85 {
+    background-color: var(--surface-85) !important;
+  }
+
+  .dark .bg-white\/80 {
+    background-color: var(--surface-80) !important;
+  }
+
+  .dark .bg-white\/70 {
+    background-color: var(--surface-70) !important;
+  }
+
+  .dark .bg-white\/60 {
+    background-color: var(--surface-60) !important;
+  }
+
+  .dark .bg-white\/20 {
+    background-color: var(--surface-20) !important;
+  }
+
+  .dark .bg-white\/15 {
+    background-color: var(--surface-15) !important;
+  }
+
+  .dark .bg-white\/10 {
+    background-color: var(--surface-10) !important;
+  }
+
+  .dark .border-green-100,
+  .dark .border-green-100\/80,
+  .dark .border-green-100\/70,
+  .dark .border-green-100\/60,
+  .dark .border-green-200,
+  .dark .border-green-200\/70,
+  .dark .border-green-300,
+  .dark .border-green-300\/70 {
+    border-color: color-mix(in oklch, var(--primary) 35%, transparent) !important;
+  }
+
+  .dark .hover\:bg-green-100\/70:hover,
+  .dark .hover\:bg-green-100\/80:hover,
+  .dark .hover\:bg-green-100:hover {
+    background-color: color-mix(in oklch, var(--primary) 20%, transparent) !important;
+  }
+
+  .dark .bg-green-50,
+  .dark .bg-green-50\/60,
+  .dark .bg-green-50\/70 {
+    background-color: color-mix(in oklch, var(--primary) 20%, transparent) !important;
+  }
+
+  .dark .bg-green-100,
+  .dark .bg-green-100\/60,
+  .dark .bg-green-100\/70,
+  .dark .bg-green-100\/80 {
+    background-color: color-mix(in oklch, var(--primary) 30%, transparent) !important;
+  }
+
+  .dark .from-green-50 {
+    --tw-gradient-from: color-mix(in oklch, var(--primary) 25%, transparent) var(--tw-gradient-from-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+  }
+
+  .dark .from-green-100 {
+    --tw-gradient-from: color-mix(in oklch, var(--primary) 30%, transparent) var(--tw-gradient-from-position) !important;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent);
+  }
+
+  .dark .via-white {
+    --tw-gradient-stops: var(--tw-gradient-from), color-mix(in oklch, var(--surface-solid) 65%, transparent),
+      var(--tw-gradient-to, transparent) !important;
+  }
+
+  .dark .to-green-50 {
+    --tw-gradient-to: color-mix(in oklch, var(--primary) 15%, transparent) var(--tw-gradient-to-position) !important;
+  }
+
+  .dark .to-green-100 {
+    --tw-gradient-to: color-mix(in oklch, var(--primary) 25%, transparent) var(--tw-gradient-to-position) !important;
+  }
+
+  .dark :is(
+      .text-gray-700,
+      .text-gray-600,
+      .text-gray-500,
+      .text-gray-400,
+      .text-slate-700,
+      .text-slate-600,
+      .text-slate-500,
+      .text-slate-400
+    ) {
+    color: color-mix(in oklch, var(--foreground) 85%, white 15%) !important;
+  }
+
+  .dark :is(.text-green-500, .text-green-600, .text-green-700, .text-green-800, .text-green-900) {
+    color: color-mix(in oklch, var(--primary) 85%, white 15%) !important;
+  }
+
+  .dark .text-muted-foreground {
+    color: color-mix(in oklch, var(--muted-foreground) 80%, white 20%) !important;
   }
 }
 
