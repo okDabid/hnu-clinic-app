@@ -210,7 +210,7 @@ export default function DoctorConsultationPage() {
             <div className="space-y-6">
                 {/* Consultation Section */}
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
+                    <Card className="rounded-3xl border border-green-100/70 bg-linear-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
                         <CardHeader className="space-y-1">
                             <CardTitle className="text-base font-semibold text-green-700">
                                 Availability overview
