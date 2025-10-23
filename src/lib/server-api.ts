@@ -26,8 +26,12 @@ export async function serverFetch<T>(path: string, init: RequestInit = {}): Prom
         headersInit.set("cookie", cookieHeader);
     }
 
+    const isAbsoluteUrl = /^https?:\/\//i.test(path);
+    const resolvedPath = isAbsoluteUrl ? path : path.startsWith("/") ? path : `/${path}`;
+    const requestUrl = isAbsoluteUrl ? resolvedPath : `${baseUrl}${resolvedPath}`;
+
     try {
-        const response = await fetch(`${baseUrl}${path.startsWith("/") ? path : `/${path}`}`, {
+        const response = await fetch(requestUrl, {
             ...init,
             headers: headersInit,
             cache: init.cache ?? "no-store",
