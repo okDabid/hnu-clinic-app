@@ -11,15 +11,11 @@ import {
     formatManilaISODate,
 } from "@/lib/time";
 import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
-
-const MIN_BOOKING_LEAD_DAYS = 3;
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
-
-function computeEarliestBookingStart(now: Date): Date {
-    const future = new Date(now.getTime() + MIN_BOOKING_LEAD_DAYS * DAY_IN_MS);
-    const earliestDate = formatManilaISODate(future);
-    return startOfManilaDay(earliestDate);
-}
+import { archiveExpiredDutyHours } from "@/lib/duty-hours";
+import {
+    computeDoctorEarliestBookingStart,
+    DEFAULT_MIN_BOOKING_LEAD_DAYS,
+} from "@/lib/booking";
 
 export async function GET() {
     try {
@@ -101,7 +97,10 @@ export async function POST(req: Request) {
         const clinic = await prisma.clinic.findUnique({ where: { clinic_id } });
         if (!clinic) return NextResponse.json({ message: "Clinic not found" }, { status: 404 });
 
-        const doctor = await prisma.users.findUnique({ where: { user_id: doctor_user_id } });
+        const doctor = await prisma.users.findUnique({
+            where: { user_id: doctor_user_id },
+            select: { role: true, specialization: true },
+        });
         if (!doctor || doctor.role !== Role.DOCTOR)
             return NextResponse.json({ message: "Doctor not found" }, { status: 404 });
 
@@ -112,7 +111,11 @@ export async function POST(req: Request) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
         const now = manilaNow();
-        const earliestBookingStart = computeEarliestBookingStart(now);
+        const earliestBookingStart = computeDoctorEarliestBookingStart(
+            now,
+            doctor.specialization,
+            DEFAULT_MIN_BOOKING_LEAD_DAYS,
+        );
 
         if (!(appointment_timestart < appointment_timeend))
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
@@ -126,10 +129,13 @@ export async function POST(req: Request) {
         }
 
         // Check if within availability
+        await archiveExpiredDutyHours({ doctor_user_id });
+
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id,
                 clinic_id,
+                archivedAt: null,
                 available_date: { gte: dayStart, lte: dayEnd },
             },
         });
@@ -213,6 +219,15 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ message: "Appointment not found" }, { status: 404 });
         }
 
+        const doctor = await prisma.users.findUnique({
+            where: { user_id: appointment.doctor_user_id },
+            select: { specialization: true },
+        });
+
+        if (!doctor) {
+            return NextResponse.json({ message: "Doctor not found" }, { status: 404 });
+        }
+
         if (
             appointment.status === AppointmentStatus.Completed ||
             appointment.status === AppointmentStatus.Cancelled
@@ -234,7 +249,11 @@ export async function PATCH(req: Request) {
         const appointment_date = startOfManilaDay(date);
         const appointment_timestart = buildManilaDate(date, time_start);
         const appointment_timeend = buildManilaDate(date, time_end);
-        const earliestBookingStart = computeEarliestBookingStart(now);
+        const earliestBookingStart = computeDoctorEarliestBookingStart(
+            now,
+            doctor.specialization,
+            DEFAULT_MIN_BOOKING_LEAD_DAYS,
+        );
 
         if (!(appointment_timestart < appointment_timeend)) {
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
@@ -251,10 +270,13 @@ export async function PATCH(req: Request) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
 
+        await archiveExpiredDutyHours({ doctor_user_id: appointment.doctor_user_id });
+
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id: appointment.doctor_user_id,
                 clinic_id: appointment.clinic_id,
+                archivedAt: null,
                 available_date: { gte: dayStart, lte: dayEnd },
             },
         });

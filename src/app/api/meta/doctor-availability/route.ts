@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withDb } from "@/lib/withDb";
+import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
 
 /**
@@ -30,12 +31,15 @@ export async function GET(req: Request) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
 
+        await archiveExpiredDutyHours({ doctor_user_id, clinic_id });
+
         const [availabilities, appointments] = await withDb(async () =>
             Promise.all([
                 prisma.doctorAvailability.findMany({
                     where: {
                         clinic_id,
                         doctor_user_id,
+                        archivedAt: null,
                         available_date: { gte: dayStart, lte: dayEnd },
                     },
                     orderBy: { available_timestart: "asc" },

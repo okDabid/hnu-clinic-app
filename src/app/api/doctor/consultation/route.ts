@@ -3,21 +3,38 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DoctorSpecialization, Prisma, Role } from "@prisma/client";
+import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import {
     buildManilaDate,
     endOfManilaDay,
     formatManilaISODate,
     getManilaWeekday,
     manilaNow,
+    rangesOverlap,
     startOfManilaDay,
+    toManilaTimeString,
 } from "@/lib/time";
-const DEFAULT_WEEKS = 4;
-const MAX_WEEKS = 12;
+
+function getCurrentMonthStart(): Date {
+    const now = manilaNow();
+    const today = formatManilaISODate(now);
+    const [year, month] = today.split("-");
+    const monthStartDate = `${year}-${month}-01`;
+    return startOfManilaDay(monthStartDate);
+}
+
+function getGenerationEndExclusive(start: Date): Date {
+    const startYear = Number.parseInt(formatManilaISODate(start).slice(0, 4), 10);
+    const januaryNextYear = `${startYear + 1}-01-01`;
+    return startOfManilaDay(januaryNextYear);
+}
+
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 /**
  * GET — Fetch all consultation slots for logged-in doctor
  */
-export async function GET() {
+export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
@@ -32,15 +49,38 @@ export async function GET() {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
+        await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
+
+        const url = new URL(req.url);
+        const pageParam = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
+        const pageSizeParam = Number.parseInt(url.searchParams.get("pageSize") ?? "25", 10);
+
+        const pageSize = Number.isNaN(pageSizeParam)
+            ? 25
+            : Math.min(Math.max(pageSizeParam, 5), 100);
+        const requestedPage = Number.isNaN(pageParam) ? 1 : Math.max(pageParam, 1);
+
+        const where: Prisma.DoctorAvailabilityWhereInput = {
+            doctor_user_id: doctor.user_id,
+            archivedAt: null,
+        };
+
+        const total = await prisma.doctorAvailability.count({ where });
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        const page = Math.min(requestedPage, totalPages);
+        const skip = (page - 1) * pageSize;
+
         const slots = await prisma.doctorAvailability.findMany({
-            where: { doctor_user_id: doctor.user_id },
+            where,
             include: {
                 clinic: { select: { clinic_id: true, clinic_name: true } },
             },
             orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
+            skip,
+            take: pageSize,
         });
 
-        return NextResponse.json(slots);
+        return NextResponse.json({ data: slots, page, pageSize, total, totalPages });
     } catch (err) {
         console.error("[GET /api/doctor/consultation]", err);
         return NextResponse.json(
@@ -68,11 +108,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
+        await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
+
         const {
             clinic_id,
             available_timestart,
             available_timeend,
-            weeks = DEFAULT_WEEKS,
         } = await req.json();
 
         if (!clinic_id || !available_timestart || !available_timeend) {
@@ -101,31 +142,45 @@ export async function POST(req: Request) {
                 : [1, 2, 3, 4, 5]
         );
 
-        const scheduleWeeks = Math.max(1, Math.min(Number(weeks) || DEFAULT_WEEKS, MAX_WEEKS));
-        const daysToGenerate = scheduleWeeks * 7;
-
-        const base = manilaNow();
+        const monthStart = getCurrentMonthStart();
+        const endExclusive = getGenerationEndExclusive(monthStart);
         const toCreate: Prisma.DoctorAvailabilityCreateManyInput[] = [];
         const generatedDates: string[] = [];
+        const candidateSlots: {
+            date: string;
+            start: Date;
+            end: Date;
+        }[] = [];
 
-        for (let i = 0; i < daysToGenerate; i += 1) {
-            const current = new Date(base);
-            current.setUTCDate(current.getUTCDate() + i);
-
-            const manilaDate = formatManilaISODate(current);
+        for (
+            let cursor = new Date(monthStart);
+            cursor < endExclusive;
+            cursor = new Date(cursor.getTime() + DAY_IN_MS)
+        ) {
+            const manilaDate = formatManilaISODate(cursor);
             const weekday = getManilaWeekday(manilaDate);
 
             if (Number.isNaN(weekday)) continue;
 
             if (!allowedDays.has(weekday)) continue;
 
+            const slotStart = buildManilaDate(manilaDate, available_timestart);
+            const slotEnd = buildManilaDate(manilaDate, available_timeend);
+
             generatedDates.push(manilaDate);
             toCreate.push({
                 doctor_user_id: doctor.user_id,
                 clinic_id,
                 available_date: startOfManilaDay(manilaDate),
-                available_timestart: buildManilaDate(manilaDate, available_timestart),
-                available_timeend: buildManilaDate(manilaDate, available_timeend),
+                available_timestart: slotStart,
+                available_timeend: slotEnd,
+                archivedAt: null,
+            });
+
+            candidateSlots.push({
+                date: manilaDate,
+                start: slotStart,
+                end: slotEnd,
             });
         }
 
@@ -139,14 +194,85 @@ export async function POST(req: Request) {
             );
         }
 
-        const rangeStart = startOfManilaDay(generatedDates[0]);
-        const rangeEnd = endOfManilaDay(generatedDates[generatedDates.length - 1]);
+        const rangeStart = monthStart;
+        const lastGeneratedDate = generatedDates[generatedDates.length - 1];
+        const rangeEnd = lastGeneratedDate
+            ? endOfManilaDay(lastGeneratedDate)
+            : endOfManilaDay(
+                  formatManilaISODate(new Date(endExclusive.getTime() - DAY_IN_MS))
+              );
+
+        const existingForYear = await prisma.doctorAvailability.count({
+            where: {
+                doctor_user_id: doctor.user_id,
+                archivedAt: null,
+                available_date: { gte: rangeStart, lt: endExclusive },
+            },
+        });
+
+        if (existingForYear > 0) {
+            const currentYear = formatManilaISODate(rangeStart).slice(0, 4);
+            return NextResponse.json(
+                {
+                    error: `Duty hours for ${currentYear} have already been generated. Edit existing slots instead of creating a new set.`,
+                },
+                { status: 409 }
+            );
+        }
+
+        const conflicting = await prisma.doctorAvailability.findMany({
+            where: {
+                doctor_user_id: doctor.user_id,
+                archivedAt: null,
+                clinic_id: { not: clinic_id },
+                available_date: { gte: rangeStart, lte: rangeEnd },
+            },
+            select: {
+                availability_id: true,
+                clinic_id: true,
+                available_date: true,
+                available_timestart: true,
+                available_timeend: true,
+            },
+        });
+
+        for (const candidate of candidateSlots) {
+            const candidateDate = candidate.date;
+            for (const existing of conflicting) {
+                const existingDate = formatManilaISODate(existing.available_date);
+                if (existingDate !== candidateDate) continue;
+
+                if (
+                    rangesOverlap(
+                        candidate.start,
+                        candidate.end,
+                        existing.available_timestart,
+                        existing.available_timeend,
+                    )
+                ) {
+                    const conflictStart = formatManilaISODate(existing.available_date);
+                    const conflictStartTime = toManilaTimeString(
+                        existing.available_timestart.toISOString(),
+                    );
+                    const conflictEndTime = toManilaTimeString(
+                        existing.available_timeend.toISOString(),
+                    );
+                    return NextResponse.json(
+                        {
+                            error: `Conflict detected with an existing duty hour on ${conflictStart} from ${conflictStartTime} to ${conflictEndTime}. Adjust the time range to avoid overlaps across clinics.`,
+                        },
+                        { status: 409 },
+                    );
+                }
+            }
+        }
 
         await prisma.$transaction(async (tx) => {
             await tx.doctorAvailability.deleteMany({
                 where: {
                     doctor_user_id: doctor.user_id,
                     clinic_id,
+                    archivedAt: null,
                     available_date: { gte: rangeStart, lte: rangeEnd },
                 },
             });
@@ -154,22 +280,18 @@ export async function POST(req: Request) {
             await tx.doctorAvailability.createMany({ data: toCreate });
         });
 
-        const refreshed = await prisma.doctorAvailability.findMany({
-            where: { doctor_user_id: doctor.user_id },
-            include: {
-                clinic: { select: { clinic_id: true, clinic_name: true } },
-            },
-            orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
-        });
+        await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
 
-        const firstDay = generatedDates[0];
-        const lastDay = generatedDates[generatedDates.length - 1];
+        const firstDay = generatedDates[0] ?? formatManilaISODate(monthStart);
+        const lastDay =
+            generatedDates[generatedDates.length - 1] ??
+            formatManilaISODate(new Date(endExclusive.getTime() - DAY_IN_MS));
 
         return NextResponse.json({
             message: `Duty hours generated for ${generatedDates.length} day${
                 generatedDates.length === 1 ? "" : "s"
             } (${firstDay} to ${lastDay}).`,
-            slots: refreshed,
+            createdCount: generatedDates.length,
         });
     } catch (err) {
         console.error("[POST /api/doctor/consultation]", err);
@@ -198,6 +320,8 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
+        await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
+
         const {
             availability_id,
             clinic_id,
@@ -210,22 +334,87 @@ export async function PUT(req: Request) {
             return NextResponse.json({ error: "Missing availability ID" }, { status: 400 });
         }
 
-        const updateData: Prisma.DoctorAvailabilityUpdateInput = {};
+        const existing = await prisma.doctorAvailability.findUnique({
+            where: { availability_id },
+        });
+
+        if (!existing || existing.doctor_user_id !== doctor.user_id) {
+            return NextResponse.json({ error: "Availability not found" }, { status: 404 });
+        }
+
+        if (existing.archivedAt) {
+            return NextResponse.json(
+                { error: "This duty hour has already been archived" },
+                { status: 400 },
+            );
+        }
+
+        const targetClinicId = clinic_id ?? existing.clinic_id;
 
         if (clinic_id) {
-            updateData.clinic = { connect: { clinic_id } };
+            const clinic = await prisma.clinic.findUnique({ where: { clinic_id } });
+            if (!clinic) {
+                return NextResponse.json({ error: "Clinic not found" }, { status: 404 });
+            }
         }
 
-        if (available_date) {
-            updateData.available_date = startOfManilaDay(available_date);
+        const targetDate = available_date ?? formatManilaISODate(existing.available_date);
+
+        const targetStartTime = available_timestart
+            ? available_timestart
+            : toManilaTimeString(existing.available_timestart.toISOString());
+
+        const targetEndTime = available_timeend
+            ? available_timeend
+            : toManilaTimeString(existing.available_timeend.toISOString());
+
+        if (!targetStartTime || !targetEndTime) {
+            return NextResponse.json(
+                { error: "Start and end times are required" },
+                { status: 400 },
+            );
         }
 
-        if (available_timestart && available_date) {
-            updateData.available_timestart = buildManilaDate(available_date, available_timestart);
+        const newStart = buildManilaDate(targetDate, targetStartTime);
+        const newEnd = buildManilaDate(targetDate, targetEndTime);
+
+        if (!(newStart < newEnd)) {
+            return NextResponse.json(
+                { error: "End time must be after start time" },
+                { status: 400 },
+            );
         }
-        if (available_timeend && available_date) {
-            updateData.available_timeend = buildManilaDate(available_date, available_timeend);
+
+        const dayStart = startOfManilaDay(targetDate);
+        const dayEnd = endOfManilaDay(targetDate);
+
+        const conflicts = await prisma.doctorAvailability.findMany({
+            where: {
+                doctor_user_id: doctor.user_id,
+                archivedAt: null,
+                availability_id: { not: availability_id },
+                available_date: { gte: dayStart, lte: dayEnd },
+            },
+        });
+
+        const hasOverlap = conflicts.some((entry) =>
+            rangesOverlap(newStart, newEnd, entry.available_timestart, entry.available_timeend),
+        );
+
+        if (hasOverlap) {
+            return NextResponse.json(
+                { error: "Updated time overlaps with another duty hour" },
+                { status: 409 },
+            );
         }
+
+        const updateData: Prisma.DoctorAvailabilityUpdateInput = {
+            clinic: { connect: { clinic_id: targetClinicId } },
+            available_date: dayStart,
+            available_timestart: newStart,
+            available_timeend: newEnd,
+            archivedAt: null,
+        };
 
         const updated = await prisma.doctorAvailability.update({
             where: { availability_id },
