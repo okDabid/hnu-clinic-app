@@ -1,6 +1,23 @@
 import { NextResponse } from "next/server";
 
 import { sendEmail } from "@/lib/email";
+import {
+  createRateLimiter,
+  isRateLimited,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
+
+const contactIpLimiter = createRateLimiter({
+  limit: 5,
+  windowMs: 5 * 60 * 1000,
+  keyPrefix: "contact:ip",
+});
+
+const contactEmailLimiter = createRateLimiter({
+  limit: 3,
+  windowMs: 60 * 60 * 1000,
+  keyPrefix: "contact:email",
+});
 
 interface ContactFormData {
   name: string;
@@ -10,6 +27,14 @@ interface ContactFormData {
 
 export async function POST(req: Request) {
   try {
+    const ipRate = await contactIpLimiter.checkRequest(req);
+    if (isRateLimited(ipRate)) {
+      return rateLimitResponse(
+        ipRate,
+        "Too many contact submissions from this address. Please try again later."
+      );
+    }
+
     const { name, email, message } = (await req.json()) as ContactFormData;
 
     // Validate inputs
@@ -17,6 +42,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "All fields are required. Please fill out the form completely." },
         { status: 400 }
+      );
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailRate = await contactEmailLimiter.check(normalizedEmail);
+    if (isRateLimited(emailRate)) {
+      return rateLimitResponse(
+        emailRate,
+        "Too many messages have been sent from this email. Please wait before trying again."
       );
     }
 

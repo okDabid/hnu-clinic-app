@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
+import {
+    createRateLimiter,
+    isRateLimited,
+    rateLimitResponse,
+} from "@/lib/rate-limit";
+
+const loginLimiter = createRateLimiter({
+    limit: 5,
+    windowMs: 60 * 1000,
+    keyPrefix: "user-login",
+});
+
 // define minimal relation types manually
 type UserRelation = {
     user: {
@@ -22,6 +34,14 @@ type StudentWithUser = {
 } & UserRelation;
 
 export async function POST(req: Request) {
+    const rate = await loginLimiter.checkRequest(req);
+    if (isRateLimited(rate)) {
+        return rateLimitResponse(
+            rate,
+            "Too many login attempts. Please try again shortly."
+        );
+    }
+
     try {
         const { role, employee_id, school_id, patient_id, password } =
             await req.json();
