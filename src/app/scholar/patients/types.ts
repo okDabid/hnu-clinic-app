@@ -47,3 +47,44 @@ export type PatientRecord = {
     appointment_id: string | null;
     latestAppointment: AppointmentSummary | null;
 };
+
+export type PreparedPatientRecord = PatientRecord & {
+    searchText: string;
+};
+
+export function buildPatientSearchText(record: PatientRecord): string {
+    return [
+        record.fullName,
+        record.patientId,
+        record.patientType,
+        record.department,
+        record.program,
+        record.year_level,
+        record.contactno,
+        record.address,
+        record.emergency?.name,
+        record.emergency?.num,
+        record.emergency?.relation,
+        record.status,
+    ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+}
+
+export function preparePatientRecord(record: PatientRecord): PreparedPatientRecord {
+    return {
+        ...record,
+        searchText: buildPatientSearchText(record),
+    };
+}
+
+export function preparePatientRecords(
+    records: PatientRecord[] | null | undefined
+): PreparedPatientRecord[] {
+    if (!Array.isArray(records)) {
+        return [];
+    }
+
+    return records.map((record) => preparePatientRecord(record));
+}
