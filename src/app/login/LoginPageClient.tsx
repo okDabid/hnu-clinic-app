@@ -293,7 +293,7 @@ export default function LoginPageClient() {
 
     // ---------- RENDER ----------
     return (
-        <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-white to-green-200">
+        <div className="relative min-h-screen bg-linear-to-br from-green-100 via-white to-green-200">
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-green-300/40 blur-3xl" />
                 <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-green-300/40 blur-3xl" />
@@ -333,7 +333,7 @@ export default function LoginPageClient() {
                     <Card
                         className={`relative z-10 overflow-hidden border-0 bg-white/90 shadow-xl backdrop-blur-xl transition-opacity ${loadingRole ? "opacity-60" : ""}`}
                     >
-                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-400 via-lime-400 to-green-500" />
+                        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-green-400 via-lime-400 to-green-500" />
                         <CardContent className="p-8">
                             <div className="mb-6 flex items-center justify-between">
                                 <div>

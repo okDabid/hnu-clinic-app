@@ -80,7 +80,7 @@ export default function DoctorDashboardPage() {
                 </Button>
             }
         >
-            <section className="rounded-3xl border border-green-100/70 bg-gradient-to-r from-green-100/70 via-white to-green-50/80 p-6 shadow-sm">
+            <section className="rounded-3xl border border-green-100/70 bg-linear-to-r from-green-100/70 via-white to-green-50/80 p-6 shadow-sm">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-3">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-500">
@@ -120,7 +120,7 @@ export default function DoctorDashboardPage() {
                         </CardContent>
                     </Card>
                 ))}
-                <Card className="h-full rounded-3xl border-green-100/70 bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
+                <Card className="h-full rounded-3xl border-green-100/70 bg-linear-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-lg">
                             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">

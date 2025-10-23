@@ -411,7 +411,7 @@ export function NurseReportsPageClient({
                             {hasData ? (
                                 <ChartContainer
                                     config={patientTrendConfig}
-                                    className="h-[320px] w-full"
+                                    className="h-80 w-full"
                                 >
                                     <BarChart data={quarterChartData}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#bbf7d0" />
