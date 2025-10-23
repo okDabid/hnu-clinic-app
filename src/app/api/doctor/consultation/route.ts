@@ -24,9 +24,9 @@ function getCurrentMonthStart(): Date {
 }
 
 function getGenerationEndExclusive(start: Date): Date {
-    const limit = new Date(start);
-    limit.setUTCFullYear(limit.getUTCFullYear() + 1);
-    return limit;
+    const startYear = Number.parseInt(formatManilaISODate(start).slice(0, 4), 10);
+    const januaryNextYear = `${startYear + 1}-01-01`;
+    return startOfManilaDay(januaryNextYear);
 }
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
