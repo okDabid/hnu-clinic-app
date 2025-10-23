@@ -1,7 +1,14 @@
+import { Suspense } from "react";
 import { unstable_noStore as noStore } from "next/cache";
 
+import NurseAccountsLoading from "./loading";
 import { NurseAccountsPageClient } from "./page.client";
-import type { NurseAccountProfileApi, NurseAccountsUserApi } from "./types";
+import {
+    normalizeNurseAccountProfile,
+    normalizeNurseAccountUsers,
+    type NurseAccountProfileApi,
+    type NurseAccountsUserApi,
+} from "./types";
 import { serverFetch } from "@/lib/server-api";
 
 export default async function NurseAccountsPage() {
@@ -11,10 +18,17 @@ export default async function NurseAccountsPage() {
         serverFetch<NurseAccountProfileApi>("/api/nurse/accounts/me"),
     ]);
 
+    const normalizedUsers = normalizeNurseAccountUsers(initialUsers);
+    const normalizedProfile = normalizeNurseAccountProfile(initialProfile);
+
     return (
-        <NurseAccountsPageClient
-            initialUsers={initialUsers}
-            initialProfile={initialProfile}
-        />
+        <Suspense fallback={<NurseAccountsLoading />}>
+            <NurseAccountsPageClient
+                initialUsers={normalizedUsers}
+                initialProfile={normalizedProfile}
+                initialUsersLoaded={Array.isArray(initialUsers)}
+                initialProfileLoaded={Boolean(normalizedProfile)}
+            />
+        </Suspense>
     );
 }

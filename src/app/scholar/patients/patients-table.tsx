@@ -20,12 +20,12 @@ import {
     PATIENT_STATUS_CLASSES,
 } from "@/lib/patient-format";
 
-import type { PatientRecord } from "./types";
+import type { PreparedPatientRecord } from "./types";
 
 interface PatientsTableProps {
-    records: PatientRecord[];
+    records: PreparedPatientRecord[];
     loading: boolean;
-    onSelect: (record: PatientRecord) => void;
+    onSelect: (record: PreparedPatientRecord) => void;
 }
 
 function PatientsTableComponent({ records, loading, onSelect }: PatientsTableProps) {

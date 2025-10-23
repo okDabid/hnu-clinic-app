@@ -15,11 +15,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-import type { PatientRecord } from "./types";
+import type { PreparedPatientRecord } from "./types";
 
 interface PatientDetailDialogProps {
     open: boolean;
-    record: PatientRecord | null;
+    record: PreparedPatientRecord | null;
     onClose: () => void;
 }
 

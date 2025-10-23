@@ -32,92 +32,17 @@ import type { AccountPasswordResult } from "@/components/account/account-passwor
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
 import PatientAccountLoading from "./loading";
-import type { PatientAccountProfileApi } from "./types";
-
-
-// Enum ↔ Label Mappings
-const departmentEnumMap: Record<string, string> = {
-    EDUCATION: "College of Education",
-    ARTS_AND_SCIENCES: "College of Arts and Sciences",
-    BUSINESS_AND_ACCOUNTANCY: "College of Business and Accountancy",
-    ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
-    HEALTH_SCIENCES: "College of Health Sciences",
-    LAW: "College of Law",
-    BASIC_EDUCATION: "Basic Education Department",
-};
-
-const reverseDepartmentEnumMap = Object.fromEntries(
-    Object.entries(departmentEnumMap).map(([key, val]) => [val, key])
-);
-
-const yearLevelEnumMap: Record<string, string> = {
-    FIRST_YEAR: "1st Year",
-    SECOND_YEAR: "2nd Year",
-    THIRD_YEAR: "3rd Year",
-    FOURTH_YEAR: "4th Year",
-    FIFTH_YEAR: "5th Year",
-    KINDERGARTEN: "Kindergarten",
-    ELEMENTARY: "Elementary",
-    JUNIOR_HIGH: "Junior High School",
-    SENIOR_HIGH: "Senior High School",
-};
-
-const reverseYearLevelEnumMap = Object.fromEntries(
-    Object.entries(yearLevelEnumMap).map(([key, val]) => [val, key])
-);
-
-const bloodTypeEnumMap: Record<string, string> = {
-    A_POS: "A+",
-    A_NEG: "A-",
-    B_POS: "B+",
-    B_NEG: "B-",
-    AB_POS: "AB+",
-    AB_NEG: "AB-",
-    O_POS: "O+",
-    O_NEG: "O-",
-};
-
-const reverseBloodTypeEnumMap = Object.fromEntries(
-    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
-);
-
-// Type Definition
-type Profile = {
-    user_id: string;
-    username: string;
-    role: string;
-    status: "Active" | "Inactive";
-    fname: string;
-    mname?: string | null;
-    lname: string;
-    date_of_birth?: string;
-    email?: string;
-    contactno?: string | null;
-    address?: string | null;
-    bloodtype?: string | null;
-    allergies?: string | null;
-    medical_cond?: string | null;
-    gender?: string | null;
-    department?: string | null;
-    program?: string | null;
-    year_level?: string | null;
-    emergencyco_name?: string | null;
-    emergencyco_num?: string | null;
-    emergencyco_relation?: string | null;
-};
-
-// Options
-const departmentOptions = [
-    "College of Education",
-    "College of Arts and Sciences",
-    "College of Business and Accountancy",
-    "College of Engineering and Computer Studies",
-    "College of Health Sciences",
-    "College of Law",
-    "Basic Education Department",
-];
-
-const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+import {
+    normalizePatientAccountProfile,
+    patientBloodTypeEnumMap,
+    patientDepartmentEnumMap,
+    patientReverseBloodTypeEnumMap,
+    patientReverseDepartmentEnumMap,
+    patientReverseYearLevelEnumMap,
+    patientYearLevelEnumMap,
+    type PatientAccountProfile,
+    type PatientAccountProfileApi,
+} from "./types";
 
 const programOptions: Record<string, string[]> = {
     "College of Education": [
@@ -167,61 +92,41 @@ const programOptions: Record<string, string[]> = {
     ],
 };
 
-function normalizeProfile(response: PatientAccountProfileApi | null | undefined) {
-    if (!response || response.error) {
-        return { profile: null as Profile | null, type: null as string | null };
-    }
-
-    const raw = response.profile ?? {};
-    const profile: Profile = {
-        user_id: response.accountId || "",
-        username: response.username || "",
-        role: response.role || "",
-        status: response.status || "Inactive",
-        fname: raw.fname || "",
-        mname: raw.mname || "",
-        lname: raw.lname || "",
-        date_of_birth: raw.date_of_birth || "",
-        email: raw.email || "",
-        contactno: raw.contactno || "",
-        address: raw.address || "",
-        bloodtype: raw.bloodtype ? bloodTypeEnumMap[raw.bloodtype] || raw.bloodtype : "",
-        allergies: raw.allergies || "",
-        medical_cond: raw.medical_cond || "",
-        gender: raw.gender || "",
-        department: raw.department ? departmentEnumMap[raw.department] || "" : "",
-        program: raw.program || "",
-        year_level: raw.year_level ? yearLevelEnumMap[raw.year_level] || "" : "",
-        emergencyco_name: raw.emergencyco_name || "",
-        emergencyco_num: raw.emergencyco_num || "",
-        emergencyco_relation: raw.emergencyco_relation || "",
-    };
-
-    return {
-        profile,
-        type: response.type || response.patientType || null,
-    };
-}
+const departmentOptions = Object.values(patientDepartmentEnumMap);
+const bloodTypeOptions = Object.values(patientBloodTypeEnumMap);
 
 export type PatientAccountPageClientProps = {
-    initialProfile: PatientAccountProfileApi | null;
+    initialProfile: PatientAccountProfile | null;
+    initialPatientType: string | null;
+    initialProfileLoaded: boolean;
 };
 
-export function PatientAccountPageClient({ initialProfile }: PatientAccountPageClientProps) {
-    const { profile: normalizedProfile, type: normalizedType } = normalizeProfile(initialProfile);
-    const normalizedTypeValue = normalizedType === "student" || normalizedType === "employee" ? normalizedType : null;
-    const [profile, setProfile] = useState<Profile | null>(normalizedProfile);
+export function PatientAccountPageClient({
+    initialProfile,
+    initialPatientType,
+    initialProfileLoaded,
+}: PatientAccountPageClientProps) {
+    const normalizedTypeValue =
+        initialPatientType === "student" || initialPatientType === "employee"
+            ? initialPatientType
+            : null;
+    const [profile, setProfile] = useState<PatientAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
 
-    const [initializing, setInitializing] = useState(!normalizedProfile);
+    const [initializing, setInitializing] = useState(!initialProfileLoaded);
 
     const [profileType, setProfileType] = useState<"student" | "employee" | null>(normalizedTypeValue);
-    const [profileLoaded, setProfileLoaded] = useState(Boolean(normalizedProfile));
+    const [profileLoaded, setProfileLoaded] = useState(initialProfileLoaded);
 
     const [tempDOB, setTempDOB] = useState("");
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
     const [isRefreshingProfile, startProfileTransition] = useTransition();
 
+    useEffect(() => {
+        if (initialProfileLoaded) {
+            setInitializing(false);
+        }
+    }, [initialProfileLoaded]);
 
     const getYearLevelOptions = (dept: string, program?: string) => {
         if (dept === "Basic Education Department") {
@@ -252,7 +157,7 @@ export function PatientAccountPageClient({ initialProfile }: PatientAccountPageC
                 return;
             }
 
-            const normalized = normalizeProfile(data as PatientAccountProfileApi);
+            const normalized = normalizePatientAccountProfile(data as PatientAccountProfileApi);
             startProfileTransition(() => {
                 const nextType =
                     normalized.type === "student" || normalized.type === "employee" ? normalized.type : null;
@@ -270,7 +175,7 @@ export function PatientAccountPageClient({ initialProfile }: PatientAccountPageC
 
     useEffect(() => {
         if (!profileLoaded) {
-            loadProfile();
+            void loadProfile();
         }
     }, [profileLoaded, loadProfile]);
 
@@ -321,13 +226,13 @@ export function PatientAccountPageClient({ initialProfile }: PatientAccountPageC
                 ...updatedProfile,
                 department:
                     profileType === "student"
-                        ? reverseDepartmentEnumMap[updatedProfile.department || ""] || null
+                        ? patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null
                         : updatedProfile.department || null,
                 year_level:
                     profileType === "student"
-                        ? reverseYearLevelEnumMap[updatedProfile.year_level || ""] || null
+                        ? patientReverseYearLevelEnumMap[updatedProfile.year_level || ""] || null
                         : null,
-                bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
+                bloodtype: patientReverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
             const res = await fetch("/api/patient/account/me", {
@@ -350,13 +255,13 @@ export function PatientAccountPageClient({ initialProfile }: PatientAccountPageC
                     ...prev!,
                     ...data.profile,
                     department: data.profile.department
-                        ? departmentEnumMap[data.profile.department]
+                        ? patientDepartmentEnumMap[data.profile.department]
                         : prev?.department,
                     year_level: data.profile.year_level
-                        ? yearLevelEnumMap[data.profile.year_level]
+                        ? patientYearLevelEnumMap[data.profile.year_level]
                         : prev?.year_level,
                     bloodtype: data.profile.bloodtype
-                        ? bloodTypeEnumMap[data.profile.bloodtype]
+                        ? patientBloodTypeEnumMap[data.profile.bloodtype]
                         : prev?.bloodtype,
                 }));
             }
@@ -524,7 +429,9 @@ export function PatientAccountPageClient({ initialProfile }: PatientAccountPageC
                                                                         setProfileLoading(true);
                                                                         const payload = {
                                                                             ...updatedProfile,
-                                                                            bloodtype: reverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
+                                                                        bloodtype: patientReverseBloodTypeEnumMap[
+                                                                            updatedProfile?.bloodtype || ""
+                                                                        ] || null,
                                                                         };
 
                                                                         const res = await fetch("/api/patient/account/me", {

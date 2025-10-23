@@ -20,7 +20,7 @@ import {
 
 import ScholarPatientsLoading from "./loading";
 import { PatientsTable } from "./patients-table";
-import type { PatientRecord } from "./types";
+import { preparePatientRecords, type PreparedPatientRecord } from "./types";
 
 const PatientDetailDialog = dynamic(
     () => import("./patient-detail-dialog").then((mod) => mod.PatientDetailDialog),
@@ -33,18 +33,19 @@ const PatientDetailDialog = dynamic(
 );
 
 export type ScholarPatientsPageClientProps = {
-    initialRecords: PatientRecord[] | null;
+    initialRecords: PreparedPatientRecord[];
+    initialLoaded: boolean;
 };
 
-export function ScholarPatientsPageClient({ initialRecords }: ScholarPatientsPageClientProps) {
-    const [records, setRecords] = useState<PatientRecord[]>(() => initialRecords ?? []);
+export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: ScholarPatientsPageClientProps) {
+    const [records, setRecords] = useState<PreparedPatientRecord[]>(() => [...initialRecords]);
     const [loading, setLoading] = useState(false);
-    const [initializing, setInitializing] = useState(!initialRecords);
+    const [initializing, setInitializing] = useState(!initialLoaded);
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("active");
     const [appointmentFilter, setAppointmentFilter] = useState("all");
-    const [selected, setSelected] = useState<PatientRecord | null>(null);
+    const [selected, setSelected] = useState<PreparedPatientRecord | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
     const [isRefreshing, startTransition] = useTransition();
 
@@ -63,7 +64,7 @@ export function ScholarPatientsPageClient({ initialRecords }: ScholarPatientsPag
                 return;
             }
             startTransition(() => {
-                setRecords(Array.isArray(data) ? data : []);
+                setRecords(Array.isArray(data) ? preparePatientRecords(data) : []);
             });
         } catch (err) {
             console.error(err);
@@ -75,10 +76,10 @@ export function ScholarPatientsPageClient({ initialRecords }: ScholarPatientsPag
     }, [startTransition]);
 
     useEffect(() => {
-        if (!initialRecords) {
+        if (!initialLoaded) {
             void loadRecords();
         }
-    }, [initialRecords, loadRecords]);
+    }, [initialLoaded, loadRecords]);
 
     const filteredRecords = useMemo(() => {
         if (
@@ -103,24 +104,7 @@ export function ScholarPatientsPageClient({ initialRecords }: ScholarPatientsPag
 
             if (!deferredSearch) return true;
 
-            const haystack = [
-                record.fullName,
-                record.patientId,
-                record.patientType,
-                record.department,
-                record.program,
-                record.year_level,
-                record.contactno,
-                record.address,
-                record.emergency?.name,
-                record.emergency?.num,
-                record.emergency?.relation,
-                record.status,
-            ]
-                .join(" ")
-                .toLowerCase();
-
-            return haystack.includes(deferredSearch);
+            return record.searchText.includes(deferredSearch);
         });
     }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
 
@@ -131,7 +115,7 @@ export function ScholarPatientsPageClient({ initialRecords }: ScholarPatientsPag
     );
     const withoutAppointments = totalPatients - withAppointments;
 
-    function openDetails(record: PatientRecord) {
+    function openDetails(record: PreparedPatientRecord) {
         setSelected(record);
         setDetailOpen(true);
     }

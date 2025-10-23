@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import orderBy from "lodash/orderBy";
 import { toast } from "sonner";
 import { Ban, CheckCircle2, Loader2, Search } from "lucide-react";
 
@@ -52,18 +51,17 @@ import { validateAndNormalizeContacts } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
 import NurseAccountsLoading from "./loading";
-import type { NurseAccountProfileApi, NurseAccountsUserApi } from "./types";
+import {
+    normalizeNurseAccountProfile,
+    normalizeNurseAccountUsers,
+    nurseReverseBloodTypeEnumMap,
+    type NurseAccountProfile,
+    type NurseAccountProfileApi,
+    type NurseAccountUser,
+    type NurseAccountsUserApi,
+} from "./types";
 
 // Types aligned with API
-type User = {
-    user_id: string;
-    accountId: string;
-    role: string;
-    status: "Active" | "Inactive";
-    fullName: string;
-    specialization: "Physician" | "Dentist" | null;
-};
-
 type RoleFilterValue = "ALL" | "SCHOLAR" | "NURSE" | "DOCTOR" | "PATIENT";
 type StatusFilterValue = "ALL" | "Active" | "Inactive";
 
@@ -87,122 +85,20 @@ type CreateUserResponse = {
     error?: string;
 };
 
-type Profile = {
-    user_id: string;
-    username: string;
-    role: string;
-    status: "Active" | "Inactive";
-    fname: string;
-    mname?: string | null;
-    lname: string;
-    date_of_birth?: string;
-    contactno?: string | null;
-    email?: string;
-    address?: string | null;
-    bloodtype?: string | null;
-    allergies?: string | null;
-    medical_cond?: string | null;
-    emergencyco_name?: string | null;
-    emergencyco_num?: string | null;
-    emergencyco_relation?: string | null;
-};
-
-const bloodTypeEnumMap: Record<string, string> = {
-    A_POS: "A+",
-    A_NEG: "A-",
-    B_POS: "B+",
-    B_NEG: "B-",
-    AB_POS: "AB+",
-    AB_NEG: "AB-",
-    O_POS: "O+",
-    O_NEG: "O-",
-};
-
-const reverseBloodTypeEnumMap = Object.fromEntries(
-    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
-);
-
-function normalizeUsers(data: NurseAccountsUserApi[] | null | undefined): User[] {
-    if (!Array.isArray(data)) {
-        return [];
-    }
-
-    const seen = new Set<string>();
-    const usersData: User[] = [];
-
-    for (const u of data) {
-        const accountId = u.accountId || u.user_id || u.id || "N/A";
-        const role = u.role || "Unknown";
-        const dedupKey = `${accountId}-${role}`;
-
-        if (seen.has(dedupKey)) {
-            continue;
-        }
-
-        seen.add(dedupKey);
-        usersData.push({
-            user_id: u.user_id || u.accountId || u.id || "N/A",
-            accountId,
-            role,
-            status: u.status || "Inactive",
-            fullName:
-                u.fullName ||
-                [u.fname, u.mname, u.lname].filter(Boolean).join(" ") ||
-                "Unnamed",
-            specialization: u.specialization ?? null,
-        });
-    }
-
-    return orderBy(
-        usersData,
-        [
-            (u) => u.role.toLowerCase(),
-            (u) => {
-                const numeric = Number.parseInt(u.user_id, 10);
-                return Number.isNaN(numeric) ? u.user_id : numeric;
-            },
-        ],
-        ["asc", "asc"]
-    );
-}
-
-function normalizeProfile(response: NurseAccountProfileApi | null | undefined): Profile | null {
-    if (!response || response.error) {
-        return null;
-    }
-
-    const bloodTypeValue = response.profile?.bloodtype
-        ? bloodTypeEnumMap[response.profile.bloodtype] || response.profile.bloodtype
-        : "";
-
-    return {
-        user_id: response.accountId || "",
-        username: response.username || "",
-        role: response.role || "",
-        status: response.status || "Inactive",
-        fname: response.profile?.fname || "",
-        mname: response.profile?.mname || "",
-        lname: response.profile?.lname || "",
-        date_of_birth: response.profile?.date_of_birth || "",
-        contactno: response.profile?.contactno || "",
-        email: response.profile?.email || "",
-        address: response.profile?.address || "",
-        bloodtype: bloodTypeValue,
-        allergies: response.profile?.allergies || "",
-        medical_cond: response.profile?.medical_cond || "",
-        emergencyco_name: response.profile?.emergencyco_name || "",
-        emergencyco_num: response.profile?.emergencyco_num || "",
-        emergencyco_relation: response.profile?.emergencyco_relation || "",
-    };
-}
-
 export type NurseAccountsPageClientProps = {
-    initialUsers: NurseAccountsUserApi[] | null;
-    initialProfile: NurseAccountProfileApi | null;
+    initialUsers: NurseAccountUser[];
+    initialProfile: NurseAccountProfile | null;
+    initialUsersLoaded: boolean;
+    initialProfileLoaded: boolean;
 };
 
-export function NurseAccountsPageClient({ initialUsers, initialProfile }: NurseAccountsPageClientProps) {
-    const [users, setUsers] = useState<User[]>(() => normalizeUsers(initialUsers));
+export function NurseAccountsPageClient({
+    initialUsers,
+    initialProfile,
+    initialUsersLoaded,
+    initialProfileLoaded,
+}: NurseAccountsPageClientProps) {
+    const [users, setUsers] = useState<NurseAccountUser[]>(() => [...initialUsers]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -212,16 +108,15 @@ export function NurseAccountsPageClient({ initialUsers, initialProfile }: NurseA
     const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("ALL");
     const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
 
-    const initialProfileValue = normalizeProfile(initialProfile);
-    const [profile, setProfile] = useState<Profile | null>(initialProfileValue);
+    const [profile, setProfile] = useState<NurseAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
 
-    const [profileLoaded, setProfileLoaded] = useState(Boolean(initialProfileValue));
-    const [usersLoaded, setUsersLoaded] = useState(Array.isArray(initialUsers));
+    const [profileLoaded, setProfileLoaded] = useState(initialProfileLoaded);
+    const [usersLoaded, setUsersLoaded] = useState(initialUsersLoaded);
 
     const [currentPage, setCurrentPage] = useState(1);
 
-    const [originalProfile, setOriginalProfile] = useState<Profile | null>(initialProfileValue);
+    const [originalProfile, setOriginalProfile] = useState<NurseAccountProfile | null>(initialProfile);
 
     const [tempDOB, setTempDOB] = useState(""); // temporary holding value
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
@@ -245,7 +140,7 @@ export function NurseAccountsPageClient({ initialUsers, initialProfile }: NurseA
         try {
             const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
             const data = await res.json();
-            const normalized = normalizeUsers(data as NurseAccountsUserApi[]);
+            const normalized = normalizeNurseAccountUsers(data as NurseAccountsUserApi[]);
             startUsersTransition(() => setUsers(normalized));
         } catch (err) {
             console.error("Failed to load users:", err);
@@ -265,7 +160,7 @@ export function NurseAccountsPageClient({ initialUsers, initialProfile }: NurseA
             });
 
             const data = await res.json();
-            const normalized = normalizeProfile(data as NurseAccountProfileApi);
+            const normalized = normalizeNurseAccountProfile(data as NurseAccountProfileApi);
             if (!normalized) {
                 if (data?.error) {
                     toast.error(data.error);
@@ -496,7 +391,7 @@ export function NurseAccountsPageClient({ initialUsers, initialProfile }: NurseA
 
             const payload = {
                 ...updatedProfile,
-                bloodtype: reverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
+                bloodtype: nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
             };
 
             // Prevent DOB modification if it was already set
@@ -745,7 +640,7 @@ export function NurseAccountsPageClient({ initialUsers, initialProfile }: NurseA
                                                                     setProfileLoading(true);
                                                                     const payload = {
                                                                         ...updatedProfile,
-                                                                        bloodtype: reverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
+                                                                        bloodtype: nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
                                                                     };
 
                                                                     const res = await fetch("/api/nurse/accounts/me", {

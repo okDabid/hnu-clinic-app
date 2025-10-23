@@ -34,60 +34,38 @@ import {
 } from "@/lib/time";
 
 import DoctorConsultationLoading from "./loading";
-
-
-type Clinic = {
-    clinic_id: string;
-    clinic_name: string;
-};
-
-type Availability = {
-    availability_id: string;
-    available_date: string;
-    available_timestart: string;
-    available_timeend: string;
-    clinic: Clinic;
-};
-
-const PAGE_SIZE = 25;
-
-type SlotsResponse = {
-    data?: Availability[];
-    total?: number;
-    totalPages?: number;
-    page?: number;
-    pageSize?: number;
-    error?: string;
-};
+import {
+    DEFAULT_PAGE_SIZE,
+    normalizeConsultationSlots,
+    type Availability,
+    type Clinic,
+    type NormalizedSlotsPayload,
+    type SlotsResponse,
+} from "./types";
 
 export type DoctorConsultationPageClientProps = {
-    initialSlots: SlotsResponse | null;
-    initialClinics: Clinic[] | null;
+    initialSlots: NormalizedSlotsPayload;
+    initialClinics: Clinic[];
+    initialSlotsLoaded: boolean;
+    initialClinicsLoaded: boolean;
 };
 
 export function DoctorConsultationPageClient({
     initialSlots,
     initialClinics,
+    initialSlotsLoaded,
+    initialClinicsLoaded,
 }: DoctorConsultationPageClientProps) {
-    const normalizedSlots = initialSlots?.data ?? [];
-    const normalizedTotal = typeof initialSlots?.total === "number" ? initialSlots.total : normalizedSlots.length;
-    const normalizedPageSize =
-        typeof initialSlots?.pageSize === "number" && initialSlots.pageSize > 0 ? initialSlots.pageSize : PAGE_SIZE;
-    const normalizedPage = typeof initialSlots?.page === "number" ? initialSlots.page : 1;
-    const normalizedTotalPages =
-        typeof initialSlots?.totalPages === "number"
-            ? initialSlots.totalPages
-            : Math.max(1, Math.ceil((normalizedTotal || 1) / normalizedPageSize));
-
     const [loading, setLoading] = useState(false);
     const [savingDutyHours, setSavingDutyHours] = useState(false);
-    const [slots, setSlots] = useState<Availability[]>(normalizedSlots);
-    const [clinics, setClinics] = useState<Clinic[]>(() => initialClinics ?? []);
-    const [slotsLoaded, setSlotsLoaded] = useState(Boolean(initialSlots));
-    const [clinicsLoaded, setClinicsLoaded] = useState(Array.isArray(initialClinics));
-    const [currentPage, setCurrentPage] = useState(normalizedPage);
-    const [totalSlots, setTotalSlots] = useState(normalizedTotal);
-    const [totalPages, setTotalPages] = useState(normalizedTotalPages);
+    const [slots, setSlots] = useState<Availability[]>(() => [...initialSlots.slots]);
+    const [clinics, setClinics] = useState<Clinic[]>(() => [...initialClinics]);
+    const [slotsLoaded, setSlotsLoaded] = useState(initialSlotsLoaded);
+    const [clinicsLoaded, setClinicsLoaded] = useState(initialClinicsLoaded);
+    const [currentPage, setCurrentPage] = useState(initialSlots.page);
+    const [totalSlots, setTotalSlots] = useState(initialSlots.total);
+    const [totalPages, setTotalPages] = useState(initialSlots.totalPages);
+    const [pageSize, setPageSize] = useState(initialSlots.pageSize || DEFAULT_PAGE_SIZE);
     const [formData, setFormData] = useState({
         clinic_id: "",
         available_date: "",
@@ -105,47 +83,48 @@ export function DoctorConsultationPageClient({
         [slots]
     );
 
-    const loadSlots = useCallback(async (targetPage: number) => {
-        try {
-            setLoading(true);
-            const res = await fetch(
-                `/api/doctor/consultation?page=${targetPage}&pageSize=${PAGE_SIZE}`,
-                { cache: "no-store" }
-            );
-            const data = await res.json();
-            if (data.error) {
-                toast.error(data.error);
-                setSlots([]);
-                setTotalSlots(0);
-                setTotalPages(1);
-                return;
-            }
+    const loadSlots = useCallback(
+        async (targetPage: number) => {
+            try {
+                setLoading(true);
+                const res = await fetch(
+                    `/api/doctor/consultation?page=${targetPage}&pageSize=${pageSize}`,
+                    { cache: "no-store" }
+                );
+                const data: SlotsResponse = await res.json();
+                if (data.error) {
+                    toast.error(data.error);
+                    startTransition(() => {
+                        setSlots([]);
+                        setTotalSlots(0);
+                        setTotalPages(1);
+                        setCurrentPage(1);
+                        setPageSize(DEFAULT_PAGE_SIZE);
+                    });
+                    return;
+                }
 
-            const normalizedTotal = typeof data.total === "number" ? data.total : 0;
-            const normalizedPageSize =
-                typeof data.pageSize === "number" && data.pageSize > 0 ? data.pageSize : PAGE_SIZE;
-            const normalizedPage = typeof data.page === "number" ? data.page : targetPage;
-            const normalizedTotalPages =
-                typeof data.totalPages === "number"
-                    ? data.totalPages
-                    : Math.max(1, Math.ceil((normalizedTotal || 1) / normalizedPageSize));
+                const normalized = normalizeConsultationSlots(data, targetPage);
 
-            startTransition(() => {
-                setSlots(Array.isArray(data.data) ? data.data : []);
-                setTotalSlots(normalizedTotal);
-                setTotalPages(normalizedTotalPages);
-                setCurrentPage(normalizedPage);
+                startTransition(() => {
+                    setSlots([...normalized.slots]);
+                    setTotalSlots(normalized.total);
+                    setTotalPages(normalized.totalPages);
+                    setCurrentPage(normalized.page);
+                    setPageSize(normalized.pageSize);
+                    setSlotsLoaded(true);
+                });
+            } catch {
+                toast.error("Failed to load consultation slots");
+            } finally {
+                setLoading(false);
                 setSlotsLoaded(true);
-            });
-        } catch {
-            toast.error("Failed to load consultation slots");
-        } finally {
-            setLoading(false);
-            setSlotsLoaded(true);
-        }
-    }, [startTransition]);
+            }
+        },
+        [pageSize, startTransition]
+    );
 
-    const showingStart = totalSlots === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+    const showingStart = totalSlots === 0 ? 0 : (currentPage - 1) * pageSize + 1;
     const showingEnd = totalSlots === 0 ? 0 : showingStart + slots.length - 1;
     const canGoPrevious = currentPage > 1;
     const canGoNext = currentPage < totalPages;
