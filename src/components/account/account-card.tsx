@@ -1,8 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { ReactNode } from "react";
 
-import { AccountPasswordDialog, AccountPasswordSubmit } from "@/components/account/account-password-dialog";
+import type { AccountPasswordSubmit } from "@/components/account/account-password-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,21 @@ interface AccountCardProps {
     contentClassName?: string;
     triggerAriaLabel?: string;
 }
+
+const AccountPasswordDialog = dynamic(
+    () =>
+        import("@/components/account/account-password-dialog").then(
+            (mod) => mod.AccountPasswordDialog
+        ),
+    {
+        loading: () => (
+            <div className="rounded-xl border border-green-100/80 bg-white/90 px-3 py-2 text-sm text-muted-foreground">
+                Preparing security tools…
+            </div>
+        ),
+        ssr: false,
+    }
+);
 
 export function AccountCard({
     children,

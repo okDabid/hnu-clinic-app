@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AccountCard } from "@/components/account/account-card";
-import { AccountPasswordResult } from "@/components/account/account-password-dialog";
+import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
 import DoctorAccountLoading from "./loading";

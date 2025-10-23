@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { AccountCard } from "@/components/account/account-card";
-import { AccountPasswordResult } from "@/components/account/account-password-dialog";
+import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
