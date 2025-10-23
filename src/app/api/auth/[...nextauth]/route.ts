@@ -25,7 +25,13 @@ const authGetLimiter = createRateLimiter({
     keyPrefix: "auth:get",
 });
 
-export async function POST(req: NextRequest) {
+type NextAuthContext = {
+    params: {
+        nextauth: string[];
+    };
+};
+
+export async function POST(req: NextRequest, context: NextAuthContext) {
     const rate = await authPostLimiter.checkRequest(req);
     if (isRateLimited(rate)) {
         return rateLimitResponse(
@@ -34,10 +40,10 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    return handler(req);
+    return handler(req, context);
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest, context: NextAuthContext) {
     const rate = await authGetLimiter.checkRequest(req);
     if (isRateLimited(rate)) {
         return rateLimitResponse(
@@ -46,5 +52,5 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    return handler(req);
+    return handler(req, context);
 }
