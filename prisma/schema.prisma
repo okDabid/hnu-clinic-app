@@ -126,6 +126,7 @@ model DoctorAvailability {
   available_date      DateTime
   available_timestart DateTime
   available_timeend   DateTime
+  archivedAt          DateTime?
   clinic              Clinic   @relation(fields: [clinic_id], references: [clinic_id], onDelete: Cascade)
   doctor              Users    @relation(fields: [doctor_user_id], references: [user_id], onDelete: Cascade)
 

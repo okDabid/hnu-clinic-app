@@ -4,6 +4,7 @@ import { AppointmentStatus, Prisma, Role, ServiceType } from "@prisma/client";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import {
     buildManilaDate,
     endOfManilaDay,
@@ -261,10 +262,13 @@ export async function POST(req: Request) {
         const dayStart = appointment_date;
         const dayEnd = endOfManilaDay(date);
 
+        await archiveExpiredDutyHours({ doctor_user_id });
+
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id,
                 clinic_id,
+                archivedAt: null,
                 available_date: { gte: dayStart, lte: dayEnd },
             },
         });

@@ -11,6 +11,7 @@ import {
     formatManilaISODate,
 } from "@/lib/time";
 import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
+import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 
 const MIN_BOOKING_LEAD_DAYS = 3;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -126,10 +127,13 @@ export async function POST(req: Request) {
         }
 
         // Check if within availability
+        await archiveExpiredDutyHours({ doctor_user_id });
+
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id,
                 clinic_id,
+                archivedAt: null,
                 available_date: { gte: dayStart, lte: dayEnd },
             },
         });
@@ -251,10 +255,13 @@ export async function PATCH(req: Request) {
         const dayStart = startOfManilaDay(date);
         const dayEnd = endOfManilaDay(date);
 
+        await archiveExpiredDutyHours({ doctor_user_id: appointment.doctor_user_id });
+
         const availabilities = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id: appointment.doctor_user_id,
                 clinic_id: appointment.clinic_id,
+                archivedAt: null,
                 available_date: { gte: dayStart, lte: dayEnd },
             },
         });

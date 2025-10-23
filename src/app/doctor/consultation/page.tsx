@@ -232,7 +232,7 @@ export default function DoctorConsultationPage() {
                                         </DialogDescription>
                                         {!editingSlot && (
                                             <p className="text-sm text-muted-foreground">
-                                                Duty hours will be plotted on weekdays (Mon–Fri for physicians, Mon–Sat for dentists) for the next four weeks.
+                                                Duty hours will be plotted on working days (Mon–Fri for physicians, Mon–Sat for dentists) from this month through the rest of the year.
                                             </p>
                                         )}
                                     </DialogHeader>

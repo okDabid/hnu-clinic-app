@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { AppointmentStatus } from "@prisma/client";
@@ -266,10 +267,13 @@ export async function PATCH(
             const dayStart = startOfManilaDay(newDate);
             const dayEnd = endOfManilaDay(newDate);
 
+            await archiveExpiredDutyHours({ doctor_user_id: appointment.doctor_user_id });
+
             const availabilities = await prisma.doctorAvailability.findMany({
                 where: {
                     doctor_user_id: appointment.doctor_user_id,
                     clinic_id: appointment.clinic_id,
+                    archivedAt: null,
                     available_date: { gte: dayStart, lte: dayEnd },
                 },
             });
