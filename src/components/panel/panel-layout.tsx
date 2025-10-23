@@ -10,6 +10,7 @@ import { LogOut, Menu, type LucideIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Sheet,
     SheetContent,
@@ -177,26 +178,28 @@ export function PanelLayout({
                                 ) : null}
                             </div>
                             <div className="flex items-center gap-3 self-start md:self-auto">
+                                <ThemeToggle className="hidden border-none bg-transparent shadow-none hover:bg-green-100/70 dark:hover:bg-emerald-500/20 md:inline-flex" />
                                 {actions}
                                 <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                                     <SheetTrigger asChild>
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/80 focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
+                                            className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/80 focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:border-slate-800 dark:text-emerald-200 dark:hover:bg-emerald-500/20 lg:hidden"
                                             aria-label={sheetAriaLabel}
                                         >
                                             <Menu className="h-5 w-5" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-green-100 bg-gradient-to-b from-white to-green-50/60 p-0">
-                                        <SheetHeader className="border-b border-green-100 bg-white/80 p-6">
-                                            <SheetTitle className="flex items-center gap-3 text-lg text-green-700">
+                                    <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-green-100 bg-gradient-to-b from-white to-green-50/60 p-0 dark:border-slate-800 dark:from-slate-950 dark:to-slate-900">
+                                        <SheetHeader className="border-b border-green-100 bg-white/80 p-6 dark:border-slate-800 dark:bg-slate-950/80">
+                                            <SheetTitle className="flex items-center gap-3 text-lg text-green-700 dark:text-emerald-200">
                                                 <Menu className="h-5 w-5" />
                                                 {sheetTitle}
                                             </SheetTitle>
                                         </SheetHeader>
                                         <div className="space-y-6 px-6 py-6">
+                                            <ThemeToggle className="ml-auto border-none bg-transparent shadow-none hover:bg-green-100/70 dark:hover:bg-emerald-500/20" />
                                             <div className="flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
                                                 <Avatar className="h-11 w-11 border border-green-100">
                                                     <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />

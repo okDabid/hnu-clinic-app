@@ -136,6 +136,81 @@
   .font-display {
     font-family: var(--font-display), system-ui, sans-serif;
   }
+
+  :root {
+    --surface-elevated: oklch(0.98 0.01 155.658);
+    --surface-muted: oklch(0.96 0.02 155.658);
+    --surface-highlight: oklch(0.92 0.04 149.605 / 0.2);
+    --accent-emerald: oklch(0.63 0.19 156.752);
+    --accent-emerald-soft: oklch(0.53 0.12 156.752 / 0.7);
+  }
+
+  .dark {
+    --surface-elevated: oklch(0.28 0.02 248.693);
+    --surface-muted: oklch(0.23 0.02 248.693);
+    --surface-highlight: oklch(0.4 0.03 228.242 / 0.25);
+    --accent-emerald: oklch(0.73 0.18 156.752);
+    --accent-emerald-soft: oklch(0.6 0.14 156.752 / 0.55);
+  }
+
+  .dark .bg-white,
+  .dark .bg-white\/90,
+  .dark .bg-white\/80,
+  .dark .bg-white\/70,
+  .dark .bg-white\/60 {
+    background-color: var(--surface-elevated) !important;
+  }
+
+  .dark .bg-green-50,
+  .dark .bg-green-50\/70,
+  .dark .bg-green-100,
+  .dark .bg-gradient-to-b.from-green-50,
+  .dark .bg-gradient-to-b.from-green-100,
+  .dark .bg-gradient-to-br.from-green-50,
+  .dark .bg-gradient-to-br.from-green-100,
+  .dark .bg-gradient-to-br.from-green-200,
+  .dark .bg-green-600\/10,
+  .dark .bg-green-600\/20 {
+    background-color: var(--surface-muted) !important;
+  }
+
+  .dark .bg-gradient-to-b.from-green-50,
+  .dark .bg-gradient-to-b.from-green-100,
+  .dark .bg-gradient-to-br.from-green-50,
+  .dark .bg-gradient-to-br.from-green-100,
+  .dark .bg-gradient-to-br.from-green-200 {
+    background-image: linear-gradient(
+      to bottom right,
+      color-mix(in oklch, var(--surface-muted) 88%, transparent),
+      color-mix(in oklch, var(--background) 94%, transparent)
+    ) !important;
+  }
+
+  .dark .text-gray-700,
+  .dark .text-gray-600,
+  .dark .text-gray-500 {
+    color: color-mix(in oklch, var(--foreground) 80%, transparent) !important;
+  }
+
+  .dark .text-green-700,
+  .dark .text-green-600,
+  .dark .text-green-500 {
+    color: var(--accent-emerald) !important;
+  }
+
+  .dark .border-green-100,
+  .dark .border-green-100\/80,
+  .dark .border-green-100\/70,
+  .dark .border-green-200,
+  .dark .border-green-200\/80 {
+    border-color: color-mix(in oklch, var(--surface-elevated) 60%, transparent) !important;
+  }
+
+  .dark .hover\:bg-green-100\/70:hover,
+  .dark .hover\:bg-green-600\/10:hover,
+  .dark .hover\:bg-green-600\/20:hover {
+    background-color: var(--accent-emerald-soft) !important;
+  }
 }
 
 html {

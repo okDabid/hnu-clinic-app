@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
     Dialog,
     DialogContent,
@@ -294,6 +295,7 @@ export default function LoginPageClient() {
     // ---------- RENDER ----------
     return (
         <div className="relative min-h-screen bg-gradient-to-br from-green-100 via-white to-green-200">
+            <ThemeToggle className="absolute right-6 top-6 border-none bg-white/70 shadow-sm hover:bg-green-100/70 dark:bg-slate-900/70 dark:hover:bg-emerald-500/20" />
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-green-300/40 blur-3xl" />
                 <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-green-300/40 blur-3xl" />
