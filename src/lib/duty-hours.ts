@@ -4,12 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { manilaNow } from "@/lib/time";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const ARCHIVED_RETENTION_MS = DAY_IN_MS;
 
 /**
  * Mark duty hours as archived when they are more than 24 hours past their end time.
- *
- * This keeps doctor availability queries lightweight without permanently deleting
- * historical duty hours.
+ * Archived entries older than the retention window are permanently deleted to
+ * keep the table lightweight.
  */
 export async function archiveExpiredDutyHours(
     where: Prisma.DoctorAvailabilityWhereInput = {}
@@ -26,5 +26,16 @@ export async function archiveExpiredDutyHours(
     await prisma.doctorAvailability.updateMany({
         where: criteria,
         data: { archivedAt: now },
+    });
+
+    const deletionCutoff = new Date(now.getTime() - ARCHIVED_RETENTION_MS);
+
+    await prisma.doctorAvailability.deleteMany({
+        where: {
+            AND: [
+                where,
+                { archivedAt: { not: null, lt: deletionCutoff } },
+            ],
+        },
     });
 }
