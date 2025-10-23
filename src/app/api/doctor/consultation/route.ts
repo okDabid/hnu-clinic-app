@@ -123,6 +123,11 @@ export async function POST(req: Request) {
         const endExclusive = getGenerationEndExclusive(monthStart);
         const toCreate: Prisma.DoctorAvailabilityCreateManyInput[] = [];
         const generatedDates: string[] = [];
+        const candidateSlots: {
+            date: string;
+            start: Date;
+            end: Date;
+        }[] = [];
 
         for (
             let cursor = new Date(monthStart);
@@ -136,14 +141,23 @@ export async function POST(req: Request) {
 
             if (!allowedDays.has(weekday)) continue;
 
+            const slotStart = buildManilaDate(manilaDate, available_timestart);
+            const slotEnd = buildManilaDate(manilaDate, available_timeend);
+
             generatedDates.push(manilaDate);
             toCreate.push({
                 doctor_user_id: doctor.user_id,
                 clinic_id,
                 available_date: startOfManilaDay(manilaDate),
-                available_timestart: buildManilaDate(manilaDate, available_timestart),
-                available_timeend: buildManilaDate(manilaDate, available_timeend),
+                available_timestart: slotStart,
+                available_timeend: slotEnd,
                 archivedAt: null,
+            });
+
+            candidateSlots.push({
+                date: manilaDate,
+                start: slotStart,
+                end: slotEnd,
             });
         }
 
@@ -179,16 +193,16 @@ export async function POST(req: Request) {
             },
         });
 
-        for (const candidate of toCreate) {
-            const candidateDate = formatManilaISODate(candidate.available_date);
+        for (const candidate of candidateSlots) {
+            const candidateDate = candidate.date;
             for (const existing of conflicting) {
                 const existingDate = formatManilaISODate(existing.available_date);
                 if (existingDate !== candidateDate) continue;
 
                 if (
                     rangesOverlap(
-                        candidate.available_timestart,
-                        candidate.available_timeend,
+                        candidate.start,
+                        candidate.end,
                         existing.available_timestart,
                         existing.available_timeend,
                     )
