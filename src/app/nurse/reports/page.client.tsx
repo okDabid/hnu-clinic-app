@@ -409,28 +409,39 @@ export function NurseReportsPageClient({
                         </CardHeader>
                         <CardContent className="pt-2">
                             {hasData ? (
-                                <ChartContainer
-                                    config={patientTrendConfig}
-                                    className="h-80 w-full"
-                                >
-                                    <BarChart data={quarterChartData}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#bbf7d0" />
-                                        <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
-                                        <YAxis tickFormatter={(value) => numberFormatter.format(value)} />
-                                        <ChartTooltip cursor={{ fill: "rgba(21, 128, 61, 0.05)" }} content={<ChartTooltipContent />} />
-                                        <Legend iconType="circle" />
-                                        <Bar
-                                            dataKey="uniquePatients"
-                                            fill={patientTrendConfig.uniquePatients.color}
-                                            radius={[10, 10, 0, 0]}
-                                        />
-                                        <Bar
-                                            dataKey="consultations"
-                                            fill={patientTrendConfig.consultations.color}
-                                            radius={[10, 10, 0, 0]}
-                                        />
-                                    </BarChart>
-                                </ChartContainer>
+                                <div className="-mx-4 px-4 pb-2 sm:mx-0 sm:px-0">
+                                    <ChartContainer
+                                        config={patientTrendConfig}
+                                        className="aspect-4/5 w-full sm:aspect-video sm:h-80"
+                                    >
+                                        <BarChart data={quarterChartData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#bbf7d0" />
+                                            <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
+                                            <YAxis tickFormatter={(value) => numberFormatter.format(value)} />
+                                            <ChartTooltip cursor={{ fill: "rgba(21, 128, 61, 0.05)" }} content={<ChartTooltipContent />} />
+                                            <Legend
+                                                iconType="circle"
+                                                wrapperStyle={{
+                                                    display: "flex",
+                                                    gap: "0.5rem",
+                                                    flexWrap: "wrap",
+                                                    justifyContent: "center",
+                                                    fontSize: "0.75rem",
+                                                }}
+                                            />
+                                            <Bar
+                                                dataKey="uniquePatients"
+                                                fill={patientTrendConfig.uniquePatients.color}
+                                                radius={[10, 10, 0, 0]}
+                                            />
+                                            <Bar
+                                                dataKey="consultations"
+                                                fill={patientTrendConfig.consultations.color}
+                                                radius={[10, 10, 0, 0]}
+                                            />
+                                        </BarChart>
+                                    </ChartContainer>
+                                </div>
                             ) : (
                                 <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-green-200 bg-green-50/50 text-sm text-muted-foreground">
                                     No consultation data recorded for the selected period.
@@ -460,12 +471,18 @@ export function NurseReportsPageClient({
                                             const percentage = Math.round((count / total) * 100);
                                             const config = patientMixConfig[key];
                                             return (
-                                                <div key={key} className="flex items-center justify-between rounded-2xl bg-green-50/80 px-4 py-3">
-                                                    <div>
+                                                <div
+                                                    key={key}
+                                                    className="flex flex-col gap-3 rounded-2xl bg-green-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                                                >
+                                                    <div className="space-y-1">
                                                         <p className="text-sm font-semibold text-green-700">{config.label}</p>
                                                         <p className="text-xs text-muted-foreground">{count} consultations</p>
                                                     </div>
-                                                    <Badge style={{ backgroundColor: config.color }} className="rounded-full text-white">
+                                                    <Badge
+                                                        style={{ backgroundColor: config.color }}
+                                                        className="self-start rounded-full text-white sm:self-auto"
+                                                    >
                                                         {Number.isFinite(percentage) ? `${percentage}%` : "0%"}
                                                     </Badge>
                                                 </div>
