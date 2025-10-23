@@ -4,9 +4,34 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
+import {
+    createRateLimiter,
+    isRateLimited,
+    rateLimitResponse,
+} from "@/lib/rate-limit";
+
+const requestResetIpLimiter = createRateLimiter({
+    limit: 5,
+    windowMs: 15 * 60 * 1000,
+    keyPrefix: "reset:ip",
+});
+
+const requestResetContactLimiter = createRateLimiter({
+    limit: 3,
+    windowMs: 30 * 60 * 1000,
+    keyPrefix: "reset:contact",
+});
 
 export async function POST(req: Request) {
     try {
+        const ipRate = await requestResetIpLimiter.checkRequest(req);
+        if (isRateLimited(ipRate)) {
+            return rateLimitResponse(
+                ipRate,
+                "Too many reset requests from this address. Please try again later."
+            );
+        }
+
         const { contact } = await req.json();
 
         if (typeof contact !== "string") {
@@ -22,6 +47,15 @@ export async function POST(req: Request) {
             return NextResponse.json(
                 { error: "Enter a valid email address." },
                 { status: 400 }
+            );
+        }
+
+        const contactKey = normalized.normalized.toLowerCase();
+        const contactRate = await requestResetContactLimiter.check(contactKey);
+        if (isRateLimited(contactRate)) {
+            return rateLimitResponse(
+                contactRate,
+                "A reset code was requested too many times for this account. Please wait before trying again."
             );
         }
 

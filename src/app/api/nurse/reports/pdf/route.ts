@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
+import { getToken } from "next-auth/jwt";
+
+import {
+    createRateLimiter,
+    isRateLimited,
+    rateLimitResponse,
+} from "@/lib/rate-limit";
 
 import {
     QUARTERS,
@@ -11,6 +18,12 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const nurseReportLimiter = createRateLimiter({
+    limit: 3,
+    windowMs: 60 * 1000,
+    keyPrefix: "nurse-report",
+});
 
 function escapeHtml(value: string) {
     return value.replace(/[&<>"]|'/g, (char) => {
@@ -438,6 +451,18 @@ function createReportHtml(report: ReportsResponse) {
 }
 
 export async function GET(req: NextRequest) {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const identifier = token?.sub ?? (typeof token?.email === "string" ? token.email : undefined);
+    const rate = identifier
+        ? await nurseReportLimiter.check(identifier)
+        : await nurseReportLimiter.checkRequest(req);
+    if (isRateLimited(rate)) {
+        return rateLimitResponse(
+            rate,
+            "Too many PDF reports requested. Please try again later."
+        );
+    }
+
     const { searchParams } = new URL(req.url);
     const yearParam = Number.parseInt(searchParams.get("year") ?? "", 10);
     const quarterParam = Number.parseInt(searchParams.get("quarter") ?? "", 10);

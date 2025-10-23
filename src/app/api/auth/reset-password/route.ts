@@ -5,9 +5,34 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { normalizeResetContact } from "@/lib/password-reset";
+import {
+    createRateLimiter,
+    isRateLimited,
+    rateLimitResponse,
+} from "@/lib/rate-limit";
+
+const resetPasswordIpLimiter = createRateLimiter({
+    limit: 10,
+    windowMs: 30 * 60 * 1000,
+    keyPrefix: "reset-password:ip",
+});
+
+const resetPasswordContactLimiter = createRateLimiter({
+    limit: 5,
+    windowMs: 30 * 60 * 1000,
+    keyPrefix: "reset-password:contact",
+});
 
 export async function POST(req: Request) {
     try {
+        const ipRate = await resetPasswordIpLimiter.checkRequest(req);
+        if (isRateLimited(ipRate)) {
+            return rateLimitResponse(
+                ipRate,
+                "Too many password reset attempts. Please wait before trying again."
+            );
+        }
+
         const { contact, code, newPassword } = await req.json();
 
         if (typeof contact !== "string" || typeof code !== "string" || typeof newPassword !== "string") {
@@ -23,6 +48,15 @@ export async function POST(req: Request) {
             return NextResponse.json(
                 { error: "Enter a valid email address." },
                 { status: 400 }
+            );
+        }
+
+        const contactKey = normalized.normalized.toLowerCase();
+        const contactRate = await resetPasswordContactLimiter.check(contactKey);
+        if (isRateLimited(contactRate)) {
+            return rateLimitResponse(
+                contactRate,
+                "Too many password reset attempts for this account. Please try again later."
             );
         }
 
