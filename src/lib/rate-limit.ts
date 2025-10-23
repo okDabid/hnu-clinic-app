@@ -33,7 +33,7 @@ export interface RateLimitExceeded {
 export type RateLimitResult = RateLimitOk | RateLimitExceeded;
 
 function getClientIp(req: RequestLike): string | null {
-    const nextReq = req as NextRequest;
+    const nextReq = req as NextRequest & { ip?: string | null };
 
     if (typeof nextReq.ip === "string" && nextReq.ip) {
         return nextReq.ip;
