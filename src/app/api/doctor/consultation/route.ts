@@ -108,6 +108,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
+        await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
+
         const {
             clinic_id,
             available_timestart,
