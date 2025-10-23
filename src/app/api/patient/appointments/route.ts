@@ -219,6 +219,15 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ message: "Appointment not found" }, { status: 404 });
         }
 
+        const doctor = await prisma.users.findUnique({
+            where: { user_id: appointment.doctor_user_id },
+            select: { specialization: true },
+        });
+
+        if (!doctor) {
+            return NextResponse.json({ message: "Doctor not found" }, { status: 404 });
+        }
+
         if (
             appointment.status === AppointmentStatus.Completed ||
             appointment.status === AppointmentStatus.Cancelled
@@ -240,7 +249,11 @@ export async function PATCH(req: Request) {
         const appointment_date = startOfManilaDay(date);
         const appointment_timestart = buildManilaDate(date, time_start);
         const appointment_timeend = buildManilaDate(date, time_end);
-        const earliestBookingStart = computeEarliestBookingStart(now);
+        const earliestBookingStart = computeDoctorEarliestBookingStart(
+            now,
+            doctor.specialization,
+            DEFAULT_MIN_BOOKING_LEAD_DAYS,
+        );
 
         if (!(appointment_timestart < appointment_timeend)) {
             return NextResponse.json({ message: "Invalid time range" }, { status: 400 });
