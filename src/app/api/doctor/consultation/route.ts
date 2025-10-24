@@ -34,9 +34,17 @@ function resolveCalendarMonthRange(monthParam: string | null) {
     const MONTH_PARAM_PATTERN = /^\d{4}-\d{2}$/;
     const monthKey = monthParam && MONTH_PARAM_PATTERN.test(monthParam) ? monthParam : fallbackMonth;
     const monthStart = startOfManilaDay(`${monthKey}-01`);
-    const nextMonth = new Date(monthStart);
-    nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
-    const nextMonthKey = formatManilaISODate(nextMonth).slice(0, 7);
+
+    const [yearStr, monthStr] = monthKey.split("-");
+    const parsedYear = Number.parseInt(yearStr, 10);
+    const parsedMonth = Number.parseInt(monthStr, 10);
+
+    const baseYear = Number.isNaN(parsedYear) ? new Date().getUTCFullYear() : parsedYear;
+    const baseMonth = Number.isNaN(parsedMonth) ? 1 : parsedMonth;
+
+    const nextMonthNumber = baseMonth === 12 ? 1 : baseMonth + 1;
+    const nextMonthYear = baseMonth === 12 ? baseYear + 1 : baseYear;
+    const nextMonthKey = `${nextMonthYear}-${String(nextMonthNumber).padStart(2, "0")}`;
     const monthEndExclusive = startOfManilaDay(`${nextMonthKey}-01`);
 
     return { monthKey, monthStart, monthEndExclusive };
