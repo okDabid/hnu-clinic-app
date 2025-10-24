@@ -596,17 +596,6 @@ export function DoctorConsultationPageClient({
         }
     }, []);
 
-    const handleGoToToday = useCallback(() => {
-        const now = new Date();
-        const isoToday = formatManilaISODate(now);
-        setSelectedDate(isoToday);
-        setCalendarExpanded(true);
-        const next = toCalendarDate(isoToday);
-        if (next) {
-            setCalendarMonth(next);
-        }
-    }, []);
-
     useEffect(() => {
         if (!slotsLoaded) {
             void loadSlots();
@@ -785,13 +774,6 @@ export function DoctorConsultationPageClient({
                                 </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/80"
-                                    onClick={handleGoToToday}
-                                >
-                                    Jump to today
-                                </Button>
                                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button
