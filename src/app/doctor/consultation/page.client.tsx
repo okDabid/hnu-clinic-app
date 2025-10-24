@@ -479,7 +479,6 @@ export function DoctorConsultationPageClient({
                 onClick={() => {
                     const slotDate = toManilaDateString(slot.available_date);
                     setSelectedDate(slotDate);
-                    setCalendarExpanded(true);
                     setEditingSlot(slot);
                     setFormData({
                         clinic_id: slot.clinic.clinic_id,
@@ -634,7 +633,6 @@ export function DoctorConsultationPageClient({
         if (!selectionExists) {
             const firstSlotDate = toManilaDateString(slots[0].available_date);
             setSelectedDate(firstSlotDate);
-            setCalendarExpanded(true);
         }
     }, [calendarCache, slots, selectedDate]);
 
