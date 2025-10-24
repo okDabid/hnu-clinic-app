@@ -966,55 +966,6 @@ export function DoctorConsultationPageClient({
                     </Card>
                     <div className="grid gap-6 pt-6 xl:grid-cols-[1.05fr_0.95fr]">
                         <div className="space-y-4 xl:space-y-5">
-                            <Card className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 shadow-sm">
-                                <CardHeader className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                                        Monthly snapshot
-                                    </p>
-                                    <CardTitle className="text-base font-semibold text-slate-900">
-                                        Coverage this month
-                                    </CardTitle>
-                                    <p className="text-sm text-muted-foreground">
-                                        {displayedMonthStats.coveredDays > 0
-                                            ? `Your calendar spans ${displayedMonthStats.coveredDays} day${displayedMonthStats.coveredDays === 1 ? "" : "s"} with ${displayedMonthStats.active} active slot${displayedMonthStats.active === 1 ? "" : "s"} so far.`
-                                            : "No duty hours plotted this month yet."}
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="grid gap-3 sm:grid-cols-2">
-                                    <div className="rounded-2xl border border-green-200 bg-white/80 p-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
-                                            Active days
-                                        </p>
-                                        <p className="mt-1 text-xl font-semibold text-slate-900">
-                                            {displayedMonthStats.activeDays}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-2xl border border-amber-200 bg-white/80 p-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                                            Leave days
-                                        </p>
-                                        <p className="mt-1 text-xl font-semibold text-slate-900">
-                                            {displayedMonthStats.leaveDays}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-2xl border border-green-200 bg-white/80 p-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
-                                            Active slots
-                                        </p>
-                                        <p className="mt-1 text-xl font-semibold text-slate-900">
-                                            {displayedMonthStats.active}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-2xl border border-amber-200 bg-white/80 p-4">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                                            On leave slots
-                                        </p>
-                                        <p className="mt-1 text-xl font-semibold text-slate-900">
-                                            {displayedMonthStats.onLeave}
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
                             <Card className="rounded-3xl border border-green-100/80 bg-white/85 shadow-sm">
                                 <CardHeader className="pb-0">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
