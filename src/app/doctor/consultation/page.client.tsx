@@ -55,6 +55,17 @@ import {
 
 const MANILA_TIME_SUFFIX = "+08:00";
 
+function getSlotStartDate(slot: Availability) {
+    const base = new Date(slot.available_date);
+    if (Number.isNaN(base.getTime())) {
+        return null;
+    }
+
+    const [hour = "0", minute = "0"] = slot.available_timestart.split(":");
+    base.setHours(Number.parseInt(hour, 10), Number.parseInt(minute, 10), 0, 0);
+    return base;
+}
+
 function toCalendarDate(value: string | null | undefined) {
     if (!value) return null;
     const normalized = value.includes("T") ? value : `${value}T12:00:00${MANILA_TIME_SUFFIX}`;
@@ -202,6 +213,84 @@ export function DoctorConsultationPageClient({
 
     const displayedMonthLoading = calendarLoadingKeys[displayedMonthKey] ?? false;
 
+    const sortedSlots = useMemo(() => {
+        return [...slots].sort((a, b) => {
+            const aDate = getSlotStartDate(a);
+            const bDate = getSlotStartDate(b);
+
+            if (!aDate && !bDate) return 0;
+            if (!aDate) return 1;
+            if (!bDate) return -1;
+            return aDate.getTime() - bDate.getTime();
+        });
+    }, [slots]);
+
+    const upcomingSlots = useMemo(() => {
+        const now = new Date();
+        const future = sortedSlots.filter((slot) => {
+            const start = getSlotStartDate(slot);
+            if (!start) return false;
+            return !slot.is_on_leave && start.getTime() >= now.getTime();
+        });
+
+        if (future.length > 0) {
+            return future.slice(0, 4);
+        }
+
+        const fallbackActive = sortedSlots.filter((slot) => !slot.is_on_leave).slice(0, 4);
+        if (fallbackActive.length > 0) {
+            return fallbackActive;
+        }
+
+        return sortedSlots.slice(0, 4);
+    }, [sortedSlots]);
+
+    const clinicDistribution = useMemo(() => {
+        const map = new Map<
+            string,
+            {
+                clinic: Clinic;
+                active: number;
+                onLeave: number;
+            }
+        >();
+
+        for (const slot of slots) {
+            const entry = map.get(slot.clinic.clinic_id) ?? {
+                clinic: slot.clinic,
+                active: 0,
+                onLeave: 0,
+            };
+
+            if (slot.is_on_leave) {
+                entry.onLeave += 1;
+            } else {
+                entry.active += 1;
+            }
+
+            map.set(slot.clinic.clinic_id, entry);
+        }
+
+        return Array.from(map.values()).sort((a, b) => {
+            const aTotal = a.active + a.onLeave;
+            const bTotal = b.active + b.onLeave;
+            if (aTotal === bTotal) {
+                return a.clinic.clinic_name.localeCompare(b.clinic.clinic_name);
+            }
+            return bTotal - aTotal;
+        });
+    }, [slots]);
+
+    const totalActiveSlots = useMemo(
+        () => clinicDistribution.reduce((acc, item) => acc + item.active, 0),
+        [clinicDistribution]
+    );
+
+    const totalOnLeaveSlots = useMemo(
+        () => clinicDistribution.reduce((acc, item) => acc + item.onLeave, 0),
+        [clinicDistribution]
+    );
+
     const displayedMonthStats = useMemo(() => {
         let active = 0;
         let onLeave = 0;
@@ -318,7 +407,7 @@ export function DoctorConsultationPageClient({
         <div
             key={slot.availability_id}
             className={cn(
-                "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between",
+                "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between sm:p-5",
                 slot.is_on_leave
                     ? context === "inline"
                         ? "border-amber-200 bg-amber-50/80 text-amber-900"
@@ -878,7 +967,7 @@ export function DoctorConsultationPageClient({
                                                         onMonthChange={setCalendarMonth}
                                                         components={{ DayButton: DayButtonWithSlots }}
                                                         modifiers={{ hasSlots: highlightedDates }}
-                                                        className="mx-auto min-w-[18rem] sm:min-w-0 [--cell-size:2.35rem] sm:[--cell-size:2.75rem] lg:[--cell-size:3.25rem]"
+                                                        className="mx-auto w-full max-w-[20rem] sm:w-auto sm:max-w-none sm:min-w-0 [--cell-size:2.35rem] sm:[--cell-size:2.75rem] lg:[--cell-size:3.25rem]"
                                                     />
                                                 </div>
                                             </div>
@@ -957,6 +1046,92 @@ export function DoctorConsultationPageClient({
                                             <p className="mt-3 text-sm text-muted-foreground">
                                                 Select a day to review or edit consultation duty hours.
                                             </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-green-50/70 via-white to-emerald-50/60 p-5 shadow-sm sm:p-6">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                        Upcoming duty hours
+                                                    </p>
+                                                    <h3 className="text-lg font-semibold text-slate-900 sm:text-xl">
+                                                        Next on your calendar
+                                                    </h3>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {totalActiveSlots > 0
+                                                            ? `Showing the next ${upcomingSlots.length} entr${upcomingSlots.length === 1 ? "y" : "ies"}. Keep availability updated so patients can plan ahead.`
+                                                            : "No active duty hours yet. Generate your schedule to keep patients informed."}
+                                                    </p>
+                                                </div>
+                                                <Badge className="self-start rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                    {totalActiveSlots} active slot{totalActiveSlots === 1 ? "" : "s"}
+                                                </Badge>
+                                            </div>
+                                            <div className="mt-4 space-y-3">
+                                                {upcomingSlots.length > 0 ? (
+                                                    upcomingSlots.map((slot) => renderSlotCard(slot, "card"))
+                                                ) : (
+                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-white/80 p-5 text-sm text-muted-foreground">
+                                                        No upcoming duty hours yet. Use “Set duty hours” to publish your first schedule.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="rounded-3xl border border-green-100/80 bg-white/90 p-5 shadow-sm sm:p-6">
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                    Clinic coverage
+                                                </p>
+                                                <h3 className="text-lg font-semibold text-slate-900 sm:text-xl">
+                                                    Where you are scheduled
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {uniqueClinicCount > 0
+                                                        ? `You're covering ${uniqueClinicCount} clinic${uniqueClinicCount === 1 ? "" : "s"} this month with ${totalOnLeaveSlots} on-leave entr${totalOnLeaveSlots === 1 ? "y" : "ies"}.`
+                                                        : "No clinics assigned yet. Duty hours will appear here once scheduled."}
+                                                </p>
+                                            </div>
+                                            <div className="mt-4 space-y-3">
+                                                {clinicDistribution.length > 0 ? (
+                                                    <ul className="space-y-3">
+                                                        {clinicDistribution.slice(0, 5).map((entry) => (
+                                                            <li
+                                                                key={entry.clinic.clinic_id}
+                                                                className="flex flex-col gap-3 rounded-2xl border border-green-100/80 bg-emerald-50/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                                                            >
+                                                                <div>
+                                                                    <p className="text-sm font-semibold text-green-700">
+                                                                        {entry.clinic.clinic_name}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground">
+                                                                        {entry.active + entry.onLeave} total entr{entry.active + entry.onLeave === 1 ? "y" : "ies"}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                                        {entry.active} active
+                                                                    </Badge>
+                                                                    {entry.onLeave > 0 ? (
+                                                                        <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
+                                                                            {entry.onLeave} on leave
+                                                                        </Badge>
+                                                                    ) : null}
+                                                                </div>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
+                                                        Clinic assignments will appear here once you generate duty hours.
+                                                    </div>
+                                                )}
+                                                {clinicDistribution.length > 5 ? (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Showing the top 5 clinics by duty hours. Update the calendar to see the full list.
+                                                    </p>
+                                                ) : null}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
