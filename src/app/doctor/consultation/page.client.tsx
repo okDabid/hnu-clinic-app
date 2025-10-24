@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+    useTransition,
+    type ComponentProps,
+} from "react";
 import { toast } from "sonner";
 import { Loader2, PlusCircle, Pencil } from "lucide-react";
 
@@ -18,20 +25,15 @@ import {
     DialogFooter,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 
 import {
-    format12Hour,
+    formatManilaISODate,
+    formatTimeRange,
     toManilaDateString,
     toManilaTimeString,
 } from "@/lib/time";
+import { cn } from "@/lib/utils";
 
 import DoctorConsultationLoading from "./loading";
 import {
@@ -42,6 +44,15 @@ import {
     type NormalizedSlotsPayload,
     type SlotsResponse,
 } from "./types";
+
+const MANILA_TIME_SUFFIX = "+08:00";
+
+function toCalendarDate(value: string | null | undefined) {
+    if (!value) return null;
+    const normalized = value.includes("T") ? value : `${value}T12:00:00${MANILA_TIME_SUFFIX}`;
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
 
 export type DoctorConsultationPageClientProps = {
     initialSlots: NormalizedSlotsPayload;
@@ -66,6 +77,14 @@ export function DoctorConsultationPageClient({
     const [totalSlots, setTotalSlots] = useState(initialSlots.total);
     const [totalPages, setTotalPages] = useState(initialSlots.totalPages);
     const [pageSize, setPageSize] = useState(initialSlots.pageSize || DEFAULT_PAGE_SIZE);
+    const initialSelectedDate =
+        initialSlots.slots.length > 0
+            ? toManilaDateString(initialSlots.slots[0].available_date)
+            : formatManilaISODate(new Date());
+    const [selectedDate, setSelectedDate] = useState<string>(initialSelectedDate);
+    const [calendarMonth, setCalendarMonth] = useState<Date>(() =>
+        toCalendarDate(initialSelectedDate) ?? new Date()
+    );
     const [formData, setFormData] = useState({
         clinic_id: "",
         available_date: "",
@@ -124,10 +143,94 @@ export function DoctorConsultationPageClient({
         [pageSize, startTransition]
     );
 
-    const showingStart = totalSlots === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-    const showingEnd = totalSlots === 0 ? 0 : showingStart + slots.length - 1;
+    const slotsByDate = useMemo(() => {
+        const map = new Map<string, Availability[]>();
+        for (const slot of slots) {
+            const dateKey = toManilaDateString(slot.available_date);
+            if (!map.has(dateKey)) {
+                map.set(dateKey, []);
+            }
+            map.get(dateKey)!.push(slot);
+        }
+        return map;
+    }, [slots]);
+
+    const selectedDateSlots = useMemo(() => {
+        if (!selectedDate) return [];
+        const items = slotsByDate.get(selectedDate) ?? [];
+        return [...items].sort((a, b) => a.available_timestart.localeCompare(b.available_timestart));
+    }, [selectedDate, slotsByDate]);
+
+    const highlightedDates = useMemo(
+        () =>
+            Array.from(slotsByDate.keys())
+                .map((date) => toCalendarDate(date))
+                .filter((date): date is Date => Boolean(date)),
+        [slotsByDate]
+    );
+
+    const calendarSelectedDate = useMemo(
+        () => toCalendarDate(selectedDate) ?? undefined,
+        [selectedDate]
+    );
+
+    const selectedDateLabel = useMemo(() => {
+        if (!calendarSelectedDate) return "Select a day";
+        return calendarSelectedDate.toLocaleDateString("en-PH", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            timeZone: "Asia/Manila",
+        });
+    }, [calendarSelectedDate]);
+
+    const selectedDateSummary = useMemo(() => {
+        if (selectedDateSlots.length > 0) {
+            return `You have ${selectedDateSlots.length} duty hour${
+                selectedDateSlots.length === 1 ? "" : "s"
+            } scheduled.`;
+        }
+        if (totalSlots === 0) {
+            return "Generate duty hours to start populating your calendar.";
+        }
+        return "No duty hours plotted for this day yet.";
+    }, [selectedDateSlots.length, totalSlots]);
+
     const canGoPrevious = currentPage > 1;
     const canGoNext = currentPage < totalPages;
+
+    const DayButtonWithSlots = useCallback(
+        (props: ComponentProps<typeof CalendarDayButton>) => {
+            const dateKey = formatManilaISODate(props.day.date);
+            const count = slotsByDate.get(dateKey)?.length ?? 0;
+
+            return (
+                <CalendarDayButton
+                    {...props}
+                    className={cn(
+                        props.className,
+                        "transition-colors",
+                        "data-[selected=true]:bg-green-600 data-[selected=true]:text-white data-[selected=true]:hover:bg-green-600",
+                        count > 0
+                            ? "data-[selected=false]:border data-[selected=false]:border-green-200 data-[selected=false]:bg-emerald-50 data-[selected=false]:text-green-700 hover:data-[selected=false]:bg-emerald-100"
+                            : "hover:data-[selected=false]:bg-muted"
+                    )}
+                >
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+                        <span className="text-base font-semibold leading-none">{props.children}</span>
+                        {count > 0 ? (
+                            <span className="rounded-full bg-green-100 px-2 text-[0.625rem] font-semibold leading-5 text-green-700">
+                                {count} slot{count === 1 ? "" : "s"}
+                            </span>
+                        ) : (
+                            <span className="text-[0.625rem] text-muted-foreground">&nbsp;</span>
+                        )}
+                    </div>
+                </CalendarDayButton>
+            );
+        },
+        [slotsByDate]
+    );
 
     const loadClinics = useCallback(async () => {
         try {
@@ -152,6 +255,32 @@ export function DoctorConsultationPageClient({
             void loadClinics();
         }
     }, [clinicsLoaded, loadClinics]);
+
+    useEffect(() => {
+        if (slots.length === 0) return;
+        const selectionExists =
+            selectedDate &&
+            slots.some((slot) => toManilaDateString(slot.available_date) === selectedDate);
+        if (!selectionExists) {
+            const firstSlotDate = toManilaDateString(slots[0].available_date);
+            setSelectedDate(firstSlotDate);
+        }
+    }, [slots, selectedDate]);
+
+    useEffect(() => {
+        if (!selectedDate) return;
+        const nextMonth = toCalendarDate(selectedDate);
+        if (!nextMonth) return;
+        setCalendarMonth((prev) => {
+            if (
+                prev.getFullYear() === nextMonth.getFullYear() &&
+                prev.getMonth() === nextMonth.getMonth()
+            ) {
+                return prev;
+            }
+            return nextMonth;
+        });
+    }, [selectedDate]);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -240,7 +369,13 @@ export function DoctorConsultationPageClient({
                             <p className="text-sm text-muted-foreground">
                                 {totalSlots === 0
                                     ? "No active slots yet. Generate duty hours to publish a new schedule."
-                                    : `You currently have ${totalSlots} availability ${totalSlots === 1 ? "entry" : "entries"}. This page shows ${slots.length} entr${slots.length === 1 ? "y" : "ies"} across ${uniqueClinicCount} clinic${uniqueClinicCount === 1 ? "" : "s"}.`}
+                                    : `Your calendar tracks ${totalSlots} availability ${
+                                          totalSlots === 1 ? "entry" : "entries"
+                                      }. This page is showing ${slots.length} entr${
+                                          slots.length === 1 ? "y" : "ies"
+                                      } across ${uniqueClinicCount} clinic${
+                                          uniqueClinicCount === 1 ? "" : "s"
+                                      } (page ${currentPage} of ${totalPages}).`}
                             </p>
                         </CardHeader>
                     </Card>
@@ -361,83 +496,124 @@ export function DoctorConsultationPageClient({
                             </Dialog>
                         </CardHeader>
 
-                        <CardContent className="flex flex-1 flex-col pt-4 text-sm text-muted-foreground">
+                        <CardContent className="flex flex-1 flex-col gap-6 pt-4">
                             {loading ? (
                                 <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
                                     <Loader2 className="h-5 w-5 animate-spin" /> Loading slots...
                                 </div>
-                            ) : slots.length > 0 ? (
-                                <div className="flex flex-col gap-4">
-                                    <div className="overflow-x-auto w-full">
-                                        <Table className="min-w-full text-sm">
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Date</TableHead>
-                                                    <TableHead>Start Time</TableHead>
-                                                    <TableHead>End Time</TableHead>
-                                                    <TableHead>Clinic</TableHead>
-                                                    <TableHead className="text-right">Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {slots.map((slot) => (
-                                                    <TableRow key={slot.availability_id} className="hover:bg-green-50 transition">
-                                                        <TableCell>{toManilaDateString(slot.available_date)}</TableCell>
-                                                        <TableCell>{format12Hour(slot.available_timestart)}</TableCell>
-                                                        <TableCell>{format12Hour(slot.available_timeend)}</TableCell>
-                                                        <TableCell>{slot.clinic.clinic_name}</TableCell>
-                                                        <TableCell className="text-right">
+                            ) : (
+                                <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+                                    <div className="rounded-3xl border border-green-100/70 bg-white/90 p-4 shadow-sm">
+                                        <Calendar
+                                            mode="single"
+                                            selected={calendarSelectedDate}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    const next = formatManilaISODate(date);
+                                                    setSelectedDate(next);
+                                                }
+                                            }}
+                                            month={calendarMonth}
+                                            onMonthChange={setCalendarMonth}
+                                            components={{ DayButton: DayButtonWithSlots }}
+                                            modifiers={{ hasSlots: highlightedDates }}
+                                            className="mx-auto [--cell-size:3.25rem]"
+                                        />
+                                        <p className="mt-4 text-sm text-muted-foreground">
+                                            Select a day to review or edit consultation duty hours.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="rounded-3xl border border-green-100/70 bg-white p-6 shadow-sm">
+                                            <div className="flex flex-col gap-2">
+                                                <p className="text-sm font-semibold uppercase tracking-wide text-green-600">
+                                                    Selected day
+                                                </p>
+                                                <h3 className="text-2xl font-semibold text-slate-900">
+                                                    {selectedDateLabel}
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground">{selectedDateSummary}</p>
+                                            </div>
+                                            <div className="mt-6 space-y-3">
+                                                {selectedDateSlots.length > 0 ? (
+                                                    selectedDateSlots.map((slot) => (
+                                                        <div
+                                                            key={slot.availability_id}
+                                                            className="flex flex-col gap-3 rounded-2xl border border-green-100/80 bg-emerald-50/40 p-4 text-sm text-slate-700 shadow-inner sm:flex-row sm:items-center sm:justify-between"
+                                                        >
+                                                            <div>
+                                                                <p className="text-lg font-semibold text-green-700">
+                                                                    {formatTimeRange(
+                                                                        slot.available_timestart,
+                                                                        slot.available_timeend
+                                                                    )}
+                                                                </p>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {slot.clinic.clinic_name}
+                                                                </p>
+                                                            </div>
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
-                                                                className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 gap-2"
+                                                                className="gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
                                                                 onClick={() => {
+                                                                    const slotDate = toManilaDateString(slot.available_date);
+                                                                    setSelectedDate(slotDate);
                                                                     setEditingSlot(slot);
                                                                     setFormData({
                                                                         clinic_id: slot.clinic.clinic_id,
-                                                                        available_date: toManilaDateString(slot.available_date),
-                                                                        available_timestart: toManilaTimeString(slot.available_timestart),
-                                                                        available_timeend: toManilaTimeString(slot.available_timeend),
+                                                                        available_date: slotDate,
+                                                                        available_timestart: toManilaTimeString(
+                                                                            slot.available_timestart
+                                                                        ),
+                                                                        available_timeend: toManilaTimeString(
+                                                                            slot.available_timeend
+                                                                        ),
                                                                     });
                                                                     setDialogOpen(true);
                                                                 }}
                                                             >
                                                                 <Pencil className="h-4 w-4" /> Edit
                                                             </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-
-                                        </Table>
-                                    </div>
-                                    <div className="flex flex-col gap-3 border-t border-green-100 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                        <p>
-                                            Showing {showingStart}–{showingEnd} of {totalSlots} slot{totalSlots === 1 ? "" : "s"}. Page {currentPage} of {totalPages}.
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                variant="outline"
-                                                className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
-                                                disabled={loading || isTransitioning || !canGoPrevious}
-                                                onClick={() => void loadSlots(currentPage - 1)}
-                                            >
-                                                Previous
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
-                                                disabled={loading || isTransitioning || !canGoNext}
-                                                onClick={() => void loadSlots(currentPage + 1)}
-                                            >
-                                                Next
-                                            </Button>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/30 p-6 text-sm text-muted-foreground">
+                                                        {totalSlots === 0 ? (
+                                                            <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
+                                                        ) : (
+                                                            <>No duty hours plotted for {selectedDateLabel}. Choose another day or edit existing hours.</>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="rounded-3xl border border-green-100/70 bg-white p-4 shadow-sm">
+                                            <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                                                <p>
+                                                    Showing {slots.length} slot{slots.length === 1 ? "" : "s"} on this page across {uniqueClinicCount} clinic{uniqueClinicCount === 1 ? "" : "s"}. Page {currentPage} of {totalPages}.
+                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
+                                                        disabled={loading || isTransitioning || !canGoPrevious}
+                                                        onClick={() => void loadSlots(currentPage - 1)}
+                                                    >
+                                                        Previous
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
+                                                        disabled={loading || isTransitioning || !canGoNext}
+                                                        onClick={() => void loadSlots(currentPage + 1)}
+                                                    >
+                                                        Next
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="py-6 text-center text-muted-foreground">
-                                    No consultation slots added yet.
                                 </div>
                             )}
                         </CardContent>
