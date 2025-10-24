@@ -83,6 +83,18 @@ function sortSlotsForDay(slots: Availability[]): Availability[] {
     });
 }
 
+function formatFriendlyDateLabel(value: string | null | undefined) {
+    if (!value) return null;
+    const date = toCalendarDate(value);
+    if (!date) return null;
+    return date.toLocaleDateString("en-PH", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        timeZone: "Asia/Manila",
+    });
+}
+
 export type DoctorConsultationPageClientProps = {
     initialSlots: NormalizedSlotsPayload;
     initialClinics: Clinic[];
@@ -216,17 +228,6 @@ export function DoctorConsultationPageClient({
             .map((item) => item.slot);
     }, [slots]);
 
-    const upcomingActiveSlots = useMemo(
-        () =>
-            sortedSlots
-                .filter(
-                    (slot) =>
-                        !slot.is_on_leave && toManilaDateString(slot.available_date) >= todayKey
-                )
-                .slice(0, 5),
-        [sortedSlots, todayKey]
-    );
-
     const upcomingLeaveSlots = useMemo(
         () =>
             sortedSlots
@@ -237,6 +238,68 @@ export function DoctorConsultationPageClient({
                 .slice(0, 4),
         [sortedSlots, todayKey]
     );
+
+    const clinicCoverageSummaries = useMemo(() => {
+        const clinicMap = new Map<
+            string,
+            {
+                clinicId: string;
+                clinicName: string;
+                totalSlots: number;
+                coveredDates: Set<string>;
+                nextUpcomingDate: string | null;
+            }
+        >();
+
+        for (const slot of sortedSlots) {
+            if (slot.is_on_leave) continue;
+            const clinicId = slot.clinic.clinic_id;
+            const dateKey = toManilaDateString(slot.available_date);
+            const existing = clinicMap.get(clinicId);
+
+            if (existing) {
+                existing.totalSlots += 1;
+                existing.coveredDates.add(dateKey);
+                if (dateKey >= todayKey) {
+                    if (!existing.nextUpcomingDate || dateKey < existing.nextUpcomingDate) {
+                        existing.nextUpcomingDate = dateKey;
+                    }
+                }
+            } else {
+                clinicMap.set(clinicId, {
+                    clinicId,
+                    clinicName: slot.clinic.clinic_name,
+                    totalSlots: 1,
+                    coveredDates: new Set([dateKey]),
+                    nextUpcomingDate: dateKey >= todayKey ? dateKey : null,
+                });
+            }
+        }
+
+        return Array.from(clinicMap.values())
+            .map((entry) => ({
+                clinicId: entry.clinicId,
+                clinicName: entry.clinicName,
+                totalSlots: entry.totalSlots,
+                coveredDays: entry.coveredDates.size,
+                nextUpcomingDate: entry.nextUpcomingDate,
+            }))
+            .sort((a, b) => {
+                const aHasUpcoming = a.nextUpcomingDate ? 0 : 1;
+                const bHasUpcoming = b.nextUpcomingDate ? 0 : 1;
+                if (aHasUpcoming !== bHasUpcoming) {
+                    return aHasUpcoming - bHasUpcoming;
+                }
+                if (a.nextUpcomingDate && b.nextUpcomingDate && a.nextUpcomingDate !== b.nextUpcomingDate) {
+                    return a.nextUpcomingDate.localeCompare(b.nextUpcomingDate);
+                }
+                if (b.coveredDays !== a.coveredDays) {
+                    return b.coveredDays - a.coveredDays;
+                }
+                return b.totalSlots - a.totalSlots;
+            })
+            .slice(0, 4);
+    }, [sortedSlots, todayKey]);
 
     const selectedMonthLoading = selectedDateMonthKey
         ? calendarLoadingKeys[selectedDateMonthKey] ?? false
@@ -1005,22 +1068,45 @@ export function DoctorConsultationPageClient({
                                         <div className="rounded-3xl border border-green-100/70 bg-linear-to-br from-white via-emerald-50/60 to-emerald-100/60 p-5 shadow-inner">
                                             <div className="space-y-2">
                                                 <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                                                    Upcoming duty hours
+                                                    Clinic coverage
                                                 </p>
                                                 <h3 className="text-base font-semibold text-slate-900">
-                                                    Your next clinic commitments
+                                                    Where patients can find you
                                                 </h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    Stay ahead by reviewing the next few confirmed duty hours across your clinics.
+                                                    Review how your active duty hours are distributed across your clinics and plan adjustments.
                                                 </p>
                                             </div>
-                                            {upcomingActiveSlots.length > 0 ? (
+                                            {clinicCoverageSummaries.length > 0 ? (
                                                 <div className="mt-4 space-y-3">
-                                                    {upcomingActiveSlots.map((slot) => renderSlotCard(slot, "card"))}
+                                                    {clinicCoverageSummaries.map((clinic) => (
+                                                        <div
+                                                            key={clinic.clinicId}
+                                                            className="flex flex-col gap-2 rounded-2xl border border-green-200 bg-white/85 p-4 text-sm text-slate-700 shadow-sm"
+                                                        >
+                                                            <div className="flex flex-col gap-1">
+                                                                <p className="text-sm font-semibold text-green-800">
+                                                                    {clinic.clinicName}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {clinic.coveredDays} day{clinic.coveredDays === 1 ? "" : "s"} scheduled · {clinic.totalSlots} slot{clinic.totalSlots === 1 ? "" : "s"}
+                                                                </p>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                {clinic.nextUpcomingDate ? (
+                                                                    <>
+                                                                        Next availability on <span className="font-semibold text-green-700">{formatFriendlyDateLabel(clinic.nextUpcomingDate)}</span>
+                                                                    </>
+                                                                ) : (
+                                                                    "No upcoming duty hours after today."
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             ) : (
                                                 <div className="mt-4 rounded-2xl border border-dashed border-green-200 bg-emerald-50/40 p-4 text-sm text-muted-foreground">
-                                                    No upcoming duty hours are scheduled beyond today. Generate new hours to publish availability.
+                                                    No clinics currently have active duty hours. Generate new hours to publish availability.
                                                 </div>
                                             )}
                                         </div>
