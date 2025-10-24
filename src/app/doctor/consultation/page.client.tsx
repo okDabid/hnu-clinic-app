@@ -1037,52 +1037,6 @@ export function DoctorConsultationPageClient({
                             </Card>
                         </div>
                         <div className="space-y-4 xl:space-y-5">
-                            <div className="rounded-3xl border border-green-100/70 bg-linear-to-br from-white via-emerald-50/60 to-emerald-100/60 p-5 shadow-inner">
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                                        Clinic coverage
-                                    </p>
-                                    <h3 className="text-base font-semibold text-slate-900">
-                                        Where patients can find you
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground">
-                                        Review how your active duty hours are distributed across your clinics and plan adjustments.
-                                    </p>
-                                </div>
-                                {clinicCoverageSummaries.length > 0 ? (
-                                    <div className="mt-4 space-y-3">
-                                        {clinicCoverageSummaries.map((clinic) => (
-                                            <div
-                                                key={clinic.clinicId}
-                                                className="flex flex-col gap-2 rounded-2xl border border-green-200 bg-white/85 p-4 text-sm text-slate-700 shadow-sm"
-                                            >
-                                                <div className="flex flex-col gap-1">
-                                                    <p className="text-sm font-semibold text-green-800">{clinic.clinicName}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {clinic.coveredDays} day{clinic.coveredDays === 1 ? "" : "s"} scheduled · {clinic.totalSlots} slot{clinic.totalSlots === 1 ? "" : "s"}
-                                                    </p>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {clinic.nextUpcomingDate ? (
-                                                        <>
-                                                            Next availability on{' '}
-                                                            <span className="font-semibold text-green-700">
-                                                                {formatFriendlyDateLabel(clinic.nextUpcomingDate)}
-                                                            </span>
-                                                        </>
-                                                    ) : (
-                                                        "No upcoming duty hours after today."
-                                                    )}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="mt-4 rounded-2xl border border-dashed border-green-200 bg-emerald-50/40 p-4 text-sm text-muted-foreground">
-                                        No clinics currently have active duty hours. Generate new hours to publish availability.
-                                    </div>
-                                )}
-                            </div>
                             <div className="rounded-3xl border border-amber-100/70 bg-linear-to-br from-amber-50/70 via-white to-amber-100/70 p-5 shadow-inner">
                                 <div className="space-y-2">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
