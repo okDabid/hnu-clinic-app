@@ -83,18 +83,6 @@ function sortSlotsForDay(slots: Availability[]): Availability[] {
     });
 }
 
-function formatFriendlyDateLabel(value: string | null | undefined) {
-    if (!value) return null;
-    const date = toCalendarDate(value);
-    if (!date) return null;
-    return date.toLocaleDateString("en-PH", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        timeZone: "Asia/Manila",
-    });
-}
-
 export type DoctorConsultationPageClientProps = {
     initialSlots: NormalizedSlotsPayload;
     initialClinics: Clinic[];
@@ -238,68 +226,6 @@ export function DoctorConsultationPageClient({
                 .slice(0, 4),
         [sortedSlots, todayKey]
     );
-
-    const clinicCoverageSummaries = useMemo(() => {
-        const clinicMap = new Map<
-            string,
-            {
-                clinicId: string;
-                clinicName: string;
-                totalSlots: number;
-                coveredDates: Set<string>;
-                nextUpcomingDate: string | null;
-            }
-        >();
-
-        for (const slot of sortedSlots) {
-            if (slot.is_on_leave) continue;
-            const clinicId = slot.clinic.clinic_id;
-            const dateKey = toManilaDateString(slot.available_date);
-            const existing = clinicMap.get(clinicId);
-
-            if (existing) {
-                existing.totalSlots += 1;
-                existing.coveredDates.add(dateKey);
-                if (dateKey >= todayKey) {
-                    if (!existing.nextUpcomingDate || dateKey < existing.nextUpcomingDate) {
-                        existing.nextUpcomingDate = dateKey;
-                    }
-                }
-            } else {
-                clinicMap.set(clinicId, {
-                    clinicId,
-                    clinicName: slot.clinic.clinic_name,
-                    totalSlots: 1,
-                    coveredDates: new Set([dateKey]),
-                    nextUpcomingDate: dateKey >= todayKey ? dateKey : null,
-                });
-            }
-        }
-
-        return Array.from(clinicMap.values())
-            .map((entry) => ({
-                clinicId: entry.clinicId,
-                clinicName: entry.clinicName,
-                totalSlots: entry.totalSlots,
-                coveredDays: entry.coveredDates.size,
-                nextUpcomingDate: entry.nextUpcomingDate,
-            }))
-            .sort((a, b) => {
-                const aHasUpcoming = a.nextUpcomingDate ? 0 : 1;
-                const bHasUpcoming = b.nextUpcomingDate ? 0 : 1;
-                if (aHasUpcoming !== bHasUpcoming) {
-                    return aHasUpcoming - bHasUpcoming;
-                }
-                if (a.nextUpcomingDate && b.nextUpcomingDate && a.nextUpcomingDate !== b.nextUpcomingDate) {
-                    return a.nextUpcomingDate.localeCompare(b.nextUpcomingDate);
-                }
-                if (b.coveredDays !== a.coveredDays) {
-                    return b.coveredDays - a.coveredDays;
-                }
-                return b.totalSlots - a.totalSlots;
-            })
-            .slice(0, 4);
-    }, [sortedSlots, todayKey]);
 
     const selectedMonthLoading = selectedDateMonthKey
         ? calendarLoadingKeys[selectedDateMonthKey] ?? false
