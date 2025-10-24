@@ -246,9 +246,8 @@ export function DoctorConsultationPageClient({
             const onLeaveCount = selectedDayCounts.onLeave;
 
             if (activeCount > 0 && onLeaveCount > 0) {
-                return `You have ${activeCount} active duty hour${
-                    activeCount === 1 ? "" : "s"
-                } and ${onLeaveCount} marked on leave for this day.`;
+                return `You have ${activeCount} active duty hour${activeCount === 1 ? "" : "s"
+                    } and ${onLeaveCount} marked on leave for this day.`;
             }
 
             if (activeCount > 0) {
@@ -292,8 +291,8 @@ export function DoctorConsultationPageClient({
                         onLeave
                             ? "On leave"
                             : activeCount > 0
-                              ? `${activeCount} slot${activeCount === 1 ? "" : "s"}`
-                              : "No duty hours"
+                                ? `${activeCount} slot${activeCount === 1 ? "" : "s"}`
+                                : "No duty hours"
                     }
                 >
                     <div className="flex h-full w-full flex-col items-center justify-center gap-1">
@@ -369,7 +368,7 @@ export function DoctorConsultationPageClient({
                 className={cn(
                     "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
                     slot.is_on_leave &&
-                        "border-amber-300 text-amber-800 hover:bg-amber-100/80",
+                    "border-amber-300 text-amber-800 hover:bg-amber-100/80",
                     context === "inline" && "bg-white/90"
                 )}
                 onClick={() => {
@@ -581,18 +580,18 @@ export function DoctorConsultationPageClient({
 
         const body = isEditing
             ? {
-                  availability_id: editingSlot!.availability_id,
-                  clinic_id: formData.clinic_id,
-                  available_date: formData.available_date,
-                  available_timestart: formData.available_timestart,
-                  available_timeend: formData.available_timeend,
-                  is_on_leave: formData.is_on_leave,
-              }
+                availability_id: editingSlot!.availability_id,
+                clinic_id: formData.clinic_id,
+                available_date: formData.available_date,
+                available_timestart: formData.available_timestart,
+                available_timeend: formData.available_timeend,
+                is_on_leave: formData.is_on_leave,
+            }
             : {
-                  clinic_id: formData.clinic_id,
-                  available_timestart: formData.available_timestart,
-                  available_timeend: formData.available_timeend,
-              };
+                clinic_id: formData.clinic_id,
+                available_timestart: formData.available_timestart,
+                available_timeend: formData.available_timeend,
+            };
         const method = isEditing ? "PUT" : "POST";
 
         try {
@@ -663,13 +662,10 @@ export function DoctorConsultationPageClient({
                             <p className="text-sm text-muted-foreground">
                                 {totalSlots === 0
                                     ? "No active slots yet. Generate duty hours to publish a new schedule."
-                                    : `Your calendar tracks ${totalSlots} availability ${
-                                          totalSlots === 1 ? "entry" : "entries"
-                                      }. This view is showing ${slots.length} entr${
-                                          slots.length === 1 ? "y" : "ies"
-                                      } across ${uniqueClinicCount} clinic${
-                                          uniqueClinicCount === 1 ? "" : "s"
-                                      }.`}
+                                    : `Your calendar tracks ${totalSlots} availability ${totalSlots === 1 ? "entry" : "entries"
+                                    }. This view is showing ${slots.length} entr${slots.length === 1 ? "y" : "ies"
+                                    } across ${uniqueClinicCount} clinic${uniqueClinicCount === 1 ? "" : "s"
+                                    }.`}
                             </p>
                         </CardHeader>
                     </Card>
@@ -821,8 +817,8 @@ export function DoctorConsultationPageClient({
                                                                 ? "Saving..."
                                                                 : "Generating..."
                                                             : editingSlot
-                                                            ? "Save Changes"
-                                                            : "Generate"}
+                                                                ? "Save Changes"
+                                                                : "Generate"}
                                                     </Button>
                                                 </DialogFooter>
                                             </form>
@@ -847,9 +843,8 @@ export function DoctorConsultationPageClient({
                                                     </p>
                                                     <p>
                                                         {displayedMonthStats.coveredDays > 0
-                                                            ? `${displayedMonthStats.coveredDays} day${
-                                                                  displayedMonthStats.coveredDays === 1 ? "" : "s"
-                                                              } plotted this month.`
+                                                            ? `${displayedMonthStats.coveredDays} day${displayedMonthStats.coveredDays === 1 ? "" : "s"
+                                                            } plotted this month.`
                                                             : "No duty hours plotted this month yet."}
                                                     </p>
                                                 </div>
@@ -962,46 +957,6 @@ export function DoctorConsultationPageClient({
                                             <p className="mt-3 text-sm text-muted-foreground">
                                                 Select a day to review or edit consultation duty hours.
                                             </p>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div className="rounded-3xl border border-green-100/70 bg-white p-5 shadow-sm sm:p-6">
-                                            <div className="flex flex-col gap-3">
-                                                <p className="text-sm font-semibold uppercase tracking-wide text-green-600">
-                                                    Selected day
-                                                </p>
-                                                <h3 className="text-xl font-semibold text-slate-900 sm:text-2xl">
-                                                    {selectedDateLabel}
-                                                </h3>
-                                                <p className="text-sm leading-6 text-muted-foreground">{selectedDateSummary}</p>
-                                                {selectedDateSlots.length > 0 ? (
-                                                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                                                        <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
-                                                            {selectedDayCounts.active} active
-                                                        </Badge>
-                                                        {selectedDayCounts.onLeave > 0 ? (
-                                                            <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
-                                                                {selectedDayCounts.onLeave} on leave
-                                                            </Badge>
-                                                        ) : null}
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                            <div className="mt-6 space-y-3">
-                                                {selectedDateSlots.length > 0 ? (
-                                                    selectedDateSlots.map((slot) =>
-                                                        renderSlotCard(slot, "card")
-                                                    )
-                                                ) : (
-                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/30 p-6 text-sm text-muted-foreground">
-                                                        {totalSlots === 0 ? (
-                                                            <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
-                                                        ) : (
-                                                            <>No duty hours plotted for {selectedDateLabel}. Choose another day or edit existing hours.</>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
