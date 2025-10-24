@@ -59,7 +59,14 @@ export async function GET(req: Request) {
         );
 
         if (availabilities.length === 0) {
-            return NextResponse.json({ slots: [] });
+            return NextResponse.json({ slots: [], onLeave: false });
+        }
+
+        const activeAvailabilities = availabilities.filter((availability) => !availability.is_on_leave);
+        const onLeave = availabilities.length > 0 && activeAvailabilities.length === 0;
+
+        if (activeAvailabilities.length === 0) {
+            return NextResponse.json({ slots: [], onLeave: true });
         }
 
         const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
@@ -78,7 +85,7 @@ export async function GET(req: Request) {
         const SLOT_MIN = 15;
         const slots: { start: string; end: string }[] = [];
 
-        for (const avail of availabilities) {
+        for (const avail of activeAvailabilities) {
             let current = new Date(avail.available_timestart);
 
             while (current < avail.available_timeend) {
@@ -100,7 +107,7 @@ export async function GET(req: Request) {
             }
         }
 
-        return NextResponse.json({ slots });
+        return NextResponse.json({ slots, onLeave });
     } catch (err) {
         console.error("[GET /api/meta/doctor-availability]", err);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });

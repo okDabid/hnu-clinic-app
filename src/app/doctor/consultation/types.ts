@@ -8,6 +8,7 @@ export type Availability = {
     available_date: string;
     available_timestart: string;
     available_timeend: string;
+    is_on_leave: boolean;
     clinic: Clinic;
 };
 
@@ -17,6 +18,12 @@ export type SlotsResponse = {
     totalPages?: number;
     page?: number;
     pageSize?: number;
+    error?: string;
+};
+
+export type CalendarSlotsResponse = {
+    month: string;
+    slots: Availability[];
     error?: string;
 };
 

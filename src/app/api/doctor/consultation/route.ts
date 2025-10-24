@@ -29,6 +29,27 @@ function getGenerationEndExclusive(start: Date): Date {
     return startOfManilaDay(januaryNextYear);
 }
 
+function resolveCalendarMonthRange(monthParam: string | null) {
+    const fallbackMonth = formatManilaISODate(manilaNow()).slice(0, 7);
+    const MONTH_PARAM_PATTERN = /^\d{4}-\d{2}$/;
+    const monthKey = monthParam && MONTH_PARAM_PATTERN.test(monthParam) ? monthParam : fallbackMonth;
+    const monthStart = startOfManilaDay(`${monthKey}-01`);
+
+    const [yearStr, monthStr] = monthKey.split("-");
+    const parsedYear = Number.parseInt(yearStr, 10);
+    const parsedMonth = Number.parseInt(monthStr, 10);
+
+    const baseYear = Number.isNaN(parsedYear) ? new Date().getUTCFullYear() : parsedYear;
+    const baseMonth = Number.isNaN(parsedMonth) ? 1 : parsedMonth;
+
+    const nextMonthNumber = baseMonth === 12 ? 1 : baseMonth + 1;
+    const nextMonthYear = baseMonth === 12 ? baseYear + 1 : baseYear;
+    const nextMonthKey = `${nextMonthYear}-${String(nextMonthNumber).padStart(2, "0")}`;
+    const monthEndExclusive = startOfManilaDay(`${nextMonthKey}-01`);
+
+    return { monthKey, monthStart, monthEndExclusive };
+}
+
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 /**
@@ -52,6 +73,28 @@ export async function GET(req: Request) {
         await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
 
         const url = new URL(req.url);
+        const view = url.searchParams.get("view");
+
+        if (view === "calendar") {
+            const { monthKey, monthStart, monthEndExclusive } = resolveCalendarMonthRange(
+                url.searchParams.get("month")
+            );
+
+            const slots = await prisma.doctorAvailability.findMany({
+                where: {
+                    doctor_user_id: doctor.user_id,
+                    archivedAt: null,
+                    available_date: { gte: monthStart, lt: monthEndExclusive },
+                },
+                include: {
+                    clinic: { select: { clinic_id: true, clinic_name: true } },
+                },
+                orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
+            });
+
+            return NextResponse.json({ month: monthKey, slots });
+        }
+
         const pageParam = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
         const pageSizeParam = Number.parseInt(url.searchParams.get("pageSize") ?? "25", 10);
 
@@ -174,6 +217,7 @@ export async function POST(req: Request) {
                 available_date: startOfManilaDay(manilaDate),
                 available_timestart: slotStart,
                 available_timeend: slotEnd,
+                is_on_leave: false,
                 archivedAt: null,
             });
 
@@ -328,6 +372,7 @@ export async function PUT(req: Request) {
             available_date,
             available_timestart,
             available_timeend,
+            is_on_leave,
         } = await req.json();
 
         if (!availability_id) {
@@ -367,6 +412,8 @@ export async function PUT(req: Request) {
         const targetEndTime = available_timeend
             ? available_timeend
             : toManilaTimeString(existing.available_timeend.toISOString());
+
+        const targetIsOnLeave = typeof is_on_leave === "boolean" ? is_on_leave : existing.is_on_leave;
 
         if (!targetStartTime || !targetEndTime) {
             return NextResponse.json(
@@ -413,6 +460,7 @@ export async function PUT(req: Request) {
             available_date: dayStart,
             available_timestart: newStart,
             available_timeend: newEnd,
+            is_on_leave: targetIsOnLeave,
             archivedAt: null,
         };
 
