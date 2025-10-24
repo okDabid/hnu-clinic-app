@@ -10,7 +10,7 @@ import {
     type ComponentProps,
 } from "react";
 import { toast } from "sonner";
-import { Loader2, PlusCircle, Pencil } from "lucide-react";
+import { Loader2, PlusCircle } from "lucide-react";
 
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
@@ -40,11 +40,20 @@ import {
     formatTimeRange,
     manilaNow,
     toManilaDateString,
-    toManilaTimeString,
 } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 import DoctorConsultationLoading from "./loading";
+import { SlotCard, buildFormStateFromSlot } from "./components/slot-card";
+import {
+    buildSortedSlots,
+    formatMonthKeyFromDate,
+    getMonthKeyFromISODate,
+    mapSlotsByDate,
+    sortSlotsForDay,
+    summarizeSlots,
+    toCalendarDate,
+} from "./utils";
 import {
     normalizeConsultationSlots,
     type Availability,
@@ -53,35 +62,6 @@ import {
     type NormalizedSlotsPayload,
     type SlotsResponse,
 } from "./types";
-
-const MANILA_TIME_SUFFIX = "+08:00";
-
-function toCalendarDate(value: string | null | undefined) {
-    if (!value) return null;
-    const normalized = value.includes("T") ? value : `${value}T12:00:00${MANILA_TIME_SUFFIX}`;
-    const date = new Date(normalized);
-    return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function formatMonthKeyFromDate(date: Date): string {
-    return date.toLocaleDateString("en-CA", {
-        timeZone: "Asia/Manila",
-        year: "numeric",
-        month: "2-digit",
-    });
-}
-
-function getMonthKeyFromISODate(value: string): string {
-    return value.slice(0, 7);
-}
-
-function sortSlotsForDay(slots: Availability[]): Availability[] {
-    return [...slots].sort((a, b) => {
-        if (a.is_on_leave && !b.is_on_leave) return -1;
-        if (!a.is_on_leave && b.is_on_leave) return 1;
-        return a.available_timestart.localeCompare(b.available_timestart);
-    });
-}
 
 export type DoctorConsultationPageClientProps = {
     initialSlots: NormalizedSlotsPayload;
@@ -146,17 +126,10 @@ export function DoctorConsultationPageClient({
         [calendarCache, displayedMonthKey]
     );
 
-    const displayedMonthSlotsByDate = useMemo(() => {
-        const map = new Map<string, Availability[]>();
-        for (const slot of displayedMonthSlots) {
-            const dateKey = toManilaDateString(slot.available_date);
-            if (!map.has(dateKey)) {
-                map.set(dateKey, []);
-            }
-            map.get(dateKey)!.push(slot);
-        }
-        return map;
-    }, [displayedMonthSlots]);
+    const displayedMonthSlotsByDate = useMemo(
+        () => mapSlotsByDate(displayedMonthSlots),
+        [displayedMonthSlots]
+    );
 
     const highlightedDates = useMemo(
         () =>
@@ -199,32 +172,9 @@ export function DoctorConsultationPageClient({
 
     const todayKey = useMemo(() => formatManilaISODate(manilaNow()), []);
 
-    const sortedSlots = useMemo(() => {
-        const slotsWithDateKeys = slots.map((slot) => ({
-            slot,
-            dateKey: toManilaDateString(slot.available_date),
-        }));
-
-        return slotsWithDateKeys
-            .sort((a, b) => {
-                const byDate = a.dateKey.localeCompare(b.dateKey);
-                if (byDate !== 0) {
-                    return byDate;
-                }
-                return a.slot.available_timestart.localeCompare(b.slot.available_timestart);
-            })
-            .map((item) => item.slot);
-    }, [slots]);
-
-    const upcomingLeaveSlots = useMemo(
-        () =>
-            sortedSlots
-                .filter(
-                    (slot) =>
-                        slot.is_on_leave && toManilaDateString(slot.available_date) >= todayKey
-                )
-                .slice(0, 4),
-        [sortedSlots, todayKey]
+    const { upcomingLeaveSlots } = useMemo(
+        () => buildSortedSlots(slots, todayKey),
+        [slots, todayKey]
     );
 
     const selectedMonthLoading = selectedDateMonthKey
@@ -233,33 +183,10 @@ export function DoctorConsultationPageClient({
 
     const displayedMonthLoading = calendarLoadingKeys[displayedMonthKey] ?? false;
 
-    const displayedMonthStats = useMemo(() => {
-        let active = 0;
-        let onLeave = 0;
-        const activeDays = new Set<string>();
-        const leaveDays = new Set<string>();
-        const coveredDays = new Set<string>();
-
-        for (const slot of displayedMonthSlots) {
-            const dateKey = toManilaDateString(slot.available_date);
-            coveredDays.add(dateKey);
-            if (slot.is_on_leave) {
-                onLeave += 1;
-                leaveDays.add(dateKey);
-            } else {
-                active += 1;
-                activeDays.add(dateKey);
-            }
-        }
-
-        return {
-            active,
-            onLeave,
-            activeDays: activeDays.size,
-            leaveDays: leaveDays.size,
-            coveredDays: coveredDays.size,
-        };
-    }, [displayedMonthSlots]);
+    const displayedMonthStats = useMemo(
+        () => summarizeSlots(displayedMonthSlots),
+        [displayedMonthSlots]
+    );
 
     const selectedDateLabel = useMemo(() => {
         if (!calendarSelectedDate) return "Select a day";
@@ -345,80 +272,15 @@ export function DoctorConsultationPageClient({
         [displayedMonthSlotsByDate]
     );
 
-    const renderSlotCard = (slot: Availability, context: "card" | "inline") => (
-        <div
-            key={slot.availability_id}
-            className={cn(
-                "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between",
-                slot.is_on_leave
-                    ? context === "inline"
-                        ? "border-amber-200 bg-amber-50/80 text-amber-900"
-                        : "border-amber-200 bg-amber-50/70 text-amber-900"
-                    : context === "inline"
-                        ? "border-green-100/80 bg-emerald-50/70 text-slate-700"
-                        : "border-green-100/80 bg-emerald-50/40 text-slate-700",
-                context === "inline" && "shadow-sm"
-            )}
-        >
-            <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                    <p
-                        className={cn(
-                            "text-lg font-semibold",
-                            slot.is_on_leave ? "text-amber-800" : "text-green-700"
-                        )}
-                    >
-                        {formatTimeRange(slot.available_timestart, slot.available_timeend)}
-                    </p>
-                    {slot.is_on_leave ? (
-                        <Badge
-                            variant="outline"
-                            className="border-amber-300 bg-amber-100 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-800"
-                        >
-                            On leave
-                        </Badge>
-                    ) : null}
-                </div>
-                <p
-                    className={cn(
-                        "text-sm",
-                        slot.is_on_leave ? "text-amber-700/90" : "text-muted-foreground"
-                    )}
-                >
-                    {slot.clinic.clinic_name}
-                </p>
-                {slot.is_on_leave ? (
-                    <p className="text-xs text-amber-700">
-                        Patients cannot book appointments for this day until you restore availability.
-                    </p>
-                ) : null}
-            </div>
-            <Button
-                size="sm"
-                variant="outline"
-                className={cn(
-                    "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
-                    slot.is_on_leave &&
-                    "border-amber-300 text-amber-800 hover:bg-amber-100/80",
-                    context === "inline" && "bg-white/90"
-                )}
-                onClick={() => {
-                    const slotDate = toManilaDateString(slot.available_date);
-                    setSelectedDate(slotDate);
-                    setEditingSlot(slot);
-                    setFormData({
-                        clinic_id: slot.clinic.clinic_id,
-                        available_date: slotDate,
-                        available_timestart: toManilaTimeString(slot.available_timestart),
-                        available_timeend: toManilaTimeString(slot.available_timeend),
-                        is_on_leave: slot.is_on_leave,
-                    });
-                    setDialogOpen(true);
-                }}
-            >
-                <Pencil className="h-4 w-4" /> {slot.is_on_leave ? "Update" : "Edit"}
-            </Button>
-        </div>
+    const handleSlotEdit = useCallback(
+        (slot: Availability) => {
+            const { slotDate, formState } = buildFormStateFromSlot(slot);
+            setSelectedDate(slotDate);
+            setEditingSlot(slot);
+            setFormData(formState);
+            setDialogOpen(true);
+        },
+        []
     );
     const loadSlots = useCallback(async () => {
         try {
@@ -931,7 +793,14 @@ export function DoctorConsultationPageClient({
                                             <div className="mt-3 overflow-hidden">
                                                 {selectedDateSlots.length > 0 ? (
                                                     <div className="space-y-3">
-                                                        {selectedDateSlots.map((slot) => renderSlotCard(slot, "inline"))}
+                                                        {selectedDateSlots.map((slot) => (
+                                                            <SlotCard
+                                                                key={slot.availability_id}
+                                                                slot={slot}
+                                                                context="inline"
+                                                                onEdit={handleSlotEdit}
+                                                            />
+                                                        ))}
                                                     </div>
                                                 ) : (
                                                     <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
