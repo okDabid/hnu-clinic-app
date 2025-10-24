@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
     try {
@@ -89,10 +90,12 @@ export async function POST(req: Request) {
                 where: { userId: user.user_id, contact: normalized.normalized },
             });
 
+            const hashedToken = await bcrypt.hash(code, 10);
+
             await tx.passwordResetToken.create({
                 data: {
                     userId: user.user_id,
-                    token: code,
+                    token: hashedToken,
                     contact: normalized.normalized,
                     type: normalized.type,
                     expiresAt,

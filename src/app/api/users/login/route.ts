@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { AccountStatus, Role } from "@prisma/client";
 
 // define minimal relation types manually
 type UserRelation = {
     user: {
         user_id: string;
-        role: string;
+        role: Role;
         password: string;
+        status: AccountStatus;
     } | null;
 };
 
@@ -21,32 +23,86 @@ type StudentWithUser = {
     lname: string;
 } & UserRelation;
 
+function trimmed(value: unknown): string {
+    return typeof value === "string" ? value.trim() : "";
+}
+
 export async function POST(req: Request) {
     try {
-        const { role, employee_id, school_id, patient_id, password } =
-            await req.json();
+        const body = await req.json();
+        const roleInput = trimmed(body.role).toUpperCase();
+
+        if (!Object.values(Role).includes(roleInput as Role)) {
+            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        }
+
+        if (roleInput === Role.ADMIN) {
+            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        }
+
+        const role = roleInput as Role;
+        const employeeId = trimmed(body.employee_id);
+        const schoolId = trimmed(body.school_id);
+        const patientId = trimmed(body.patient_id);
+        const password = String(body.password ?? "");
 
         let userRecord: EmployeeWithUser | StudentWithUser | null = null;
 
-        if (role === "NURSE" || role === "DOCTOR") {
+        if (role === Role.NURSE || role === Role.DOCTOR) {
             userRecord = (await prisma.employee.findUnique({
-                where: { employee_id },
-                include: { user: true },
+                where: { employee_id: employeeId },
+                include: {
+                    user: {
+                        select: {
+                            user_id: true,
+                            role: true,
+                            password: true,
+                            status: true,
+                        },
+                    },
+                },
             })) as EmployeeWithUser | null;
-        } else if (role === "SCHOLAR") {
+        } else if (role === Role.SCHOLAR) {
             userRecord = (await prisma.student.findUnique({
-                where: { student_id: school_id },
-                include: { user: true },
+                where: { student_id: schoolId },
+                include: {
+                    user: {
+                        select: {
+                            user_id: true,
+                            role: true,
+                            password: true,
+                            status: true,
+                        },
+                    },
+                },
             })) as StudentWithUser | null;
-        } else if (role === "PATIENT") {
+        } else if (role === Role.PATIENT) {
             userRecord =
                 ((await prisma.student.findUnique({
-                    where: { student_id: patient_id },
-                    include: { user: true },
+                    where: { student_id: patientId },
+                    include: {
+                        user: {
+                            select: {
+                                user_id: true,
+                                role: true,
+                                password: true,
+                                status: true,
+                            },
+                        },
+                    },
                 })) as StudentWithUser | null) ||
                 ((await prisma.employee.findUnique({
-                    where: { employee_id: patient_id },
-                    include: { user: true },
+                    where: { employee_id: patientId },
+                    include: {
+                        user: {
+                            select: {
+                                user_id: true,
+                                role: true,
+                                password: true,
+                                status: true,
+                            },
+                        },
+                    },
                 })) as EmployeeWithUser | null);
         }
 
@@ -64,6 +120,20 @@ export async function POST(req: Request) {
             return NextResponse.json(
                 { error: "Invalid credentials" },
                 { status: 401 }
+            );
+        }
+
+        if (userRecord.user.role !== role) {
+            return NextResponse.json(
+                { error: "Invalid credentials" },
+                { status: 401 }
+            );
+        }
+
+        if (userRecord.user.status !== AccountStatus.Active) {
+            return NextResponse.json(
+                { error: "Account inactive" },
+                { status: 403 }
             );
         }
 

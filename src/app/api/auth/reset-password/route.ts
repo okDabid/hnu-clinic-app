@@ -47,13 +47,16 @@ export async function POST(req: Request) {
         const resetRecord = await prisma.passwordResetToken.findFirst({
             where: {
                 contact: normalized.normalized,
-                token: sanitizedCode,
+                type: normalized.type,
                 expiresAt: { gt: new Date() },
             },
             orderBy: { createdAt: "desc" },
         });
 
-        if (!resetRecord) {
+        const tokenValid =
+            resetRecord && (await bcrypt.compare(sanitizedCode, resetRecord.token));
+
+        if (!resetRecord || !tokenValid) {
             return NextResponse.json(
                 { error: "Invalid or expired code." },
                 { status: 400 }

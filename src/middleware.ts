@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { AccountStatus } from "@prisma/client";
+import { AccountStatus, Role } from "@prisma/client";
 
 /**
  * Guards protected routes by validating the session token and role access.
@@ -39,7 +39,7 @@ export async function middleware(req: NextRequest) {
     }
 
     // If token exists
-    const role = token.role as string | undefined;
+    const role = token.role as Role | undefined;
     const status = token.status as AccountStatus | undefined;
 
     // Block inactive users
@@ -54,12 +54,17 @@ export async function middleware(req: NextRequest) {
     }
 
     // Role-based route guards
-    const roleGuardMap: Record<string, string> = {
-        "/nurse": "NURSE",
-        "/doctor": "DOCTOR",
-        "/scholar": "SCHOLAR",
-        "/patient": "PATIENT",
-        "/admin": "ADMIN",
+    const roleGuardMap: Record<string, Role> = {
+        "/nurse": Role.NURSE,
+        "/doctor": Role.DOCTOR,
+        "/scholar": Role.SCHOLAR,
+        "/patient": Role.PATIENT,
+        "/admin": Role.ADMIN,
+        "/api/nurse": Role.NURSE,
+        "/api/doctor": Role.DOCTOR,
+        "/api/scholar": Role.SCHOLAR,
+        "/api/patient": Role.PATIENT,
+        "/api/admin": Role.ADMIN,
     };
 
     for (const prefix in roleGuardMap) {
