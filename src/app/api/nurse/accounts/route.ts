@@ -123,7 +123,7 @@ async function ensureUniqueEmployeeId(
     return id;
 }
 
-const ACCOUNT_MANAGER_ROLES = new Set<Role>([Role.NURSE, Role.ADMIN]);
+const ACCOUNT_MANAGER_ROLES = new Set<Role>([Role.NURSE]);
 const MANAGEABLE_ROLES = new Set<Role>([
     Role.NURSE,
     Role.DOCTOR,
@@ -537,13 +537,6 @@ export async function PUT(req: Request) {
 
         if (!target) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        if (target.role === Role.ADMIN && sessionRole !== Role.ADMIN) {
-            return NextResponse.json(
-                { error: "You cannot change the status of an admin account." },
-                { status: 403 }
-            );
         }
 
         if (target.status === statusEnum) {

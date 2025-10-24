@@ -36,10 +36,6 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 
-        if (roleInput === Role.ADMIN) {
-            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-        }
-
         const role = roleInput as Role;
         const employeeId = trimmed(body.employee_id);
         const schoolId = trimmed(body.school_id);

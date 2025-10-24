@@ -59,12 +59,10 @@ export async function middleware(req: NextRequest) {
         "/doctor": Role.DOCTOR,
         "/scholar": Role.SCHOLAR,
         "/patient": Role.PATIENT,
-        "/admin": Role.ADMIN,
         "/api/nurse": Role.NURSE,
         "/api/doctor": Role.DOCTOR,
         "/api/scholar": Role.SCHOLAR,
         "/api/patient": Role.PATIENT,
-        "/api/admin": Role.ADMIN,
     };
 
     for (const prefix in roleGuardMap) {
@@ -90,7 +88,6 @@ export const config = {
         "/doctor/:path*",
         "/scholar/:path*",
         "/patient/:path*",
-        "/admin/:path*",
         "/api/:path*", // secure API routes too
     ],
 };

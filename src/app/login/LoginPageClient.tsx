@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import {
     DialogFooter,
     DialogDescription,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { normalizeResetContact } from "@/lib/password-reset";
 
 export default function LoginPageClient() {
@@ -37,6 +38,11 @@ export default function LoginPageClient() {
     const [codeError, setCodeError] = useState<string | null>(null);
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [resendCooldown, setResendCooldown] = useState(0);
+    const [adminOpen, setAdminOpen] = useState(false);
+    const [adminCode, setAdminCode] = useState("");
+    const [adminError, setAdminError] = useState<string | null>(null);
+    const [adminVerifying, setAdminVerifying] = useState(false);
+    const [adminUnlocked, setAdminUnlocked] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -49,7 +55,22 @@ export default function LoginPageClient() {
         return () => window.clearTimeout(timeout);
     }, [resendCooldown]);
 
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const stored = window.sessionStorage.getItem("nurse-admin-access");
+        setAdminUnlocked(stored === "true");
+    }, []);
+
     const maskedContact = useMemo(() => maskContact(contact), [contact]);
+
+    const handleAdminToggle = (open: boolean) => {
+        setAdminOpen(open);
+        if (!open) {
+            setAdminCode("");
+            setAdminError(null);
+            setAdminVerifying(false);
+        }
+    };
 
     const handleForgotToggle = (open: boolean) => {
         setForgotOpen(open);
@@ -123,6 +144,46 @@ export default function LoginPageClient() {
             toast.error(message, { position: "top-center" });
         } finally {
             setLoadingRole(null);
+        }
+    }
+
+    async function handleAdminSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        const trimmed = adminCode.trim();
+
+        if (!/^\d{6}$/.test(trimmed)) {
+            setAdminError("Enter the 6-digit access code.");
+            return;
+        }
+
+        setAdminError(null);
+        setAdminVerifying(true);
+        try {
+            const res = await fetch("/api/auth/admin-pin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: trimmed }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                const message = typeof data.error === "string" ? data.error : "Invalid access code.";
+                setAdminError(message);
+                return;
+            }
+
+            if (typeof window !== "undefined") {
+                window.sessionStorage.setItem("nurse-admin-access", "true");
+            }
+            setAdminUnlocked(true);
+            toast.success("Privileged nurse tools unlocked.");
+            handleAdminToggle(false);
+        } catch (err) {
+            console.error("Admin pin error", err);
+            setAdminError("Network error. Try again.");
+        } finally {
+            setAdminVerifying(false);
         }
     }
 
@@ -288,6 +349,11 @@ export default function LoginPageClient() {
                     Forgot password?
                 </button>
             </p>
+            {role === "nurse" && adminUnlocked && (
+                <p className="text-center text-xs font-medium text-emerald-600">
+                    Privileged account actions will be available after sign-in.
+                </p>
+            )}
         </form>
     );
 
@@ -342,8 +408,37 @@ export default function LoginPageClient() {
                                         Use your assigned credentials to access the clinic portal.
                                     </p>
                                 </div>
-                                <div className="hidden sm:block">
-                                    <Image src="/clinic-illustration.svg" alt="HNU Clinic" width={48} height={48} />
+                                <div className="flex items-center gap-2">
+                                    {adminUnlocked && (
+                                        <span className="hidden items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 sm:inline-flex">
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                            Nurse tools unlocked
+                                        </span>
+                                    )}
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleAdminToggle(true)}
+                                                className={`h-9 w-9 rounded-full border border-green-100 text-green-600 shadow-sm transition hover:bg-green-50 ${
+                                                    adminUnlocked ? "bg-green-50" : ""
+                                                }`}
+                                                aria-label="Unlock nurse administration tools"
+                                            >
+                                                <Shield className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left" className="bg-green-700 text-white">
+                                            <p className="max-w-[12rem] text-center">
+                                                Enter the 6-digit clinic code to unlock account deletion tools.
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <div className="hidden sm:block">
+                                        <Image src="/clinic-illustration.svg" alt="HNU Clinic" width={48} height={48} />
+                                    </div>
                                 </div>
                             </div>
 
@@ -591,6 +686,61 @@ export default function LoginPageClient() {
                             </form>
                         </>
                     )}
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={adminOpen} onOpenChange={handleAdminToggle}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-green-700">Unlock Nurse Administration</DialogTitle>
+                        <DialogDescription className="text-gray-600">
+                            Provide the 6-digit clinic access code to enable privileged account management actions after logging
+                            in.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleAdminSubmit} className="mt-4 space-y-4">
+                        <div className="space-y-2">
+                            <Input
+                                value={adminCode}
+                                onChange={(event) => {
+                                    const numeric = event.target.value.replace(/[^0-9]/g, "");
+                                    setAdminCode(numeric.slice(0, 6));
+                                    if (adminError) setAdminError(null);
+                                }}
+                                inputMode="numeric"
+                                maxLength={6}
+                                placeholder="Enter 6-digit access code"
+                                autoComplete="one-time-code"
+                                disabled={adminVerifying}
+                                required
+                            />
+                            {adminError && <p className="text-sm text-red-600">{adminError}</p>}
+                        </div>
+                        <DialogFooter className="flex-col gap-2 sm:flex-row">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleAdminToggle(false)}
+                                className="w-full"
+                                disabled={adminVerifying}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                className="w-full bg-green-600 text-white hover:bg-green-700"
+                                disabled={adminVerifying}
+                            >
+                                {adminVerifying ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" /> Verifying...
+                                    </>
+                                ) : (
+                                    "Unlock"
+                                )}
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
         </div>

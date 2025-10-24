@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth";
 /**
  * GET /api/clinics
  * Returns all active clinics with their basic info.
- * Accessible by authenticated users (doctor/nurse/admin).
+ * Accessible by authenticated doctor and nurse users.
  */
 export async function GET() {
     try {

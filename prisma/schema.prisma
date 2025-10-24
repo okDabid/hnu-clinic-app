@@ -256,7 +256,6 @@ enum Role {
   DOCTOR
   SCHOLAR
   PATIENT
-  ADMIN
 }
 
 enum AppointmentStatus {

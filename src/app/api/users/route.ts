@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 // mirror Prisma enums manually (since they aren’t exported)
-type Role = "NURSE" | "DOCTOR" | "SCHOLAR" | "PATIENT" | "ADMIN";
+type Role = "NURSE" | "DOCTOR" | "SCHOLAR" | "PATIENT";
 type AccountStatus = "Active" | "Inactive";
 
 // --------------------
