@@ -7,6 +7,7 @@ import {
     Gender,
     BloodType,
     Department,
+    YearLevel,
     Role,
     AccountStatus,
 } from "@prisma/client";
@@ -40,160 +41,355 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_NEG: "O-",
 };
 
+const yearLevelMap: Record<string, YearLevel> = {
+    "1st Year": YearLevel.FIRST_YEAR,
+    "2nd Year": YearLevel.SECOND_YEAR,
+    "3rd Year": YearLevel.THIRD_YEAR,
+    "4th Year": YearLevel.FOURTH_YEAR,
+    "5th Year": YearLevel.FIFTH_YEAR,
+    "Kindergarten": YearLevel.KINDERGARTEN,
+    "Kindergarten 1": YearLevel.KINDERGARTEN,
+    "Kindergarten 2": YearLevel.KINDERGARTEN,
+    "Elementary": YearLevel.ELEMENTARY,
+    "Grade 1": YearLevel.ELEMENTARY,
+    "Grade 2": YearLevel.ELEMENTARY,
+    "Grade 3": YearLevel.ELEMENTARY,
+    "Grade 4": YearLevel.ELEMENTARY,
+    "Grade 5": YearLevel.ELEMENTARY,
+    "Grade 6": YearLevel.ELEMENTARY,
+    "Junior High School": YearLevel.JUNIOR_HIGH,
+    "Grade 7": YearLevel.JUNIOR_HIGH,
+    "Grade 8": YearLevel.JUNIOR_HIGH,
+    "Grade 9": YearLevel.JUNIOR_HIGH,
+    "Grade 10": YearLevel.JUNIOR_HIGH,
+    "Senior High School": YearLevel.SENIOR_HIGH,
+    "Grade 11": YearLevel.SENIOR_HIGH,
+    "Grade 12": YearLevel.SENIOR_HIGH,
+    FIRST_YEAR: YearLevel.FIRST_YEAR,
+    SECOND_YEAR: YearLevel.SECOND_YEAR,
+    THIRD_YEAR: YearLevel.THIRD_YEAR,
+    FOURTH_YEAR: YearLevel.FOURTH_YEAR,
+    FIFTH_YEAR: YearLevel.FIFTH_YEAR,
+    KINDERGARTEN: YearLevel.KINDERGARTEN,
+    ELEMENTARY: YearLevel.ELEMENTARY,
+    JUNIOR_HIGH: YearLevel.JUNIOR_HIGH,
+    SENIOR_HIGH: YearLevel.SENIOR_HIGH,
+};
+
+function mapYearLevel(value: unknown): YearLevel | null {
+    if (typeof value !== "string") {
+        return null;
+    }
+    const trimmed = value.trim();
+    return yearLevelMap[trimmed] ?? null;
+}
+
 // ---------------- UNIQUE ID HELPERS ----------------
-async function ensureUniqueUsername(base: string): Promise<string> {
+type TransactionClient = Prisma.TransactionClient;
+
+async function ensureUniqueUsername(
+    tx: TransactionClient,
+    base: string
+): Promise<string> {
     let candidate = base;
     let n = 1;
-    while (await prisma.users.findUnique({ where: { username: candidate } })) {
+    while (await tx.users.findUnique({ where: { username: candidate } })) {
         candidate = `${base}-${n++}`;
     }
     return candidate;
 }
 
-async function ensureUniqueStudentId(value: string): Promise<string> {
+async function ensureUniqueStudentId(
+    tx: TransactionClient,
+    value: string
+): Promise<string> {
     let id = value;
     let n = 1;
-    while (await prisma.student.findUnique({ where: { student_id: id } })) {
+    while (await tx.student.findUnique({ where: { student_id: id } })) {
         id = `${value}-${n++}`;
     }
     return id;
 }
 
-async function ensureUniqueEmployeeId(value: string): Promise<string> {
+async function ensureUniqueEmployeeId(
+    tx: TransactionClient,
+    value: string
+): Promise<string> {
     let id = value;
     let n = 1;
-    while (await prisma.employee.findUnique({ where: { employee_id: id } })) {
+    while (await tx.employee.findUnique({ where: { employee_id: id } })) {
         id = `${value}-${n++}`;
     }
     return id;
+}
+
+const ACCOUNT_MANAGER_ROLES = new Set<Role>([Role.NURSE]);
+const MANAGEABLE_ROLES = new Set<Role>([
+    Role.NURSE,
+    Role.DOCTOR,
+    Role.PATIENT,
+    Role.SCHOLAR,
+]);
+
+function isAccountManager(role: Role | undefined): role is Role {
+    return Boolean(role && ACCOUNT_MANAGER_ROLES.has(role));
+}
+
+function getTrimmed(value: unknown): string {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function getOptional(value: unknown): string | null {
+    const trimmed = getTrimmed(value);
+    return trimmed.length ? trimmed : null;
 }
 
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user) {
+        const sessionRole = session?.user?.role as Role | undefined;
+        if (!session?.user || !isAccountManager(sessionRole)) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const payload = await req.json();
-        const roleEnum = payload.role as Role;
+        const roleStr = getTrimmed(payload.role).toUpperCase();
 
-        // Determine username
-        let username: string;
-        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            username = payload.employee_id;
-        } else if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            username = payload.student_id;
-        } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            username = payload.employee_id;
-        } else if (roleEnum === Role.SCHOLAR) {
-            username = payload.school_id;
-        } else {
-            username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
+        if (!Object.values(Role).includes(roleStr as Role)) {
+            return NextResponse.json({ error: "Invalid role" }, { status: 400 });
         }
 
-        const finalUsername = await ensureUniqueUsername(username);
+        const roleEnum = roleStr as Role;
 
-        // Generate password
+        if (!MANAGEABLE_ROLES.has(roleEnum)) {
+            return NextResponse.json({ error: "Unsupported role" }, { status: 400 });
+        }
+
+        const fname = getTrimmed(payload.fname);
+        const lname = getTrimmed(payload.lname);
+        const mname = getOptional(payload.mname);
+
+        if (!fname || !lname) {
+            return NextResponse.json(
+                { error: "First and last name are required." },
+                { status: 400 }
+            );
+        }
+
+        const genderStr = getTrimmed(payload.gender);
+        const genderEnum = Object.values(Gender).includes(genderStr as Gender)
+            ? (genderStr as Gender)
+            : null;
+
+        if (!genderEnum) {
+            return NextResponse.json(
+                { error: "A valid gender is required." },
+                { status: 400 }
+            );
+        }
+
+        const patientType = getTrimmed(payload.patientType).toLowerCase();
+        let username: string | null = null;
+
+        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
+            const employeeId = getTrimmed(payload.employee_id);
+            if (!employeeId) {
+                return NextResponse.json(
+                    { error: "Employee ID is required for this role." },
+                    { status: 400 }
+                );
+            }
+            username = employeeId;
+        } else if (roleEnum === Role.PATIENT && patientType === "student") {
+            const studentId = getTrimmed(payload.student_id);
+            if (!studentId) {
+                return NextResponse.json(
+                    { error: "Student ID is required for this patient." },
+                    { status: 400 }
+                );
+            }
+            username = studentId;
+        } else if (roleEnum === Role.PATIENT && patientType === "employee") {
+            const employeeId = getTrimmed(payload.employee_id);
+            if (!employeeId) {
+                return NextResponse.json(
+                    { error: "Employee ID is required for this patient." },
+                    { status: 400 }
+                );
+            }
+            username = employeeId;
+        } else if (roleEnum === Role.SCHOLAR) {
+            const schoolId = getTrimmed(payload.school_id);
+            if (!schoolId) {
+                return NextResponse.json(
+                    { error: "School ID is required for scholars." },
+                    { status: 400 }
+                );
+            }
+            username = schoolId;
+        } else {
+            username = `${fname.toLowerCase()}.${lname.toLowerCase()}`;
+        }
+
+        if (!username) {
+            return NextResponse.json(
+                { error: "Unable to determine username." },
+                { status: 400 }
+            );
+        }
+
+        let doctorSpecialization: "Physician" | "Dentist" | null = null;
+        if (roleEnum === Role.DOCTOR) {
+            const specialization = getTrimmed(payload.specialization);
+            if (!(["Physician", "Dentist"] as const).includes(
+                specialization as "Physician" | "Dentist"
+            )) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Doctor specialization must be Physician or Dentist.",
+                    },
+                    { status: 400 }
+                );
+            }
+            doctorSpecialization = specialization as "Physician" | "Dentist";
+        }
+
+        if (roleEnum === Role.PATIENT) {
+            if (!patientType || !["student", "employee"].includes(patientType)) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Specify whether the patient is a student or employee.",
+                    },
+                    { status: 400 }
+                );
+            }
+        }
+
+        const dateOfBirth = payload.date_of_birth
+            ? new Date(payload.date_of_birth)
+            : null;
+
+        if (dateOfBirth && Number.isNaN(dateOfBirth.getTime())) {
+            return NextResponse.json(
+                { error: "Invalid date of birth." },
+                { status: 400 }
+            );
+        }
+
+        const bloodtypeInput = getTrimmed(payload.bloodtype).toUpperCase();
+
+        const sharedProfileData = {
+            fname,
+            mname,
+            lname,
+            gender: genderEnum,
+            bloodtype: bloodTypeMap[bloodtypeInput] || null,
+            address: getOptional(payload.address),
+            allergies: getOptional(payload.allergies),
+            medical_cond: getOptional(payload.medical_cond),
+            emergencyco_name: getOptional(payload.emergencyco_name),
+            emergencyco_num: getOptional(payload.emergencyco_num),
+            emergencyco_relation: getOptional(payload.emergencyco_relation),
+            email: getOptional(payload.email),
+            contactno: getOptional(payload.phone),
+            date_of_birth: dateOfBirth,
+        };
+
+        const departmentRaw = getTrimmed(payload.department);
+        const departmentEnum =
+            departmentRaw &&
+            Object.values(Department).includes(departmentRaw as Department)
+                ? (departmentRaw as Department)
+                : null;
+        const program = getOptional(payload.program);
+        const yearLevel = mapYearLevel(payload.year_level);
+
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-        // Create the user record, including specialization when provided
-        const newUser = await prisma.users.create({
-            data: {
-                username: finalUsername,
-                password: hashedPassword,
-                role: roleEnum,
-                status: AccountStatus.Active,
-                specialization:
-                    roleEnum === Role.DOCTOR
-                        ? payload.specialization === "Physician"
-                            ? "Physician"
-                            : payload.specialization === "Dentist"
-                                ? "Dentist"
-                                : null
-                        : null,
-            },
+        const { finalUsername } = await prisma.$transaction(async (tx) => {
+            const finalUsername = await ensureUniqueUsername(tx, username as string);
+
+            const newUser = await tx.users.create({
+                data: {
+                    username: finalUsername,
+                    password: hashedPassword,
+                    role: roleEnum,
+                    status: AccountStatus.Active,
+                    specialization: doctorSpecialization,
+                },
+            });
+
+            if (roleEnum === Role.PATIENT && patientType === "student") {
+                const uniqueStudentId = await ensureUniqueStudentId(
+                    tx,
+                    getTrimmed(payload.student_id)
+                );
+                await tx.student.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        student_id: uniqueStudentId,
+                        department: departmentEnum,
+                        program,
+                        year_level: yearLevel,
+                        ...sharedProfileData,
+                    },
+                });
+            }
+
+            if (roleEnum === Role.PATIENT && patientType === "employee") {
+                const uniqueEmployeeId = await ensureUniqueEmployeeId(
+                    tx,
+                    getTrimmed(payload.employee_id)
+                );
+                await tx.employee.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        employee_id: uniqueEmployeeId,
+                        ...sharedProfileData,
+                    },
+                });
+            }
+
+            if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
+                const uniqueEmployeeId = await ensureUniqueEmployeeId(
+                    tx,
+                    getTrimmed(payload.employee_id)
+                );
+                await tx.employee.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        employee_id: uniqueEmployeeId,
+                        ...sharedProfileData,
+                    },
+                });
+            }
+
+            if (roleEnum === Role.SCHOLAR) {
+                const uniqueStudentId = await ensureUniqueStudentId(
+                    tx,
+                    getTrimmed(payload.school_id)
+                );
+                await tx.student.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        student_id: uniqueStudentId,
+                        department: departmentEnum,
+                        program,
+                        year_level: yearLevel,
+                        ...sharedProfileData,
+                    },
+                });
+            }
+
+            return { finalUsername };
         });
 
-        // Shared fields
-        const sharedProfileData = {
-            fname: payload.fname,
-            mname: payload.mname,
-            lname: payload.lname,
-            gender: payload.gender as Gender,
-            bloodtype: bloodTypeMap[payload.bloodtype] || null,
-            address: payload.address ?? null,
-            allergies: payload.allergies ?? null,
-            medical_cond: payload.medical_cond ?? null,
-            emergencyco_name: payload.emergencyco_name ?? null,
-            emergencyco_num: payload.emergencyco_num ?? null,
-            emergencyco_relation: payload.emergencyco_relation ?? null,
-            email: payload.email?.trim() || null,
-            contactno: payload.phone?.trim() || null,
-            date_of_birth: payload.date_of_birth ? new Date(payload.date_of_birth) : null,
-        };
-
-        // Create profile based on role
-        if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
-            await prisma.student.create({
-                data: {
-                    user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
-                    department:
-                        payload.department && Object.values(Department).includes(payload.department)
-                            ? (payload.department as Department)
-                            : null,
-                    program: payload.program ?? null,
-                    year_level: payload.year_level ?? null,
-                    ...sharedProfileData,
-                },
-            });
-        }
-
-        if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
-            await prisma.employee.create({
-                data: {
-                    user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
-                    ...sharedProfileData,
-                },
-            });
-        }
-
-        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
-            await prisma.employee.create({
-                data: {
-                    user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
-                    ...sharedProfileData,
-                },
-            });
-        }
-
-        if (roleEnum === Role.SCHOLAR) {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
-            await prisma.student.create({
-                data: {
-                    user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
-                    department:
-                        payload.department && Object.values(Department).includes(payload.department)
-                            ? (payload.department as Department)
-                            : null,
-                    program: payload.program ?? null,
-                    year_level: payload.year_level ?? null,
-                    ...sharedProfileData,
-                },
-            });
-        }
-
         return NextResponse.json({
-            id: username.replace(/-\d+$/, ""), // hide "-1" suffix if any
+            id: finalUsername,
             password: plainPassword,
         });
     } catch (err) {
@@ -215,22 +411,56 @@ export async function POST(req: Request) {
 // ---------------- LIST USERS ----------------
 export async function GET() {
     try {
+        const session = await getServerSession(authOptions);
+        const sessionRole = session?.user?.role as Role | undefined;
+
+        if (!session?.user || !isAccountManager(sessionRole)) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const users = await prisma.users.findMany({
-            include: { student: true, employee: true },
+            where: {
+                role: {
+                    in: [Role.NURSE, Role.DOCTOR, Role.PATIENT, Role.SCHOLAR],
+                },
+            },
+            select: {
+                user_id: true,
+                username: true,
+                role: true,
+                status: true,
+                specialization: true,
+                student: {
+                    select: {
+                        student_id: true,
+                        fname: true,
+                        lname: true,
+                        bloodtype: true,
+                    },
+                },
+                employee: {
+                    select: {
+                        employee_id: true,
+                        fname: true,
+                        lname: true,
+                        bloodtype: true,
+                    },
+                },
+            },
         });
 
         const formatted = users.map((u) => {
-            let displayId = u.username.replace(/-\d+$/, ""); // 👈 hide "-1" in UI
+            let identifier = u.username;
 
             if (u.role === Role.PATIENT) {
-                displayId =
-                    u.student?.student_id?.replace(/-\d+$/, "") ??
-                    u.employee?.employee_id?.replace(/-\d+$/, "") ??
-                    u.username.replace(/-\d+$/, "");
+                identifier =
+                    u.student?.student_id ??
+                    u.employee?.employee_id ??
+                    u.username;
             } else if (u.role === Role.NURSE || u.role === Role.DOCTOR) {
-                displayId = u.employee?.employee_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
+                identifier = u.employee?.employee_id ?? u.username;
             } else if (u.role === Role.SCHOLAR) {
-                displayId = u.student?.student_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
+                identifier = u.student?.student_id ?? u.username;
             }
 
             const fullName =
@@ -241,16 +471,16 @@ export async function GET() {
                         : u.username;
 
             const bloodTypeRaw = u.student?.bloodtype || u.employee?.bloodtype || null;
-            const bloodTypeDisplay = bloodTypeRaw ? bloodTypeEnumMap[bloodTypeRaw] || bloodTypeRaw : null;
+            const bloodTypeDisplay = bloodTypeRaw
+                ? bloodTypeEnumMap[bloodTypeRaw] || bloodTypeRaw
+                : null;
 
             return {
-                user_id: displayId,
+                user_id: identifier,
                 accountId: u.user_id,
                 role: u.role,
                 status: u.status,
                 fullName,
-                email: u.student?.email ?? u.employee?.email ?? null,
-                contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,
                 specialization: u.specialization,
             };
@@ -267,15 +497,24 @@ export async function GET() {
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user) {
+        const sessionRole = session?.user?.role as Role | undefined;
+        if (!session?.user || !isAccountManager(sessionRole)) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const { user_id, newStatus } = await req.json();
+        const targetId = getTrimmed(user_id);
+        const statusUpdate = getTrimmed(newStatus);
 
-        if (!user_id || (newStatus !== "Active" && newStatus !== "Inactive")) {
+        if (
+            !targetId ||
+            (statusUpdate !== AccountStatus.Active &&
+                statusUpdate !== AccountStatus.Inactive)
+        ) {
             return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
         }
+
+        const statusEnum = statusUpdate as AccountStatus;
 
         // Prevent self-deactivation
         const currentUser = await prisma.users.findUnique({
@@ -283,7 +522,7 @@ export async function PUT(req: Request) {
             select: { user_id: true },
         });
 
-        if (currentUser && currentUser.user_id === user_id) {
+        if (currentUser && currentUser.user_id === targetId) {
             return NextResponse.json(
                 { error: "You cannot deactivate your own account." },
                 { status: 403 }
@@ -292,26 +531,28 @@ export async function PUT(req: Request) {
 
         // Check if target exists
         const target = await prisma.users.findUnique({
-            where: { user_id },
-            select: { status: true },
+            where: { user_id: targetId },
+            select: { status: true, role: true },
         });
 
         if (!target) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        if (target.status === newStatus) {
+        if (target.status === statusEnum) {
             return NextResponse.json({ message: "No changes made." }, { status: 200 });
         }
 
         // Update user status
         await prisma.users.update({
-            where: { user_id },
-            data: { status: newStatus },
+            where: { user_id: targetId },
+            data: { status: statusEnum },
         });
 
         return NextResponse.json({
-            message: `User ${newStatus === "Active" ? "activated" : "deactivated"} successfully.`,
+            message: `User ${
+                statusEnum === AccountStatus.Active ? "activated" : "deactivated"
+            } successfully.`,
         });
     } catch (err) {
         console.error("[PUT /api/nurse/accounts]", err);

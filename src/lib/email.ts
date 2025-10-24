@@ -25,9 +25,6 @@ async function getTransporter() {
             user: EMAIL_USER,
             pass: EMAIL_PASS,
         },
-        tls: {
-            rejectUnauthorized: false,
-        },
         maxConnections: 3,
         maxMessages: 100,
     });
