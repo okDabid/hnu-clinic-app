@@ -7,6 +7,7 @@ import {
     Gender,
     BloodType,
     Department,
+    YearLevel,
     Role,
     AccountStatus,
 } from "@prisma/client";
@@ -39,6 +40,49 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_POS: "O+",
     O_NEG: "O-",
 };
+
+const yearLevelMap: Record<string, YearLevel> = {
+    "1st Year": YearLevel.FIRST_YEAR,
+    "2nd Year": YearLevel.SECOND_YEAR,
+    "3rd Year": YearLevel.THIRD_YEAR,
+    "4th Year": YearLevel.FOURTH_YEAR,
+    "5th Year": YearLevel.FIFTH_YEAR,
+    "Kindergarten": YearLevel.KINDERGARTEN,
+    "Kindergarten 1": YearLevel.KINDERGARTEN,
+    "Kindergarten 2": YearLevel.KINDERGARTEN,
+    "Elementary": YearLevel.ELEMENTARY,
+    "Grade 1": YearLevel.ELEMENTARY,
+    "Grade 2": YearLevel.ELEMENTARY,
+    "Grade 3": YearLevel.ELEMENTARY,
+    "Grade 4": YearLevel.ELEMENTARY,
+    "Grade 5": YearLevel.ELEMENTARY,
+    "Grade 6": YearLevel.ELEMENTARY,
+    "Junior High School": YearLevel.JUNIOR_HIGH,
+    "Grade 7": YearLevel.JUNIOR_HIGH,
+    "Grade 8": YearLevel.JUNIOR_HIGH,
+    "Grade 9": YearLevel.JUNIOR_HIGH,
+    "Grade 10": YearLevel.JUNIOR_HIGH,
+    "Senior High School": YearLevel.SENIOR_HIGH,
+    "Grade 11": YearLevel.SENIOR_HIGH,
+    "Grade 12": YearLevel.SENIOR_HIGH,
+    FIRST_YEAR: YearLevel.FIRST_YEAR,
+    SECOND_YEAR: YearLevel.SECOND_YEAR,
+    THIRD_YEAR: YearLevel.THIRD_YEAR,
+    FOURTH_YEAR: YearLevel.FOURTH_YEAR,
+    FIFTH_YEAR: YearLevel.FIFTH_YEAR,
+    KINDERGARTEN: YearLevel.KINDERGARTEN,
+    ELEMENTARY: YearLevel.ELEMENTARY,
+    JUNIOR_HIGH: YearLevel.JUNIOR_HIGH,
+    SENIOR_HIGH: YearLevel.SENIOR_HIGH,
+};
+
+function mapYearLevel(value: unknown): YearLevel | null {
+    if (typeof value !== "string") {
+        return null;
+    }
+    const trimmed = value.trim();
+    return yearLevelMap[trimmed] ?? null;
+}
 
 // ---------------- UNIQUE ID HELPERS ----------------
 type TransactionClient = Prisma.TransactionClient;
@@ -261,7 +305,7 @@ export async function POST(req: Request) {
                 ? (departmentRaw as Department)
                 : null;
         const program = getOptional(payload.program);
-        const yearLevel = getOptional(payload.year_level);
+        const yearLevel = mapYearLevel(payload.year_level);
 
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
