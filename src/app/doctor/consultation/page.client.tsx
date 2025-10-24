@@ -423,37 +423,58 @@ export function DoctorConsultationPageClient({
     const loadSlots = useCallback(async () => {
         try {
             setLoading(true);
-            const aggregatedSlots: Availability[] = [];
-            let combinedTotal = 0;
-            let page = 1;
-            let totalPages = 1;
 
-            while (page <= totalPages) {
-                const res = await fetch(`/api/doctor/consultation?page=${page}&pageSize=100`, {
-                    cache: "no-store",
+            const firstResponse = await fetch(`/api/doctor/consultation?page=1&pageSize=100`, {
+                cache: "no-store",
+            });
+            const firstData: SlotsResponse = await firstResponse.json();
+
+            if (!firstResponse.ok || firstData.error) {
+                toast.error(firstData.error ?? "Failed to load consultation slots");
+                startTransition(() => {
+                    setSlots([]);
+                    setTotalSlots(0);
+                    setSlotsLoaded(true);
                 });
-                const data: SlotsResponse = await res.json();
+                return;
+            }
 
-                if (data.error) {
-                    toast.error(data.error);
-                    startTransition(() => {
-                        setSlots([]);
-                        setTotalSlots(0);
-                        setSlotsLoaded(true);
-                    });
-                    return;
+            const normalizedFirst = normalizeConsultationSlots(firstData, 1);
+            const aggregatedSlots: Availability[] = [...normalizedFirst.slots];
+            let combinedTotal = normalizedFirst.total;
+
+            const remainingPages = normalizedFirst.totalPages > 1
+                ? Array.from({ length: normalizedFirst.totalPages - 1 }, (_, index) => index + 2)
+                : [];
+
+            if (remainingPages.length > 0) {
+                const remainingResults = await Promise.allSettled(
+                    remainingPages.map((page) =>
+                        fetch(`/api/doctor/consultation?page=${page}&pageSize=100`, {
+                            cache: "no-store",
+                        }).then(async (response) => {
+                            const pageData: SlotsResponse = await response.json();
+                            if (!response.ok || pageData.error) {
+                                throw new Error(pageData.error ?? `Failed to load page ${page}`);
+                            }
+                            return pageData;
+                        })
+                    )
+                );
+
+                for (const result of remainingResults) {
+                    if (result.status === "fulfilled") {
+                        const normalized = normalizeConsultationSlots(result.value, 1);
+                        aggregatedSlots.push(...normalized.slots);
+                        combinedTotal = Math.max(combinedTotal, normalized.total);
+                    } else {
+                        const message =
+                            result.reason instanceof Error
+                                ? result.reason.message
+                                : "Failed to load consultation slots";
+                        toast.error(message);
+                    }
                 }
-
-                const normalized = normalizeConsultationSlots(data, page);
-                aggregatedSlots.push(...normalized.slots);
-                combinedTotal = normalized.total;
-                totalPages = normalized.totalPages;
-
-                if (!Array.isArray(data.data) || data.data.length === 0) {
-                    break;
-                }
-
-                page += 1;
             }
 
             const nextTotal = combinedTotal > 0 ? combinedTotal : aggregatedSlots.length;
