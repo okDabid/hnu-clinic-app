@@ -19,6 +19,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -114,6 +119,9 @@ export function DoctorConsultationPageClient({
     });
     const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [calendarExpanded, setCalendarExpanded] = useState(
+        () => initialSlots.slots.length > 0
+    );
     const [, startTransition] = useTransition();
 
     const [calendarCache, setCalendarCache] = useState<Record<string, Availability[]>>({});
@@ -277,33 +285,111 @@ export function DoctorConsultationPageClient({
                         props.className,
                         "transition-colors",
                         onLeave
-                            ? "data-[selected-single=true]:bg-amber-500 data-[selected-single=true]:text-white data-[selected-single=true]:hover:bg-amber-600 data-[selected=false]:border data-[selected=false]:border-amber-200 data-[selected=false]:bg-amber-50 data-[selected=false]:text-amber-800 hover:data-[selected=false]:bg-amber-100"
-                            : [
-                                  "data-[selected-single=true]:bg-emerald-700 data-[selected-single=true]:text-white data-[selected-single=true]:hover:bg-emerald-700",
-                                  activeCount > 0
-                                      ? "data-[selected=false]:border data-[selected=false]:border-green-200 data-[selected=false]:bg-emerald-50 data-[selected=false]:text-green-700 hover:data-[selected=false]:bg-emerald-100"
-                                      : "hover:data-[selected=false]:bg-muted",
-                              ]
+                            ? "data-[selected-single=true]:bg-amber-500 data-[selected-single=true]:text-white data-[selected-single=true]:hover:bg-amber-600"
+                            : "data-[selected-single=true]:bg-emerald-700 data-[selected-single=true]:text-white data-[selected-single=true]:hover:bg-emerald-700"
                     )}
+                    title={
+                        onLeave
+                            ? "On leave"
+                            : activeCount > 0
+                              ? `${activeCount} slot${activeCount === 1 ? "" : "s"}`
+                              : "No duty hours"
+                    }
                 >
                     <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-                        <span className="text-sm font-semibold leading-none sm:text-base">{props.children}</span>
-                        {onLeave ? (
-                            <span className="rounded-full bg-amber-100 px-2 text-[0.625rem] font-semibold leading-5 text-amber-800">
-                                On leave
-                            </span>
-                        ) : activeCount > 0 ? (
-                            <span className="rounded-full bg-green-100 px-2 text-[0.625rem] font-semibold leading-5 text-green-700">
-                                {activeCount} slot{activeCount === 1 ? "" : "s"}
-                            </span>
-                        ) : (
-                            <span className="text-[0.625rem] text-muted-foreground">&nbsp;</span>
-                        )}
+                        <span className="text-sm font-semibold leading-none sm:text-base">
+                            {props.children}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            {activeCount > 0 ? (
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                            ) : null}
+                            {onLeave ? (
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                            ) : null}
+                        </div>
                     </div>
                 </CalendarDayButton>
             );
         },
         [displayedMonthSlotsByDate]
+    );
+
+    const renderSlotCard = (slot: Availability, context: "card" | "inline") => (
+        <div
+            key={slot.availability_id}
+            className={cn(
+                "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between",
+                slot.is_on_leave
+                    ? context === "inline"
+                        ? "border-amber-200 bg-amber-50/80 text-amber-900"
+                        : "border-amber-200 bg-amber-50/70 text-amber-900"
+                    : context === "inline"
+                        ? "border-green-100/80 bg-emerald-50/70 text-slate-700"
+                        : "border-green-100/80 bg-emerald-50/40 text-slate-700",
+                context === "inline" && "shadow-sm"
+            )}
+        >
+            <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                    <p
+                        className={cn(
+                            "text-lg font-semibold",
+                            slot.is_on_leave ? "text-amber-800" : "text-green-700"
+                        )}
+                    >
+                        {formatTimeRange(slot.available_timestart, slot.available_timeend)}
+                    </p>
+                    {slot.is_on_leave ? (
+                        <Badge
+                            variant="outline"
+                            className="border-amber-300 bg-amber-100 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-800"
+                        >
+                            On leave
+                        </Badge>
+                    ) : null}
+                </div>
+                <p
+                    className={cn(
+                        "text-sm",
+                        slot.is_on_leave ? "text-amber-700/90" : "text-muted-foreground"
+                    )}
+                >
+                    {slot.clinic.clinic_name}
+                </p>
+                {slot.is_on_leave ? (
+                    <p className="text-xs text-amber-700">
+                        Patients cannot book appointments for this day until you restore availability.
+                    </p>
+                ) : null}
+            </div>
+            <Button
+                size="sm"
+                variant="outline"
+                className={cn(
+                    "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
+                    slot.is_on_leave &&
+                        "border-amber-300 text-amber-800 hover:bg-amber-100/80",
+                    context === "inline" && "bg-white/90"
+                )}
+                onClick={() => {
+                    const slotDate = toManilaDateString(slot.available_date);
+                    setSelectedDate(slotDate);
+                    setCalendarExpanded(true);
+                    setEditingSlot(slot);
+                    setFormData({
+                        clinic_id: slot.clinic.clinic_id,
+                        available_date: slotDate,
+                        available_timestart: toManilaTimeString(slot.available_timestart),
+                        available_timeend: toManilaTimeString(slot.available_timeend),
+                        is_on_leave: slot.is_on_leave,
+                    });
+                    setDialogOpen(true);
+                }}
+            >
+                <Pencil className="h-4 w-4" /> {slot.is_on_leave ? "Update" : "Edit"}
+            </Button>
+        </div>
     );
     const loadSlots = useCallback(async () => {
         try {
@@ -410,6 +496,7 @@ export function DoctorConsultationPageClient({
         const now = new Date();
         const isoToday = formatManilaISODate(now);
         setSelectedDate(isoToday);
+        setCalendarExpanded(true);
         const next = toCalendarDate(isoToday);
         if (next) {
             setCalendarMonth(next);
@@ -454,6 +541,7 @@ export function DoctorConsultationPageClient({
         if (!selectionExists) {
             const firstSlotDate = toManilaDateString(slots[0].available_date);
             setSelectedDate(firstSlotDate);
+            setCalendarExpanded(true);
         }
     }, [calendarCache, slots, selectedDate]);
 
@@ -788,6 +876,7 @@ export function DoctorConsultationPageClient({
                                                             if (date) {
                                                                 const next = formatManilaISODate(date);
                                                                 setSelectedDate(next);
+                                                                setCalendarExpanded(true);
                                                             }
                                                         }}
                                                         month={calendarMonth}
@@ -798,6 +887,64 @@ export function DoctorConsultationPageClient({
                                                     />
                                                 </div>
                                             </div>
+                                            <Collapsible
+                                                open={calendarExpanded}
+                                                onOpenChange={setCalendarExpanded}
+                                            >
+                                                <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-green-100/80 bg-white/80 p-4 shadow-inner sm:flex-row sm:items-center sm:justify-between">
+                                                    <div className="space-y-1">
+                                                        <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                            {calendarExpanded ? "Selected day" : "Day details"}
+                                                        </p>
+                                                        <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
+                                                            {selectedDateLabel}
+                                                        </h3>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            {selectedDateSummary}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex flex-col items-start gap-2 sm:items-end">
+                                                        {selectedDateSlots.length > 0 ? (
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                                    {selectedDayCounts.active} active
+                                                                </Badge>
+                                                                {selectedDayCounts.onLeave > 0 ? (
+                                                                    <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
+                                                                        {selectedDayCounts.onLeave} on leave
+                                                                    </Badge>
+                                                                ) : null}
+                                                            </div>
+                                                        ) : null}
+                                                        <CollapsibleTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="rounded-full text-green-700 hover:bg-emerald-100"
+                                                            >
+                                                                {calendarExpanded ? "Collapse" : "View schedule"}
+                                                            </Button>
+                                                        </CollapsibleTrigger>
+                                                    </div>
+                                                </div>
+                                                <CollapsibleContent className="grid data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr] transition-[grid-template-rows] duration-300">
+                                                    <div className="mt-3 overflow-hidden">
+                                                        {selectedDateSlots.length > 0 ? (
+                                                            <div className="space-y-3">
+                                                                {selectedDateSlots.map((slot) => renderSlotCard(slot, "inline"))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
+                                                                {totalSlots === 0 ? (
+                                                                    <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
+                                                                ) : (
+                                                                    <>No duty hours plotted for {selectedDateLabel}. Choose another day or edit existing hours.</>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </CollapsibleContent>
+                                            </Collapsible>
                                             <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground sm:gap-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
@@ -842,86 +989,9 @@ export function DoctorConsultationPageClient({
                                             </div>
                                             <div className="mt-6 space-y-3">
                                                 {selectedDateSlots.length > 0 ? (
-                                                    selectedDateSlots.map((slot) => (
-                                                        <div
-                                                            key={slot.availability_id}
-                                                            className={cn(
-                                                                "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between",
-                                                                slot.is_on_leave
-                                                                    ? "border-amber-200 bg-amber-50/70 text-amber-900"
-                                                                    : "border-green-100/80 bg-emerald-50/40 text-slate-700"
-                                                            )}
-                                                        >
-                                                            <div className="space-y-1">
-                                                                <div className="flex flex-wrap items-center gap-2">
-                                                                    <p
-                                                                        className={cn(
-                                                                            "text-lg font-semibold",
-                                                                            slot.is_on_leave
-                                                                                ? "text-amber-800"
-                                                                                : "text-green-700"
-                                                                        )}
-                                                                    >
-                                                                        {formatTimeRange(
-                                                                            slot.available_timestart,
-                                                                            slot.available_timeend
-                                                                        )}
-                                                                    </p>
-                                                                    {slot.is_on_leave ? (
-                                                                        <Badge
-                                                                            variant="outline"
-                                                                            className="border-amber-300 bg-amber-100 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-800"
-                                                                        >
-                                                                            On leave
-                                                                        </Badge>
-                                                                    ) : null}
-                                                                </div>
-                                                                <p
-                                                                    className={cn(
-                                                                        "text-sm",
-                                                                        slot.is_on_leave
-                                                                            ? "text-amber-700/90"
-                                                                            : "text-muted-foreground"
-                                                                    )}
-                                                                >
-                                                                    {slot.clinic.clinic_name}
-                                                                </p>
-                                                                {slot.is_on_leave ? (
-                                                                    <p className="text-xs text-amber-700">
-                                                                        Patients cannot book appointments for this day until you restore availability.
-                                                                    </p>
-                                                                ) : null}
-                                                            </div>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className={cn(
-                                                                    "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
-                                                                    slot.is_on_leave &&
-                                                                        "border-amber-300 text-amber-800 hover:bg-amber-100/80"
-                                                                )}
-                                                                onClick={() => {
-                                                                    const slotDate = toManilaDateString(slot.available_date);
-                                                                    setSelectedDate(slotDate);
-                                                                    setEditingSlot(slot);
-                                                                    setFormData({
-                                                                        clinic_id: slot.clinic.clinic_id,
-                                                                        available_date: slotDate,
-                                                                        available_timestart: toManilaTimeString(
-                                                                            slot.available_timestart
-                                                                        ),
-                                                                        available_timeend: toManilaTimeString(
-                                                                            slot.available_timeend
-                                                                        ),
-                                                                        is_on_leave: slot.is_on_leave,
-                                                                    });
-                                                                    setDialogOpen(true);
-                                                                }}
-                                                            >
-                                                                <Pencil className="h-4 w-4" /> {slot.is_on_leave ? "Update" : "Edit"}
-                                                            </Button>
-                                                        </div>
-                                                    ))
+                                                    selectedDateSlots.map((slot) =>
+                                                        renderSlotCard(slot, "card")
+                                                    )
                                                 ) : (
                                                     <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/30 p-6 text-sm text-muted-foreground">
                                                         {totalSlots === 0 ? (
