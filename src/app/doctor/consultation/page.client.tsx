@@ -40,7 +40,6 @@ import { cn } from "@/lib/utils";
 
 import DoctorConsultationLoading from "./loading";
 import {
-    DEFAULT_PAGE_SIZE,
     normalizeConsultationSlots,
     type Availability,
     type CalendarSlotsResponse,
@@ -97,10 +96,7 @@ export function DoctorConsultationPageClient({
     const [clinics, setClinics] = useState<Clinic[]>(() => [...initialClinics]);
     const [slotsLoaded, setSlotsLoaded] = useState(initialSlotsLoaded);
     const [clinicsLoaded, setClinicsLoaded] = useState(initialClinicsLoaded);
-    const [currentPage, setCurrentPage] = useState(initialSlots.page);
     const [totalSlots, setTotalSlots] = useState(initialSlots.total);
-    const [totalPages, setTotalPages] = useState(initialSlots.totalPages);
-    const [pageSize, setPageSize] = useState(initialSlots.pageSize || DEFAULT_PAGE_SIZE);
     const initialSelectedDate =
         initialSlots.slots.length > 0
             ? toManilaDateString(initialSlots.slots[0].available_date)
@@ -118,7 +114,7 @@ export function DoctorConsultationPageClient({
     });
     const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [isTransitioning, startTransition] = useTransition();
+    const [, startTransition] = useTransition();
 
     const [calendarCache, setCalendarCache] = useState<Record<string, Availability[]>>({});
     const calendarCacheRef = useRef<Record<string, Availability[]>>({});
@@ -267,9 +263,6 @@ export function DoctorConsultationPageClient({
         return "No duty hours plotted for this day yet.";
     }, [selectedDateSlots, selectedDayCounts, selectedMonthLoading, totalSlots]);
 
-    const canGoPrevious = currentPage > 1;
-    const canGoNext = currentPage < totalPages;
-
     const DayButtonWithSlots = useCallback(
         (props: ComponentProps<typeof CalendarDayButton>) => {
             const dateKey = formatManilaISODate(props.day.date);
@@ -284,9 +277,9 @@ export function DoctorConsultationPageClient({
                         props.className,
                         "transition-colors",
                         onLeave
-                            ? "data-[selected=true]:bg-amber-500 data-[selected=true]:text-white data-[selected=true]:hover:bg-amber-600 data-[selected=false]:border data-[selected=false]:border-amber-200 data-[selected=false]:bg-amber-50 data-[selected=false]:text-amber-800 hover:data-[selected=false]:bg-amber-100"
+                            ? "data-[selected-single=true]:bg-amber-500 data-[selected-single=true]:text-white data-[selected-single=true]:hover:bg-amber-600 data-[selected=false]:border data-[selected=false]:border-amber-200 data-[selected=false]:bg-amber-50 data-[selected=false]:text-amber-800 hover:data-[selected=false]:bg-amber-100"
                             : [
-                                  "data-[selected=true]:bg-green-600 data-[selected=true]:text-white data-[selected=true]:hover:bg-green-600",
+                                  "data-[selected-single=true]:bg-emerald-700 data-[selected-single=true]:text-white data-[selected-single=true]:hover:bg-emerald-700",
                                   activeCount > 0
                                       ? "data-[selected=false]:border data-[selected=false]:border-green-200 data-[selected=false]:bg-emerald-50 data-[selected=false]:text-green-700 hover:data-[selected=false]:bg-emerald-100"
                                       : "hover:data-[selected=false]:bg-muted",
@@ -294,7 +287,7 @@ export function DoctorConsultationPageClient({
                     )}
                 >
                     <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-                        <span className="text-base font-semibold leading-none">{props.children}</span>
+                        <span className="text-sm font-semibold leading-none sm:text-base">{props.children}</span>
                         {onLeave ? (
                             <span className="rounded-full bg-amber-100 px-2 text-[0.625rem] font-semibold leading-5 text-amber-800">
                                 On leave
@@ -312,46 +305,56 @@ export function DoctorConsultationPageClient({
         },
         [displayedMonthSlotsByDate]
     );
-    const loadSlots = useCallback(
-        async (targetPage: number) => {
-            try {
-                setLoading(true);
-                const res = await fetch(
-                    `/api/doctor/consultation?page=${targetPage}&pageSize=${pageSize}`,
-                    { cache: "no-store" }
-                );
+    const loadSlots = useCallback(async () => {
+        try {
+            setLoading(true);
+            const aggregatedSlots: Availability[] = [];
+            let combinedTotal = 0;
+            let page = 1;
+            let totalPages = 1;
+
+            while (page <= totalPages) {
+                const res = await fetch(`/api/doctor/consultation?page=${page}&pageSize=100`, {
+                    cache: "no-store",
+                });
                 const data: SlotsResponse = await res.json();
+
                 if (data.error) {
                     toast.error(data.error);
                     startTransition(() => {
                         setSlots([]);
                         setTotalSlots(0);
-                        setTotalPages(1);
-                        setCurrentPage(1);
-                        setPageSize(DEFAULT_PAGE_SIZE);
+                        setSlotsLoaded(true);
                     });
                     return;
                 }
 
-                const normalized = normalizeConsultationSlots(data, targetPage);
+                const normalized = normalizeConsultationSlots(data, page);
+                aggregatedSlots.push(...normalized.slots);
+                combinedTotal = normalized.total;
+                totalPages = normalized.totalPages;
 
-                startTransition(() => {
-                    setSlots([...normalized.slots]);
-                    setTotalSlots(normalized.total);
-                    setTotalPages(normalized.totalPages);
-                    setCurrentPage(normalized.page);
-                    setPageSize(normalized.pageSize);
-                    setSlotsLoaded(true);
-                });
-            } catch {
-                toast.error("Failed to load consultation slots");
-            } finally {
-                setLoading(false);
-                setSlotsLoaded(true);
+                if (!Array.isArray(data.data) || data.data.length === 0) {
+                    break;
+                }
+
+                page += 1;
             }
-        },
-        [pageSize, startTransition]
-    );
+
+            const nextTotal = combinedTotal > 0 ? combinedTotal : aggregatedSlots.length;
+
+            startTransition(() => {
+                setSlots([...aggregatedSlots]);
+                setTotalSlots(nextTotal);
+                setSlotsLoaded(true);
+            });
+        } catch {
+            toast.error("Failed to load consultation slots");
+        } finally {
+            setLoading(false);
+            setSlotsLoaded(true);
+        }
+    }, [startTransition]);
 
     const fetchCalendarMonth = useCallback(
         async (date: Date, options: { force?: boolean } = {}) => {
@@ -415,7 +418,7 @@ export function DoctorConsultationPageClient({
 
     useEffect(() => {
         if (!slotsLoaded) {
-            void loadSlots(1);
+            void loadSlots();
         }
     }, [slotsLoaded, loadSlots]);
 
@@ -518,10 +521,10 @@ export function DoctorConsultationPageClient({
             } else {
                 if (isEditing) {
                     toast.success("Schedule updated!");
-                    await loadSlots(currentPage);
+                    await loadSlots();
                 } else {
                     toast.success(data.message ?? "Duty hours generated!");
-                    await loadSlots(1);
+                    await loadSlots();
                 }
 
                 if (isEditing) {
@@ -574,11 +577,11 @@ export function DoctorConsultationPageClient({
                                     ? "No active slots yet. Generate duty hours to publish a new schedule."
                                     : `Your calendar tracks ${totalSlots} availability ${
                                           totalSlots === 1 ? "entry" : "entries"
-                                      }. This page is showing ${slots.length} entr${
+                                      }. This view is showing ${slots.length} entr${
                                           slots.length === 1 ? "y" : "ies"
                                       } across ${uniqueClinicCount} clinic${
                                           uniqueClinicCount === 1 ? "" : "s"
-                                      } (page ${currentPage} of ${totalPages}).`}
+                                      }.`}
                             </p>
                         </CardHeader>
                     </Card>
@@ -748,8 +751,8 @@ export function DoctorConsultationPageClient({
                             ) : (
                                 <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
                                     <div className="space-y-4">
-                                        <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm">
-                                            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+                                        <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm sm:p-6">
+                                            <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                                 <div>
                                                     <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
                                                         Monthly snapshot
@@ -762,7 +765,7 @@ export function DoctorConsultationPageClient({
                                                             : "No duty hours plotted this month yet."}
                                                     </p>
                                                 </div>
-                                                <div className="flex flex-wrap items-center gap-2">
+                                                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                                                     <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
                                                         {displayedMonthStats.active} active slot{displayedMonthStats.active === 1 ? "" : "s"}
                                                     </Badge>
@@ -771,29 +774,31 @@ export function DoctorConsultationPageClient({
                                                     </Badge>
                                                 </div>
                                             </div>
-                                            <div className="relative mt-4 rounded-2xl border border-green-100/60 bg-white/70 p-3 shadow-inner">
+                                            <div className="relative mt-4 rounded-2xl border border-green-100/60 bg-white/70 shadow-inner">
                                                 {displayedMonthLoading ? (
                                                     <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
                                                         <Loader2 className="h-5 w-5 animate-spin text-green-600" />
                                                     </div>
                                                 ) : null}
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={calendarSelectedDate}
-                                                    onSelect={(date) => {
-                                                        if (date) {
-                                                            const next = formatManilaISODate(date);
-                                                            setSelectedDate(next);
-                                                        }
-                                                    }}
-                                                    month={calendarMonth}
-                                                    onMonthChange={setCalendarMonth}
-                                                    components={{ DayButton: DayButtonWithSlots }}
-                                                    modifiers={{ hasSlots: highlightedDates }}
-                                                    className="mx-auto [--cell-size:3.25rem]"
-                                                />
+                                                <div className="overflow-x-auto px-3 py-3 sm:px-4 sm:py-4">
+                                                    <Calendar
+                                                        mode="single"
+                                                        selected={calendarSelectedDate}
+                                                        onSelect={(date) => {
+                                                            if (date) {
+                                                                const next = formatManilaISODate(date);
+                                                                setSelectedDate(next);
+                                                            }
+                                                        }}
+                                                        month={calendarMonth}
+                                                        onMonthChange={setCalendarMonth}
+                                                        components={{ DayButton: DayButtonWithSlots }}
+                                                        modifiers={{ hasSlots: highlightedDates }}
+                                                        className="mx-auto min-w-[18rem] sm:min-w-0 [--cell-size:2.35rem] sm:[--cell-size:2.75rem] lg:[--cell-size:3.25rem]"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                                            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground sm:gap-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                                                     <span>Active slots</span>
@@ -807,23 +812,23 @@ export function DoctorConsultationPageClient({
                                                     <span>No duty hours</span>
                                                 </div>
                                             </div>
-                                            <p className="mt-2 text-sm text-muted-foreground">
+                                            <p className="mt-3 text-sm text-muted-foreground">
                                                 Select a day to review or edit consultation duty hours.
                                             </p>
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                        <div className="rounded-3xl border border-green-100/70 bg-white p-6 shadow-sm">
-                                            <div className="flex flex-col gap-2">
+                                        <div className="rounded-3xl border border-green-100/70 bg-white p-5 shadow-sm sm:p-6">
+                                            <div className="flex flex-col gap-3">
                                                 <p className="text-sm font-semibold uppercase tracking-wide text-green-600">
                                                     Selected day
                                                 </p>
-                                                <h3 className="text-2xl font-semibold text-slate-900">
+                                                <h3 className="text-xl font-semibold text-slate-900 sm:text-2xl">
                                                     {selectedDateLabel}
                                                 </h3>
-                                                <p className="text-sm text-muted-foreground">{selectedDateSummary}</p>
+                                                <p className="text-sm leading-6 text-muted-foreground">{selectedDateSummary}</p>
                                                 {selectedDateSlots.length > 0 ? (
-                                                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                    <div className="mt-3 flex flex-wrap items-center gap-2">
                                                         <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
                                                             {selectedDayCounts.active} active
                                                         </Badge>
@@ -891,7 +896,7 @@ export function DoctorConsultationPageClient({
                                                                 size="sm"
                                                                 variant="outline"
                                                                 className={cn(
-                                                                    "gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70",
+                                                                    "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
                                                                     slot.is_on_leave &&
                                                                         "border-amber-300 text-amber-800 hover:bg-amber-100/80"
                                                                 )}
@@ -926,31 +931,6 @@ export function DoctorConsultationPageClient({
                                                         )}
                                                     </div>
                                                 )}
-                                            </div>
-                                        </div>
-                                        <div className="rounded-3xl border border-green-100/70 bg-white p-4 shadow-sm">
-                                            <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                                <p>
-                                                    Showing {slots.length} slot{slots.length === 1 ? "" : "s"} on this page across {uniqueClinicCount} clinic{uniqueClinicCount === 1 ? "" : "s"}. Page {currentPage} of {totalPages}.
-                                                </p>
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
-                                                        disabled={loading || isTransitioning || !canGoPrevious}
-                                                        onClick={() => void loadSlots(currentPage - 1)}
-                                                    >
-                                                        Previous
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
-                                                        disabled={loading || isTransitioning || !canGoNext}
-                                                        onClick={() => void loadSlots(currentPage + 1)}
-                                                    >
-                                                        Next
-                                                    </Button>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
