@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    Fragment,
     useCallback,
     useEffect,
     useMemo,
@@ -18,11 +19,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import {
     Dialog,
     DialogContent,
@@ -54,6 +50,27 @@ import {
 } from "./types";
 
 const MANILA_TIME_SUFFIX = "+08:00";
+
+function formatConsultationDayLabel(value: string): string | null {
+    const normalized = toCalendarDate(toManilaDateString(value));
+    if (!normalized) return null;
+
+    return normalized.toLocaleDateString("en-PH", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        timeZone: "Asia/Manila",
+    });
+}
+
+function getSlotDate(
+    slot: Availability,
+    timeKey: "available_timestart" | "available_timeend" = "available_timestart"
+): Date {
+    const datePart = toManilaDateString(slot.available_date);
+    const timePart = slot[timeKey];
+    return new Date(`${datePart}T${timePart}${MANILA_TIME_SUFFIX}`);
+}
 
 function toCalendarDate(value: string | null | undefined) {
     if (!value) return null;
@@ -119,9 +136,6 @@ export function DoctorConsultationPageClient({
     });
     const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [calendarExpanded, setCalendarExpanded] = useState(
-        () => initialSlots.slots.length > 0
-    );
     const [, startTransition] = useTransition();
 
     const [calendarCache, setCalendarCache] = useState<Record<string, Availability[]>>({});
@@ -195,6 +209,17 @@ export function DoctorConsultationPageClient({
         }
         return { active, onLeave };
     }, [selectedDateSlots]);
+
+    const upcomingSlots = useMemo(() => {
+        if (slots.length === 0) return [];
+
+        const now = new Date();
+        const sorted = [...slots].sort((a, b) => getSlotDate(a).getTime() - getSlotDate(b).getTime());
+
+        return sorted
+            .filter((slot) => getSlotDate(slot).getTime() >= now.getTime())
+            .slice(0, 6);
+    }, [slots]);
 
     const selectedMonthLoading = selectedDateMonthKey
         ? calendarLoadingKeys[selectedDateMonthKey] ?? false
@@ -314,82 +339,99 @@ export function DoctorConsultationPageClient({
         [displayedMonthSlotsByDate]
     );
 
-    const renderSlotCard = (slot: Availability, context: "card" | "inline") => (
-        <div
-            key={slot.availability_id}
-            className={cn(
-                "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between",
-                slot.is_on_leave
-                    ? context === "inline"
-                        ? "border-amber-200 bg-amber-50/80 text-amber-900"
-                        : "border-amber-200 bg-amber-50/70 text-amber-900"
-                    : context === "inline"
-                        ? "border-green-100/80 bg-emerald-50/70 text-slate-700"
-                        : "border-green-100/80 bg-emerald-50/40 text-slate-700",
-                context === "inline" && "shadow-sm"
-            )}
-        >
-            <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
+    const renderSlotCard = (
+        slot: Availability,
+        context: "card" | "inline",
+        options: { showDateLabel?: boolean } = {}
+    ) => {
+        const { showDateLabel = false } = options;
+        const formattedDateLabel = showDateLabel ? formatConsultationDayLabel(slot.available_date) : null;
+
+        return (
+            <div
+                className={cn(
+                    "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between",
+                    slot.is_on_leave
+                        ? context === "inline"
+                            ? "border-amber-200 bg-amber-50/80 text-amber-900"
+                            : "border-amber-200 bg-amber-50/70 text-amber-900"
+                        : context === "inline"
+                            ? "border-green-100/80 bg-emerald-50/70 text-slate-700"
+                            : "border-green-100/80 bg-emerald-50/40 text-slate-700",
+                    context === "inline" && "shadow-sm"
+                )}
+            >
+                <div className={cn("space-y-1", showDateLabel && "space-y-2")}> 
+                    {showDateLabel && formattedDateLabel ? (
+                        <p
+                            className={cn(
+                                "text-xs font-semibold uppercase tracking-wide",
+                                slot.is_on_leave ? "text-amber-700" : "text-green-600"
+                            )}
+                        >
+                            {formattedDateLabel}
+                        </p>
+                    ) : null}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <p
+                            className={cn(
+                                "text-lg font-semibold",
+                                slot.is_on_leave ? "text-amber-800" : "text-green-700"
+                            )}
+                        >
+                            {formatTimeRange(slot.available_timestart, slot.available_timeend)}
+                        </p>
+                        {slot.is_on_leave ? (
+                            <Badge
+                                variant="outline"
+                                className="border-amber-300 bg-amber-100 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-800"
+                            >
+                                On leave
+                            </Badge>
+                        ) : null}
+                    </div>
                     <p
                         className={cn(
-                            "text-lg font-semibold",
-                            slot.is_on_leave ? "text-amber-800" : "text-green-700"
+                            "text-sm",
+                            slot.is_on_leave ? "text-amber-700/90" : "text-muted-foreground"
                         )}
                     >
-                        {formatTimeRange(slot.available_timestart, slot.available_timeend)}
+                        {slot.clinic.clinic_name}
                     </p>
                     {slot.is_on_leave ? (
-                        <Badge
-                            variant="outline"
-                            className="border-amber-300 bg-amber-100 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-800"
-                        >
-                            On leave
-                        </Badge>
+                        <p className="text-xs text-amber-700">
+                            Patients cannot book appointments for this day until you restore availability.
+                        </p>
                     ) : null}
                 </div>
-                <p
+                <Button
+                    size="sm"
+                    variant="outline"
                     className={cn(
-                        "text-sm",
-                        slot.is_on_leave ? "text-amber-700/90" : "text-muted-foreground"
+                        "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
+                        slot.is_on_leave &&
+                            "border-amber-300 text-amber-800 hover:bg-amber-100/80",
+                        context === "inline" && "bg-white/90"
                     )}
+                    onClick={() => {
+                        const slotDate = toManilaDateString(slot.available_date);
+                        setSelectedDate(slotDate);
+                        setEditingSlot(slot);
+                        setFormData({
+                            clinic_id: slot.clinic.clinic_id,
+                            available_date: slotDate,
+                            available_timestart: toManilaTimeString(slot.available_timestart),
+                            available_timeend: toManilaTimeString(slot.available_timeend),
+                            is_on_leave: slot.is_on_leave,
+                        });
+                        setDialogOpen(true);
+                    }}
                 >
-                    {slot.clinic.clinic_name}
-                </p>
-                {slot.is_on_leave ? (
-                    <p className="text-xs text-amber-700">
-                        Patients cannot book appointments for this day until you restore availability.
-                    </p>
-                ) : null}
+                    <Pencil className="h-4 w-4" /> {slot.is_on_leave ? "Update" : "Edit"}
+                </Button>
             </div>
-            <Button
-                size="sm"
-                variant="outline"
-                className={cn(
-                    "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
-                    slot.is_on_leave &&
-                    "border-amber-300 text-amber-800 hover:bg-amber-100/80",
-                    context === "inline" && "bg-white/90"
-                )}
-                onClick={() => {
-                    const slotDate = toManilaDateString(slot.available_date);
-                    setSelectedDate(slotDate);
-                    setCalendarExpanded(true);
-                    setEditingSlot(slot);
-                    setFormData({
-                        clinic_id: slot.clinic.clinic_id,
-                        available_date: slotDate,
-                        available_timestart: toManilaTimeString(slot.available_timestart),
-                        available_timeend: toManilaTimeString(slot.available_timeend),
-                        is_on_leave: slot.is_on_leave,
-                    });
-                    setDialogOpen(true);
-                }}
-            >
-                <Pencil className="h-4 w-4" /> {slot.is_on_leave ? "Update" : "Edit"}
-            </Button>
-        </div>
-    );
+        );
+    };
     const loadSlots = useCallback(async () => {
         try {
             setLoading(true);
@@ -495,7 +537,6 @@ export function DoctorConsultationPageClient({
         const now = new Date();
         const isoToday = formatManilaISODate(now);
         setSelectedDate(isoToday);
-        setCalendarExpanded(true);
         const next = toCalendarDate(isoToday);
         if (next) {
             setCalendarMonth(next);
@@ -833,7 +874,7 @@ export function DoctorConsultationPageClient({
                                     <Loader2 className="h-5 w-5 animate-spin" /> Loading slots...
                                 </div>
                             ) : (
-                                <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+                                <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] xl:grid-cols-[1.2fr_0.8fr]">
                                     <div className="space-y-4">
                                         <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm sm:p-6">
                                             <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -843,7 +884,7 @@ export function DoctorConsultationPageClient({
                                                     </p>
                                                     <p>
                                                         {displayedMonthStats.coveredDays > 0
-                                                            ? `${displayedMonthStats.coveredDays} day${displayedMonthStats.coveredDays === 1 ? "" : "s"
+                                                            ? `${displayedMonthStats.coveredDays} day${displayedMonthStats.coveredDays === 1 ? "" : "s"}
                                                             } plotted this month.`
                                                             : "No duty hours plotted this month yet."}
                                                     </p>
@@ -871,75 +912,16 @@ export function DoctorConsultationPageClient({
                                                             if (date) {
                                                                 const next = formatManilaISODate(date);
                                                                 setSelectedDate(next);
-                                                                setCalendarExpanded(true);
                                                             }
                                                         }}
                                                         month={calendarMonth}
                                                         onMonthChange={setCalendarMonth}
                                                         components={{ DayButton: DayButtonWithSlots }}
                                                         modifiers={{ hasSlots: highlightedDates }}
-                                                        className="mx-auto min-w-[18rem] sm:min-w-0 [--cell-size:2.35rem] sm:[--cell-size:2.75rem] lg:[--cell-size:3.25rem]"
+                                                        className="mx-auto w-full max-w-[20rem] [--cell-size:2.25rem] sm:[--cell-size:2.75rem] lg:[--cell-size:3.25rem]"
                                                     />
                                                 </div>
                                             </div>
-                                            <Collapsible
-                                                open={calendarExpanded}
-                                                onOpenChange={setCalendarExpanded}
-                                            >
-                                                <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-green-100/80 bg-white/80 p-4 shadow-inner sm:flex-row sm:items-center sm:justify-between">
-                                                    <div className="space-y-1">
-                                                        <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                                                            {calendarExpanded ? "Selected day" : "Day details"}
-                                                        </p>
-                                                        <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
-                                                            {selectedDateLabel}
-                                                        </h3>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {selectedDateSummary}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-2 sm:items-end">
-                                                        {selectedDateSlots.length > 0 ? (
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
-                                                                    {selectedDayCounts.active} active
-                                                                </Badge>
-                                                                {selectedDayCounts.onLeave > 0 ? (
-                                                                    <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
-                                                                        {selectedDayCounts.onLeave} on leave
-                                                                    </Badge>
-                                                                ) : null}
-                                                            </div>
-                                                        ) : null}
-                                                        <CollapsibleTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="rounded-full text-green-700 hover:bg-emerald-100"
-                                                            >
-                                                                {calendarExpanded ? "Collapse" : "View schedule"}
-                                                            </Button>
-                                                        </CollapsibleTrigger>
-                                                    </div>
-                                                </div>
-                                                <CollapsibleContent className="grid data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr] transition-[grid-template-rows] duration-300">
-                                                    <div className="mt-3 overflow-hidden">
-                                                        {selectedDateSlots.length > 0 ? (
-                                                            <div className="space-y-3">
-                                                                {selectedDateSlots.map((slot) => renderSlotCard(slot, "inline"))}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
-                                                                {totalSlots === 0 ? (
-                                                                    <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
-                                                                ) : (
-                                                                    <>No duty hours plotted for {selectedDateLabel}. Choose another day or edit existing hours.</>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </CollapsibleContent>
-                                            </Collapsible>
                                             <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground sm:gap-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
@@ -957,6 +939,84 @@ export function DoctorConsultationPageClient({
                                             <p className="mt-3 text-sm text-muted-foreground">
                                                 Select a day to review or edit consultation duty hours.
                                             </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <div className="rounded-3xl border border-green-100/80 bg-white/90 p-5 shadow-sm sm:p-6">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                                <div className="space-y-2">
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                        Selected day
+                                                    </p>
+                                                    <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
+                                                        {selectedDateLabel}
+                                                    </h3>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {selectedDateSummary}
+                                                    </p>
+                                                </div>
+                                                {selectedDateSlots.length > 0 ? (
+                                                    <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                                        <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                            {selectedDayCounts.active} active
+                                                        </Badge>
+                                                        {selectedDayCounts.onLeave > 0 ? (
+                                                            <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
+                                                                {selectedDayCounts.onLeave} on leave
+                                                            </Badge>
+                                                        ) : null}
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                            <div className="mt-4 space-y-3">
+                                                {selectedDateSlots.length > 0 ? (
+                                                    selectedDateSlots.map((slot) => (
+                                                        <Fragment key={slot.availability_id}>
+                                                            {renderSlotCard(slot, "inline")}
+                                                        </Fragment>
+                                                    ))
+                                                ) : (
+                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
+                                                        {totalSlots === 0 ? (
+                                                            <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
+                                                        ) : (
+                                                            <>No duty hours plotted for {selectedDateLabel}. Choose another day or edit existing hours.</>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-white via-green-50/80 to-emerald-50/70 p-5 shadow-sm sm:p-6">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                        Upcoming duty hours
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Stay ahead of the next confirmed consultation blocks.
+                                                    </p>
+                                                </div>
+                                                <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                    {upcomingSlots.length > 0
+                                                        ? `${upcomingSlots.length} upcoming`
+                                                        : "Nothing scheduled"}
+                                                </Badge>
+                                            </div>
+                                            <div className="mt-4 space-y-3">
+                                                {upcomingSlots.length > 0 ? (
+                                                    upcomingSlots.map((slot) => (
+                                                        <Fragment key={`upcoming-${slot.availability_id}`}>
+                                                            {renderSlotCard(slot, "inline", { showDateLabel: true })}
+                                                        </Fragment>
+                                                    ))
+                                                ) : (
+                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-white/85 p-5 text-sm text-muted-foreground">
+                                                        {totalSlots === 0
+                                                            ? "Once you generate duty hours, the next few slots will appear here."
+                                                            : "No upcoming duty hours after today. Add more availability to keep the calendar open."}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
