@@ -38,6 +38,7 @@ import { Switch } from "@/components/ui/switch";
 import {
     formatManilaISODate,
     formatTimeRange,
+    manilaNow,
     toManilaDateString,
     toManilaTimeString,
 } from "@/lib/time";
@@ -119,7 +120,7 @@ export function DoctorConsultationPageClient({
     });
     const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [calendarExpanded, setCalendarExpanded] = useState(
+    const [dayDetailsExpanded, setDayDetailsExpanded] = useState(
         () => initialSlots.slots.length > 0
     );
     const [, startTransition] = useTransition();
@@ -195,6 +196,36 @@ export function DoctorConsultationPageClient({
         }
         return { active, onLeave };
     }, [selectedDateSlots]);
+
+    const todayKey = useMemo(() => formatManilaISODate(manilaNow()), []);
+
+    const sortedSlots = useMemo(() => {
+        const slotsWithDateKeys = slots.map((slot) => ({
+            slot,
+            dateKey: toManilaDateString(slot.available_date),
+        }));
+
+        return slotsWithDateKeys
+            .sort((a, b) => {
+                const byDate = a.dateKey.localeCompare(b.dateKey);
+                if (byDate !== 0) {
+                    return byDate;
+                }
+                return a.slot.available_timestart.localeCompare(b.slot.available_timestart);
+            })
+            .map((item) => item.slot);
+    }, [slots]);
+
+    const upcomingLeaveSlots = useMemo(
+        () =>
+            sortedSlots
+                .filter(
+                    (slot) =>
+                        slot.is_on_leave && toManilaDateString(slot.available_date) >= todayKey
+                )
+                .slice(0, 4),
+        [sortedSlots, todayKey]
+    );
 
     const selectedMonthLoading = selectedDateMonthKey
         ? calendarLoadingKeys[selectedDateMonthKey] ?? false
@@ -374,7 +405,6 @@ export function DoctorConsultationPageClient({
                 onClick={() => {
                     const slotDate = toManilaDateString(slot.available_date);
                     setSelectedDate(slotDate);
-                    setCalendarExpanded(true);
                     setEditingSlot(slot);
                     setFormData({
                         clinic_id: slot.clinic.clinic_id,
@@ -491,17 +521,6 @@ export function DoctorConsultationPageClient({
         }
     }, []);
 
-    const handleGoToToday = useCallback(() => {
-        const now = new Date();
-        const isoToday = formatManilaISODate(now);
-        setSelectedDate(isoToday);
-        setCalendarExpanded(true);
-        const next = toCalendarDate(isoToday);
-        if (next) {
-            setCalendarMonth(next);
-        }
-    }, []);
-
     useEffect(() => {
         if (!slotsLoaded) {
             void loadSlots();
@@ -540,7 +559,6 @@ export function DoctorConsultationPageClient({
         if (!selectionExists) {
             const firstSlotDate = toManilaDateString(slots[0].available_date);
             setSelectedDate(firstSlotDate);
-            setCalendarExpanded(true);
         }
     }, [calendarCache, slots, selectedDate]);
 
@@ -680,13 +698,6 @@ export function DoctorConsultationPageClient({
                                 </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/80"
-                                    onClick={handleGoToToday}
-                                >
-                                    Jump to today
-                                </Button>
                                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button
@@ -833,136 +844,160 @@ export function DoctorConsultationPageClient({
                                     <Loader2 className="h-5 w-5 animate-spin" /> Loading slots...
                                 </div>
                             ) : (
-                                <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-                                    <div className="space-y-4">
-                                        <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm sm:p-6">
-                                            <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                                                <div>
-                                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                                                        Monthly snapshot
-                                                    </p>
-                                                    <p>
-                                                        {displayedMonthStats.coveredDays > 0
-                                                            ? `${displayedMonthStats.coveredDays} day${displayedMonthStats.coveredDays === 1 ? "" : "s"
-                                                            } plotted this month.`
-                                                            : "No duty hours plotted this month yet."}
-                                                    </p>
-                                                </div>
-                                                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                                                    <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
-                                                        {displayedMonthStats.active} active slot{displayedMonthStats.active === 1 ? "" : "s"}
-                                                    </Badge>
-                                                    <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
-                                                        {displayedMonthStats.onLeave} on leave
-                                                    </Badge>
-                                                </div>
-                                            </div>
-                                            <div className="relative mt-4 rounded-2xl border border-green-100/60 bg-white/70 shadow-inner">
-                                                {displayedMonthLoading ? (
-                                                    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
-                                                        <Loader2 className="h-5 w-5 animate-spin text-green-600" />
-                                                    </div>
-                                                ) : null}
-                                                <div className="overflow-x-auto px-3 py-3 sm:px-4 sm:py-4">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={calendarSelectedDate}
-                                                        onSelect={(date) => {
-                                                            if (date) {
-                                                                const next = formatManilaISODate(date);
-                                                                setSelectedDate(next);
-                                                                setCalendarExpanded(true);
-                                                            }
-                                                        }}
-                                                        month={calendarMonth}
-                                                        onMonthChange={setCalendarMonth}
-                                                        components={{ DayButton: DayButtonWithSlots }}
-                                                        modifiers={{ hasSlots: highlightedDates }}
-                                                        className="mx-auto min-w-[18rem] sm:min-w-0 [--cell-size:2.35rem] sm:[--cell-size:2.75rem] lg:[--cell-size:3.25rem]"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <Collapsible
-                                                open={calendarExpanded}
-                                                onOpenChange={setCalendarExpanded}
-                                            >
-                                                <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-green-100/80 bg-white/80 p-4 shadow-inner sm:flex-row sm:items-center sm:justify-between">
-                                                    <div className="space-y-1">
-                                                        <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                                                            {calendarExpanded ? "Selected day" : "Day details"}
-                                                        </p>
-                                                        <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
-                                                            {selectedDateLabel}
-                                                        </h3>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {selectedDateSummary}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex flex-col items-start gap-2 sm:items-end">
-                                                        {selectedDateSlots.length > 0 ? (
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
-                                                                    {selectedDayCounts.active} active
-                                                                </Badge>
-                                                                {selectedDayCounts.onLeave > 0 ? (
-                                                                    <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
-                                                                        {selectedDayCounts.onLeave} on leave
-                                                                    </Badge>
-                                                                ) : null}
-                                                            </div>
-                                                        ) : null}
-                                                        <CollapsibleTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="rounded-full text-green-700 hover:bg-emerald-100"
-                                                            >
-                                                                {calendarExpanded ? "Collapse" : "View schedule"}
-                                                            </Button>
-                                                        </CollapsibleTrigger>
-                                                    </div>
-                                                </div>
-                                                <CollapsibleContent className="grid data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr] transition-[grid-template-rows] duration-300">
-                                                    <div className="mt-3 overflow-hidden">
-                                                        {selectedDateSlots.length > 0 ? (
-                                                            <div className="space-y-3">
-                                                                {selectedDateSlots.map((slot) => renderSlotCard(slot, "inline"))}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
-                                                                {totalSlots === 0 ? (
-                                                                    <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
-                                                                ) : (
-                                                                    <>No duty hours plotted for {selectedDateLabel}. Choose another day or edit existing hours.</>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </CollapsibleContent>
-                                            </Collapsible>
-                                            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground sm:gap-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                                                    <span>Active slots</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                                                    <span>On leave</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="h-2.5 w-2.5 rounded-full border border-border bg-white" />
-                                                    <span>No duty hours</span>
-                                                </div>
-                                            </div>
-                                            <p className="mt-3 text-sm text-muted-foreground">
-                                                Select a day to review or edit consultation duty hours.
+                                <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm sm:p-6">
+                                    <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                Duty hours calendar
                                             </p>
+                                            <p>Pick a day to update or review your consultation availability.</p>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                            <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                {displayedMonthStats.coveredDays} day{displayedMonthStats.coveredDays === 1 ? "" : "s"} plotted
+                                            </Badge>
+                                            <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
+                                                {displayedMonthStats.onLeave} on leave
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div className="relative mt-4 rounded-2xl border border-green-100/60 bg-white/70 shadow-inner">
+                                        {displayedMonthLoading ? (
+                                            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
+                                                <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+                                            </div>
+                                        ) : null}
+                                        <div className="overflow-x-auto px-3 py-3 sm:px-4 sm:py-4">
+                                            <Calendar
+                                                mode="single"
+                                                selected={calendarSelectedDate}
+                                                onSelect={(date) => {
+                                                    if (date) {
+                                                        const next = formatManilaISODate(date);
+                                                        setSelectedDate(next);
+                                                        setDayDetailsExpanded(true);
+                                                    }
+                                                }}
+                                                month={calendarMonth}
+                                                onMonthChange={setCalendarMonth}
+                                                components={{ DayButton: DayButtonWithSlots }}
+                                                modifiers={{ hasSlots: highlightedDates }}
+                                                className="mx-auto w-full max-w-sm sm:max-w-none [--cell-size:2.3rem] sm:[--cell-size:2.75rem] xl:[--cell-size:3.25rem]"
+                                            />
                                         </div>
                                     </div>
                                 </div>
                             )}
                         </CardContent>
                     </Card>
+                    <div className="grid gap-6 pt-6 xl:grid-cols-[1.05fr_0.95fr]">
+                        <div className="space-y-4 xl:space-y-5">
+                            <Card className="rounded-3xl border border-green-100/80 bg-white/85 shadow-sm">
+                                <CardHeader className="pb-0">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                        Selected day
+                                    </p>
+                                    <CardTitle className="text-lg font-semibold text-slate-900">
+                                        {selectedDateLabel}
+                                    </CardTitle>
+                                    <p className="text-sm text-muted-foreground">{selectedDateSummary}</p>
+                                </CardHeader>
+                                <CardContent className="space-y-4 pt-4">
+                                    <Collapsible open={dayDetailsExpanded} onOpenChange={setDayDetailsExpanded}>
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            {selectedDateSlots.length > 0 ? (
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                        {selectedDayCounts.active} active
+                                                    </Badge>
+                                                    {selectedDayCounts.onLeave > 0 ? (
+                                                        <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
+                                                            {selectedDayCounts.onLeave} on leave
+                                                        </Badge>
+                                                    ) : null}
+                                                </div>
+                                            ) : null}
+                                            <CollapsibleTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="rounded-full text-green-700 hover:bg-emerald-100"
+                                                >
+                                                    {dayDetailsExpanded ? "Hide schedule" : "View schedule"}
+                                                </Button>
+                                            </CollapsibleTrigger>
+                                        </div>
+                                        <CollapsibleContent className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 data-[state=closed]:grid-rows-[0fr] data-[state=closed]:opacity-0 data-[state=open]:grid-rows-[1fr] data-[state=open]:opacity-100">
+                                            <div className="mt-3 overflow-hidden">
+                                                {selectedDateSlots.length > 0 ? (
+                                                    <div className="space-y-3">
+                                                        {selectedDateSlots.map((slot) => renderSlotCard(slot, "inline"))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
+                                                        {totalSlots === 0 ? (
+                                                            <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
+                                                        ) : (
+                                                            <>No duty hours plotted for {selectedDateLabel}. Choose another day or edit existing hours.</>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </CollapsibleContent>
+                                    </Collapsible>
+                                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground sm:gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                            <span>Active slots</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                                            <span>On leave</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-2.5 w-2.5 rounded-full border border-border bg-white" />
+                                            <span>No duty hours</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                        <div className="space-y-4 xl:space-y-5">
+                            <div className="rounded-3xl border border-amber-100/70 bg-linear-to-br from-amber-50/70 via-white to-amber-100/70 p-5 shadow-inner">
+                                <div className="space-y-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+                                        On leave days
+                                    </p>
+                                    <h3 className="text-base font-semibold text-amber-900">Planned time away</h3>
+                                    <p className="text-sm text-amber-800/80">
+                                        Patients will not see these slots until you restore availability.
+                                    </p>
+                                </div>
+                                {upcomingLeaveSlots.length > 0 ? (
+                                    <div className="mt-4 space-y-3">
+                                        {upcomingLeaveSlots.map((slot) => (
+                                            <div
+                                                key={slot.availability_id}
+                                                className="rounded-2xl border border-amber-200 bg-white/80 p-4 text-sm text-amber-900 shadow-sm"
+                                            >
+                                                <p className="text-sm font-semibold text-amber-800">
+                                                    {toManilaDateString(slot.available_date)} · {formatTimeRange(slot.available_timestart, slot.available_timeend)}
+                                                </p>
+                                                <p className="mt-1 text-sm text-amber-800/80">{slot.clinic.clinic_name}</p>
+                                                <p className="mt-2 text-xs text-amber-700">
+                                                    Update this day to reopen appointments if plans change.
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="mt-4 rounded-2xl border border-dashed border-amber-200 bg-white/70 p-4 text-sm text-amber-800/80">
+                                        No upcoming leave days on record. Use “Edit” on a duty hour to temporarily block bookings.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
             </div>
