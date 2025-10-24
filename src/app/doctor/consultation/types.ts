@@ -8,6 +8,7 @@ export type Availability = {
     available_date: string;
     available_timestart: string;
     available_timeend: string;
+    is_on_leave: boolean;
     clinic: Clinic;
 };
 

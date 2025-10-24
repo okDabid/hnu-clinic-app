@@ -174,6 +174,7 @@ export async function POST(req: Request) {
                 available_date: startOfManilaDay(manilaDate),
                 available_timestart: slotStart,
                 available_timeend: slotEnd,
+                is_on_leave: false,
                 archivedAt: null,
             });
 
@@ -328,6 +329,7 @@ export async function PUT(req: Request) {
             available_date,
             available_timestart,
             available_timeend,
+            is_on_leave,
         } = await req.json();
 
         if (!availability_id) {
@@ -367,6 +369,8 @@ export async function PUT(req: Request) {
         const targetEndTime = available_timeend
             ? available_timeend
             : toManilaTimeString(existing.available_timeend.toISOString());
+
+        const targetIsOnLeave = typeof is_on_leave === "boolean" ? is_on_leave : existing.is_on_leave;
 
         if (!targetStartTime || !targetEndTime) {
             return NextResponse.json(
@@ -413,6 +417,7 @@ export async function PUT(req: Request) {
             available_date: dayStart,
             available_timestart: newStart,
             available_timeend: newEnd,
+            is_on_leave: targetIsOnLeave,
             archivedAt: null,
         };
 

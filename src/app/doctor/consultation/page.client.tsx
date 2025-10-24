@@ -13,6 +13,7 @@ import { Loader2, PlusCircle, Pencil } from "lucide-react";
 
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
 
 import {
     formatManilaISODate,
@@ -90,6 +92,7 @@ export function DoctorConsultationPageClient({
         available_date: "",
         available_timestart: "",
         available_timeend: "",
+        is_on_leave: false,
     });
     const [editingSlot, setEditingSlot] = useState<Availability | null>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -158,7 +161,11 @@ export function DoctorConsultationPageClient({
     const selectedDateSlots = useMemo(() => {
         if (!selectedDate) return [];
         const items = slotsByDate.get(selectedDate) ?? [];
-        return [...items].sort((a, b) => a.available_timestart.localeCompare(b.available_timestart));
+        return [...items].sort((a, b) => {
+            if (a.is_on_leave && !b.is_on_leave) return -1;
+            if (!a.is_on_leave && b.is_on_leave) return 1;
+            return a.available_timestart.localeCompare(b.available_timestart);
+        });
     }, [selectedDate, slotsByDate]);
 
     const highlightedDates = useMemo(
@@ -186,15 +193,28 @@ export function DoctorConsultationPageClient({
 
     const selectedDateSummary = useMemo(() => {
         if (selectedDateSlots.length > 0) {
-            return `You have ${selectedDateSlots.length} duty hour${
-                selectedDateSlots.length === 1 ? "" : "s"
-            } scheduled.`;
+            const activeCount = selectedDateSlots.filter((slot) => !slot.is_on_leave).length;
+            const onLeaveCount = selectedDateSlots.length - activeCount;
+
+            if (activeCount > 0 && onLeaveCount > 0) {
+                return `You have ${activeCount} active duty hour${
+                    activeCount === 1 ? "" : "s"
+                } and ${onLeaveCount} marked on leave for this day.`;
+            }
+
+            if (activeCount > 0) {
+                return `You have ${activeCount} duty hour${activeCount === 1 ? "" : "s"} scheduled.`;
+            }
+
+            if (onLeaveCount > 0) {
+                return "This day is marked as on leave. Patients will not see any available slots.";
+            }
         }
         if (totalSlots === 0) {
             return "Generate duty hours to start populating your calendar.";
         }
         return "No duty hours plotted for this day yet.";
-    }, [selectedDateSlots.length, totalSlots]);
+    }, [selectedDateSlots, totalSlots]);
 
     const canGoPrevious = currentPage > 1;
     const canGoNext = currentPage < totalPages;
@@ -202,7 +222,9 @@ export function DoctorConsultationPageClient({
     const DayButtonWithSlots = useCallback(
         (props: ComponentProps<typeof CalendarDayButton>) => {
             const dateKey = formatManilaISODate(props.day.date);
-            const count = slotsByDate.get(dateKey)?.length ?? 0;
+            const entries = slotsByDate.get(dateKey) ?? [];
+            const activeCount = entries.filter((slot) => !slot.is_on_leave).length;
+            const onLeave = entries.length > 0 && activeCount === 0;
 
             return (
                 <CalendarDayButton
@@ -210,17 +232,25 @@ export function DoctorConsultationPageClient({
                     className={cn(
                         props.className,
                         "transition-colors",
-                        "data-[selected=true]:bg-green-600 data-[selected=true]:text-white data-[selected=true]:hover:bg-green-600",
-                        count > 0
-                            ? "data-[selected=false]:border data-[selected=false]:border-green-200 data-[selected=false]:bg-emerald-50 data-[selected=false]:text-green-700 hover:data-[selected=false]:bg-emerald-100"
-                            : "hover:data-[selected=false]:bg-muted"
+                        onLeave
+                            ? "data-[selected=true]:bg-amber-500 data-[selected=true]:text-white data-[selected=true]:hover:bg-amber-600 data-[selected=false]:border data-[selected=false]:border-amber-200 data-[selected=false]:bg-amber-50 data-[selected=false]:text-amber-800 hover:data-[selected=false]:bg-amber-100"
+                            : [
+                                  "data-[selected=true]:bg-green-600 data-[selected=true]:text-white data-[selected=true]:hover:bg-green-600",
+                                  activeCount > 0
+                                      ? "data-[selected=false]:border data-[selected=false]:border-green-200 data-[selected=false]:bg-emerald-50 data-[selected=false]:text-green-700 hover:data-[selected=false]:bg-emerald-100"
+                                      : "hover:data-[selected=false]:bg-muted",
+                              ]
                     )}
                 >
                     <div className="flex h-full w-full flex-col items-center justify-center gap-1">
                         <span className="text-base font-semibold leading-none">{props.children}</span>
-                        {count > 0 ? (
+                        {onLeave ? (
+                            <span className="rounded-full bg-amber-100 px-2 text-[0.625rem] font-semibold leading-5 text-amber-800">
+                                On leave
+                            </span>
+                        ) : activeCount > 0 ? (
                             <span className="rounded-full bg-green-100 px-2 text-[0.625rem] font-semibold leading-5 text-green-700">
-                                {count} slot{count === 1 ? "" : "s"}
+                                {activeCount} slot{activeCount === 1 ? "" : "s"}
                             </span>
                         ) : (
                             <span className="text-[0.625rem] text-muted-foreground">&nbsp;</span>
@@ -287,7 +317,10 @@ export function DoctorConsultationPageClient({
         const isEditing = Boolean(editingSlot);
 
         if (isEditing) {
-            if (!formData.available_date || !formData.available_timestart || !formData.available_timeend) {
+            if (
+                !formData.available_date ||
+                (!formData.is_on_leave && (!formData.available_timestart || !formData.available_timeend))
+            ) {
                 toast.error("Please provide both start and end times.");
                 return;
             }
@@ -305,6 +338,7 @@ export function DoctorConsultationPageClient({
                 available_date: formData.available_date,
                 available_timestart: formData.available_timestart,
                 available_timeend: formData.available_timeend,
+                is_on_leave: formData.is_on_leave,
             }
             : {
                 clinic_id: formData.clinic_id,
@@ -338,6 +372,7 @@ export function DoctorConsultationPageClient({
                     available_date: "",
                     available_timestart: "",
                     available_timeend: "",
+                    is_on_leave: false,
                 });
                 setEditingSlot(null);
             }
@@ -391,12 +426,13 @@ export function DoctorConsultationPageClient({
                                         className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                                         onClick={() => {
                                             setEditingSlot(null);
-                                            setFormData({
-                                                clinic_id: "",
-                                                available_date: "",
-                                                available_timestart: "",
-                                                available_timeend: "",
-                                            });
+                setFormData({
+                    clinic_id: "",
+                    available_date: "",
+                    available_timestart: "",
+                    available_timeend: "",
+                    is_on_leave: false,
+                });
                                         }}
                                     >
                                         <PlusCircle className="h-4 w-4" /> Set duty hours
@@ -457,7 +493,7 @@ export function DoctorConsultationPageClient({
                                                             setFormData({ ...formData, available_timestart: e.target.value })
                                                         }
                                                         required
-                                                        disabled={loading}
+                                                        disabled={loading || (editingSlot ? formData.is_on_leave : false)}
                                                     />
                                                 </div>
                                                 <div>
@@ -469,10 +505,39 @@ export function DoctorConsultationPageClient({
                                                             setFormData({ ...formData, available_timeend: e.target.value })
                                                         }
                                                         required
-                                                        disabled={loading}
+                                                        disabled={loading || (editingSlot ? formData.is_on_leave : false)}
                                                     />
                                                 </div>
                                             </div>
+
+                                            {editingSlot && (
+                                                <div className="rounded-2xl border border-green-100/80 bg-emerald-50/40 p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm font-semibold text-green-700">
+                                                                Availability status
+                                                            </p>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Toggle on leave to block patient appointments for this day
+                                                                without deleting the original schedule.
+                                                            </p>
+                                                        </div>
+                                                        <Switch
+                                                            checked={formData.is_on_leave}
+                                                            onCheckedChange={(checked) =>
+                                                                setFormData({ ...formData, is_on_leave: checked })
+                                                            }
+                                                            disabled={loading}
+                                                            aria-label="Toggle on leave status"
+                                                        />
+                                                    </div>
+                                                    {formData.is_on_leave && (
+                                                        <p className="mt-2 text-sm text-amber-700">
+                                                            Patients will see this date as unavailable while it is on leave.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
 
                                             <DialogFooter>
                                                 <Button
@@ -539,23 +604,62 @@ export function DoctorConsultationPageClient({
                                                     selectedDateSlots.map((slot) => (
                                                         <div
                                                             key={slot.availability_id}
-                                                            className="flex flex-col gap-3 rounded-2xl border border-green-100/80 bg-emerald-50/40 p-4 text-sm text-slate-700 shadow-inner sm:flex-row sm:items-center sm:justify-between"
+                                                            className={cn(
+                                                                "flex flex-col gap-3 rounded-2xl border p-4 text-sm shadow-inner sm:flex-row sm:items-center sm:justify-between",
+                                                                slot.is_on_leave
+                                                                    ? "border-amber-200 bg-amber-50/70 text-amber-900"
+                                                                    : "border-green-100/80 bg-emerald-50/40 text-slate-700"
+                                                            )}
                                                         >
-                                                            <div>
-                                                                <p className="text-lg font-semibold text-green-700">
-                                                                    {formatTimeRange(
-                                                                        slot.available_timestart,
-                                                                        slot.available_timeend
+                                                            <div className="space-y-1">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <p
+                                                                        className={cn(
+                                                                            "text-lg font-semibold",
+                                                                            slot.is_on_leave
+                                                                                ? "text-amber-800"
+                                                                                : "text-green-700"
+                                                                        )}
+                                                                    >
+                                                                        {formatTimeRange(
+                                                                            slot.available_timestart,
+                                                                            slot.available_timeend
+                                                                        )}
+                                                                    </p>
+                                                                    {slot.is_on_leave ? (
+                                                                        <Badge
+                                                                            variant="outline"
+                                                                            className="border-amber-300 bg-amber-100 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-800"
+                                                                        >
+                                                                            On leave
+                                                                        </Badge>
+                                                                    ) : null}
+                                                                </div>
+                                                                <p
+                                                                    className={cn(
+                                                                        "text-sm",
+                                                                        slot.is_on_leave
+                                                                            ? "text-amber-700/90"
+                                                                            : "text-muted-foreground"
                                                                     )}
-                                                                </p>
-                                                                <p className="text-sm text-muted-foreground">
+                                                                >
                                                                     {slot.clinic.clinic_name}
                                                                 </p>
+                                                                {slot.is_on_leave ? (
+                                                                    <p className="text-xs text-amber-700">
+                                                                        Patients cannot book appointments for this day until you
+                                                                        restore availability.
+                                                                    </p>
+                                                                ) : null}
                                                             </div>
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
-                                                                className="gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
+                                                                className={cn(
+                                                                    "gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70",
+                                                                    slot.is_on_leave &&
+                                                                        "border-amber-300 text-amber-800 hover:bg-amber-100/80"
+                                                                )}
                                                                 onClick={() => {
                                                                     const slotDate = toManilaDateString(slot.available_date);
                                                                     setSelectedDate(slotDate);
@@ -569,11 +673,12 @@ export function DoctorConsultationPageClient({
                                                                         available_timeend: toManilaTimeString(
                                                                             slot.available_timeend
                                                                         ),
+                                                                        is_on_leave: slot.is_on_leave,
                                                                     });
                                                                     setDialogOpen(true);
                                                                 }}
                                                             >
-                                                                <Pencil className="h-4 w-4" /> Edit
+                                                                <Pencil className="h-4 w-4" /> {slot.is_on_leave ? "Update" : "Edit"}
                                                             </Button>
                                                         </div>
                                                     ))

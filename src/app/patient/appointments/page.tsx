@@ -196,7 +196,7 @@ export default function PatientAppointmentsPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [doctorAvailability, setDoctorAvailability] = useState<
-        Record<string, { slots: Slot[]; loading: boolean; error: string | null }>
+        Record<string, { slots: Slot[]; loading: boolean; error: string | null; onLeave: boolean }>
     >({});
     const [loadingClinics, setLoadingClinics] = useState(true);
     const [loadingDoctors, setLoadingDoctors] = useState(false);
@@ -399,12 +399,16 @@ export default function PatientAppointmentsPage() {
         }
 
         if (!date) {
-            const emptyAvailability: Record<string, { slots: Slot[]; loading: boolean; error: string | null }> = {};
+            const emptyAvailability: Record<
+                string,
+                { slots: Slot[]; loading: boolean; error: string | null; onLeave: boolean }
+            > = {};
             doctors.forEach((doctor) => {
                 emptyAvailability[doctor.user_id] = {
                     slots: [],
                     loading: false,
                     error: null,
+                    onLeave: false,
                 };
             });
             setDoctorAvailability(emptyAvailability);
@@ -421,6 +425,7 @@ export default function PatientAppointmentsPage() {
                     slots: existing?.slots ?? [],
                     loading: true,
                     error: null,
+                    onLeave: existing?.onLeave ?? false,
                 };
             });
             return next;
@@ -444,6 +449,7 @@ export default function PatientAppointmentsPage() {
                         slots: data?.slots || [],
                         loading: false,
                         error: null,
+                        onLeave: Boolean(data?.onLeave),
                     },
                 }));
             } catch {
@@ -455,6 +461,7 @@ export default function PatientAppointmentsPage() {
                         slots: [],
                         loading: false,
                         error: "Failed to load availability",
+                        onLeave: false,
                     },
                 }));
             }
@@ -473,6 +480,7 @@ export default function PatientAppointmentsPage() {
     const slots = useMemo(() => selectedDoctorAvailability?.slots ?? [], [selectedDoctorAvailability]);
     const loadingSlots = selectedDoctorAvailability?.loading ?? false;
     const selectedDoctorAvailabilityError = selectedDoctorAvailability?.error ?? null;
+    const onLeaveDay = selectedDoctorAvailability?.onLeave ?? false;
     const selectedSlot = useMemo(() => slots.find((s) => s.start === timeStart), [slots, timeStart]);
     const selectedDoctor = useMemo(() => doctors.find((d) => d.user_id === doctorId) || null, [doctorId, doctors]);
     const selectedClinic = useMemo(
@@ -810,7 +818,13 @@ export default function PatientAppointmentsPage() {
                                 <Select
                                     value={timeStart}
                                     onValueChange={setTimeStart}
-                                    disabled={loadingSlots || !doctorId || !date || !!selectedDoctorAvailabilityError}
+                                    disabled={
+                                        loadingSlots ||
+                                        !doctorId ||
+                                        !date ||
+                                        !!selectedDoctorAvailabilityError ||
+                                        onLeaveDay
+                                    }
                                 >
                                     <SelectTrigger className="rounded-xl border-green-200">
                                         <SelectValue
@@ -821,12 +835,14 @@ export default function PatientAppointmentsPage() {
                                                         ? "Loading slots..."
                                                         : selectedDoctorAvailabilityError
                                                             ? "Unable to load slots"
-                                                            : slots.length
-                                                                ? "Select a time"
-                                                                : "No slots available"
-                                            }
-                                        />
-                                    </SelectTrigger>
+                                                            : onLeaveDay
+                                                                ? "Doctor is on leave"
+                                                                : slots.length
+                                                                    ? "Select a time"
+                                                                    : "No slots available"
+                                        }
+                                    />
+                                </SelectTrigger>
                                     <SelectContent>
                                         {slots.map((slot) => (
                                             <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
@@ -835,6 +851,11 @@ export default function PatientAppointmentsPage() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {onLeaveDay && (
+                                    <p className="text-sm text-amber-600">
+                                        This doctor is marked as on leave for the selected date.
+                                    </p>
+                                )}
                             </div>
 
                             <Button
@@ -909,6 +930,7 @@ export default function PatientAppointmentsPage() {
                                             const doctorSlots = availability?.slots ?? [];
                                             const doctorLoading = date ? availability?.loading ?? false : false;
                                             const doctorError = date ? availability?.error ?? null : null;
+                                            const doctorOnLeave = date ? availability?.onLeave ?? false : false;
                                             const isActiveDoctor = doctor.user_id === doctorId;
 
                                             return (
@@ -948,6 +970,10 @@ export default function PatientAppointmentsPage() {
                                                         ) : doctorError ? (
                                                             <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
                                                                 Unable to load the schedule for this doctor. Try again later.
+                                                            </div>
+                                                        ) : doctorOnLeave ? (
+                                                            <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-800">
+                                                                This doctor is marked as on leave for {formatDateOnly(date)}.
                                                             </div>
                                                         ) : doctorSlots.length > 0 ? (
                                                             <div className="grid gap-2 sm:grid-cols-2">
