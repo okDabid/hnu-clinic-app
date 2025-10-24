@@ -1009,7 +1009,9 @@ export function DoctorConsultationPageClient({
                                                         </CollapsibleTrigger>
                                                     </div>
                                                 </div>
-                                                <CollapsibleContent className="grid data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr] transition-[grid-template-rows] duration-300">
+                                            <CollapsibleContent
+                                                className="grid overflow-hidden data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr] data-[state=closed]:opacity-0 data-[state=open]:opacity-100 transition-[grid-template-rows,opacity] duration-300"
+                                            >
                                                     <div className="mt-3 overflow-hidden">
                                                         {selectedDateSlots.length > 0 ? (
                                                             <div className="space-y-3">
