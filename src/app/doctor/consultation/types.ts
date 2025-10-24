@@ -21,6 +21,12 @@ export type SlotsResponse = {
     error?: string;
 };
 
+export type CalendarSlotsResponse = {
+    month: string;
+    slots: Availability[];
+    error?: string;
+};
+
 export type NormalizedSlotsPayload = {
     slots: Availability[];
     total: number;

@@ -29,6 +29,19 @@ function getGenerationEndExclusive(start: Date): Date {
     return startOfManilaDay(januaryNextYear);
 }
 
+function resolveCalendarMonthRange(monthParam: string | null) {
+    const fallbackMonth = formatManilaISODate(manilaNow()).slice(0, 7);
+    const MONTH_PARAM_PATTERN = /^\d{4}-\d{2}$/;
+    const monthKey = monthParam && MONTH_PARAM_PATTERN.test(monthParam) ? monthParam : fallbackMonth;
+    const monthStart = startOfManilaDay(`${monthKey}-01`);
+    const nextMonth = new Date(monthStart);
+    nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+    const nextMonthKey = formatManilaISODate(nextMonth).slice(0, 7);
+    const monthEndExclusive = startOfManilaDay(`${nextMonthKey}-01`);
+
+    return { monthKey, monthStart, monthEndExclusive };
+}
+
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 /**
@@ -52,6 +65,28 @@ export async function GET(req: Request) {
         await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
 
         const url = new URL(req.url);
+        const view = url.searchParams.get("view");
+
+        if (view === "calendar") {
+            const { monthKey, monthStart, monthEndExclusive } = resolveCalendarMonthRange(
+                url.searchParams.get("month")
+            );
+
+            const slots = await prisma.doctorAvailability.findMany({
+                where: {
+                    doctor_user_id: doctor.user_id,
+                    archivedAt: null,
+                    available_date: { gte: monthStart, lt: monthEndExclusive },
+                },
+                include: {
+                    clinic: { select: { clinic_id: true, clinic_name: true } },
+                },
+                orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
+            });
+
+            return NextResponse.json({ month: monthKey, slots });
+        }
+
         const pageParam = Number.parseInt(url.searchParams.get("page") ?? "1", 10);
         const pageSizeParam = Number.parseInt(url.searchParams.get("pageSize") ?? "25", 10);
 

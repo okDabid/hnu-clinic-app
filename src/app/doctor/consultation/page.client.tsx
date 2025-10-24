@@ -4,6 +4,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
     useTransition,
     type ComponentProps,
@@ -42,6 +43,7 @@ import {
     DEFAULT_PAGE_SIZE,
     normalizeConsultationSlots,
     type Availability,
+    type CalendarSlotsResponse,
     type Clinic,
     type NormalizedSlotsPayload,
     type SlotsResponse,
@@ -54,6 +56,26 @@ function toCalendarDate(value: string | null | undefined) {
     const normalized = value.includes("T") ? value : `${value}T12:00:00${MANILA_TIME_SUFFIX}`;
     const date = new Date(normalized);
     return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatMonthKeyFromDate(date: Date): string {
+    return date.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "2-digit",
+    });
+}
+
+function getMonthKeyFromISODate(value: string): string {
+    return value.slice(0, 7);
+}
+
+function sortSlotsForDay(slots: Availability[]): Availability[] {
+    return [...slots].sort((a, b) => {
+        if (a.is_on_leave && !b.is_on_leave) return -1;
+        if (!a.is_on_leave && b.is_on_leave) return 1;
+        return a.available_timestart.localeCompare(b.available_timestart);
+    });
 }
 
 export type DoctorConsultationPageClientProps = {
@@ -98,6 +120,14 @@ export function DoctorConsultationPageClient({
     const [dialogOpen, setDialogOpen] = useState(false);
     const [isTransitioning, startTransition] = useTransition();
 
+    const [calendarCache, setCalendarCache] = useState<Record<string, Availability[]>>({});
+    const calendarCacheRef = useRef<Record<string, Availability[]>>({});
+    const [calendarLoadingKeys, setCalendarLoadingKeys] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        calendarCacheRef.current = calendarCache;
+    }, [calendarCache]);
+
     const initializing = !(slotsLoaded && clinicsLoaded);
 
     const uniqueClinicCount = useMemo(
@@ -105,6 +135,183 @@ export function DoctorConsultationPageClient({
         [slots]
     );
 
+    const displayedMonthKey = useMemo(() => formatMonthKeyFromDate(calendarMonth), [calendarMonth]);
+    const displayedMonthSlots = useMemo(
+        () => calendarCache[displayedMonthKey] ?? [],
+        [calendarCache, displayedMonthKey]
+    );
+
+    const displayedMonthSlotsByDate = useMemo(() => {
+        const map = new Map<string, Availability[]>();
+        for (const slot of displayedMonthSlots) {
+            const dateKey = toManilaDateString(slot.available_date);
+            if (!map.has(dateKey)) {
+                map.set(dateKey, []);
+            }
+            map.get(dateKey)!.push(slot);
+        }
+        return map;
+    }, [displayedMonthSlots]);
+
+    const highlightedDates = useMemo(
+        () =>
+            Array.from(displayedMonthSlotsByDate.keys())
+                .map((date) => toCalendarDate(date))
+                .filter((date): date is Date => Boolean(date)),
+        [displayedMonthSlotsByDate]
+    );
+
+    const calendarSelectedDate = useMemo(
+        () => toCalendarDate(selectedDate) ?? undefined,
+        [selectedDate]
+    );
+    const selectedDateMonthKey = useMemo(
+        () => (selectedDate ? getMonthKeyFromISODate(selectedDate) : null),
+        [selectedDate]
+    );
+
+    const selectedDateSlots = useMemo(() => {
+        if (!selectedDate || !selectedDateMonthKey) return [];
+        const monthSlots = calendarCache[selectedDateMonthKey] ?? [];
+        const items = monthSlots.filter(
+            (slot) => toManilaDateString(slot.available_date) === selectedDate
+        );
+        return sortSlotsForDay(items);
+    }, [calendarCache, selectedDate, selectedDateMonthKey]);
+
+    const selectedDayCounts = useMemo(() => {
+        let active = 0;
+        let onLeave = 0;
+        for (const slot of selectedDateSlots) {
+            if (slot.is_on_leave) {
+                onLeave += 1;
+            } else {
+                active += 1;
+            }
+        }
+        return { active, onLeave };
+    }, [selectedDateSlots]);
+
+    const selectedMonthLoading = selectedDateMonthKey
+        ? calendarLoadingKeys[selectedDateMonthKey] ?? false
+        : false;
+
+    const displayedMonthLoading = calendarLoadingKeys[displayedMonthKey] ?? false;
+
+    const displayedMonthStats = useMemo(() => {
+        let active = 0;
+        let onLeave = 0;
+        const activeDays = new Set<string>();
+        const leaveDays = new Set<string>();
+        const coveredDays = new Set<string>();
+
+        for (const slot of displayedMonthSlots) {
+            const dateKey = toManilaDateString(slot.available_date);
+            coveredDays.add(dateKey);
+            if (slot.is_on_leave) {
+                onLeave += 1;
+                leaveDays.add(dateKey);
+            } else {
+                active += 1;
+                activeDays.add(dateKey);
+            }
+        }
+
+        return {
+            active,
+            onLeave,
+            activeDays: activeDays.size,
+            leaveDays: leaveDays.size,
+            coveredDays: coveredDays.size,
+        };
+    }, [displayedMonthSlots]);
+
+    const selectedDateLabel = useMemo(() => {
+        if (!calendarSelectedDate) return "Select a day";
+        return calendarSelectedDate.toLocaleDateString("en-PH", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            timeZone: "Asia/Manila",
+        });
+    }, [calendarSelectedDate]);
+
+    const selectedDateSummary = useMemo(() => {
+        if (selectedDateSlots.length > 0) {
+            const activeCount = selectedDayCounts.active;
+            const onLeaveCount = selectedDayCounts.onLeave;
+
+            if (activeCount > 0 && onLeaveCount > 0) {
+                return `You have ${activeCount} active duty hour${
+                    activeCount === 1 ? "" : "s"
+                } and ${onLeaveCount} marked on leave for this day.`;
+            }
+
+            if (activeCount > 0) {
+                return `You have ${activeCount} duty hour${activeCount === 1 ? "" : "s"} scheduled.`;
+            }
+
+            if (onLeaveCount > 0) {
+                return "This day is marked as on leave. Patients will not see any available slots.";
+            }
+        }
+
+        if (selectedMonthLoading) {
+            return "Loading duty hours for this day...";
+        }
+
+        if (totalSlots === 0) {
+            return "Generate duty hours to start populating your calendar.";
+        }
+
+        return "No duty hours plotted for this day yet.";
+    }, [selectedDateSlots, selectedDayCounts, selectedMonthLoading, totalSlots]);
+
+    const canGoPrevious = currentPage > 1;
+    const canGoNext = currentPage < totalPages;
+
+    const DayButtonWithSlots = useCallback(
+        (props: ComponentProps<typeof CalendarDayButton>) => {
+            const dateKey = formatManilaISODate(props.day.date);
+            const entries = displayedMonthSlotsByDate.get(dateKey) ?? [];
+            const activeCount = entries.filter((slot) => !slot.is_on_leave).length;
+            const onLeave = entries.length > 0 && activeCount === 0;
+
+            return (
+                <CalendarDayButton
+                    {...props}
+                    className={cn(
+                        props.className,
+                        "transition-colors",
+                        onLeave
+                            ? "data-[selected=true]:bg-amber-500 data-[selected=true]:text-white data-[selected=true]:hover:bg-amber-600 data-[selected=false]:border data-[selected=false]:border-amber-200 data-[selected=false]:bg-amber-50 data-[selected=false]:text-amber-800 hover:data-[selected=false]:bg-amber-100"
+                            : [
+                                  "data-[selected=true]:bg-green-600 data-[selected=true]:text-white data-[selected=true]:hover:bg-green-600",
+                                  activeCount > 0
+                                      ? "data-[selected=false]:border data-[selected=false]:border-green-200 data-[selected=false]:bg-emerald-50 data-[selected=false]:text-green-700 hover:data-[selected=false]:bg-emerald-100"
+                                      : "hover:data-[selected=false]:bg-muted",
+                              ]
+                    )}
+                >
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+                        <span className="text-base font-semibold leading-none">{props.children}</span>
+                        {onLeave ? (
+                            <span className="rounded-full bg-amber-100 px-2 text-[0.625rem] font-semibold leading-5 text-amber-800">
+                                On leave
+                            </span>
+                        ) : activeCount > 0 ? (
+                            <span className="rounded-full bg-green-100 px-2 text-[0.625rem] font-semibold leading-5 text-green-700">
+                                {activeCount} slot{activeCount === 1 ? "" : "s"}
+                            </span>
+                        ) : (
+                            <span className="text-[0.625rem] text-muted-foreground">&nbsp;</span>
+                        )}
+                    </div>
+                </CalendarDayButton>
+            );
+        },
+        [displayedMonthSlotsByDate]
+    );
     const loadSlots = useCallback(
         async (targetPage: number) => {
             try {
@@ -146,120 +353,42 @@ export function DoctorConsultationPageClient({
         [pageSize, startTransition]
     );
 
-    const slotsByDate = useMemo(() => {
-        const map = new Map<string, Availability[]>();
-        for (const slot of slots) {
-            const dateKey = toManilaDateString(slot.available_date);
-            if (!map.has(dateKey)) {
-                map.set(dateKey, []);
-            }
-            map.get(dateKey)!.push(slot);
-        }
-        return map;
-    }, [slots]);
-
-    const selectedDateSlots = useMemo(() => {
-        if (!selectedDate) return [];
-        const items = slotsByDate.get(selectedDate) ?? [];
-        return [...items].sort((a, b) => {
-            if (a.is_on_leave && !b.is_on_leave) return -1;
-            if (!a.is_on_leave && b.is_on_leave) return 1;
-            return a.available_timestart.localeCompare(b.available_timestart);
-        });
-    }, [selectedDate, slotsByDate]);
-
-    const highlightedDates = useMemo(
-        () =>
-            Array.from(slotsByDate.keys())
-                .map((date) => toCalendarDate(date))
-                .filter((date): date is Date => Boolean(date)),
-        [slotsByDate]
-    );
-
-    const calendarSelectedDate = useMemo(
-        () => toCalendarDate(selectedDate) ?? undefined,
-        [selectedDate]
-    );
-
-    const selectedDateLabel = useMemo(() => {
-        if (!calendarSelectedDate) return "Select a day";
-        return calendarSelectedDate.toLocaleDateString("en-PH", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            timeZone: "Asia/Manila",
-        });
-    }, [calendarSelectedDate]);
-
-    const selectedDateSummary = useMemo(() => {
-        if (selectedDateSlots.length > 0) {
-            const activeCount = selectedDateSlots.filter((slot) => !slot.is_on_leave).length;
-            const onLeaveCount = selectedDateSlots.length - activeCount;
-
-            if (activeCount > 0 && onLeaveCount > 0) {
-                return `You have ${activeCount} active duty hour${
-                    activeCount === 1 ? "" : "s"
-                } and ${onLeaveCount} marked on leave for this day.`;
+    const fetchCalendarMonth = useCallback(
+        async (date: Date, options: { force?: boolean } = {}) => {
+            const monthKey = formatMonthKeyFromDate(date);
+            if (!options.force && calendarCacheRef.current[monthKey]) {
+                return;
             }
 
-            if (activeCount > 0) {
-                return `You have ${activeCount} duty hour${activeCount === 1 ? "" : "s"} scheduled.`;
+            setCalendarLoadingKeys((prev) => ({ ...prev, [monthKey]: true }));
+
+            try {
+                const params = new URLSearchParams({ view: "calendar", month: monthKey });
+                const res = await fetch(`/api/doctor/consultation?${params.toString()}`, {
+                    cache: "no-store",
+                });
+                const data: CalendarSlotsResponse = await res.json();
+                if (!res.ok || data.error) {
+                    toast.error(data.error ?? "Failed to load calendar data");
+                    return;
+                }
+
+                const slotsForMonth = Array.isArray(data.slots) ? data.slots : [];
+
+                startTransition(() => {
+                    setCalendarCache((prev) => {
+                        const next = { ...prev, [monthKey]: slotsForMonth };
+                        calendarCacheRef.current = next;
+                        return next;
+                    });
+                });
+            } catch {
+                toast.error("Failed to load calendar data");
+            } finally {
+                setCalendarLoadingKeys((prev) => ({ ...prev, [monthKey]: false }));
             }
-
-            if (onLeaveCount > 0) {
-                return "This day is marked as on leave. Patients will not see any available slots.";
-            }
-        }
-        if (totalSlots === 0) {
-            return "Generate duty hours to start populating your calendar.";
-        }
-        return "No duty hours plotted for this day yet.";
-    }, [selectedDateSlots, totalSlots]);
-
-    const canGoPrevious = currentPage > 1;
-    const canGoNext = currentPage < totalPages;
-
-    const DayButtonWithSlots = useCallback(
-        (props: ComponentProps<typeof CalendarDayButton>) => {
-            const dateKey = formatManilaISODate(props.day.date);
-            const entries = slotsByDate.get(dateKey) ?? [];
-            const activeCount = entries.filter((slot) => !slot.is_on_leave).length;
-            const onLeave = entries.length > 0 && activeCount === 0;
-
-            return (
-                <CalendarDayButton
-                    {...props}
-                    className={cn(
-                        props.className,
-                        "transition-colors",
-                        onLeave
-                            ? "data-[selected=true]:bg-amber-500 data-[selected=true]:text-white data-[selected=true]:hover:bg-amber-600 data-[selected=false]:border data-[selected=false]:border-amber-200 data-[selected=false]:bg-amber-50 data-[selected=false]:text-amber-800 hover:data-[selected=false]:bg-amber-100"
-                            : [
-                                  "data-[selected=true]:bg-green-600 data-[selected=true]:text-white data-[selected=true]:hover:bg-green-600",
-                                  activeCount > 0
-                                      ? "data-[selected=false]:border data-[selected=false]:border-green-200 data-[selected=false]:bg-emerald-50 data-[selected=false]:text-green-700 hover:data-[selected=false]:bg-emerald-100"
-                                      : "hover:data-[selected=false]:bg-muted",
-                              ]
-                    )}
-                >
-                    <div className="flex h-full w-full flex-col items-center justify-center gap-1">
-                        <span className="text-base font-semibold leading-none">{props.children}</span>
-                        {onLeave ? (
-                            <span className="rounded-full bg-amber-100 px-2 text-[0.625rem] font-semibold leading-5 text-amber-800">
-                                On leave
-                            </span>
-                        ) : activeCount > 0 ? (
-                            <span className="rounded-full bg-green-100 px-2 text-[0.625rem] font-semibold leading-5 text-green-700">
-                                {activeCount} slot{activeCount === 1 ? "" : "s"}
-                            </span>
-                        ) : (
-                            <span className="text-[0.625rem] text-muted-foreground">&nbsp;</span>
-                        )}
-                    </div>
-                </CalendarDayButton>
-            );
         },
-        [slotsByDate]
+        [startTransition]
     );
 
     const loadClinics = useCallback(async () => {
@@ -271,6 +400,16 @@ export function DoctorConsultationPageClient({
             console.warn("Failed to fetch clinics list");
         } finally {
             setClinicsLoaded(true);
+        }
+    }, []);
+
+    const handleGoToToday = useCallback(() => {
+        const now = new Date();
+        const isoToday = formatManilaISODate(now);
+        setSelectedDate(isoToday);
+        const next = toCalendarDate(isoToday);
+        if (next) {
+            setCalendarMonth(next);
         }
     }, []);
 
@@ -287,15 +426,33 @@ export function DoctorConsultationPageClient({
     }, [clinicsLoaded, loadClinics]);
 
     useEffect(() => {
+        void fetchCalendarMonth(calendarMonth);
+    }, [calendarMonth, fetchCalendarMonth]);
+
+    useEffect(() => {
+        const date = toCalendarDate(selectedDate);
+        if (date) {
+            void fetchCalendarMonth(date);
+        }
+    }, [selectedDate, fetchCalendarMonth]);
+
+    useEffect(() => {
+        if (!selectedDate) return;
+        const monthKey = getMonthKeyFromISODate(selectedDate);
+        const monthSlots = calendarCache[monthKey];
+        if (monthSlots && monthSlots.some((slot) => toManilaDateString(slot.available_date) === selectedDate)) {
+            return;
+        }
+
         if (slots.length === 0) return;
-        const selectionExists =
-            selectedDate &&
-            slots.some((slot) => toManilaDateString(slot.available_date) === selectedDate);
+        const selectionExists = slots.some(
+            (slot) => toManilaDateString(slot.available_date) === selectedDate
+        );
         if (!selectionExists) {
             const firstSlotDate = toManilaDateString(slots[0].available_date);
             setSelectedDate(firstSlotDate);
         }
-    }, [slots, selectedDate]);
+    }, [calendarCache, slots, selectedDate]);
 
     useEffect(() => {
         if (!selectedDate) return;
@@ -333,18 +490,18 @@ export function DoctorConsultationPageClient({
 
         const body = isEditing
             ? {
-                availability_id: editingSlot!.availability_id,
-                clinic_id: formData.clinic_id,
-                available_date: formData.available_date,
-                available_timestart: formData.available_timestart,
-                available_timeend: formData.available_timeend,
-                is_on_leave: formData.is_on_leave,
-            }
+                  availability_id: editingSlot!.availability_id,
+                  clinic_id: formData.clinic_id,
+                  available_date: formData.available_date,
+                  available_timestart: formData.available_timestart,
+                  available_timeend: formData.available_timeend,
+                  is_on_leave: formData.is_on_leave,
+              }
             : {
-                clinic_id: formData.clinic_id,
-                available_timestart: formData.available_timestart,
-                available_timeend: formData.available_timeend,
-            };
+                  clinic_id: formData.clinic_id,
+                  available_timestart: formData.available_timestart,
+                  available_timeend: formData.available_timeend,
+              };
         const method = isEditing ? "PUT" : "POST";
 
         try {
@@ -366,6 +523,18 @@ export function DoctorConsultationPageClient({
                     toast.success(data.message ?? "Duty hours generated!");
                     await loadSlots(1);
                 }
+
+                if (isEditing) {
+                    const targetISODate = formData.available_date || selectedDate;
+                    const target = toCalendarDate(targetISODate);
+                    await fetchCalendarMonth(target ?? calendarMonth, { force: true });
+                } else {
+                    calendarCacheRef.current = {};
+                    setCalendarCache({});
+                    setCalendarLoadingKeys({});
+                    await fetchCalendarMonth(calendarMonth, { force: true });
+                }
+
                 setDialogOpen(false);
                 setFormData({
                     clinic_id: "",
@@ -387,7 +556,6 @@ export function DoctorConsultationPageClient({
     if (initializing) {
         return <DoctorConsultationLoading />;
     }
-
     return (
         <DoctorLayout
             title="Consultation availability"
@@ -416,151 +584,162 @@ export function DoctorConsultationPageClient({
                     </Card>
                     <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
                         <CardHeader className="flex flex-col gap-3 border-b border-green-100/70 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="text-xl font-semibold text-green-700 sm:text-2xl">
-                                My duty hours
-                            </CardTitle>
+                            <div>
+                                <CardTitle className="text-xl font-semibold text-green-700 sm:text-2xl">
+                                    My duty hours
+                                </CardTitle>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Plot and edit your clinic schedule directly from the calendar. Toggle on-leave days without deleting existing hours.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/80"
+                                    onClick={handleGoToToday}
+                                >
+                                    Jump to today
+                                </Button>
+                                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+                                            onClick={() => {
+                                                setEditingSlot(null);
+                                                setFormData({
+                                                    clinic_id: "",
+                                                    available_date: "",
+                                                    available_timestart: "",
+                                                    available_timeend: "",
+                                                    is_on_leave: false,
+                                                });
+                                            }}
+                                        >
+                                            <PlusCircle className="h-4 w-4" /> Set duty hours
+                                        </Button>
+                                    </DialogTrigger>
 
-                            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button
-                                        className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
-                                        onClick={() => {
-                                            setEditingSlot(null);
-                setFormData({
-                    clinic_id: "",
-                    available_date: "",
-                    available_timestart: "",
-                    available_timeend: "",
-                    is_on_leave: false,
-                });
-                                        }}
-                                    >
-                                        <PlusCircle className="h-4 w-4" /> Set duty hours
-                                    </Button>
-                                </DialogTrigger>
+                                    {dialogOpen ? (
+                                        <DialogContent className="rounded-3xl border border-green-100 bg-white/95">
+                                            <DialogHeader>
+                                                <DialogTitle className="text-lg font-semibold text-green-700">
+                                                    {editingSlot ? "Edit consultation slot" : "Generate duty hours"}
+                                                </DialogTitle>
+                                                <DialogDescription className="text-sm text-muted-foreground">
+                                                    {editingSlot
+                                                        ? "Update the start or end time for this specific day."
+                                                        : "Set your daily duty hours and we will populate the upcoming schedule automatically."}
+                                                </DialogDescription>
+                                                {!editingSlot && (
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Duty hours will be plotted on working days (Mon–Fri for physicians, Mon–Sat for dentists) from this month through the rest of the year.
+                                                    </p>
+                                                )}
+                                            </DialogHeader>
 
-                                {dialogOpen ? (
-                                    <DialogContent className="rounded-3xl border border-green-100 bg-white/95">
-                                        <DialogHeader>
-                                            <DialogTitle className="text-lg font-semibold text-green-700">
-                                                {editingSlot ? "Edit consultation slot" : "Generate duty hours"}
-                                            </DialogTitle>
-                                            <DialogDescription className="text-sm text-muted-foreground">
-                                                {editingSlot
-                                                    ? "Update the start or end time for this specific day."
-                                                    : "Set your daily duty hours and we will populate the upcoming schedule automatically."}
-                                            </DialogDescription>
-                                            {!editingSlot && (
-                                                <p className="text-sm text-muted-foreground">
-                                                    Duty hours will be plotted on working days (Mon–Fri for physicians, Mon–Sat for dentists) from this month through the rest of the year.
-                                                </p>
-                                            )}
-                                        </DialogHeader>
-
-                                        <form onSubmit={handleSubmit} className="space-y-4">
-                                            <div>
-                                                <Label>Clinic</Label>
-                                                <select
-                                                    value={formData.clinic_id}
-                                                    onChange={(e) => setFormData({ ...formData, clinic_id: e.target.value })}
-                                                    required
-                                                    className="w-full border rounded-md p-2"
-                                                    disabled={loading}
-                                                >
-                                                    <option value="">Select clinic</option>
-                                                    {clinics.map((c) => (
-                                                        <option key={c.clinic_id} value={c.clinic_id}>
-                                                            {c.clinic_name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            {editingSlot && (
+                                            <form onSubmit={handleSubmit} className="space-y-4">
                                                 <div>
-                                                    <Label>Date</Label>
-                                                    <Input type="date" value={formData.available_date} disabled readOnly />
-                                                </div>
-                                            )}
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <Label>Start Time</Label>
-                                                    <Input
-                                                        type="time"
-                                                        value={formData.available_timestart}
-                                                        onChange={(e) =>
-                                                            setFormData({ ...formData, available_timestart: e.target.value })
-                                                        }
+                                                    <Label>Clinic</Label>
+                                                    <select
+                                                        value={formData.clinic_id}
+                                                        onChange={(e) => setFormData({ ...formData, clinic_id: e.target.value })}
                                                         required
-                                                        disabled={loading || (editingSlot ? formData.is_on_leave : false)}
-                                                    />
+                                                        className="w-full rounded-md border p-2"
+                                                        disabled={loading}
+                                                    >
+                                                        <option value="">Select clinic</option>
+                                                        {clinics.map((c) => (
+                                                            <option key={c.clinic_id} value={c.clinic_id}>
+                                                                {c.clinic_name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                 </div>
-                                                <div>
-                                                    <Label>End Time</Label>
-                                                    <Input
-                                                        type="time"
-                                                        value={formData.available_timeend}
-                                                        onChange={(e) =>
-                                                            setFormData({ ...formData, available_timeend: e.target.value })
-                                                        }
-                                                        required
-                                                        disabled={loading || (editingSlot ? formData.is_on_leave : false)}
-                                                    />
-                                                </div>
-                                            </div>
 
-                                            {editingSlot && (
-                                                <div className="rounded-2xl border border-green-100/80 bg-emerald-50/40 p-4">
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="space-y-1">
-                                                            <p className="text-sm font-semibold text-green-700">
-                                                                Availability status
-                                                            </p>
-                                                            <p className="text-sm text-muted-foreground">
-                                                                Toggle on leave to block patient appointments for this day
-                                                                without deleting the original schedule.
-                                                            </p>
-                                                        </div>
-                                                        <Switch
-                                                            checked={formData.is_on_leave}
-                                                            onCheckedChange={(checked) =>
-                                                                setFormData({ ...formData, is_on_leave: checked })
+                                                {editingSlot && (
+                                                    <div>
+                                                        <Label>Date</Label>
+                                                        <Input type="date" value={formData.available_date} disabled readOnly />
+                                                    </div>
+                                                )}
+
+                                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                                    <div>
+                                                        <Label>Start Time</Label>
+                                                        <Input
+                                                            type="time"
+                                                            value={formData.available_timestart}
+                                                            onChange={(e) =>
+                                                                setFormData({ ...formData, available_timestart: e.target.value })
                                                             }
-                                                            disabled={loading}
-                                                            aria-label="Toggle on leave status"
+                                                            required
+                                                            disabled={loading || (editingSlot ? formData.is_on_leave : false)}
                                                         />
                                                     </div>
-                                                    {formData.is_on_leave && (
-                                                        <p className="mt-2 text-sm text-amber-700">
-                                                            Patients will see this date as unavailable while it is on leave.
-                                                        </p>
-                                                    )}
+                                                    <div>
+                                                        <Label>End Time</Label>
+                                                        <Input
+                                                            type="time"
+                                                            value={formData.available_timeend}
+                                                            onChange={(e) =>
+                                                                setFormData({ ...formData, available_timeend: e.target.value })
+                                                            }
+                                                            required
+                                                            disabled={loading || (editingSlot ? formData.is_on_leave : false)}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            )}
 
-                                            <DialogFooter>
-                                                <Button
-                                                    type="submit"
-                                                    disabled={loading}
-                                                    className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
-                                                >
-                                                    {savingDutyHours && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                                                    {savingDutyHours
-                                                        ? editingSlot
-                                                            ? "Saving..."
-                                                            : "Generating..."
-                                                        : editingSlot
+                                                {editingSlot && (
+                                                    <div className="rounded-2xl border border-green-100/80 bg-emerald-50/40 p-4">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="space-y-2">
+                                                                <p className="text-sm font-semibold text-green-700">
+                                                                    Availability status
+                                                                </p>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    Toggle on leave to block patient appointments for this day without deleting the original schedule.
+                                                                </p>
+                                                            </div>
+                                                            <Switch
+                                                                checked={formData.is_on_leave}
+                                                                onCheckedChange={(checked) =>
+                                                                    setFormData({ ...formData, is_on_leave: checked })
+                                                                }
+                                                                disabled={loading}
+                                                                aria-label="Toggle on leave status"
+                                                            />
+                                                        </div>
+                                                        {formData.is_on_leave && (
+                                                            <p className="mt-2 text-sm text-amber-700">
+                                                                Patients will see this date as unavailable while it is on leave.
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                <DialogFooter>
+                                                    <Button
+                                                        type="submit"
+                                                        disabled={loading}
+                                                        className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+                                                    >
+                                                        {savingDutyHours && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                                                        {savingDutyHours
+                                                            ? editingSlot
+                                                                ? "Saving..."
+                                                                : "Generating..."
+                                                            : editingSlot
                                                             ? "Save Changes"
                                                             : "Generate"}
-                                                </Button>
-                                            </DialogFooter>
-                                        </form>
-                                    </DialogContent>
-                                ) : null}
-                            </Dialog>
+                                                    </Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    ) : null}
+                                </Dialog>
+                            </div>
                         </CardHeader>
-
                         <CardContent className="flex flex-1 flex-col gap-6 pt-4">
                             {loading ? (
                                 <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
@@ -568,25 +747,70 @@ export function DoctorConsultationPageClient({
                                 </div>
                             ) : (
                                 <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-                                    <div className="rounded-3xl border border-green-100/70 bg-white/90 p-4 shadow-sm">
-                                        <Calendar
-                                            mode="single"
-                                            selected={calendarSelectedDate}
-                                            onSelect={(date) => {
-                                                if (date) {
-                                                    const next = formatManilaISODate(date);
-                                                    setSelectedDate(next);
-                                                }
-                                            }}
-                                            month={calendarMonth}
-                                            onMonthChange={setCalendarMonth}
-                                            components={{ DayButton: DayButtonWithSlots }}
-                                            modifiers={{ hasSlots: highlightedDates }}
-                                            className="mx-auto [--cell-size:3.25rem]"
-                                        />
-                                        <p className="mt-4 text-sm text-muted-foreground">
-                                            Select a day to review or edit consultation duty hours.
-                                        </p>
+                                    <div className="space-y-4">
+                                        <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm">
+                                            <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+                                                <div>
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                        Monthly snapshot
+                                                    </p>
+                                                    <p>
+                                                        {displayedMonthStats.coveredDays > 0
+                                                            ? `${displayedMonthStats.coveredDays} day${
+                                                                  displayedMonthStats.coveredDays === 1 ? "" : "s"
+                                                              } plotted this month.`
+                                                            : "No duty hours plotted this month yet."}
+                                                    </p>
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                        {displayedMonthStats.active} active slot{displayedMonthStats.active === 1 ? "" : "s"}
+                                                    </Badge>
+                                                    <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
+                                                        {displayedMonthStats.onLeave} on leave
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                            <div className="relative mt-4 rounded-2xl border border-green-100/60 bg-white/70 p-3 shadow-inner">
+                                                {displayedMonthLoading ? (
+                                                    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
+                                                        <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+                                                    </div>
+                                                ) : null}
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={calendarSelectedDate}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            const next = formatManilaISODate(date);
+                                                            setSelectedDate(next);
+                                                        }
+                                                    }}
+                                                    month={calendarMonth}
+                                                    onMonthChange={setCalendarMonth}
+                                                    components={{ DayButton: DayButtonWithSlots }}
+                                                    modifiers={{ hasSlots: highlightedDates }}
+                                                    className="mx-auto [--cell-size:3.25rem]"
+                                                />
+                                            </div>
+                                            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                                    <span>Active slots</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                                                    <span>On leave</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="h-2.5 w-2.5 rounded-full border border-border bg-white" />
+                                                    <span>No duty hours</span>
+                                                </div>
+                                            </div>
+                                            <p className="mt-2 text-sm text-muted-foreground">
+                                                Select a day to review or edit consultation duty hours.
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className="space-y-4">
                                         <div className="rounded-3xl border border-green-100/70 bg-white p-6 shadow-sm">
@@ -598,6 +822,18 @@ export function DoctorConsultationPageClient({
                                                     {selectedDateLabel}
                                                 </h3>
                                                 <p className="text-sm text-muted-foreground">{selectedDateSummary}</p>
+                                                {selectedDateSlots.length > 0 ? (
+                                                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                        <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                            {selectedDayCounts.active} active
+                                                        </Badge>
+                                                        {selectedDayCounts.onLeave > 0 ? (
+                                                            <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
+                                                                {selectedDayCounts.onLeave} on leave
+                                                            </Badge>
+                                                        ) : null}
+                                                    </div>
+                                                ) : null}
                                             </div>
                                             <div className="mt-6 space-y-3">
                                                 {selectedDateSlots.length > 0 ? (
@@ -647,8 +883,7 @@ export function DoctorConsultationPageClient({
                                                                 </p>
                                                                 {slot.is_on_leave ? (
                                                                     <p className="text-xs text-amber-700">
-                                                                        Patients cannot book appointments for this day until you
-                                                                        restore availability.
+                                                                        Patients cannot book appointments for this day until you restore availability.
                                                                     </p>
                                                                 ) : null}
                                                             </div>
