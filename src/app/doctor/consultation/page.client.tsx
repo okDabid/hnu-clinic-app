@@ -38,6 +38,7 @@ import { Switch } from "@/components/ui/switch";
 import {
     formatManilaISODate,
     formatTimeRange,
+    manilaNow,
     toManilaDateString,
     toManilaTimeString,
 } from "@/lib/time";
@@ -195,6 +196,47 @@ export function DoctorConsultationPageClient({
         }
         return { active, onLeave };
     }, [selectedDateSlots]);
+
+    const todayKey = useMemo(() => formatManilaISODate(manilaNow()), []);
+
+    const sortedSlots = useMemo(() => {
+        const slotsWithDateKeys = slots.map((slot) => ({
+            slot,
+            dateKey: toManilaDateString(slot.available_date),
+        }));
+
+        return slotsWithDateKeys
+            .sort((a, b) => {
+                const byDate = a.dateKey.localeCompare(b.dateKey);
+                if (byDate !== 0) {
+                    return byDate;
+                }
+                return a.slot.available_timestart.localeCompare(b.slot.available_timestart);
+            })
+            .map((item) => item.slot);
+    }, [slots]);
+
+    const upcomingActiveSlots = useMemo(
+        () =>
+            sortedSlots
+                .filter(
+                    (slot) =>
+                        !slot.is_on_leave && toManilaDateString(slot.available_date) >= todayKey
+                )
+                .slice(0, 5),
+        [sortedSlots, todayKey]
+    );
+
+    const upcomingLeaveSlots = useMemo(
+        () =>
+            sortedSlots
+                .filter(
+                    (slot) =>
+                        slot.is_on_leave && toManilaDateString(slot.available_date) >= todayKey
+                )
+                .slice(0, 4),
+        [sortedSlots, todayKey]
+    );
 
     const selectedMonthLoading = selectedDateMonthKey
         ? calendarLoadingKeys[selectedDateMonthKey] ?? false
@@ -833,7 +875,7 @@ export function DoctorConsultationPageClient({
                                     <Loader2 className="h-5 w-5 animate-spin" /> Loading slots...
                                 </div>
                             ) : (
-                                <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+                                <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
                                     <div className="space-y-4">
                                         <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm sm:p-6">
                                             <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -878,7 +920,7 @@ export function DoctorConsultationPageClient({
                                                         onMonthChange={setCalendarMonth}
                                                         components={{ DayButton: DayButtonWithSlots }}
                                                         modifiers={{ hasSlots: highlightedDates }}
-                                                        className="mx-auto min-w-[18rem] sm:min-w-0 [--cell-size:2.35rem] sm:[--cell-size:2.75rem] lg:[--cell-size:3.25rem]"
+                                                        className="mx-auto w-full max-w-sm sm:max-w-none [--cell-size:2.3rem] sm:[--cell-size:2.75rem] xl:[--cell-size:3.25rem]"
                                                     />
                                                 </div>
                                             </div>
@@ -957,6 +999,67 @@ export function DoctorConsultationPageClient({
                                             <p className="mt-3 text-sm text-muted-foreground">
                                                 Select a day to review or edit consultation duty hours.
                                             </p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4 xl:space-y-5">
+                                        <div className="rounded-3xl border border-green-100/70 bg-linear-to-br from-white via-emerald-50/60 to-emerald-100/60 p-5 shadow-inner">
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                                    Upcoming duty hours
+                                                </p>
+                                                <h3 className="text-base font-semibold text-slate-900">
+                                                    Your next clinic commitments
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground">
+                                                    Stay ahead by reviewing the next few confirmed duty hours across your clinics.
+                                                </p>
+                                            </div>
+                                            {upcomingActiveSlots.length > 0 ? (
+                                                <div className="mt-4 space-y-3">
+                                                    {upcomingActiveSlots.map((slot) => renderSlotCard(slot, "card"))}
+                                                </div>
+                                            ) : (
+                                                <div className="mt-4 rounded-2xl border border-dashed border-green-200 bg-emerald-50/40 p-4 text-sm text-muted-foreground">
+                                                    No upcoming duty hours are scheduled beyond today. Generate new hours to publish availability.
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="rounded-3xl border border-amber-100/70 bg-linear-to-br from-amber-50/70 via-white to-amber-100/70 p-5 shadow-inner">
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+                                                    On leave days
+                                                </p>
+                                                <h3 className="text-base font-semibold text-amber-900">
+                                                    Planned time away
+                                                </h3>
+                                                <p className="text-sm text-amber-800/80">
+                                                    Patients will not see these slots until you restore availability.
+                                                </p>
+                                            </div>
+                                            {upcomingLeaveSlots.length > 0 ? (
+                                                <div className="mt-4 space-y-3">
+                                                    {upcomingLeaveSlots.map((slot) => (
+                                                        <div
+                                                            key={slot.availability_id}
+                                                            className="rounded-2xl border border-amber-200 bg-white/80 p-4 text-sm text-amber-900 shadow-sm"
+                                                        >
+                                                            <p className="text-sm font-semibold text-amber-800">
+                                                                {toManilaDateString(slot.available_date)} · {formatTimeRange(slot.available_timestart, slot.available_timeend)}
+                                                            </p>
+                                                            <p className="mt-1 text-sm text-amber-800/80">
+                                                                {slot.clinic.clinic_name}
+                                                            </p>
+                                                            <p className="mt-2 text-xs text-amber-700">
+                                                                Update this day to reopen appointments if plans change.
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="mt-4 rounded-2xl border border-dashed border-amber-200 bg-white/70 p-4 text-sm text-amber-800/80">
+                                                    No upcoming leave days on record. Use “Edit” on a duty hour to temporarily block bookings.
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
