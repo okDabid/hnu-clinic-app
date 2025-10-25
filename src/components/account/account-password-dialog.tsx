@@ -294,7 +294,7 @@ export function AccountPasswordDialog({
                             </Button>
                         </div>
                         {passwordMismatchMessage ? (
-                            <p className="mt-2 text-sm text-red-600">{passwordMismatchMessage}</p>
+                            <p className="mt-2 text-xs text-muted-foreground">{passwordMismatchMessage}</p>
                         ) : null}
                     </div>
 
