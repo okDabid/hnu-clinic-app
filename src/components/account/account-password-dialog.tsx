@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
     DialogContent,
@@ -16,6 +17,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { getPasswordStrength } from "@/lib/password-strength";
 
 export type AccountPasswordPayload = {
     oldPassword: string;
@@ -73,6 +75,9 @@ export function AccountPasswordDialog({
     const [errors, setErrors] = useState<string[]>([]);
     const [message, setMessage] = useState<string | null>(null);
     const [livePasswordErrors, setLivePasswordErrors] = useState<string[]>([]);
+    const [newPassword, setNewPassword] = useState("");
+
+    const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword]);
 
     const combinedErrors = useMemo(() => {
         if (errors.length > 0) return errors;
@@ -87,6 +92,7 @@ export function AccountPasswordDialog({
         setErrors([]);
         setLivePasswordErrors([]);
         setMessage(null);
+        setNewPassword("");
     }, []);
 
     const handleOpenChange = useCallback(
@@ -105,11 +111,13 @@ export function AccountPasswordDialog({
             const form = event.currentTarget;
             const formData = new FormData(form);
             const oldPassword = String(formData.get("oldPassword") ?? "");
-            const newPassword = String(formData.get("newPassword") ?? "");
+            const newPasswordValue = String(formData.get("newPassword") ?? "");
             const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-            const validationErrors = collectPasswordErrors(newPassword);
-            if (newPassword !== confirmPassword) {
+            setNewPassword(newPasswordValue);
+
+            const validationErrors = collectPasswordErrors(newPasswordValue);
+            if (newPasswordValue !== confirmPassword) {
                 validationErrors.push("Passwords do not match.");
             }
 
@@ -124,7 +132,7 @@ export function AccountPasswordDialog({
                 setErrors([]);
                 setMessage(null);
 
-                const result = await onSubmit({ oldPassword, newPassword });
+                const result = await onSubmit({ oldPassword, newPassword: newPasswordValue });
 
                 if (result && result.error) {
                     setErrors([result.error]);
@@ -135,6 +143,8 @@ export function AccountPasswordDialog({
                 setMessage(success);
                 onSuccess?.(success);
                 form.reset();
+                setNewPassword("");
+                setLivePasswordErrors([]);
             } catch (error) {
                 console.error("Password update failed", error);
                 setErrors(["Failed to update password. Please try again."]);
@@ -147,11 +157,16 @@ export function AccountPasswordDialog({
 
     const handleNewPasswordChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
+        setNewPassword(value);
+
         if (value.length === 0) {
+            setErrors([]);
             setLivePasswordErrors([]);
             setMessage(null);
             return;
         }
+
+        setErrors([]);
         setLivePasswordErrors(collectPasswordErrors(value));
         setMessage(null);
     }, []);
@@ -197,23 +212,46 @@ export function AccountPasswordDialog({
 
                     <div>
                         <Label className="mb-1 block font-medium">New password</Label>
-                        <div className="relative">
-                            <Input
-                                type={showNew ? "text" : "password"}
-                                name="newPassword"
-                                required
-                                className="pr-10"
-                                onChange={handleNewPasswordChange}
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setShowNew((prev) => !prev)}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                            >
-                                {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
-                            </Button>
+                        <div className="space-y-2">
+                            <div className="relative">
+                                <Input
+                                    type={showNew ? "text" : "password"}
+                                    name="newPassword"
+                                    required
+                                    className="pr-10"
+                                    onChange={handleNewPasswordChange}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setShowNew((prev) => !prev)}
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                >
+                                    {showNew ? (
+                                        <EyeOff className="h-5 w-5 text-gray-500" />
+                                    ) : (
+                                        <Eye className="h-5 w-5 text-gray-500" />
+                                    )}
+                                </Button>
+                            </div>
+                            {newPassword ? (
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className={cn("font-medium", passwordStrength.textClass)}>
+                                            Strength: {passwordStrength.label}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                            Use 8+ chars with letters, numbers & symbols
+                                        </span>
+                                    </div>
+                                    <Progress
+                                        value={passwordStrength.value}
+                                        indicatorClassName={passwordStrength.indicatorClass}
+                                        aria-label={`Password strength ${passwordStrength.label || "unknown"}`}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
                     </div>
 
