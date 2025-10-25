@@ -408,14 +408,40 @@ export default function DoctorAppointmentsPage() {
                     newTimeEnd,
                 }),
             });
-            if (!res.ok) throw new Error("Action failed");
+            const data = (await res.json().catch(() => null)) as
+                | (Appointment & { error?: string; message?: string })
+                | { error?: string; message?: string }
+                | null;
+
+            if (!res.ok) {
+                const errorMessage = data?.error ?? data?.message ?? "Action failed";
+                toast.error(errorMessage);
+                return;
+            }
 
             if (actionType === "cancel") {
-                setAppointments((prev) => prev.filter((appt) => appt.id !== selectedAppt.id));
+                if (data && typeof data === "object" && "id" in data) {
+                    const updated = data as Appointment;
+                    setAppointments((prev) =>
+                        prev.map((appt) => (appt.id === selectedAppt.id ? updated : appt))
+                    );
+                } else {
+                    setAppointments((prev) =>
+                        prev.map((appt) =>
+                            appt.id === selectedAppt.id
+                                ? { ...appt, status: "Cancelled" }
+                                : appt
+                        )
+                    );
+                }
                 toast.success("Appointment cancelled");
             } else if (actionType === "move") {
-                const updated = await res.json();
-                setAppointments((prev) => prev.map((appt) => (appt.id === selectedAppt.id ? updated : appt)));
+                if (data && typeof data === "object" && "id" in data) {
+                    const updated = data as Appointment;
+                    setAppointments((prev) =>
+                        prev.map((appt) => (appt.id === selectedAppt.id ? updated : appt))
+                    );
+                }
                 toast.success("Appointment moved");
             }
             resetDialogState();
