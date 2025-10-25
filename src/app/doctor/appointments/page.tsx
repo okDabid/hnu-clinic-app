@@ -408,14 +408,22 @@ export default function DoctorAppointmentsPage() {
                     newTimeEnd,
                 }),
             });
-            if (!res.ok) throw new Error("Action failed");
+            const data = await res.json();
+            if (!res.ok) {
+                const message = typeof data?.error === "string" ? data.error : "Action failed";
+                toast.error(message);
+                return;
+            }
 
             if (actionType === "cancel") {
-                setAppointments((prev) => prev.filter((appt) => appt.id !== selectedAppt.id));
+                setAppointments((prev) =>
+                    prev.map((appt) => (appt.id === selectedAppt.id ? data : appt))
+                );
                 toast.success("Appointment cancelled");
             } else if (actionType === "move") {
-                const updated = await res.json();
-                setAppointments((prev) => prev.map((appt) => (appt.id === selectedAppt.id ? updated : appt)));
+                setAppointments((prev) =>
+                    prev.map((appt) => (appt.id === selectedAppt.id ? data : appt))
+                );
                 toast.success("Appointment moved");
             }
             resetDialogState();
@@ -564,12 +572,12 @@ export default function DoctorAppointmentsPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                        <TableHead className="min-w-[160px]">Patient</TableHead>
-                                        <TableHead className="min-w-[160px]">Clinic</TableHead>
+                                        <TableHead className="min-w-40">Patient</TableHead>
+                                        <TableHead className="min-w-40">Clinic</TableHead>
                                         <TableHead className="min-w-[120px]">Date</TableHead>
                                         <TableHead className="min-w-[120px]">Time</TableHead>
                                         <TableHead className="min-w-[120px]">Status</TableHead>
-                                        <TableHead className="min-w-[160px]">Consultation</TableHead>
+                                        <TableHead className="min-w-40">Consultation</TableHead>
                                         <TableHead className="w-[110px] text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -629,11 +637,10 @@ export default function DoctorAppointmentsPage() {
                                                     <TableCell>
                                                         <Badge
                                                             variant="outline"
-                                                            className={`rounded-full px-2 py-1 text-xs ${
-                                                                appointment.hasConsultation
+                                                            className={`rounded-full px-2 py-1 text-xs ${appointment.hasConsultation
                                                                     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                                                                     : "border-slate-200 bg-slate-100 text-slate-600"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {appointment.hasConsultation ? "Consultation ready" : "Awaiting notes"}
                                                         </Badge>

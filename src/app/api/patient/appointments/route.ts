@@ -371,8 +371,13 @@ export async function DELETE(req: Request) {
             );
         }
 
-        await prisma.appointment.delete({
+        if (appointment.status === AppointmentStatus.Cancelled) {
+            return NextResponse.json({ message: "Appointment already cancelled" });
+        }
+
+        await prisma.appointment.update({
             where: { appointment_id },
+            data: { status: AppointmentStatus.Cancelled },
         });
 
         return NextResponse.json({ message: "Appointment cancelled" });
