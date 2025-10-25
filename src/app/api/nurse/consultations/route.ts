@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { manilaNow } from "@/lib/time";
+import { handleAuthError, requireRole } from "@/lib/authorization";
+import { Role } from "@prisma/client";
 
 export async function POST(req: Request) {
     try {
+        const session = await requireRole([Role.NURSE, Role.ADMIN]);
+
         const body = await req.json();
-        const { appointment_id, nurse_user_id, reason_of_visit, findings, diagnosis } = body;
+        const { appointment_id, reason_of_visit, findings, diagnosis } = body;
 
         if (!appointment_id || typeof appointment_id !== "string") {
             return NextResponse.json(
@@ -14,12 +18,7 @@ export async function POST(req: Request) {
             );
         }
 
-        if (!nurse_user_id || typeof nurse_user_id !== "string") {
-            return NextResponse.json(
-                { error: "Valid nurse_user_id is required" },
-                { status: 400 }
-            );
-        }
+        const nurse_user_id = session.user.id;
 
         const appointment = await prisma.appointment.findUnique({
             where: { appointment_id },
@@ -54,6 +53,8 @@ export async function POST(req: Request) {
 
         return NextResponse.json(consultation);
     } catch (err: unknown) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         // Narrow the type safely
         if (err instanceof Error) {
             console.error("POST /api/nurse/consultations error:", err.message);

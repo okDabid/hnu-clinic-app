@@ -10,8 +10,7 @@ import {
     Role,
     AccountStatus,
 } from "@prisma/client";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // Generate random password (8 chars)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -71,10 +70,7 @@ async function ensureUniqueEmployeeId(value: string): Promise<string> {
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        await requireRole([Role.NURSE, Role.ADMIN]);
 
         const payload = await req.json();
         const roleEnum = payload.role as Role;
@@ -197,6 +193,8 @@ export async function POST(req: Request) {
             password: plainPassword,
         });
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("[POST /api/nurse/accounts]", err);
 
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -215,6 +213,8 @@ export async function POST(req: Request) {
 // ---------------- LIST USERS ----------------
 export async function GET() {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const users = await prisma.users.findMany({
             include: { student: true, employee: true },
         });
@@ -258,6 +258,8 @@ export async function GET() {
 
         return NextResponse.json(formatted);
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("[GET /api/nurse/accounts]", err);
         return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
     }
@@ -266,10 +268,7 @@ export async function GET() {
 // ---------------- UPDATE USER STATUS (Activate / Deactivate) ----------------
 export async function PUT(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const session = await requireRole([Role.NURSE, Role.ADMIN]);
 
         const { user_id, newStatus } = await req.json();
 
@@ -314,6 +313,8 @@ export async function PUT(req: Request) {
             message: `User ${newStatus === "Active" ? "activated" : "deactivated"} successfully.`,
         });
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("[PUT /api/nurse/accounts]", err);
         return NextResponse.json(
             { error: "Failed to update account status" },

@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
+import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // GET /api/nurse/clinic/[id]
 export async function GET(
     _req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = await params; // must await
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
+        const { id } = params;
 
         if (!id) {
             return NextResponse.json({ error: "Clinic ID is required" }, { status: 400 });
@@ -23,6 +27,8 @@ export async function GET(
 
         return NextResponse.json(clinic);
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("GET /clinic/[id] error:", err);
         return NextResponse.json({ error: "Failed to fetch clinic" }, { status: 500 });
     }
@@ -31,10 +37,12 @@ export async function GET(
 // PUT /api/nurse/clinic/[id]
 export async function PUT(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
-        const { id } = await params;
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
+        const { id } = params;
 
         if (!id) {
             return NextResponse.json({ error: "Clinic ID is required" }, { status: 400 });
@@ -71,6 +79,8 @@ export async function PUT(
 
         return NextResponse.json(updatedClinic);
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("PUT /clinic/[id] error:", err);
         return NextResponse.json({ error: "Failed to update clinic" }, { status: 500 });
     }

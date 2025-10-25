@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { listDispenses, recordDispense, DispenseError } from "@/lib/dispense";
+import { handleAuthError, requireRole } from "@/lib/authorization";
+import { Role } from "@prisma/client";
 
 export async function GET() {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const dispenses = await listDispenses();
         return NextResponse.json(dispenses);
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("GET /api/nurse/dispense error:", err);
         return NextResponse.json(
             { error: "Failed to load dispenses" },
@@ -16,6 +22,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const {
             med_id,
             consultation_id,
@@ -62,6 +70,8 @@ export async function POST(req: Request) {
         });
         return NextResponse.json(newDispense);
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         if (err instanceof DispenseError) {
             return NextResponse.json({ error: err.message }, { status: err.status });
         }
