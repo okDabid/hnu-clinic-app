@@ -56,6 +56,18 @@ export default function LoginPageClient() {
         () => getPasswordStrength(newPassword),
         [newPassword]
     );
+    const passwordMismatchMessage = useMemo(() => {
+        if (!newPassword || !confirmPassword) return null;
+        if (newPassword === confirmPassword) return null;
+        return "Passwords do not match.";
+    }, [confirmPassword, newPassword]);
+    const canReset = useMemo(() => {
+        const trimmedCode = code.trim();
+        if (!/^\d{6}$/.test(trimmedCode)) return false;
+        if (!newPassword || !confirmPassword) return false;
+        if (newPassword !== confirmPassword) return false;
+        return passwordStrength.label !== "Too weak";
+    }, [code, confirmPassword, newPassword, passwordStrength.label]);
 
     const handleForgotToggle = (open: boolean) => {
         setForgotOpen(open);
@@ -187,18 +199,14 @@ export default function LoginPageClient() {
             return;
         }
 
-        if (passwordValue.length < 8) {
-            setPasswordError("Password must be at least 8 characters.");
-            return;
-        }
-
-        if (!/[A-Za-z]/.test(passwordValue) || !/\d/.test(passwordValue)) {
-            setPasswordError("Include letters and numbers for a stronger password.");
+        const strength = getPasswordStrength(passwordValue);
+        if (strength.label === "Too weak") {
+            setPasswordError("Create a stronger password before continuing.");
             return;
         }
 
         if (passwordValue !== confirmPassword) {
-            setPasswordError("Passwords do not match.");
+            setPasswordError(null);
             return;
         }
 
@@ -587,17 +595,17 @@ export default function LoginPageClient() {
                                             </Button>
                                         </div>
                                         {passwordError && (
-                                            <p className="text-sm text-red-600">{passwordError}</p>
+                                            <p className="text-xs text-muted-foreground">{passwordError}</p>
                                         )}
-                                        <p className="text-xs text-slate-500">
-                                            Password must be at least 8 characters and include both letters and numbers.
-                                        </p>
+                                        {passwordMismatchMessage && (
+                                            <p className="text-xs text-muted-foreground">{passwordMismatchMessage}</p>
+                                        )}
                                     </div>
                                 </div>
                                 <DialogFooter>
                                     <Button
                                         type="submit"
-                                        disabled={resetting}
+                                        disabled={resetting || !canReset}
                                         className="w-full bg-green-600 text-white hover:bg-green-700"
                                     >
                                         {resetting ? (

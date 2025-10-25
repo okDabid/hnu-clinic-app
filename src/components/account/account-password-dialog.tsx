@@ -43,20 +43,6 @@ interface AccountPasswordDialogProps {
     successMessage?: string;
 }
 
-const passwordValidationRules: { test: (value: string) => boolean; message: string }[] = [
-    { test: (value) => value.length >= 8, message: "Password must be at least 8 characters." },
-    { test: (value) => /[A-Z]/.test(value), message: "Must contain an uppercase letter." },
-    { test: (value) => /[a-z]/.test(value), message: "Must contain a lowercase letter." },
-    { test: (value) => /\d/.test(value), message: "Must contain a number." },
-    { test: (value) => /[^\w\s]/.test(value), message: "Must contain a symbol." },
-];
-
-function collectPasswordErrors(password: string) {
-    return passwordValidationRules
-        .filter((rule) => !rule.test(password))
-        .map((rule) => rule.message);
-}
-
 export function AccountPasswordDialog({
     onSubmit,
     onSuccess,
@@ -74,7 +60,6 @@ export function AccountPasswordDialog({
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
     const [message, setMessage] = useState<string | null>(null);
-    const [livePasswordErrors, setLivePasswordErrors] = useState<string[]>([]);
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -86,13 +71,24 @@ export function AccountPasswordDialog({
         return "Passwords do not match.";
     }, [confirmPassword, newPassword]);
 
+    const canSubmit = useMemo(() => {
+        if (!newPassword || !confirmPassword) {
+            return false;
+        }
+
+        if (newPassword !== confirmPassword) {
+            return false;
+        }
+
+        return passwordStrength.label !== "Too weak";
+    }, [confirmPassword, newPassword, passwordStrength.label]);
+
     const resetState = useCallback(() => {
         setShowCurrent(false);
         setShowNew(false);
         setShowConfirm(false);
         setLoading(false);
         setErrors([]);
-        setLivePasswordErrors([]);
         setMessage(null);
         setNewPassword("");
         setConfirmPassword("");
@@ -120,11 +116,11 @@ export function AccountPasswordDialog({
             setNewPassword(newPasswordValue);
             setConfirmPassword(confirmPasswordValue);
 
-            const validationErrors = collectPasswordErrors(newPasswordValue);
             const hasMismatch = newPasswordValue !== confirmPasswordValue;
+            const strength = getPasswordStrength(newPasswordValue);
+            const isTooWeak = strength.label === "Too weak";
 
-            if (validationErrors.length > 0 || hasMismatch) {
-                setLivePasswordErrors(validationErrors);
+            if (hasMismatch || isTooWeak) {
                 setErrors([]);
                 setMessage(null);
                 return;
@@ -147,7 +143,6 @@ export function AccountPasswordDialog({
                 onSuccess?.(success);
                 form.reset();
                 setNewPassword("");
-                setLivePasswordErrors([]);
                 setConfirmPassword("");
             } catch (error) {
                 console.error("Password update failed", error);
@@ -159,24 +154,14 @@ export function AccountPasswordDialog({
         [onSubmit, onSuccess, successMessage]
     );
 
-    const recalculateLiveErrors = useCallback((nextPassword: string) => {
-        if (nextPassword.length === 0) {
-            setLivePasswordErrors([]);
-            return;
-        }
-
-        setLivePasswordErrors(collectPasswordErrors(nextPassword));
-    }, []);
-
     const handleNewPasswordChange = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
             const value = event.target.value;
             setNewPassword(value);
-            recalculateLiveErrors(value);
             setErrors([]);
             setMessage(null);
         },
-        [recalculateLiveErrors]
+        []
     );
 
     const handleConfirmPasswordChange = useCallback(
@@ -298,14 +283,6 @@ export function AccountPasswordDialog({
                         ) : null}
                     </div>
 
-                    {livePasswordErrors.length > 0 ? (
-                        <div className="space-y-1 text-xs text-muted-foreground">
-                            {livePasswordErrors.map((error, index) => (
-                                <p key={index}>{error}</p>
-                            ))}
-                        </div>
-                    ) : null}
-
                     {errors.length > 0 ? (
                         <div className="space-y-1 text-sm text-red-600">
                             {errors.map((error, index) => (
@@ -320,7 +297,7 @@ export function AccountPasswordDialog({
                         <Button
                             type="submit"
                             className="w-full rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
-                            disabled={loading}
+                            disabled={loading || !canSubmit}
                         >
                             {loading ? (
                                 <>
