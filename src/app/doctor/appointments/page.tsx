@@ -408,14 +408,22 @@ export default function DoctorAppointmentsPage() {
                     newTimeEnd,
                 }),
             });
-            if (!res.ok) throw new Error("Action failed");
+            const data = await res.json();
+            if (!res.ok) {
+                const message = typeof data?.error === "string" ? data.error : "Action failed";
+                toast.error(message);
+                return;
+            }
 
             if (actionType === "cancel") {
-                setAppointments((prev) => prev.filter((appt) => appt.id !== selectedAppt.id));
+                setAppointments((prev) =>
+                    prev.map((appt) => (appt.id === selectedAppt.id ? data : appt))
+                );
                 toast.success("Appointment cancelled");
             } else if (actionType === "move") {
-                const updated = await res.json();
-                setAppointments((prev) => prev.map((appt) => (appt.id === selectedAppt.id ? updated : appt)));
+                setAppointments((prev) =>
+                    prev.map((appt) => (appt.id === selectedAppt.id ? data : appt))
+                );
                 toast.success("Appointment moved");
             }
             resetDialogState();

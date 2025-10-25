@@ -414,6 +414,20 @@ export async function PATCH(
                 return NextResponse.json({ error: "Cancellation reason is required" }, { status: 400 });
             }
 
+            if (appointment.status === AppointmentStatus.Completed) {
+                return NextResponse.json(
+                    { error: "Completed appointments cannot be cancelled" },
+                    { status: 400 }
+                );
+            }
+
+            if (appointment.status === AppointmentStatus.Cancelled) {
+                return NextResponse.json(
+                    { error: "Appointment already cancelled" },
+                    { status: 400 }
+                );
+            }
+
             const patientEmail = getPatientEmail(appointment.patient);
             if (patientEmail) {
                 const emailPayload = buildStatusEmail({
@@ -441,11 +455,26 @@ export async function PATCH(
                 }
             }
 
-            await prisma.appointment.delete({
+            const updated = await prisma.appointment.update({
                 where: { appointment_id: id },
+                data: {
+                    status: AppointmentStatus.Cancelled,
+                    remarks: reason,
+                },
+                include: {
+                    clinic: { select: { clinic_name: true } },
+                    consultation: { select: { consultation_id: true } },
+                    patient: {
+                        select: {
+                            username: true,
+                            student: { select: { fname: true, lname: true } },
+                            employee: { select: { fname: true, lname: true } },
+                        },
+                    },
+                },
             });
 
-            return NextResponse.json({ message: "Appointment cancelled" });
+            return NextResponse.json(shapeResponse(updated));
         }
 
         // Map frontend actions to Prisma enum
