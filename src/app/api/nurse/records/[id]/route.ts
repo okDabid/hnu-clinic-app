@@ -4,14 +4,18 @@ import { patientRecordPatchSchema, updatePatientRecordEntry } from "@/lib/patien
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { Role } from "@prisma/client";
 
+type RecordRouteContext = {
+    params: Promise<{ id: string }>;
+};
+
 export async function PATCH(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: RecordRouteContext
 ) {
     try {
         await requireRole([Role.NURSE, Role.ADMIN]);
 
-        const { id } = params;
+        const { id } = await params;
 
         if (!id) {
             return NextResponse.json(

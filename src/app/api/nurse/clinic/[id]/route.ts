@@ -4,14 +4,18 @@ import { Role } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // GET /api/nurse/clinic/[id]
+type ClinicRouteContext = {
+    params: Promise<{ id: string }>;
+};
+
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: ClinicRouteContext
 ) {
     try {
         await requireRole([Role.NURSE, Role.ADMIN]);
 
-        const { id } = params;
+        const { id } = await params;
 
         if (!id) {
             return NextResponse.json({ error: "Clinic ID is required" }, { status: 400 });
@@ -37,12 +41,12 @@ export async function GET(
 // PUT /api/nurse/clinic/[id]
 export async function PUT(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: ClinicRouteContext
 ) {
     try {
         await requireRole([Role.NURSE, Role.ADMIN]);
 
-        const { id } = params;
+        const { id } = await params;
 
         if (!id) {
             return NextResponse.json({ error: "Clinic ID is required" }, { status: 400 });
