@@ -86,12 +86,6 @@ export function AccountPasswordDialog({
         return "Passwords do not match.";
     }, [confirmPassword, newPassword]);
 
-    const combinedErrors = useMemo(() => {
-        const source = errors.length > 0 ? errors : livePasswordErrors;
-        if (!passwordMismatchMessage) return source;
-        return source.filter((error) => error !== passwordMismatchMessage);
-    }, [errors, livePasswordErrors, passwordMismatchMessage]);
-
     const resetState = useCallback(() => {
         setShowCurrent(false);
         setShowNew(false);
@@ -127,12 +121,11 @@ export function AccountPasswordDialog({
             setConfirmPassword(confirmPasswordValue);
 
             const validationErrors = collectPasswordErrors(newPasswordValue);
-            if (newPasswordValue !== confirmPasswordValue) {
-                validationErrors.push("Passwords do not match.");
-            }
+            const hasMismatch = newPasswordValue !== confirmPasswordValue;
 
-            if (validationErrors.length > 0) {
-                setErrors(validationErrors);
+            if (validationErrors.length > 0 || hasMismatch) {
+                setLivePasswordErrors(validationErrors);
+                setErrors([]);
                 setMessage(null);
                 return;
             }
@@ -305,13 +298,21 @@ export function AccountPasswordDialog({
                         ) : null}
                     </div>
 
-                    {combinedErrors.length > 0 && (
-                        <div className="space-y-1 text-sm text-red-600">
-                            {combinedErrors.map((error, index) => (
+                    {livePasswordErrors.length > 0 ? (
+                        <div className="space-y-1 text-xs text-muted-foreground">
+                            {livePasswordErrors.map((error, index) => (
                                 <p key={index}>{error}</p>
                             ))}
                         </div>
-                    )}
+                    ) : null}
+
+                    {errors.length > 0 ? (
+                        <div className="space-y-1 text-sm text-red-600">
+                            {errors.map((error, index) => (
+                                <p key={index}>{error}</p>
+                            ))}
+                        </div>
+                    ) : null}
 
                     {message ? <p className="text-sm text-green-600">{message}</p> : null}
 
