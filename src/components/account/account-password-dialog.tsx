@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
     DialogContent,
@@ -16,6 +17,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { getPasswordStrength } from "@/lib/password-strength";
 
 export type AccountPasswordPayload = {
     oldPassword: string;
@@ -41,20 +43,6 @@ interface AccountPasswordDialogProps {
     successMessage?: string;
 }
 
-const passwordValidationRules: { test: (value: string) => boolean; message: string }[] = [
-    { test: (value) => value.length >= 8, message: "Password must be at least 8 characters." },
-    { test: (value) => /[A-Z]/.test(value), message: "Must contain an uppercase letter." },
-    { test: (value) => /[a-z]/.test(value), message: "Must contain a lowercase letter." },
-    { test: (value) => /\d/.test(value), message: "Must contain a number." },
-    { test: (value) => /[^\w\s]/.test(value), message: "Must contain a symbol." },
-];
-
-function collectPasswordErrors(password: string) {
-    return passwordValidationRules
-        .filter((rule) => !rule.test(password))
-        .map((rule) => rule.message);
-}
-
 export function AccountPasswordDialog({
     onSubmit,
     onSuccess,
@@ -72,12 +60,28 @@ export function AccountPasswordDialog({
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
     const [message, setMessage] = useState<string | null>(null);
-    const [livePasswordErrors, setLivePasswordErrors] = useState<string[]>([]);
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
-    const combinedErrors = useMemo(() => {
-        if (errors.length > 0) return errors;
-        return livePasswordErrors;
-    }, [errors, livePasswordErrors]);
+    const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword]);
+
+    const passwordMismatchMessage = useMemo(() => {
+        if (!newPassword || !confirmPassword) return null;
+        if (newPassword === confirmPassword) return null;
+        return "Passwords do not match.";
+    }, [confirmPassword, newPassword]);
+
+    const canSubmit = useMemo(() => {
+        if (!newPassword || !confirmPassword) {
+            return false;
+        }
+
+        if (newPassword !== confirmPassword) {
+            return false;
+        }
+
+        return passwordStrength.label !== "Too weak";
+    }, [confirmPassword, newPassword, passwordStrength.label]);
 
     const resetState = useCallback(() => {
         setShowCurrent(false);
@@ -85,8 +89,9 @@ export function AccountPasswordDialog({
         setShowConfirm(false);
         setLoading(false);
         setErrors([]);
-        setLivePasswordErrors([]);
         setMessage(null);
+        setNewPassword("");
+        setConfirmPassword("");
     }, []);
 
     const handleOpenChange = useCallback(
@@ -105,16 +110,18 @@ export function AccountPasswordDialog({
             const form = event.currentTarget;
             const formData = new FormData(form);
             const oldPassword = String(formData.get("oldPassword") ?? "");
-            const newPassword = String(formData.get("newPassword") ?? "");
-            const confirmPassword = String(formData.get("confirmPassword") ?? "");
+            const newPasswordValue = String(formData.get("newPassword") ?? "");
+            const confirmPasswordValue = String(formData.get("confirmPassword") ?? "");
 
-            const validationErrors = collectPasswordErrors(newPassword);
-            if (newPassword !== confirmPassword) {
-                validationErrors.push("Passwords do not match.");
-            }
+            setNewPassword(newPasswordValue);
+            setConfirmPassword(confirmPasswordValue);
 
-            if (validationErrors.length > 0) {
-                setErrors(validationErrors);
+            const hasMismatch = newPasswordValue !== confirmPasswordValue;
+            const strength = getPasswordStrength(newPasswordValue);
+            const isTooWeak = strength.label === "Too weak";
+
+            if (hasMismatch || isTooWeak) {
+                setErrors([]);
                 setMessage(null);
                 return;
             }
@@ -124,7 +131,7 @@ export function AccountPasswordDialog({
                 setErrors([]);
                 setMessage(null);
 
-                const result = await onSubmit({ oldPassword, newPassword });
+                const result = await onSubmit({ oldPassword, newPassword: newPasswordValue });
 
                 if (result && result.error) {
                     setErrors([result.error]);
@@ -135,6 +142,8 @@ export function AccountPasswordDialog({
                 setMessage(success);
                 onSuccess?.(success);
                 form.reset();
+                setNewPassword("");
+                setConfirmPassword("");
             } catch (error) {
                 console.error("Password update failed", error);
                 setErrors(["Failed to update password. Please try again."]);
@@ -145,16 +154,25 @@ export function AccountPasswordDialog({
         [onSubmit, onSuccess, successMessage]
     );
 
-    const handleNewPasswordChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
-        if (value.length === 0) {
-            setLivePasswordErrors([]);
+    const handleNewPasswordChange = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+            const value = event.target.value;
+            setNewPassword(value);
+            setErrors([]);
             setMessage(null);
-            return;
-        }
-        setLivePasswordErrors(collectPasswordErrors(value));
-        setMessage(null);
-    }, []);
+        },
+        []
+    );
+
+    const handleConfirmPasswordChange = useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+            const value = event.target.value;
+            setConfirmPassword(value);
+            setErrors([]);
+            setMessage(null);
+        },
+        []
+    );
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -197,23 +215,46 @@ export function AccountPasswordDialog({
 
                     <div>
                         <Label className="mb-1 block font-medium">New password</Label>
-                        <div className="relative">
-                            <Input
-                                type={showNew ? "text" : "password"}
-                                name="newPassword"
-                                required
-                                className="pr-10"
-                                onChange={handleNewPasswordChange}
-                            />
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setShowNew((prev) => !prev)}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
-                            >
-                                {showNew ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
-                            </Button>
+                        <div className="space-y-2">
+                            <div className="relative">
+                                <Input
+                                    type={showNew ? "text" : "password"}
+                                    name="newPassword"
+                                    required
+                                    className="pr-10"
+                                    onChange={handleNewPasswordChange}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setShowNew((prev) => !prev)}
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-transparent"
+                                >
+                                    {showNew ? (
+                                        <EyeOff className="h-5 w-5 text-gray-500" />
+                                    ) : (
+                                        <Eye className="h-5 w-5 text-gray-500" />
+                                    )}
+                                </Button>
+                            </div>
+                            {newPassword ? (
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className={cn("font-medium", passwordStrength.textClass)}>
+                                            Strength: {passwordStrength.label}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                            Use 8+ chars with letters, numbers & symbols
+                                        </span>
+                                    </div>
+                                    <Progress
+                                        value={passwordStrength.value}
+                                        indicatorClassName={passwordStrength.indicatorClass}
+                                        aria-label={`Password strength ${passwordStrength.label || "unknown"}`}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
                     </div>
 
@@ -225,6 +266,7 @@ export function AccountPasswordDialog({
                                 name="confirmPassword"
                                 required
                                 className="pr-10"
+                                onChange={handleConfirmPasswordChange}
                             />
                             <Button
                                 type="button"
@@ -236,15 +278,18 @@ export function AccountPasswordDialog({
                                 {showConfirm ? <EyeOff className="h-5 w-5 text-gray-500" /> : <Eye className="h-5 w-5 text-gray-500" />}
                             </Button>
                         </div>
+                        {passwordMismatchMessage ? (
+                            <p className="mt-2 text-xs text-muted-foreground">{passwordMismatchMessage}</p>
+                        ) : null}
                     </div>
 
-                    {combinedErrors.length > 0 && (
-                        <ul className="space-y-1 text-sm text-red-600">
-                            {combinedErrors.map((error, index) => (
-                                <li key={index}>• {error}</li>
+                    {errors.length > 0 ? (
+                        <div className="space-y-1 text-sm text-red-600">
+                            {errors.map((error, index) => (
+                                <p key={index}>{error}</p>
                             ))}
-                        </ul>
-                    )}
+                        </div>
+                    ) : null}
 
                     {message ? <p className="text-sm text-green-600">{message}</p> : null}
 
@@ -252,7 +297,7 @@ export function AccountPasswordDialog({
                         <Button
                             type="submit"
                             className="w-full rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
-                            disabled={loading}
+                            disabled={loading || !canSubmit}
                         >
                             {loading ? (
                                 <>

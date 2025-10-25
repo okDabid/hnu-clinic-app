@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { normalizeResetContact } from "@/lib/password-reset";
+import { getPasswordStrength } from "@/lib/password-strength";
 
 export async function POST(req: Request) {
     try {
@@ -36,9 +37,11 @@ export async function POST(req: Request) {
             );
         }
 
-        if (trimmedPassword.length < 8) {
+        const strength = getPasswordStrength(trimmedPassword);
+
+        if (strength.label === "Too weak") {
             return NextResponse.json(
-                { error: "New password must be at least 8 characters." },
+                { error: "Create a stronger password before continuing." },
                 { status: 400 }
             );
         }
