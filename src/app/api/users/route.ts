@@ -2,10 +2,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-
-// mirror Prisma enums manually (since they aren’t exported)
-type Role = "NURSE" | "DOCTOR" | "SCHOLAR" | "PATIENT" | "ADMIN";
-type AccountStatus = "Active" | "Inactive";
+import { Role, AccountStatus } from "@prisma/client";
+import { generateRandomPassword } from "@/lib/security";
+import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // --------------------
 // Error Handler Helper
@@ -24,9 +23,18 @@ function handleError(error: unknown, message = "Server error") {
 // --------------------
 export async function POST(req: Request) {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const body = await req.json();
 
-        const role = (body.role as string).toUpperCase() as Role;
+        const roleInput = String(body.role ?? "").toUpperCase();
+        if (!Object.values(Role).includes(roleInput as Role)) {
+            return NextResponse.json(
+                { error: "Invalid role specified" },
+                { status: 400 }
+            );
+        }
+        const role = roleInput as Role;
         const fname: string = body.fname;
         const mname: string | null = body.mname || null;
         const lname: string = body.lname;
@@ -39,7 +47,7 @@ export async function POST(req: Request) {
         const patientType: "student" | "employee" | null = body.patientType || null;
 
         // Generate random password
-        const rawPassword = Math.random().toString(36).slice(-8);
+        const rawPassword = generateRandomPassword(12);
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
         let username: string | null = null;
@@ -136,6 +144,8 @@ export async function POST(req: Request) {
             { status: 201 }
         );
     } catch (error: unknown) {
+        const authResponse = handleAuthError(error);
+        if (authResponse) return authResponse;
         return handleError(error, "Failed to create user");
     }
 }
@@ -145,6 +155,8 @@ export async function POST(req: Request) {
 // --------------------
 export async function GET() {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const users = await prisma.users.findMany({
             include: {
                 student: true,
@@ -167,6 +179,8 @@ export async function GET() {
 
         return NextResponse.json(formatted);
     } catch (error: unknown) {
+        const authResponse = handleAuthError(error);
+        if (authResponse) return authResponse;
         return handleError(error, "Failed to fetch users");
     }
 }
@@ -176,10 +190,19 @@ export async function GET() {
 // --------------------
 export async function PATCH(req: Request) {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const { userId, status } = (await req.json()) as {
             userId: string;
             status: AccountStatus;
         };
+
+        if (!Object.values(AccountStatus).includes(status)) {
+            return NextResponse.json(
+                { error: "Invalid status" },
+                { status: 400 }
+            );
+        }
 
         await prisma.users.update({
             where: { user_id: userId },
@@ -188,6 +211,8 @@ export async function PATCH(req: Request) {
 
         return NextResponse.json({ success: true });
     } catch (error: unknown) {
+        const authResponse = handleAuthError(error);
+        if (authResponse) return authResponse;
         return handleError(error, "Failed to update status");
     }
 }

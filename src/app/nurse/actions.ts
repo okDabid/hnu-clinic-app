@@ -46,6 +46,14 @@ export async function createUser(
         body: JSON.stringify(payload),
     });
 
+    if (res.status === 401) {
+        throw new Error("Your session has expired. Please sign in again.");
+    }
+
+    if (res.status === 403) {
+        throw new Error("You do not have permission to manage user accounts.");
+    }
+
     if (!res.ok) {
         throw new Error("Failed to create user");
     }
@@ -58,6 +66,14 @@ export async function getUsers(): Promise<UserSummary[]> {
         method: "GET",
         cache: "no-store",
     });
+
+    if (res.status === 401) {
+        throw new Error("Your session has expired. Please sign in again.");
+    }
+
+    if (res.status === 403) {
+        throw new Error("You do not have permission to view user accounts.");
+    }
 
     if (!res.ok) {
         throw new Error("Failed to fetch users");
@@ -75,6 +91,14 @@ export async function toggleUserStatus(
         body: JSON.stringify({ userId, status: newStatus }),
         headers: { "Content-Type": "application/json" },
     });
+
+    if (res.status === 401) {
+        throw new Error("Your session has expired. Please sign in again.");
+    }
+
+    if (res.status === 403) {
+        throw new Error("You do not have permission to update account status.");
+    }
 
     if (!res.ok) {
         throw new Error("Failed to update user status");

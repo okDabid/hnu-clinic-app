@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { MedCategory, MedType, DosageUnit } from "@prisma/client";
+import { MedCategory, MedType, DosageUnit, Role } from "@prisma/client";
+import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // GET stays the same (no changes)
 export async function GET() {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const now = new Date();
 
         const expiredReplenishments = await prisma.replenishment.findMany({
@@ -149,6 +152,8 @@ export async function GET() {
 
         return NextResponse.json({ inventory: result, archived, expiredDeducted: totalExpiredDeducted });
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("GET /api/nurse/inventory error:", err);
         return NextResponse.json({ error: "Failed to load inventory" }, { status: 500 });
     }
@@ -157,6 +162,8 @@ export async function GET() {
 // POST updated to support enums + strength
 export async function POST(req: Request) {
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const body = await req.json();
         const { clinic_id, item_name, quantity, expiry, category, item_type, strength, unit } = body as {
             clinic_id: string;
@@ -246,6 +253,8 @@ export async function POST(req: Request) {
 
         return NextResponse.json(newItem);
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("POST /api/nurse/inventory error:", err);
         return NextResponse.json({ error: "Failed to add stock" }, { status: 500 });
     }

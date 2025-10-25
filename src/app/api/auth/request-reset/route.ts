@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
+import { generateNumericCode } from "@/lib/security";
 
 export async function POST(req: Request) {
     try {
@@ -24,8 +25,6 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
         }
-
-        console.log("Starting password reset for:", normalized.normalized);
 
         // Find user by email
         const user = await prisma.users.findFirst({
@@ -60,10 +59,10 @@ export async function POST(req: Request) {
         });
 
         if (!user) {
-            return NextResponse.json(
-                { error: "No account found with that email." },
-                { status: 404 }
-            );
+            return NextResponse.json({
+                success: true,
+                message: "If an account exists for that email, a reset code has been sent.",
+            });
         }
 
         // Display name
@@ -72,7 +71,7 @@ export async function POST(req: Request) {
         if (user.employee) fullName = `${user.employee.fname} ${user.employee.lname}`;
 
         // Generate OTP and expiry
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const code = generateNumericCode(6);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
         // Atomic token handling with rate limit
@@ -141,7 +140,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             success: true,
-            message: "Reset code sent successfully.",
+            message: "If an account exists for that email, a reset code has been sent.",
         });
     } catch (error: unknown) {
         console.error("REQUEST-RESET ERROR DETAILS:", error);

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
+import { handleAuthError, requireRole } from "@/lib/authorization";
+import { Role } from "@prisma/client";
 
 import {
     QUARTERS,
@@ -438,20 +440,22 @@ function createReportHtml(report: ReportsResponse) {
 }
 
 export async function GET(req: NextRequest) {
-    const { searchParams } = new URL(req.url);
-    const yearParam = Number.parseInt(searchParams.get("year") ?? "", 10);
-    const quarterParam = Number.parseInt(searchParams.get("quarter") ?? "", 10);
-
-    const year = Number.isNaN(yearParam) ? undefined : yearParam;
-    const quarter = Number.isNaN(quarterParam)
-        ? undefined
-        : QUARTERS.includes(quarterParam as (typeof QUARTERS)[number])
-            ? (quarterParam as (typeof QUARTERS)[number])
-            : undefined;
-
     let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 
     try {
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
+        const { searchParams } = new URL(req.url);
+        const yearParam = Number.parseInt(searchParams.get("year") ?? "", 10);
+        const quarterParam = Number.parseInt(searchParams.get("quarter") ?? "", 10);
+
+        const year = Number.isNaN(yearParam) ? undefined : yearParam;
+        const quarter = Number.isNaN(quarterParam)
+            ? undefined
+            : QUARTERS.includes(quarterParam as (typeof QUARTERS)[number])
+                ? (quarterParam as (typeof QUARTERS)[number])
+                : undefined;
+
         const report = await getQuarterlyReports({ year, quarter });
 
         browser = await puppeteer.launch({
@@ -485,6 +489,8 @@ export async function GET(req: NextRequest) {
             },
         });
     } catch (error) {
+        const authResponse = handleAuthError(error);
+        if (authResponse) return authResponse;
         console.error("Failed to generate nurse report PDF", error);
         return NextResponse.json({ error: "Failed to generate report PDF" }, { status: 500 });
     } finally {

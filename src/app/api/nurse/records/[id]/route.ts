@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 
 import { patientRecordPatchSchema, updatePatientRecordEntry } from "@/lib/patient-records-update";
+import { handleAuthError, requireRole } from "@/lib/authorization";
+import { Role } from "@prisma/client";
+
+type RecordRouteContext = {
+    params: Promise<{ id: string }>;
+};
 
 export async function PATCH(
     req: Request,
-    { params }: { params: Promise<{ id: string }> } // FIXED for Next.js 14+
+    { params }: RecordRouteContext
 ) {
     try {
-        // Must await params in Next.js 14 dynamic routes
+        await requireRole([Role.NURSE, Role.ADMIN]);
+
         const { id } = await params;
 
         if (!id) {
@@ -30,6 +37,8 @@ export async function PATCH(
         const updated = await updatePatientRecordEntry(id, parsed.data);
         return NextResponse.json(updated);
     } catch (err) {
+        const authResponse = handleAuthError(err);
+        if (authResponse) return authResponse;
         console.error("PATCH /api/nurse/records/[id] error:", err);
         return NextResponse.json(
             { error: "Failed to update health data" },
