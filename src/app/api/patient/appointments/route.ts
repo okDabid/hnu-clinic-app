@@ -322,11 +322,12 @@ export async function PATCH(req: Request) {
                 appointment_date,
                 appointment_timestart,
                 appointment_timeend,
-                status: AppointmentStatus.Moved,
+                status: AppointmentStatus.Pending,
+                remarks: null,
             },
         });
 
-        return NextResponse.json({ message: "Appointment rescheduled" });
+        return NextResponse.json({ message: "Reschedule request submitted" });
     } catch (error) {
         console.error("[PATCH /api/patient/appointments]", error);
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
