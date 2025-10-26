@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import { withNewPage } from "@/lib/pdf/browser";
+import { PdfCache } from "@/lib/pdf/cache";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -62,6 +62,8 @@ function computeAge(dateOfBirth?: Date | null, now: Date = new Date()) {
 
   return age >= 0 ? String(age) : "";
 }
+
+const CERTIFICATE_CACHE = new PdfCache(1000 * 60 * 60); // 1 hour TTL
 
 function slugify(value: string) {
   return value
@@ -620,7 +622,6 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const isLocal = !process.env.AWS_REGION && !process.env.VERCEL;
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
@@ -845,19 +846,23 @@ export async function GET(
 
     const html = renderCertificateHtml(context);
 
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: { width: 1280, height: 720 },
-      executablePath: isLocal
-        ? process.platform === "win32"
-          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-          : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        : await chromium.executablePath(),
-      headless: true,
-    });
+    const filename = `${context.certificateType === "dental" ? "dental" : "medical"
+      }-certificate-${slugify(patientName)}.pdf`;
 
-    try {
-      const page = await browser.newPage();
+    const cacheKey = medcert.certificate_id;
+    const cached = CERTIFICATE_CACHE.get(cacheKey);
+    if (cached) {
+      return new Response(cached, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+
+    const pdfBytes = await withNewPage(async (page) => {
       await page.setContent(html, { waitUntil: "networkidle0" });
       await page.emulateMediaType("print");
       const pdfBuffer = await page.pdf({
@@ -871,28 +876,19 @@ export async function GET(
         },
       });
 
-      const pdfArrayBuffer =
-        pdfBuffer instanceof ArrayBuffer
-          ? pdfBuffer
-          : pdfBuffer.buffer.slice(
-            pdfBuffer.byteOffset,
-            pdfBuffer.byteOffset + pdfBuffer.byteLength
-          );
+      return new Uint8Array(pdfBuffer);
+    });
 
-      const filename = `${context.certificateType === "dental" ? "dental" : "medical"
-        }-certificate-${slugify(patientName)}.pdf`;
+    CERTIFICATE_CACHE.set(cacheKey, pdfBytes);
 
-      return new Response(pdfArrayBuffer as ArrayBuffer, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="${filename}"`,
-          "Cache-Control": "no-store",
-        },
-      });
-    } finally {
-      await browser.close();
-    }
+    return new Response(pdfBytes, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Cache-Control": "no-store",
+      },
+    });
   } catch (error) {
     console.error("[GET /api/doctor/appointments/:id/certificate]", error);
     return NextResponse.json(
