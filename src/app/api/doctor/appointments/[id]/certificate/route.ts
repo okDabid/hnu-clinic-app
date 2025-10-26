@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,11 +12,18 @@ import {
   Role,
 } from "@prisma/client";
 import { formatManilaDateTime, manilaNow } from "@/lib/time";
-import { SimplePdfDocument } from "@/lib/pdf/simple-pdf";
-import { PdfCache } from "@/lib/pdf/cache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function titleCase(value: string | null | undefined) {
   if (!value) return "";
@@ -108,196 +117,510 @@ type CertificateContext = {
   ptrNumber: string;
 };
 
+function renderCertificateHtml(context: CertificateContext) {
+  const placeholder = (value?: string, fallback = "Not recorded") => {
+    if (value && value.trim()) {
+      return escapeHtml(value);
+    }
 
+    if (fallback === "Not recorded") {
+      return "&nbsp;";
+    }
 
-const CERTIFICATE_CACHE = new PdfCache(1000 * 60 * 60 * 24);
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  const isArrayBuffer = bytes.buffer instanceof ArrayBuffer;
-  if (
-    isArrayBuffer &&
-    bytes.byteOffset === 0 &&
-    bytes.byteLength === bytes.buffer.byteLength
-  ) {
-    return bytes.buffer as ArrayBuffer;
-  }
-
-  if (isArrayBuffer) {
-    return (bytes.buffer as ArrayBuffer).slice(
-      bytes.byteOffset,
-      bytes.byteOffset + bytes.byteLength,
-    );
-  }
-
-  const copy = new Uint8Array(bytes.byteLength);
-  copy.set(bytes);
-  return copy.buffer;
-}
-
-function approximateWidth(text: string, size: number) {
-  return text.length * size * 0.5;
-}
-
-function sanitize(value?: string, fallback = "Not recorded") {
-  return value && value.trim() ? value.trim() : fallback;
-}
-
-async function createCertificatePdf(context: CertificateContext): Promise<Uint8Array> {
-  const document = new SimplePdfDocument();
-  const page = document.addPage(595.28, 841.89);
-  const { width, height } = page.getSize();
-  const margin = 48;
-  const contentWidth = width - margin * 2;
-  let cursorY = height - margin;
-
-  const drawCentered = (
-    text: string,
-    font: "regular" | "bold",
-    size: number,
-    spacing = size * 1.6,
-  ) => {
-    const x = Math.max(margin, (width - approximateWidth(text, size)) / 2);
-    page.drawText(text, x, cursorY, font, size);
-    cursorY -= spacing;
+    return `<span class="placeholder">${escapeHtml(fallback)}</span>`;
   };
 
-  const drawRightAligned = (
-    text: string,
-    y: number,
-    font: "regular" | "bold",
-    size: number,
-  ) => {
-    const x = width - margin - approximateWidth(text, size);
-    page.drawText(text, x, y, font, size);
+  const credentialValue = (value?: string) => {
+    if (value && value.trim()) {
+      return escapeHtml(value);
+    }
+    return "&nbsp;";
   };
 
-  const drawHeading = (text: string) => {
-    page.drawText(text.toUpperCase(), margin, cursorY, "bold", 11);
-    cursorY -= 18;
-  };
+  const isDental = context.certificateType === "dental";
+  const heading = isDental ? "DENTAL CERTIFICATE" : "MEDICAL CERTIFICATE";
 
-  const drawField = (label: string, value?: string) => {
-    page.drawText(label.toUpperCase(), margin, cursorY, "bold", 9);
-    cursorY =
-      page.drawParagraph(
-        sanitize(value),
-        margin,
-        cursorY - 14,
-        "regular",
-        12,
-        contentWidth,
-        16,
-      ) - 12;
-  };
+  const introLine = isDental
+    ? `This is to certify that <strong>${escapeHtml(
+      context.patientName
+    )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Holy Name University Highschool Clinic.`
+    : `This is to certify that <strong>${escapeHtml(
+      context.patientName
+    )}</strong>, a student of Holy Name University, was examined at the Holy Name University College Clinic.`;
 
-  const introLine =
-    context.certificateType === "dental"
-      ? `This is to certify that ${context.patientName}, a student of Holy Name University, underwent a dental evaluation at the Holy Name University Highschool Clinic.`
-      : `This is to certify that ${context.patientName}, a student of Holy Name University, was examined at the Holy Name University College Clinic.`;
+  const medicalHistoryOptions = [
+    "Asthma",
+    "Hypertension",
+    "Cancer",
+    "Epilepsy",
+    "Diabetes",
+    "Heart Disease",
+    "Kidney Disease",
+    "Nervous/Mental Disorder",
+  ];
 
-  drawCentered("Holy Name University Clinic", "bold", 18);
-  drawCentered("City of Tagbilaran, Bohol", "regular", 11);
-  drawCentered(
-    (context.certificateType === "dental"
-      ? "Dental Certificate"
-      : "Medical Certificate").toUpperCase(),
-    "bold",
-    16,
-    28,
+  const renderCheckbox = (label: string) => `
+        <div class="checkbox">
+          <span class="box" aria-hidden="true"></span>
+          <span class="text">${escapeHtml(label)}</span>
+        </div>
+    `;
+
+  const medicalHistoryBoxes = medicalHistoryOptions
+    .map((option) => renderCheckbox(option))
+    .join("");
+
+  const remainingMedical = "";
+
+  const allergiesList = context.allergies
+    .map((value) => titleCase(value))
+    .join(", ");
+
+  const impression = placeholder(context.diagnosis, "Not recorded");
+  const recommendation = placeholder(
+    context.findings,
+    isDental
+      ? "No dental recommendations were provided."
+      : "No medical recommendations were provided."
   );
 
-  const metaTop = height - margin + 4;
-  drawRightAligned(`Certificate ID: ${context.certificateId}`, metaTop, "regular", 10);
-  drawRightAligned(`Issued: ${context.issueDateDisplay}`, metaTop - 14, "regular", 10);
-  drawRightAligned(`Valid Until: ${formatDateLong(context.validUntil)}`, metaTop - 28, "regular", 10);
-
-  cursorY -= 6;
-  page.drawHorizontalRule(margin, cursorY, contentWidth);
-  cursorY -= 24;
-
-  cursorY =
-    page.drawParagraph(introLine, margin, cursorY, "regular", 12, contentWidth, 16) - 10;
-
-  const reasonParts: string[] = [`Consultation recorded on ${context.consultationDate}.`];
+  const noteParts: string[] = [];
   if (context.reason) {
-    reasonParts.push(`Reason for visit: ${context.reason}.`);
+    noteParts.push(`Reason for visit: ${context.reason}.`);
   }
-
-  cursorY =
-    page.drawParagraph(
-      reasonParts.join(" "),
-      margin,
-      cursorY,
-      "regular",
-      12,
-      contentWidth,
-      16,
-    ) - 18;
-
-  drawHeading("Patient Information");
-  drawField("Patient Name", context.patientName);
-  drawField("Patient Type", context.patientType);
-  drawField("Age", context.age);
-  drawField("Sex", context.sex);
-  drawField("Program", context.program);
-  drawField("Department", context.department);
-  drawField("Year Level", context.yearLevel);
-  drawField("Address", context.address);
-
-  drawHeading("Consultation Summary");
-  drawField("Clinic", context.clinicName);
-  drawField("Consultation Date", context.consultationDate);
-  drawField("Diagnosis / Impression", context.diagnosis || "Not recorded");
-  drawField(
-    "Findings / Recommendations",
-    context.findings ||
-      (context.certificateType === "dental"
-        ? "No dental recommendations were provided."
-        : "No medical recommendations were provided."),
-  );
-  drawField(
-    "Allergies",
-    context.allergies.length
-      ? context.allergies.map((value) => titleCase(value)).join(", ")
-      : "No allergies recorded.",
-  );
-  drawField("Valid Until", formatDateLong(context.validUntil));
-
-  page.drawHorizontalRule(margin, cursorY, contentWidth);
-  cursorY -= 24;
-
-  page.drawText(context.doctorName, margin, cursorY, "bold", 12);
-  cursorY -= 14;
-  page.drawText(context.doctorTitle, margin, cursorY, "regular", 11);
-  cursorY -= 14;
-
-  if (context.licenseNumber) {
-    page.drawText(`License No.: ${context.licenseNumber}`, margin, cursorY, "regular", 10);
-    cursorY -= 12;
-  }
-
-  if (context.ptrNumber) {
-    page.drawText(`PTR No.: ${context.ptrNumber}`, margin, cursorY, "regular", 10);
-    cursorY -= 12;
-  }
-
-  page.drawText(
-    "Generated by the HNU Clinic information system.",
-    margin,
-    cursorY - 6,
-    "regular",
-    9,
+  noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
+  const notes = placeholder(
+    noteParts.map((entry) => entry.trim()).join(" "),
+    "No additional notes were recorded."
   );
 
-  const pdfBytes = await document.save();
-  return pdfBytes.slice();
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(heading)}</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Times New Roman", "Georgia", serif;
+        background: #ffffff;
+        color: #111827;
+      }
+
+      main {
+        width: 8.27in;
+        min-height: 11in;
+        margin: 0 auto;
+        padding: 0.32in 0.4in;
+        display: flex;
+        flex-direction: column;
+      }
+
+      main.medical .field-line .field-label::before {
+        content: "☐";
+        margin-right: 4px;
+        font-size: 11px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 6px;
+      }
+
+      .institution {
+        font-size: 16px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .department {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .address {
+        font-size: 13px;
+        margin-top: 2px;
+      }
+
+      h1 {
+        font-size: 22px;
+        margin: 8px 0 0;
+        letter-spacing: 0.16em;
+      }
+
+      .date-line {
+        font-size: 13.5px;
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 8px;
+        gap: 6px;
+      }
+
+      .underline {
+        border-bottom: 1px solid #111827;
+        padding: 0 6px 2px;
+        min-width: 110px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 16px;
+      }
+
+      .placeholder {
+        font-style: italic;
+        color: #6b7280;
+      }
+
+      section {
+        margin-bottom: 8px;
+      }
+
+      .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+      }
+
+      .field-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 5px;
+        font-size: 12.8px;
+        margin-bottom: 2px;
+        flex-wrap: wrap;
+      }
+
+      .field-label {
+        flex: 0 0 115px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 10.8px;
+      }
+
+      .field-line .underline {
+        flex: 1 1 auto;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+        gap: 3px 10px;
+      }
+
+      .field-grid .field-line {
+        margin-bottom: 0;
+      }
+
+      .field-grid .field-label {
+        flex-basis: 110px;
+      }
+
+      .patient-info .field-line {
+        font-size: 11.4px;
+        gap: 4px;
+      }
+
+      .patient-info .field-label {
+        font-size: 10.2px;
+        flex-basis: 108px;
+      }
+
+      .patient-info .field-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3px 8px;
+        margin-bottom: 4px;
+      }
+
+      .checkbox {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12.3px;
+      }
+
+      .checkbox .box {
+        width: 11px;
+        height: 11px;
+        border: 1px solid #111827;
+        display: inline-block;
+        margin-top: 1px;
+        flex-shrink: 0;
+      }
+
+      .statement {
+        font-size: 13px;
+        text-align: justify;
+        margin-bottom: 5px;
+      }
+
+      .notes {
+        min-height: 38px;
+      }
+
+      .signature-block {
+        margin-top: 12px;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .signature {
+        text-align: center;
+        font-size: 11.8px;
+        min-width: 190px;
+      }
+
+      .signature .line {
+        border-bottom: 1px solid #111827;
+        margin-bottom: 4px;
+        padding-bottom: 3px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .signature .credentials {
+        margin-top: 6px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 3px 12px;
+        justify-items: start;
+      }
+
+      .signature .credential {
+        text-align: left;
+        font-size: 10.8px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .signature .credential .label {
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+
+      .signature .credential .underline {
+        min-width: 130px;
+      }
+
+      footer {
+        margin-top: auto;
+        font-size: 10.8px;
+        color: #374151;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      footer .certificate-id {
+        font-family: "Courier New", monospace;
+        letter-spacing: 0.08em;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="${isDental ? "certificate dental" : "certificate medical"}">
+      <header>
+        <div class="institution">Holy Name University</div>
+        <div class="department">Health Services Department</div>
+        <div class="address">Tagbilaran City, Bohol</div>
+        <h1>${escapeHtml(heading)}</h1>
+      </header>
+
+      <div class="date-line">
+        <span>Date:</span>
+        <span class="underline">${escapeHtml(context.issueDateDisplay)}</span>
+      </div>
+
+      <section class="patient-info">
+        <div class="section-title">Patient Information</div>
+        <div class="field-line">
+          <span class="field-label">Name</span>
+          <span class="underline">${placeholder(context.patientName)}</span>
+        </div>
+        <div class="field-line">
+          <span class="field-label">Address</span>
+          <span class="underline">${placeholder(context.address, "Not provided")}</span>
+        </div>
+        <div class="field-grid">
+          <div class="field-line">
+            <span class="field-label">Age</span>
+            <span class="underline">${placeholder(context.age, "Not provided")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Sex</span>
+            <span class="underline">${placeholder(context.sex, "Not provided")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Program</span>
+            <span class="underline">${placeholder(context.program, "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Year Level</span>
+            <span class="underline">${placeholder(context.yearLevel, "Not recorded")}</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Vital Signs</div>
+        <div class="field-grid">
+          <div class="field-line">
+            <span class="field-label">BP</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">HR</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">RR</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Temp</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Weight</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Height</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">SpO₂</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Clinic</span>
+            <span class="underline">${placeholder(context.clinicName)}</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Medical History</div>
+        <div class="checkbox-grid">
+          ${medicalHistoryBoxes}
+        </div>
+        <div class="field-line">
+          <span class="field-label">Others</span>
+          <span class="underline">${placeholder(remainingMedical)}</span>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">COVID-19 Vaccination</div>
+        <div class="field-line">
+          <span class="field-label">Vaccine</span>
+          <span class="underline">${placeholder("", "Not recorded")}</span>
+        </div>
+        <div class="field-grid">
+          <div class="field-line">
+            <span class="field-label">Dose 1</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">Dose 2</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">1st Booster</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+          <div class="field-line">
+            <span class="field-label">2nd Booster</span>
+            <span class="underline">${placeholder("", "Not recorded")}</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Allergies</div>
+        <div class="field-line">
+          <span class="field-label">Food / Drug</span>
+          <span class="underline">${placeholder(
+    allergiesList,
+    "No allergies declared"
+  )}</span>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Clinical Impression</div>
+        <div class="field-line">
+          <span class="field-label">Impression</span>
+          <span class="underline">${impression}</span>
+        </div>
+        <div class="field-line">
+          <span class="field-label">Recommendation</span>
+          <span class="underline">${recommendation}</span>
+        </div>
+        <div class="field-line notes">
+          <span class="field-label">Notes</span>
+          <span class="underline">${notes}</span>
+        </div>
+      </section>
+
+      <p class="statement">${introLine}</p>
+
+      <div class="signature-block">
+        <div class="signature">
+          <div class="line">${escapeHtml(context.doctorName)}</div>
+          <div>${escapeHtml(context.doctorTitle)}</div>
+          <div class="credentials">
+            <div class="credential">
+              <span class="label">License No.</span>
+              <span class="underline">${credentialValue(context.licenseNumber)}</span>
+            </div>
+            <div class="credential">
+              <span class="label">PTR No.</span>
+              <span class="underline">${credentialValue(context.ptrNumber)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div>Valid until: ${escapeHtml(formatDateLong(context.validUntil))}</div>
+        <div class="certificate-id">Certificate ID: ${escapeHtml(
+    context.certificateId
+  )}</div>
+        <div>
+          This certificate is issued for any school-related activity and is valid for one (1) year from the date of issuance.
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>`;
 }
-
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const isLocal = !process.env.AWS_REGION && !process.env.VERCEL;
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
@@ -520,33 +843,56 @@ export async function GET(
       ptrNumber: "",
     };
 
-    const cacheKey = `${context.certificateId}:${context.validUntil.toISOString()}`;
-    const cachedPdf = CERTIFICATE_CACHE.get(cacheKey);
-    const filename = `${context.certificateType === "dental" ? "dental" : "medical"
-      }-certificate-${slugify(patientName)}.pdf`;
+    const html = renderCertificateHtml(context);
 
-    if (cachedPdf) {
-      return new Response(toArrayBuffer(cachedPdf), {
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: { width: 1280, height: 720 },
+      executablePath: isLocal
+        ? process.platform === "win32"
+          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+          : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        : await chromium.executablePath(),
+      headless: true,
+    });
+
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: "networkidle0" });
+      await page.emulateMediaType("print");
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: {
+          top: "0.4in",
+          bottom: "0.5in",
+          left: "0.5in",
+          right: "0.5in",
+        },
+      });
+
+      const pdfArrayBuffer =
+        pdfBuffer instanceof ArrayBuffer
+          ? pdfBuffer
+          : pdfBuffer.buffer.slice(
+            pdfBuffer.byteOffset,
+            pdfBuffer.byteOffset + pdfBuffer.byteLength
+          );
+
+      const filename = `${context.certificateType === "dental" ? "dental" : "medical"
+        }-certificate-${slugify(patientName)}.pdf`;
+
+      return new Response(pdfArrayBuffer as ArrayBuffer, {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="${filename}"`,
-          "Cache-Control": "public, max-age=300",
+          "Cache-Control": "no-store",
         },
       });
+    } finally {
+      await browser.close();
     }
-
-    const pdfBytes = await createCertificatePdf(context);
-    CERTIFICATE_CACHE.set(cacheKey, pdfBytes);
-
-    return new Response(toArrayBuffer(pdfBytes), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-        "Cache-Control": "public, max-age=300",
-      },
-    });
   } catch (error) {
     console.error("[GET /api/doctor/appointments/:id/certificate]", error);
     return NextResponse.json(
