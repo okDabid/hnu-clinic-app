@@ -12,10 +12,14 @@ interface Bucket {
     expiresAt: number;
 }
 
+interface ExpirationEntry {
+    key: string;
+    expiresAt: number;
+}
+
 class MemoryRateLimiter {
     private buckets: Map<string, Bucket> = new Map();
-    private lastCleanup = 0;
-    private readonly cleanupIntervalMs = 60_000; // 1 minute
+    private expirations: ExpirationEntry[] = [];
 
     consume(key: string, limit: number, windowMs: number): RateLimitResult {
         const now = Date.now();
@@ -23,7 +27,9 @@ class MemoryRateLimiter {
         const bucket = this.buckets.get(key);
 
         if (!bucket || bucket.expiresAt <= now) {
-            this.buckets.set(key, { count: 1, expiresAt: now + windowMs });
+            const expiresAt = now + windowMs;
+            this.buckets.set(key, { count: 1, expiresAt });
+            this.scheduleExpiration({ key, expiresAt });
             return { success: true };
         }
 
@@ -36,16 +42,88 @@ class MemoryRateLimiter {
     }
 
     private cleanup(now: number) {
-        if (now - this.lastCleanup < this.cleanupIntervalMs) {
-            return;
-        }
+        while (this.expirations.length > 0) {
+            const next = this.expirations[0];
+            if (next.expiresAt > now) {
+                break;
+            }
 
-        this.lastCleanup = now;
-        for (const [key, bucket] of this.buckets) {
-            if (bucket.expiresAt <= now) {
-                this.buckets.delete(key);
+            const expired = this.popExpiration();
+            const bucket = this.buckets.get(expired.key);
+            if (!bucket) {
+                continue;
+            }
+
+            if (bucket.expiresAt <= now && bucket.expiresAt === expired.expiresAt) {
+                this.buckets.delete(expired.key);
             }
         }
+    }
+
+    private scheduleExpiration(entry: ExpirationEntry) {
+        this.expirations.push(entry);
+        this.heapBubbleUp(this.expirations.length - 1);
+    }
+
+    private popExpiration(): ExpirationEntry {
+        const first = this.expirations[0]!;
+        const last = this.expirations.pop()!;
+
+        if (this.expirations.length === 0) {
+            return first;
+        }
+
+        this.expirations[0] = last;
+        this.heapSinkDown(0);
+        return first;
+    }
+
+    private heapBubbleUp(index: number) {
+        const entry = this.expirations[index];
+
+        while (index > 0) {
+            const parentIndex = Math.floor((index - 1) / 2);
+            const parent = this.expirations[parentIndex];
+            if (parent.expiresAt <= entry.expiresAt) {
+                break;
+            }
+
+            this.expirations[index] = parent;
+            index = parentIndex;
+        }
+
+        this.expirations[index] = entry;
+    }
+
+    private heapSinkDown(index: number) {
+        const length = this.expirations.length;
+        const entry = this.expirations[index];
+
+        while (true) {
+            const leftIndex = index * 2 + 1;
+            if (leftIndex >= length) {
+                break;
+            }
+
+            let smallestIndex = leftIndex;
+            const rightIndex = leftIndex + 1;
+
+            if (
+                rightIndex < length &&
+                this.expirations[rightIndex].expiresAt < this.expirations[leftIndex].expiresAt
+            ) {
+                smallestIndex = rightIndex;
+            }
+
+            if (this.expirations[smallestIndex].expiresAt >= entry.expiresAt) {
+                break;
+            }
+
+            this.expirations[index] = this.expirations[smallestIndex];
+            index = smallestIndex;
+        }
+
+        this.expirations[index] = entry;
     }
 }
 
