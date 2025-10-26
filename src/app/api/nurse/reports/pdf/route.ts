@@ -481,7 +481,7 @@ export async function GET(req: NextRequest) {
         const report = await getQuarterlyReports({ year, quarter });
         const html = createReportHtml(report);
 
-        const pdfArrayBuffer = await withNewPage(async (page) => {
+        const pdfBytes = await withNewPage(async (page) => {
             await page.setContent(html, { waitUntil: "load" });
 
             const pdfBuffer = await page.pdf({
@@ -490,19 +490,14 @@ export async function GET(req: NextRequest) {
                 margin: { top: "20mm", bottom: "20mm", left: "12mm", right: "12mm" },
             });
 
-            return pdfBuffer instanceof ArrayBuffer
-                ? pdfBuffer
-                : pdfBuffer.buffer.slice(
-                    pdfBuffer.byteOffset,
-                    pdfBuffer.byteOffset + pdfBuffer.byteLength,
-                );
+            return new Uint8Array(pdfBuffer);
         });
 
         const filename = `nurse-quarterly-report-${report.year}-q${report.selectedQuarter.quarter}.pdf`;
 
-        REPORT_CACHE.set(cacheKey, pdfArrayBuffer);
+        REPORT_CACHE.set(cacheKey, pdfBytes);
 
-        return new Response(pdfArrayBuffer as ArrayBuffer, {
+        return new Response(pdfBytes, {
             status: 200,
             headers: {
                 "Content-Type": "application/pdf",

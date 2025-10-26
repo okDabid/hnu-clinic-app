@@ -120,7 +120,7 @@ function sanitize(value?: string, fallback = "Not recorded") {
   return value && value.trim() ? value.trim() : fallback;
 }
 
-async function createCertificatePdf(context: CertificateContext) {
+async function createCertificatePdf(context: CertificateContext): Promise<Uint8Array> {
   const document = new SimplePdfDocument();
   const page = document.addPage(595.28, 841.89);
   const { width, height } = page.getSize();
@@ -268,10 +268,7 @@ async function createCertificatePdf(context: CertificateContext) {
   );
 
   const pdfBytes = await document.save();
-  return pdfBytes.buffer.slice(
-    pdfBytes.byteOffset,
-    pdfBytes.byteOffset + pdfBytes.byteLength,
-  );
+  return pdfBytes.slice();
 }
 
 
@@ -517,10 +514,10 @@ export async function GET(
       });
     }
 
-    const pdfArrayBuffer = await createCertificatePdf(context);
-    CERTIFICATE_CACHE.set(cacheKey, pdfArrayBuffer);
+    const pdfBytes = await createCertificatePdf(context);
+    CERTIFICATE_CACHE.set(cacheKey, pdfBytes);
 
-    return new Response(pdfArrayBuffer, {
+    return new Response(pdfBytes, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

@@ -1,7 +1,17 @@
 type CacheEntry = {
-    data: ArrayBuffer;
+    data: Uint8Array;
     expiresAt: number;
 };
+
+function cloneToUint8Array(value: ArrayBufferLike | Uint8Array) {
+    if (value instanceof Uint8Array) {
+        return value.slice();
+    }
+
+    const copy = new Uint8Array(value.byteLength);
+    copy.set(new Uint8Array(value));
+    return copy;
+}
 
 export class PdfCache {
     private entries = new Map<string, CacheEntry>();
@@ -16,12 +26,12 @@ export class PdfCache {
             return null;
         }
 
-        return entry.data.slice(0);
+        return entry.data.slice();
     }
 
-    set(key: string, value: ArrayBuffer) {
+    set(key: string, value: ArrayBufferLike | Uint8Array) {
         this.entries.set(key, {
-            data: value.slice(0),
+            data: cloneToUint8Array(value),
             expiresAt: Date.now() + this.ttlMs,
         });
     }
