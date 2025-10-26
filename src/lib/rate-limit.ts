@@ -90,7 +90,7 @@ export function withRateLimit<Args extends unknown[]>(
 }
 
 export function getClientIp(request: RateLimitedRequest): string | null {
-    const nextReq = request as NextRequest;
+    const nextReq = request as NextRequest & { ip?: string | null };
     if (typeof nextReq.ip === "string" && nextReq.ip.length > 0) {
         return nextReq.ip;
     }
