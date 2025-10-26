@@ -56,12 +56,37 @@ const process = [
 ];
 
 const techStack = [
-    "Next.js App Router",
-    "TypeScript",
-    "Prisma & PostgreSQL",
-    "Tailwind CSS",
-    "Lucide Icons",
-    "NextAuth",
+    { name: "Next.js", logo: "/logos/nextjs.svg" },
+    { name: "TypeScript", logo: "/logos/typescript.svg" },
+    { name: "Tailwind CSS", logo: "/logos/tailwind.svg" },
+    { name: "ShadCN/UI", logo: "/logos/shadcn.svg" },
+    { name: "Lucide Icons", logo: "/logos/lucide.svg" },
+    { name: "NextAuth", logo: "/logos/nextauth.svg" },
+    { name: "Zod", logo: "/logos/zod.svg" },
+    { name: "Vercel", logo: "/logos/vercel.svg" },
+];
+
+const developers = [
+    {
+        name: "David Matthew Maniwang",
+        role: "Project Lead / Backend Developer",
+        img: "/profile/pic1.png",
+    },
+    {
+        name: "Dulce Maris Ongyot",
+        role: "Database & Integration",
+        img: "/profile/pic2.png",
+    },
+    {
+        name: "Joanamarie Ayuban Burato",
+        role: "Frontend Developer / UI Designer",
+        img: "/profile/pic3.jpg",
+    },
+    {
+        name: "Christian Dale Ombrosa",
+        role: "Frontend Developer / UX Designer",
+        img: "/profile/pic4.png",
+    },
 ];
 
 export default function LearnMorePage() {
@@ -137,65 +162,157 @@ export default function LearnMorePage() {
                 </section>
 
                 <section className="bg-white px-6 py-16 md:px-12 md:py-20">
-                    <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[2fr,1fr]">
+                    <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.1fr_0.9fr] items-center">
                         <div className="space-y-6">
-                            <h3 className="text-2xl font-bold text-green-600 md:text-3xl">How the clinic team collaborates</h3>
-                            <p className="text-gray-600">
-                                Coordinated care means everyone has the context they need. The HNU Clinic platform connects providers, staff, and patients with purposeful tools.
+                            <span className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                                <Workflow className="h-4 w-4" /> Workflow Snapshot
+                            </span>
+                            <h3 className="text-2xl font-bold text-green-600 md:text-3xl">How an appointment moves through the system</h3>
+                            <p className="text-gray-600 leading-relaxed">
+                                A guided process keeps everyone aligned—from the moment a request is submitted to the final follow-up instructions documented by clinic staff.
                             </p>
                             <div className="space-y-4">
                                 {process.map((step, index) => (
-                                    <Card key={step.title} className="rounded-2xl border-green-100 bg-white/95 shadow-lg">
-                                        <CardHeader className="flex items-center gap-4">
-                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-lg font-semibold text-green-700">
+                                    <Card key={step.title} className="rounded-2xl border-green-100 bg-white/90 shadow-sm">
+                                        <CardContent className="flex gap-4 p-6">
+                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-600 text-white font-semibold">
                                                 {index + 1}
                                             </span>
-                                            <CardTitle className="text-lg text-green-700">{step.title}</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="pt-0 text-sm leading-relaxed text-gray-600">{step.detail}</CardContent>
+                                            <div className="space-y-1">
+                                                <p className="text-sm font-semibold text-green-700 uppercase tracking-wide">{step.title}</p>
+                                                <p className="text-sm text-gray-600 leading-relaxed">{step.detail}</p>
+                                            </div>
+                                        </CardContent>
                                     </Card>
                                 ))}
                             </div>
                         </div>
-                        <div className="space-y-6">
-                            <Card className="rounded-2xl border-green-100 bg-green-50/80 shadow-inner">
-                                <CardHeader className="space-y-4 text-center">
-                                    <Users className="mx-auto h-10 w-10 text-green-600" />
-                                    <CardTitle className="text-lg font-semibold text-green-700">Teams supported</CardTitle>
-                                </CardHeader>
-                                <CardContent className="grid gap-3 text-sm text-gray-600">
-                                    <span className="rounded-lg bg-white/80 px-4 py-2 shadow-sm">Doctors and specialists</span>
-                                    <span className="rounded-lg bg-white/80 px-4 py-2 shadow-sm">Nurses and clinic staff</span>
-                                    <span className="rounded-lg bg-white/80 px-4 py-2 shadow-sm">Students, faculty, and employees</span>
-                                </CardContent>
-                            </Card>
-                            <Card className="rounded-2xl border-green-100 bg-white/95 shadow-lg">
-                                <CardHeader className="space-y-4 text-center">
-                                    <Workflow className="mx-auto h-10 w-10 text-green-600" />
-                                    <CardTitle className="text-lg font-semibold text-green-700">Technology foundation</CardTitle>
-                                </CardHeader>
-                                <CardContent className="grid gap-2 text-sm text-gray-600">
-                                    {techStack.map((item) => (
-                                        <span key={item} className="rounded-lg border border-green-100 bg-white/90 px-3 py-2">
-                                            {item}
-                                        </span>
-                                    ))}
-                                </CardContent>
-                            </Card>
+                        <Card className="rounded-3xl border-none bg-linear-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-xl">
+                            <CardContent className="space-y-5 p-8">
+                                <h4 className="text-2xl font-semibold">Designed for confident clinic operations</h4>
+                                <p className="text-sm text-white/80 md:text-base leading-relaxed">
+                                    The portal brings scheduling, communication, and documentation together in one workflow so staff can focus on care while technology handles the details.
+                                </p>
+                                <ul className="space-y-3 text-sm text-white/80 md:text-base">
+                                    <li>• Accessible on campus or remotely</li>
+                                    <li>• Built with secure authentication and validation</li>
+                                    <li>• Structured data for accurate reporting</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </section>
+
+                <section className="bg-white px-6 py-16 md:px-12 md:py-20">
+                    <div className="mx-auto max-w-6xl space-y-10">
+                        <div className="space-y-4 text-center">
+                            <Code2 className="mx-auto h-12 w-12 text-green-600" />
+                            <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Modern tools that power the experience</h3>
+                            <p className="mx-auto max-w-3xl text-gray-600">
+                                Our technology stack combines reliable frameworks and UI libraries to keep the platform scalable and intuitive.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                            {techStack.map((tech) => (
+                                <Card key={tech.name} className="rounded-2xl border-green-100 bg-white shadow-sm">
+                                    <CardContent className="flex flex-col items-center gap-4 p-6">
+                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
+                                            <Image src={tech.logo} alt={tech.name} width={48} height={48} className="object-contain" />
+                                        </div>
+                                        <p className="text-sm font-medium text-green-700">{tech.name}</p>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
                     </div>
                 </section>
 
-                <section className="bg-linear-to-r from-green-50 to-white px-6 py-16 md:px-12 md:py-20">
-                    <div className="mx-auto max-w-6xl space-y-6 text-center">
-                        <Code2 className="mx-auto h-12 w-12 text-green-600" />
-                        <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Built with reliability in mind</h3>
-                        <p className="mx-auto max-w-3xl text-sm leading-relaxed text-gray-600 md:text-base">
-                            Resilient infrastructure keeps records available and requests moving quickly. Automated health checks, database pooling, and background maintenance work together so the clinic team can stay focused on delivering care.
+                <section className="bg-white px-6 py-16 md:px-12 md:py-20">
+                    <div className="mx-auto max-w-6xl space-y-12">
+                        <div className="space-y-4 text-center">
+                            <Users className="mx-auto h-12 w-12 text-green-600" />
+                            <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Meet the developers</h3>
+                            <p className="mx-auto max-w-3xl text-gray-600">
+                                A collaborative team of HNU students engineered the platform, uniting backend reliability with intuitive user experiences.
+                            </p>
+                        </div>
+                        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                            {developers.map((dev) => (
+                                <Card key={dev.name} className="rounded-2xl border-green-100 bg-white/90 shadow-sm">
+                                    <CardContent className="flex flex-col items-center gap-4 p-6 text-center">
+                                        <Image
+                                            src={dev.img}
+                                            alt={dev.name}
+                                            width={130}
+                                            height={130}
+                                            className="h-32 w-32 rounded-full object-cover shadow"
+                                        />
+                                        <div className="space-y-1">
+                                            <p className="text-base font-semibold text-green-700">{dev.name}</p>
+                                            <p className="text-sm text-gray-600">{dev.role}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="px-6 py-16 md:px-12">
+                    <div className="mx-auto max-w-5xl rounded-3xl border border-green-200 bg-linear-to-br from-green-100 via-white to-green-50 p-10 text-center shadow-lg">
+                        <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Ready to streamline clinic operations?</h3>
+                        <p className="mx-auto mt-4 max-w-2xl text-gray-600">
+                            Log in to the HNU Clinic portal to manage appointments, update records, and keep your team aligned with the latest patient information.
                         </p>
+                        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                            <Link href="/login">
+                                <Button size="lg" className="bg-green-600 text-white shadow-md hover:bg-green-700">
+                                    Access the portal
+                                </Button>
+                            </Link>
+                            <Link href="/#contact" className="text-sm font-medium text-green-700 hover:text-green-800">
+                                Contact the clinic support team
+                            </Link>
+                        </div>
                     </div>
                 </section>
             </main>
+
+            <footer className="bg-green-900 text-green-50">
+                <div className="mx-auto grid max-w-7xl gap-8 px-6 py-12 md:px-12 md:grid-cols-3">
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">HNU Clinic</p>
+                        <p className="text-sm leading-relaxed text-green-100">
+                            Supporting Holy Name University with a modern, patient-centered clinic experience.
+                        </p>
+                    </div>
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">Quick Links</p>
+                        <ul className="space-y-2 text-sm text-green-100">
+                            {navigation.map((item) => (
+                                <li key={item.label}>
+                                    <Link href={item.href} className="transition hover:text-white">
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">Need assistance?</p>
+                        <p className="text-sm leading-relaxed text-green-100">
+                            Visit the About page to meet the clinic team or send a message through the contact form for tailored support.
+                        </p>
+                        <Link href="/about" className="inline-flex text-sm font-medium text-white underline-offset-4 hover:underline">
+                            Meet the health services department
+                        </Link>
+                    </div>
+                </div>
+                <div className="border-t border-green-700/60 py-4 text-center text-xs text-green-200">
+                    © {new Date().getFullYear()} HNU Clinic Capstone Project
+                </div>
+            </footer>
         </div>
     );
 }
