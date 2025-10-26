@@ -14,9 +14,12 @@ interface Bucket {
 
 class MemoryRateLimiter {
     private buckets: Map<string, Bucket> = new Map();
+    private lastCleanup = 0;
+    private readonly cleanupIntervalMs = 60_000; // 1 minute
 
     consume(key: string, limit: number, windowMs: number): RateLimitResult {
         const now = Date.now();
+        this.cleanup(now);
         const bucket = this.buckets.get(key);
 
         if (!bucket || bucket.expiresAt <= now) {
@@ -30,6 +33,19 @@ class MemoryRateLimiter {
         }
 
         return { success: false, retryAfterMs: Math.max(0, bucket.expiresAt - now) };
+    }
+
+    private cleanup(now: number) {
+        if (now - this.lastCleanup < this.cleanupIntervalMs) {
+            return;
+        }
+
+        this.lastCleanup = now;
+        for (const [key, bucket] of this.buckets) {
+            if (bucket.expiresAt <= now) {
+                this.buckets.delete(key);
+            }
+        }
     }
 }
 
