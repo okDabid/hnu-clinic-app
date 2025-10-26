@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { sendEmail } from "@/lib/email";
+import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
 
 interface ContactFormData {
   name: string;
@@ -8,7 +9,7 @@ interface ContactFormData {
   message: string;
 }
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
   try {
     const { name, email, message } = (await req.json()) as ContactFormData;
 
@@ -83,3 +84,21 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export const POST = withRateLimit(
+    [
+        {
+            key: ipKey("contact:ip"),
+            limit: 5,
+            windowMs: 60_000,
+            message: "Too many messages from this IP. Please try again later.",
+        },
+        {
+            key: jsonFieldKey("email", "contact:email"),
+            limit: 3,
+            windowMs: 10 * 60_000,
+            message: "We already received a few messages from this email recently. Please wait before sending another.",
+        },
+    ],
+    handler
+);

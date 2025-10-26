@@ -5,8 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { generateNumericCode } from "@/lib/security";
+import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
     try {
         const { contact } = await req.json();
 
@@ -163,3 +164,21 @@ export async function POST(req: Request) {
         );
     }
 }
+
+export const POST = withRateLimit(
+    [
+        {
+            key: ipKey("auth:request-reset:ip"),
+            limit: 5,
+            windowMs: 10 * 60_000,
+            message: "Too many reset requests from this IP. Please wait before trying again.",
+        },
+        {
+            key: jsonFieldKey("contact", "auth:request-reset:contact"),
+            limit: 3,
+            windowMs: 15 * 60_000,
+            message: "A reset code was already sent recently. Please check your inbox or try later.",
+        },
+    ],
+    handler
+);

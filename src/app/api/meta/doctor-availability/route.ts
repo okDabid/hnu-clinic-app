@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withDb } from "@/lib/withDb";
 import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
+import { getClientIp, withRateLimit } from "@/lib/rate-limit";
 
 /**
  * GET /api/meta/doctor-availability
@@ -13,7 +14,7 @@ import { startOfManilaDay, endOfManilaDay } from "@/lib/time";
  *
  * Returns: Array of available time slots (15 mins each)
  */
-export async function GET(req: Request) {
+async function handler(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const clinic_id = searchParams.get("clinic_id");
@@ -113,3 +114,19 @@ export async function GET(req: Request) {
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export const GET = withRateLimit(
+    {
+        key: (request) => {
+            const ip = getClientIp(request);
+            if (!ip) return null;
+            const { searchParams } = new URL(request.url);
+            const doctor = searchParams.get("doctor_user_id") ?? "any";
+            return `meta:doctor-availability:${ip}:${doctor}`;
+        },
+        limit: 20,
+        windowMs: 60_000,
+        message: "Too many availability checks. Please wait before trying again.",
+    },
+    handler
+);
