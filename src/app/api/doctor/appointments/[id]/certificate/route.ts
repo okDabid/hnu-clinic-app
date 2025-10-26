@@ -113,17 +113,25 @@ type CertificateContext = {
 const CERTIFICATE_CACHE = new PdfCache(1000 * 60 * 60 * 24);
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const isArrayBuffer = bytes.buffer instanceof ArrayBuffer;
   if (
+    isArrayBuffer &&
     bytes.byteOffset === 0 &&
     bytes.byteLength === bytes.buffer.byteLength
   ) {
-    return bytes.buffer;
+    return bytes.buffer as ArrayBuffer;
   }
 
-  return bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  );
+  if (isArrayBuffer) {
+    return (bytes.buffer as ArrayBuffer).slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength,
+    );
+  }
+
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }
 
 function approximateWidth(text: string, size: number) {
