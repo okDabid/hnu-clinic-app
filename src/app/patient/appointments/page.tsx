@@ -853,7 +853,7 @@ export default function PatientAppointmentsPage() {
                         </form>
                     </AppointmentPanel>
 
-                    <Card className="rounded-3xl border-green-100/80 bg-gradient-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
+                    <Card className="rounded-3xl border-green-100/80 bg-linear-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
                         <CardHeader>
                             <CardTitle className="text-lg">Important reminders</CardTitle>
                         </CardHeader>
@@ -1137,7 +1137,7 @@ export default function PatientAppointmentsPage() {
                                 <TableHeader>
                                     <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
                                         <TableHead className="min-w-[180px]">Clinic</TableHead>
-                                        <TableHead className="min-w-[160px]">Doctor</TableHead>
+                                        <TableHead className="min-w-40">Doctor</TableHead>
                                         <TableHead className="min-w-[120px]">Date</TableHead>
                                         <TableHead className="min-w-[120px]">Time</TableHead>
                                         <TableHead className="min-w-[120px]">Status</TableHead>
