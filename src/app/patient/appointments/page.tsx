@@ -307,7 +307,7 @@ export default function PatientAppointmentsPage() {
                 toast.error(data?.message ?? "Failed to reschedule appointment");
                 return;
             }
-            toast.success("Appointment rescheduled");
+            toast.success("Reschedule request sent for doctor approval");
             closeRescheduleDialog();
             loadAppointments();
         } catch {
@@ -1283,8 +1283,8 @@ export default function PatientAppointmentsPage() {
                         <DialogTitle className="text-lg font-semibold text-green-700">Reschedule appointment</DialogTitle>
                         <DialogDescription>
                             {rescheduleTarget
-                                ? `Select a new slot for your appointment with ${rescheduleTarget.doctor}. ${earliestBookedMessage}`
-                                : "Choose a new schedule for your appointment."}
+                                ? `Select a new slot for your appointment with ${rescheduleTarget.doctor}. We'll send the request to the clinic for approval. ${earliestBookedMessage}`
+                                : "Choose a new schedule for your appointment. We'll submit it for doctor approval."}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -1345,7 +1345,7 @@ export default function PatientAppointmentsPage() {
                             >
                                 {rescheduling ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
                                     </>
                                 ) : (
                                     "Confirm"
