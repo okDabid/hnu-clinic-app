@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs"; // non-blocking, faster in serverless
 import { prisma } from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
 import { withDb } from "@/lib/withDb";
+import { getClientIp, hitRateLimit } from "@/lib/rate-limit";
 
 /** Extend next-auth types used by the application. */
 declare module "next-auth" {
@@ -59,8 +60,21 @@ export const authOptions: NextAuthOptions = {
                 role: { label: "Role", type: "text" },
             },
             // Validate user-provided credentials against stored records.
-            async authorize(credentials): Promise<AppUser | null> {
+            async authorize(credentials, req): Promise<AppUser | null> {
                 if (!credentials) throw new Error("Missing credentials.");
+
+                const clientIp = req ? getClientIp(req) : "unknown";
+                const ipResult = hitRateLimit({
+                    key: `auth:login:ip:${clientIp}`,
+                    limit: 10,
+                    windowMs: 60 * 1000,
+                });
+
+                if (!ipResult.ok) {
+                    throw new Error(
+                        "Too many login attempts from this IP. Please wait a minute before trying again.",
+                    );
+                }
 
                 const id = String(credentials.id || "").trim();
                 const password = String(credentials.password || "");
@@ -69,6 +83,20 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Invalid role provided.");
                 }
                 const role = roleStr as Role;
+
+                if (id) {
+                    const identifierResult = hitRateLimit({
+                        key: `auth:login:user:${role}:${id.toLowerCase()}`,
+                        limit: 5,
+                        windowMs: 5 * 60 * 1000,
+                    });
+
+                    if (!identifierResult.ok) {
+                        throw new Error(
+                            "Too many login attempts for this account. Please try again later or reset your password.",
+                        );
+                    }
+                }
 
                 // Find user (indexed query)
                 const user = await withDb(() =>

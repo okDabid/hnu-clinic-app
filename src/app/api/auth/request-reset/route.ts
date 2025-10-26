@@ -5,25 +5,61 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { generateNumericCode } from "@/lib/security";
+import {
+    assertRateLimit,
+    RateLimitError,
+    getClientIp,
+    applyRateLimitHeaders,
+    RateLimitResult,
+} from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
+    let headerSource: RateLimitResult | null = null;
     try {
+        const clientIp = getClientIp(req);
+        const ipResult = assertRateLimit({
+            key: `auth:reset-request:ip:${clientIp}`,
+            limit: 5,
+            windowMs: 15 * 60 * 1000,
+            message: "Too many password reset requests from this IP. Please try again later.",
+        });
+        headerSource = ipResult;
+
         const { contact } = await req.json();
 
         if (typeof contact !== "string") {
-            return NextResponse.json(
+            const response = NextResponse.json(
                 { error: "Contact email is required." },
                 { status: 400 }
             );
+            return applyRateLimitHeaders(response, headerSource);
         }
 
         const normalized = normalizeResetContact(contact);
 
         if (!normalized) {
-            return NextResponse.json(
+            const response = NextResponse.json(
                 { error: "Enter a valid email address." },
                 { status: 400 }
             );
+            return applyRateLimitHeaders(response, headerSource);
+        }
+
+        const contactResult = assertRateLimit({
+            key: `auth:reset-request:contact:${normalized.normalized}`,
+            limit: 3,
+            windowMs: 60 * 60 * 1000,
+            message:
+                "Too many password reset requests for this contact. Please wait before requesting another code.",
+        });
+
+        if (
+            !headerSource ||
+            contactResult.remaining < headerSource.remaining ||
+            (contactResult.remaining === headerSource.remaining &&
+                contactResult.reset < headerSource.reset)
+        ) {
+            headerSource = contactResult;
         }
 
         // Find user by email
@@ -59,10 +95,11 @@ export async function POST(req: Request) {
         });
 
         if (!user) {
-            return NextResponse.json({
+            const response = NextResponse.json({
                 success: true,
                 message: "If an account exists for that email, a reset code has been sent.",
             });
+            return applyRateLimitHeaders(response, headerSource);
         }
 
         // Display name
@@ -138,28 +175,38 @@ export async function POST(req: Request) {
             fromName: "HNU Clinic",
         });
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             success: true,
             message: "If an account exists for that email, a reset code has been sent.",
         });
+        return applyRateLimitHeaders(response, headerSource);
     } catch (error: unknown) {
         console.error("REQUEST-RESET ERROR DETAILS:", error);
         const message =
             error instanceof Error ? error.message : "Unknown error occurred";
 
-        if (message === "Reset already requested recently.") {
+        if (error instanceof RateLimitError) {
             return NextResponse.json(
+                { error: error.message },
+                { status: error.status, headers: error.headers },
+            );
+        }
+
+        if (message === "Reset already requested recently.") {
+            const response = NextResponse.json(
                 {
                     error:
                         "A reset code was already sent recently. Please try again later.",
                 },
                 { status: 429 }
             );
+            return applyRateLimitHeaders(response, headerSource);
         }
 
-        return NextResponse.json(
+        const response = NextResponse.json(
             { error: "Internal server error.", details: message },
             { status: 500 }
         );
+        return applyRateLimitHeaders(response, headerSource);
     }
 }

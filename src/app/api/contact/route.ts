@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { sendEmail } from "@/lib/email";
+import {
+  assertRateLimit,
+  RateLimitError,
+  getClientIp,
+  applyRateLimitHeaders,
+  RateLimitResult,
+} from "@/lib/rate-limit";
 
 interface ContactFormData {
   name: string;
@@ -9,15 +16,43 @@ interface ContactFormData {
 }
 
 export async function POST(req: Request) {
+  let headerSource: RateLimitResult | null = null;
   try {
+    const clientIp = getClientIp(req);
+    const ipResult = assertRateLimit({
+      key: `contact:ip:${clientIp}`,
+      limit: 3,
+      windowMs: 5 * 60 * 1000,
+      message: "Too many messages from this IP. Please wait a few minutes before trying again.",
+    });
+    headerSource = ipResult;
+
     const { name, email, message } = (await req.json()) as ContactFormData;
 
     // Validate inputs
     if (!name || !email || !message) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: "All fields are required. Please fill out the form completely." },
         { status: 400 }
       );
+      return applyRateLimitHeaders(response, headerSource);
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const emailResult = assertRateLimit({
+      key: `contact:email:${normalizedEmail}`,
+      limit: 5,
+      windowMs: 60 * 60 * 1000,
+      message: "Too many messages from this email address. Please try again later.",
+    });
+
+    if (
+      !headerSource ||
+      emailResult.remaining < headerSource.remaining ||
+      (emailResult.remaining === headerSource.remaining && emailResult.reset < headerSource.reset)
+    ) {
+      headerSource = emailResult;
     }
 
     // Themed HTML email
@@ -46,13 +81,14 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    const inbox = process.env.EMAIL_USER;
-    if (!inbox) {
-      return NextResponse.json(
-        { error: "Email service is not configured." },
-        { status: 500 }
-      );
-    }
+  const inbox = process.env.EMAIL_USER;
+  if (!inbox) {
+    const response = NextResponse.json(
+      { error: "Email service is not configured." },
+      { status: 500 }
+    );
+    return applyRateLimitHeaders(response, headerSource);
+  }
 
     await sendEmail({
       to: inbox,
@@ -63,23 +99,32 @@ export async function POST(req: Request) {
       text: `Name: ${name}\nEmail: ${email}\nMessage:\n${message}`,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: "Message sent successfully! Thank you for contacting HNU Clinic.",
     });
+    return applyRateLimitHeaders(response, headerSource);
   } catch (error) {
     // Type-safe error handling
     if (error instanceof Error) {
+      if (error instanceof RateLimitError) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: error.status, headers: error.headers }
+        );
+      }
       console.error("Email error:", error.message);
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: `Failed to send message: ${error.message}` },
         { status: 500 }
       );
+      return applyRateLimitHeaders(response, headerSource);
     }
 
     console.error("Unknown error occurred while sending email.");
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: "An unexpected error occurred. Please try again later." },
       { status: 500 }
     );
+    return applyRateLimitHeaders(response, headerSource);
   }
 }
