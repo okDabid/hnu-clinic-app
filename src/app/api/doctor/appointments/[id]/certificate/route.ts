@@ -112,6 +112,20 @@ type CertificateContext = {
 
 const CERTIFICATE_CACHE = new PdfCache(1000 * 60 * 60 * 24);
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  if (
+    bytes.byteOffset === 0 &&
+    bytes.byteLength === bytes.buffer.byteLength
+  ) {
+    return bytes.buffer;
+  }
+
+  return bytes.buffer.slice(
+    bytes.byteOffset,
+    bytes.byteOffset + bytes.byteLength,
+  );
+}
+
 function approximateWidth(text: string, size: number) {
   return text.length * size * 0.5;
 }
@@ -504,7 +518,7 @@ export async function GET(
       }-certificate-${slugify(patientName)}.pdf`;
 
     if (cachedPdf) {
-      return new Response(cachedPdf, {
+      return new Response(toArrayBuffer(cachedPdf), {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
@@ -517,7 +531,7 @@ export async function GET(
     const pdfBytes = await createCertificatePdf(context);
     CERTIFICATE_CACHE.set(cacheKey, pdfBytes);
 
-    return new Response(pdfBytes, {
+    return new Response(toArrayBuffer(pdfBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
