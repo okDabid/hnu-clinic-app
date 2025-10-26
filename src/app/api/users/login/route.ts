@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { ipKey, withRateLimit } from "@/lib/rate-limit";
 
 // define minimal relation types manually
 type UserRelation = {
@@ -21,7 +22,7 @@ type StudentWithUser = {
     lname: string;
 } & UserRelation;
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
     try {
         const { role, employee_id, school_id, patient_id, password } =
             await req.json();
@@ -78,3 +79,37 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 }
+
+export const POST = withRateLimit(
+    [
+        {
+            key: ipKey("users:login:ip"),
+            limit: 10,
+            windowMs: 60_000,
+            message: "Too many login attempts from this IP. Please try again shortly.",
+        },
+        {
+            key: async (request) => {
+                if (request.method !== "POST") return null;
+                try {
+                    const body = await request.clone().json();
+                    const roleValue = typeof body?.role === "string" ? body.role : "UNKNOWN";
+                    const candidateId =
+                        (typeof body?.employee_id === "string" && body.employee_id) ||
+                        (typeof body?.school_id === "string" && body.school_id) ||
+                        (typeof body?.patient_id === "string" && body.patient_id) ||
+                        null;
+                    if (!candidateId) return null;
+                    return `users:login:account:${roleValue.toUpperCase()}:${candidateId.toLowerCase()}`;
+                } catch (error) {
+                    console.warn("Failed to derive login identifier for rate limiting", error);
+                    return null;
+                }
+            },
+            limit: 5,
+            windowMs: 60_000,
+            message: "Too many attempts for this account. Please wait before retrying.",
+        },
+    ],
+    handler
+);

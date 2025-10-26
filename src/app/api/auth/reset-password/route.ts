@@ -6,8 +6,9 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { getPasswordStrength } from "@/lib/password-strength";
+import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
     try {
         const { contact, code, newPassword } = await req.json();
 
@@ -110,3 +111,21 @@ export async function POST(req: Request) {
         );
     }
 }
+
+export const POST = withRateLimit(
+    [
+        {
+            key: ipKey("auth:reset-password:ip"),
+            limit: 10,
+            windowMs: 5 * 60_000,
+            message: "Too many password reset attempts from this IP. Please try again later.",
+        },
+        {
+            key: jsonFieldKey("contact", "auth:reset-password:contact"),
+            limit: 5,
+            windowMs: 5 * 60_000,
+            message: "Too many verification attempts for this contact. Please wait before retrying.",
+        },
+    ],
+    handler
+);

@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { AccountStatus, Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { withDb } from "@/lib/withDb";
+import { getClientIp, withRateLimit } from "@/lib/rate-limit";
 
 /**
  * GET /api/meta/doctors?clinic_id=...&service_type=...
  * Returns doctors available for a given clinic and filtered by service type.
  */
-export async function GET(req: Request) {
+async function handler(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const clinic_id = searchParams.get("clinic_id");
@@ -77,3 +78,19 @@ export async function GET(req: Request) {
         );
     }
 }
+
+export const GET = withRateLimit(
+    {
+        key: (request) => {
+            const ip = getClientIp(request);
+            if (!ip) return null;
+            const { searchParams } = new URL(request.url);
+            const clinic = searchParams.get("clinic_id") ?? "any";
+            return `meta:doctors:${ip}:${clinic}`;
+        },
+        limit: 30,
+        windowMs: 60_000,
+        message: "Too many doctor directory requests. Please try again later.",
+    },
+    handler
+);
