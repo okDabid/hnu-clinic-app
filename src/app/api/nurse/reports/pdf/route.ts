@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { Role } from "@prisma/client";
+import { withNewPage } from "@/lib/pdf/browser";
+import { PdfCache } from "@/lib/pdf/cache";
 
 import {
     QUARTERS,
@@ -439,8 +439,13 @@ function createReportHtml(report: ReportsResponse) {
 </html>`;
 }
 
+const REPORT_CACHE = new PdfCache(1000 * 60 * 60); // 1 hour TTL
+
+function buildCacheKey(year: number | undefined, quarter: number | undefined) {
+    return `${year ?? "latest"}:${quarter ?? "auto"}`;
+}
+
 export async function GET(req: NextRequest) {
-    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 
     try {
         await requireRole([Role.NURSE, Role.ADMIN]);
@@ -456,36 +461,53 @@ export async function GET(req: NextRequest) {
                 ? (quarterParam as (typeof QUARTERS)[number])
                 : undefined;
 
+        const cacheKey = buildCacheKey(year, quarter);
+        const cached = REPORT_CACHE.get(cacheKey);
+        if (cached) {
+            const filename = year && quarter
+                ? `nurse-quarterly-report-${year}-q${quarter}.pdf`
+                : `nurse-quarterly-report-latest.pdf`;
+
+            return new Response(cached, {
+                status: 200,
+                headers: {
+                    "Content-Type": "application/pdf",
+                    "Content-Disposition": `attachment; filename="${filename}"`,
+                    "Cache-Control": "public, max-age=300",
+                },
+            });
+        }
+
         const report = await getQuarterlyReports({ year, quarter });
-
-        browser = await puppeteer.launch({
-            args: chromium.args,
-            executablePath: await chromium.executablePath(),
-            headless: true,
-        });
-
-        const page = await browser.newPage();
         const html = createReportHtml(report);
-        await page.setContent(html, { waitUntil: "load" });
 
-        const pdfBuffer = await page.pdf({
-            format: "A4",
-            printBackground: true,
-            margin: { top: "20mm", bottom: "20mm", left: "12mm", right: "12mm" },
+        const pdfArrayBuffer = await withNewPage(async (page) => {
+            await page.setContent(html, { waitUntil: "load" });
+
+            const pdfBuffer = await page.pdf({
+                format: "A4",
+                printBackground: true,
+                margin: { top: "20mm", bottom: "20mm", left: "12mm", right: "12mm" },
+            });
+
+            return pdfBuffer instanceof ArrayBuffer
+                ? pdfBuffer
+                : pdfBuffer.buffer.slice(
+                    pdfBuffer.byteOffset,
+                    pdfBuffer.byteOffset + pdfBuffer.byteLength,
+                );
         });
 
         const filename = `nurse-quarterly-report-${report.year}-q${report.selectedQuarter.quarter}.pdf`;
 
-        const pdfArrayBuffer = pdfBuffer instanceof ArrayBuffer
-            ? pdfBuffer
-            : pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
+        REPORT_CACHE.set(cacheKey, pdfArrayBuffer);
 
         return new Response(pdfArrayBuffer as ArrayBuffer, {
             status: 200,
             headers: {
                 "Content-Type": "application/pdf",
                 "Content-Disposition": `attachment; filename="${filename}"`,
-                "Cache-Control": "no-store",
+                "Cache-Control": "public, max-age=300",
             },
         });
     } catch (error) {
@@ -493,9 +515,5 @@ export async function GET(req: NextRequest) {
         if (authResponse) return authResponse;
         console.error("Failed to generate nurse report PDF", error);
         return NextResponse.json({ error: "Failed to generate report PDF" }, { status: 500 });
-    } finally {
-        if (browser) {
-            await browser.close().catch(() => { });
-        }
     }
 }
