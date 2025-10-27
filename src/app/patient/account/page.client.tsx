@@ -544,6 +544,18 @@ export function PatientAccountPageClient({
                                                                                 setProfileLoading(true);
                                                                                 const payload = {
                                                                                     ...updatedProfile,
+                                                                                    department:
+                                                                                        profileType === "student"
+                                                                                            ? patientReverseDepartmentEnumMap[
+                                                                                                  updatedProfile.department || ""
+                                                                                              ] || null
+                                                                                            : updatedProfile.department || null,
+                                                                                    year_level:
+                                                                                        profileType === "student"
+                                                                                            ? patientReverseYearLevelEnumMap[
+                                                                                                  updatedProfile.year_level || ""
+                                                                                              ] || null
+                                                                                            : null,
                                                                                     bloodtype:
                                                                                         patientReverseBloodTypeEnumMap[
                                                                                             updatedProfile?.bloodtype || ""
