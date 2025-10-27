@@ -273,11 +273,6 @@ export default function DoctorAccountPage() {
     );
 
     const medicalPrepared = Boolean(profile?.bloodtype?.trim());
-    const emergencyReady = Boolean(
-        profile?.emergencyco_name?.trim() &&
-            profile?.emergencyco_num?.trim() &&
-            profile?.emergencyco_relation?.trim()
-    );
 
     const summaryItems = profile
         ? [
