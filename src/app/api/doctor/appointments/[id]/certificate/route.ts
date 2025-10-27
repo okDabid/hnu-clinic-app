@@ -16,6 +16,35 @@ import { formatManilaDateTime, manilaNow } from "@/lib/time";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const MEDICAL_HISTORY_OPTIONS = [
+  "Asthma",
+  "Hypertension",
+  "Cancer",
+  "Epilepsy",
+  "Diabetes",
+  "Heart Disease",
+  "Kidney Disease",
+  "Nervous/Mental Disorder",
+] as const;
+
+const MEDICAL_HISTORY_ALIASES: Record<string, (typeof MEDICAL_HISTORY_OPTIONS)[number]> = {
+  asthma: "Asthma",
+  hypertension: "Hypertension",
+  highblood: "Hypertension",
+  highbloodpressure: "Hypertension",
+  cancer: "Cancer",
+  epilepsy: "Epilepsy",
+  diabetes: "Diabetes",
+  diabeties: "Diabetes",
+  diabetis: "Diabetes",
+  heartdisease: "Heart Disease",
+  heartdiseases: "Heart Disease",
+  kidneydisease: "Kidney Disease",
+  nervementaldisorder: "Nervous/Mental Disorder",
+  nervousmentaldisorder: "Nervous/Mental Disorder",
+  nervousandmentaldisorder: "Nervous/Mental Disorder",
+};
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -82,6 +111,36 @@ function buildConditionList(rawConditions?: string | null) {
     .filter(Boolean);
 }
 
+function normalizeCondition(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function categorizeMedicalHistory(conditions: string[]) {
+  const normalizedMap = new Map(
+    MEDICAL_HISTORY_OPTIONS.map((option) => [normalizeCondition(option), option])
+  );
+
+  const matched = new Set<(typeof MEDICAL_HISTORY_OPTIONS)[number]>();
+  const remaining: string[] = [];
+
+  for (const condition of conditions) {
+    const normalized = normalizeCondition(condition);
+    const matchedOption =
+      normalizedMap.get(normalized) || MEDICAL_HISTORY_ALIASES[normalized];
+
+    if (matchedOption) {
+      matched.add(matchedOption);
+    } else {
+      remaining.push(titleCase(condition));
+    }
+  }
+
+  return {
+    matched: Array.from(matched),
+    remaining: remaining.join(", "),
+  };
+}
+
 function formatDateLong(date: Date) {
   return new Intl.DateTimeFormat("en-PH", {
     month: "long",
@@ -102,6 +161,7 @@ type CertificateContext = {
   age: string;
   sex: string;
   address: string;
+  patientId: string;
   program: string;
   department: string;
   yearLevel: string;
@@ -111,6 +171,8 @@ type CertificateContext = {
   findings: string;
   reason: string;
   allergies: string[];
+  medicalHistory: string[];
+  otherMedicalHistory: string;
   doctorName: string;
   doctorTitle: string;
   licenseNumber: string;
@@ -140,37 +202,47 @@ function renderCertificateHtml(context: CertificateContext) {
   const isDental = context.certificateType === "dental";
   const heading = isDental ? "DENTAL CERTIFICATE" : "MEDICAL CERTIFICATE";
 
+  const descriptorType = context.patientType
+    ? context.patientType.toLowerCase()
+    : undefined;
+  const article = descriptorType
+    ? /^[aeiou]/.test(descriptorType)
+      ? "an"
+      : "a"
+    : "a";
+  const descriptor = descriptorType
+    ? `${article} ${escapeHtml(descriptorType)} of Holy Name University`
+    : "a patient of Holy Name University";
+  const clinicSegment = context.clinicName
+    ? ` at the Holy Name University ${escapeHtml(context.clinicName)}.`
+    : " at the Holy Name University Clinic.";
+
   const introLine = isDental
     ? `This is to certify that <strong>${escapeHtml(
-      context.patientName
-    )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Holy Name University Highschool Clinic.`
+        context.patientName
+      )}</strong>, ${descriptor}, underwent a dental evaluation${clinicSegment}`
     : `This is to certify that <strong>${escapeHtml(
-      context.patientName
-    )}</strong>, a student of Holy Name University, was examined at the Holy Name University College Clinic.`;
+        context.patientName
+      )}</strong>, ${descriptor}, was examined${clinicSegment}`;
 
-  const medicalHistoryOptions = [
-    "Asthma",
-    "Hypertension",
-    "Cancer",
-    "Epilepsy",
-    "Diabetes",
-    "Heart Disease",
-    "Kidney Disease",
-    "Nervous/Mental Disorder",
-  ];
+  const historySet = new Set(
+    context.medicalHistory.map((condition) => normalizeCondition(condition))
+  );
 
-  const renderCheckbox = (label: string) => `
+  const renderCheckbox = (label: string, checked: boolean) => `
         <div class="checkbox">
-          <span class="box" aria-hidden="true"></span>
+          <span class="box${checked ? " checked" : ""}" aria-hidden="true"></span>
           <span class="text">${escapeHtml(label)}</span>
         </div>
     `;
 
-  const medicalHistoryBoxes = medicalHistoryOptions
-    .map((option) => renderCheckbox(option))
+  const medicalHistoryBoxes = MEDICAL_HISTORY_OPTIONS
+    .map((option) =>
+      renderCheckbox(option, historySet.has(normalizeCondition(option)))
+    )
     .join("");
 
-  const remainingMedical = "";
+  const remainingMedical = context.otherMedicalHistory;
 
   const allergiesList = context.allergies
     .map((value) => titleCase(value))
@@ -193,6 +265,46 @@ function renderCertificateHtml(context: CertificateContext) {
     noteParts.map((entry) => entry.trim()).join(" "),
     "No additional notes were recorded."
   );
+
+  const patientMeta = [
+    context.patientType
+      ? {
+          label: "Patient Type",
+          value: context.patientType,
+        }
+      : null,
+    context.patientId
+      ? {
+          label: "Student ID",
+          value: context.patientId,
+        }
+      : null,
+    context.department
+      ? {
+          label: "Department",
+          value: context.department,
+        }
+      : null,
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  const patientMetaHtml = patientMeta.length
+    ? `
+        <div class="field-grid">
+          ${patientMeta
+            .map(
+              (item) => `
+              <div class="field-line">
+                <span class="field-label">${escapeHtml(item.label)}</span>
+                <span class="underline">${placeholder(
+                  item.value,
+                  "Not recorded"
+                )}</span>
+              </div>`
+            )
+            .join("")}
+        </div>
+      `
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -361,9 +473,29 @@ function renderCertificateHtml(context: CertificateContext) {
         width: 11px;
         height: 11px;
         border: 1px solid #111827;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         margin-top: 1px;
         flex-shrink: 0;
+        font-size: 10px;
+        line-height: 1;
+      }
+
+      .checkbox .box::after {
+        content: "✓";
+        color: #111827;
+        font-size: 11px;
+        opacity: 0;
+        transform: translateY(-1px);
+      }
+
+      .checkbox .box.checked::after {
+        opacity: 1;
+      }
+
+      .checkbox .text {
+        flex: 1 1 auto;
       }
 
       .statement {
@@ -461,6 +593,7 @@ function renderCertificateHtml(context: CertificateContext) {
           <span class="field-label">Address</span>
           <span class="underline">${placeholder(context.address, "Not provided")}</span>
         </div>
+        ${patientMetaHtml}
         <div class="field-grid">
           <div class="field-line">
             <span class="field-label">Age</span>
@@ -526,7 +659,7 @@ function renderCertificateHtml(context: CertificateContext) {
         </div>
         <div class="field-line">
           <span class="field-label">Others</span>
-          <span class="underline">${placeholder(remainingMedical)}</span>
+          <span class="underline">${placeholder(remainingMedical, "None declared")}</span>
         </div>
       </section>
 
@@ -682,6 +815,7 @@ export async function GET(
                 fname: true,
                 mname: true,
                 lname: true,
+                student_id: true,
                 date_of_birth: true,
                 gender: true,
                 address: true,
@@ -790,6 +924,9 @@ export async function GET(
     const department = humanizeEnum(studentProfile.department);
     const yearLevel = humanizeEnum(studentProfile.year_level);
     const allergies = buildConditionList(studentProfile.allergies);
+    const medicalConditions = buildConditionList(studentProfile.medical_cond);
+    const { matched: medicalHistory, remaining: otherMedicalHistory } =
+      categorizeMedicalHistory(medicalConditions);
     const patientName = titleCase(
       [studentProfile.fname, studentProfile.mname, studentProfile.lname]
         .filter(Boolean)
@@ -828,6 +965,7 @@ export async function GET(
       age,
       sex,
       address: studentProfile.address ?? "",
+      patientId: studentProfile.student_id ?? "",
       program,
       department,
       yearLevel,
@@ -837,6 +975,8 @@ export async function GET(
       findings: appointment.consultation.findings ?? "",
       reason: appointment.consultation.reason_of_visit ?? "",
       allergies,
+      medicalHistory,
+      otherMedicalHistory,
       doctorName,
       doctorTitle,
       licenseNumber: "",
