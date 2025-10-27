@@ -90,7 +90,7 @@ export function AccountSummaryGrid({ items, className }: AccountSummaryGridProps
                             aria-hidden
                             className={cn(
                                 "pointer-events-none absolute inset-0 opacity-60 blur-sm",
-                                "bg-gradient-to-br",
+                                "bg-linear-to-br",
                                 accent.gradient
                             )}
                         />

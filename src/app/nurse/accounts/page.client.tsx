@@ -156,14 +156,14 @@ export function NurseAccountsPageClient({
 
     const completionFields = profile
         ? [
-              profile.email,
-              profile.contactno,
-              profile.address,
-              profile.bloodtype,
-              profile.emergencyco_name,
-              profile.emergencyco_num,
-              profile.emergencyco_relation,
-          ]
+            profile.email,
+            profile.contactno,
+            profile.address,
+            profile.bloodtype,
+            profile.emergencyco_name,
+            profile.emergencyco_num,
+            profile.emergencyco_relation,
+        ]
         : [];
 
     const completionCount = completionFields.filter((value) => {
@@ -185,43 +185,43 @@ export function NurseAccountsPageClient({
 
     const summaryItems: AccountSummaryItem[] = profile
         ? [
-              {
-                  icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
-                  label: "Account status",
-                  value: profile.status,
-                  helper:
-                      profile.status === "Active"
-                          ? "You can administer clinic accounts."
-                          : "Contact an administrator to restore your access.",
-                  accent: profile.status === "Active" ? "emerald" : "rose",
-              },
-              {
-                  icon: BarChart3,
-                  label: "Profile completeness",
-                  value: `${completionPercent}% complete`,
-                  helper:
-                      completionPercent >= 100
-                          ? "All key contact details are filled."
-                          : "Add missing contact or emergency information.",
-                  progress: completionPercent,
-                  accent:
-                      completionPercent >= 80
-                          ? "emerald"
-                          : completionPercent >= 50
+            {
+                icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
+                label: "Account status",
+                value: profile.status,
+                helper:
+                    profile.status === "Active"
+                        ? "You can manage accounts."
+                        : "Contact an administrator to restore your access.",
+                accent: profile.status === "Active" ? "emerald" : "rose",
+            },
+            {
+                icon: BarChart3,
+                label: "Profile completeness",
+                value: `${completionPercent}% complete`,
+                helper:
+                    completionPercent >= 100
+                        ? "All key contact details are filled."
+                        : "Add missing contact or emergency information.",
+                progress: completionPercent,
+                accent:
+                    completionPercent >= 80
+                        ? "emerald"
+                        : completionPercent >= 50
                             ? "amber"
                             : "rose",
-              },
-              {
-                  icon: ClipboardList,
-                  label: "Accounts overseen",
-                  value: `${managedAccounts} accounts`,
-                  helper:
-                      inactiveAccounts > 0
-                          ? `${inactiveAccounts} inactive accounts need attention.`
-                          : "All accounts are currently active.",
-                  accent: inactiveAccounts > 0 ? "amber" : "teal",
-              },
-          ]
+            },
+            {
+                icon: ClipboardList,
+                label: "Accounts overseen",
+                value: `${managedAccounts} accounts`,
+                helper:
+                    inactiveAccounts > 0
+                        ? `${inactiveAccounts} inactive accounts need attention.`
+                        : "All accounts are currently active.",
+                accent: inactiveAccounts > 0 ? "amber" : "teal",
+            },
+        ]
         : [];
 
 
@@ -632,16 +632,14 @@ export function NurseAccountsPageClient({
             actions={
                 statusBadge ? (
                     <span
-                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${
-                            statusBadge === "Active"
+                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
                                 ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
                                 : "border-rose-200 bg-rose-50/80 text-rose-600"
-                        }`}
+                            }`}
                     >
                         <span
-                            className={`h-2 w-2 rounded-full ${
-                                statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
-                            }`}
+                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                                }`}
                         />
                         Status: {statusBadge}
                     </span>
