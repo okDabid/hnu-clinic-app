@@ -111,6 +111,22 @@ type CertificateContext = {
   findings: string;
   reason: string;
   allergies: string[];
+  medicalConditions: string[];
+  vitals: {
+    weight?: string;
+    height?: string;
+    bloodPressure?: string;
+    heartRate?: string;
+    temperature?: string;
+    oxygenSaturation?: string;
+  };
+  vaccination: {
+    vaccine?: string;
+    dose1?: string;
+    dose2?: string;
+    booster1?: string;
+    booster2?: string;
+  };
   doctorName: string;
   doctorTitle: string;
   licenseNumber: string;
@@ -123,30 +139,35 @@ function renderCertificateHtml(context: CertificateContext) {
       return escapeHtml(value);
     }
 
-    if (fallback === "Not recorded") {
-      return "&nbsp;";
-    }
-
     return `<span class="placeholder">${escapeHtml(fallback)}</span>`;
   };
 
-  const credentialValue = (value?: string) => {
-    if (value && value.trim()) {
-      return escapeHtml(value);
-    }
-    return "&nbsp;";
-  };
+  const credentialValue = (value?: string) =>
+    placeholder(value, "Not provided");
 
   const isDental = context.certificateType === "dental";
   const heading = isDental ? "DENTAL CERTIFICATE" : "MEDICAL CERTIFICATE";
 
+  const defaultClinic = isDental ? "Highschool Clinic" : "College Clinic";
+  const clinicDisplay = context.clinicName?.trim()
+    ? context.clinicName
+    : defaultClinic;
+
+  const certificateClasses = isDental
+    ? "certificate dental"
+    : "certificate medical";
+
   const introLine = isDental
     ? `This is to certify that <strong>${escapeHtml(
-      context.patientName
-    )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Holy Name University Highschool Clinic.`
+        context.patientName
+      )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Holy Name University ${escapeHtml(
+        clinicDisplay
+      )}.`
     : `This is to certify that <strong>${escapeHtml(
-      context.patientName
-    )}</strong>, a student of Holy Name University, was examined at the Holy Name University College Clinic.`;
+        context.patientName
+      )}</strong>, a student of Holy Name University, was examined at the Holy Name University ${escapeHtml(
+        clinicDisplay
+      )}.`;
 
   const medicalHistoryOptions = [
     "Asthma",
@@ -159,40 +180,158 @@ function renderCertificateHtml(context: CertificateContext) {
     "Nervous/Mental Disorder",
   ];
 
-  const renderCheckbox = (label: string) => `
-        <div class="checkbox">
-          <span class="box" aria-hidden="true"></span>
-          <span class="text">${escapeHtml(label)}</span>
-        </div>
-    `;
+  const normalizeCondition = (value: string) =>
+    value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
-  const medicalHistoryBoxes = medicalHistoryOptions
-    .map((option) => renderCheckbox(option))
+  const normalizedOptions = medicalHistoryOptions.map((label) => ({
+    label,
+    key: normalizeCondition(label),
+  }));
+
+  const matchedConditions = new Set<string>();
+  const otherConditions: string[] = [];
+
+  for (const raw of context.medicalConditions) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+
+    const normalized = normalizeCondition(trimmed);
+    const match = normalizedOptions.find(
+      (option) =>
+        normalized === option.key ||
+        normalized.includes(option.key) ||
+        option.key.includes(normalized)
+    );
+
+    if (match) {
+      matchedConditions.add(match.label);
+    } else {
+      otherConditions.push(titleCase(trimmed));
+    }
+  }
+
+  const uniqueOtherConditions = Array.from(
+    new Map(otherConditions.map((value) => [value.toLowerCase(), value])).values()
+  );
+
+  const medicalHistoryHtml = medicalHistoryOptions
+    .map((label) => {
+      const isChecked = matchedConditions.has(label);
+      return `
+          <div class="checkbox${isChecked ? " checked" : ""}">
+            <span class="box" aria-hidden="true"></span>
+            <span class="text">${escapeHtml(label)}</span>
+          </div>
+      `;
+    })
     .join("");
 
-  const remainingMedical = "";
+  const renderInfoItem = (
+    label: string,
+    value?: string,
+    fallback = "Not recorded",
+    options: { full?: boolean; compact?: boolean } = {}
+  ) => {
+    const classes = ["info-item"];
+    if (options.full) classes.push("full");
+    if (options.compact) classes.push("compact");
+
+    return `
+      <div class="${classes.join(" ")}">
+        <span class="item-label">${escapeHtml(label)}</span>
+        <span class="item-value">${placeholder(value, fallback)}</span>
+      </div>
+    `;
+  };
+
+  const renderStatCard = (
+    label: string,
+    value?: string,
+    fallback = "Not recorded"
+  ) => `
+      <div class="stat-card">
+        <span class="card-label">${escapeHtml(label)}</span>
+        <span class="card-value">${placeholder(value, fallback)}</span>
+      </div>
+    `;
+
+  const patientInfoItems: {
+    label: string;
+    value?: string;
+    fallback?: string;
+    full?: boolean;
+    compact?: boolean;
+  }[] = [
+    { label: "Name", value: context.patientName, fallback: "Not recorded", full: true },
+    { label: "Address", value: context.address, fallback: "Not provided", full: true },
+    { label: "Patient Type", value: context.patientType, fallback: "Not recorded" },
+    { label: "Age", value: context.age, fallback: "Not provided" },
+    { label: "Sex", value: context.sex, fallback: "Not provided" },
+    { label: "Program", value: context.program, fallback: "Not recorded" },
+    { label: "Year Level", value: context.yearLevel, fallback: "Not recorded" },
+  ];
+
+  patientInfoItems.push({
+    label: "Department",
+    value: context.department,
+    fallback: "Not recorded",
+  });
+
+  const patientInfoHtml = patientInfoItems
+    .map((item) =>
+      renderInfoItem(
+        item.label,
+        item.value,
+        item.fallback,
+        { full: item.full, compact: item.compact }
+      )
+    )
+    .join("");
+
+  const vitalCards: { label: string; value?: string; fallback?: string }[] = [
+    { label: "Weight", value: context.vitals.weight },
+    { label: "Height", value: context.vitals.height },
+    { label: "BP", value: context.vitals.bloodPressure },
+    { label: "HR", value: context.vitals.heartRate },
+    { label: "SpO₂", value: context.vitals.oxygenSaturation },
+    { label: "Temp", value: context.vitals.temperature },
+    { label: "Clinic", value: clinicDisplay },
+  ];
+
+  const vitalSignsHtml = vitalCards
+    .map((card) => renderStatCard(card.label, card.value, card.fallback))
+    .join("");
+
+  const vaccinationCards: { label: string; value?: string; fallback?: string }[] = [
+    { label: "Vaccine", value: context.vaccination.vaccine },
+    { label: "Dose 1", value: context.vaccination.dose1 },
+    { label: "Dose 2", value: context.vaccination.dose2 },
+    { label: "1st Booster", value: context.vaccination.booster1 },
+    { label: "2nd Booster", value: context.vaccination.booster2 },
+  ];
+
+  const vaccinationHtml = vaccinationCards
+    .map((card) => renderStatCard(card.label, card.value, card.fallback))
+    .join("");
 
   const allergiesList = context.allergies
     .map((value) => titleCase(value))
+    .filter(Boolean)
     .join(", ");
 
-  const impression = placeholder(context.diagnosis, "Not recorded");
-  const recommendation = placeholder(
-    context.findings,
-    isDental
-      ? "No dental recommendations were provided."
-      : "No medical recommendations were provided."
-  );
+  const recommendationFallback = isDental
+    ? "No dental recommendations were provided."
+    : "No medical recommendations were provided.";
 
   const noteParts: string[] = [];
   if (context.reason) {
     noteParts.push(`Reason for visit: ${context.reason}.`);
   }
-  noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
-  const notes = placeholder(
-    noteParts.map((entry) => entry.trim()).join(" "),
-    "No additional notes were recorded."
-  );
+  if (context.consultationDate) {
+    noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
+  }
+
+  const notesText = noteParts.map((entry) => entry.trim()).join(" ");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -220,172 +359,203 @@ function renderCertificateHtml(context: CertificateContext) {
         width: 8.27in;
         min-height: 11in;
         margin: 0 auto;
-        padding: 0.32in 0.4in;
+        padding: 0.45in 0.6in 0.5in;
         display: flex;
         flex-direction: column;
       }
 
-      main.medical .field-line .field-label::before {
-        content: "☐";
-        margin-right: 4px;
-        font-size: 11px;
-      }
-
       header {
         text-align: center;
-        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 18px;
       }
 
       .institution {
         font-size: 16px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        font-weight: 600;
       }
 
       .department {
         font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
+        font-weight: 500;
+        letter-spacing: 0.12em;
       }
 
       .address {
-        font-size: 13px;
+        font-size: 12px;
         margin-top: 2px;
+        letter-spacing: 0.04em;
       }
 
       h1 {
         font-size: 22px;
-        margin: 8px 0 0;
-        letter-spacing: 0.16em;
+        letter-spacing: 0.18em;
+        margin: 12px 0 0;
       }
 
-      .date-line {
-        font-size: 13.5px;
+      .meta {
+        font-size: 12.5px;
         display: flex;
         justify-content: flex-end;
-        margin-bottom: 8px;
-        gap: 6px;
+        gap: 8px;
+        margin-bottom: 14px;
+        align-items: center;
       }
 
-      .underline {
+      .meta-label {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 600;
+      }
+
+      .meta-value {
+        min-width: 150px;
         border-bottom: 1px solid #111827;
-        padding: 0 6px 2px;
-        min-width: 110px;
+        padding-bottom: 2px;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      .section {
+        margin-bottom: 18px;
+      }
+
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        margin-bottom: 8px;
+        color: #111827;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px 16px;
+      }
+
+      .info-grid.single {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12.4px;
+        min-height: 48px;
+      }
+
+      .info-item.full {
+        grid-column: 1 / -1;
+      }
+
+      .info-item.compact {
+        min-height: 0;
+      }
+
+      .item-label {
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 10px;
+        color: #4b5563;
+      }
+
+      .item-value {
+        font-weight: 500;
+        color: #111827;
+        min-height: 18px;
         display: inline-flex;
         align-items: center;
-        justify-content: flex-start;
-        min-height: 16px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 10px 16px;
+      }
+
+      .stat-card {
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-height: 66px;
+      }
+
+      .stat-card .card-label {
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 9.5px;
+        color: #4b5563;
+      }
+
+      .stat-card .card-value {
+        font-size: 12.8px;
+        font-weight: 600;
+        color: #111827;
       }
 
       .placeholder {
         font-style: italic;
         color: #6b7280;
-      }
-
-      section {
-        margin-bottom: 8px;
-      }
-
-      .section-title {
-        font-size: 14px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 4px;
-      }
-
-      .field-line {
-        display: flex;
-        align-items: flex-start;
-        gap: 5px;
-        font-size: 12.8px;
-        margin-bottom: 2px;
-        flex-wrap: wrap;
-      }
-
-      .field-label {
-        flex: 0 0 115px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        font-size: 10.8px;
-      }
-
-      .field-line .underline {
-        flex: 1 1 auto;
-      }
-
-      .field-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
-        gap: 3px 10px;
-      }
-
-      .field-grid .field-line {
-        margin-bottom: 0;
-      }
-
-      .field-grid .field-label {
-        flex-basis: 110px;
-      }
-
-      .patient-info .field-line {
-        font-size: 11.4px;
-        gap: 4px;
-      }
-
-      .patient-info .field-label {
-        font-size: 10.2px;
-        flex-basis: 108px;
-      }
-
-      .patient-info .field-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        font-weight: normal;
       }
 
       .checkbox-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 3px 8px;
-        margin-bottom: 4px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 6px 16px;
+        margin-bottom: 10px;
       }
 
       .checkbox {
         display: flex;
         align-items: center;
-        gap: 5px;
-        font-size: 12.3px;
+        gap: 6px;
+        font-size: 12.4px;
       }
 
       .checkbox .box {
-        width: 11px;
-        height: 11px;
+        width: 12px;
+        height: 12px;
         border: 1px solid #111827;
-        display: inline-block;
-        margin-top: 1px;
-        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .checkbox.checked .box::after {
+        content: "✔";
+        font-size: 10px;
+        color: #111827;
+      }
+
+      .checkbox .text {
+        letter-spacing: 0.02em;
       }
 
       .statement {
-        font-size: 13px;
+        font-size: 13.2px;
         text-align: justify;
-        margin-bottom: 5px;
-      }
-
-      .notes {
-        min-height: 38px;
+        line-height: 1.55;
+        margin: 18px 0 14px;
       }
 
       .signature-block {
-        margin-top: 12px;
+        margin-top: 24px;
         display: flex;
         justify-content: flex-end;
       }
 
       .signature {
         text-align: center;
-        font-size: 11.8px;
-        min-width: 190px;
+        font-size: 12px;
+        min-width: 240px;
       }
 
       .signature .line {
@@ -394,41 +564,54 @@ function renderCertificateHtml(context: CertificateContext) {
         padding-bottom: 3px;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
       }
 
-      .signature .credentials {
-        margin-top: 6px;
+      .signature .title {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .credentials {
+        margin-top: 8px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 3px 12px;
-        justify-items: start;
+        gap: 6px 14px;
+        font-size: 10.4px;
       }
 
-      .signature .credential {
+      .credential {
         text-align: left;
-        font-size: 10.8px;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 4px;
       }
 
-      .signature .credential .label {
+      .credential .label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
         font-weight: 600;
-        letter-spacing: 0.04em;
+        font-size: 9.6px;
+        color: #4b5563;
       }
 
-      .signature .credential .underline {
-        min-width: 130px;
+      .credential .value {
+        border-bottom: 1px solid #111827;
+        min-height: 18px;
+        display: flex;
+        align-items: center;
+        padding-bottom: 2px;
+        font-weight: 500;
       }
 
       footer {
         margin-top: auto;
-        font-size: 10.8px;
+        font-size: 10.6px;
         color: #374151;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
       }
 
       footer .certificate-id {
@@ -438,7 +621,7 @@ function renderCertificateHtml(context: CertificateContext) {
     </style>
   </head>
   <body>
-    <main class="${isDental ? "certificate dental" : "certificate medical"}">
+    <main class="${certificateClasses}">
       <header>
         <div class="institution">Holy Name University</div>
         <div class="department">Health Services Department</div>
@@ -446,140 +629,80 @@ function renderCertificateHtml(context: CertificateContext) {
         <h1>${escapeHtml(heading)}</h1>
       </header>
 
-      <div class="date-line">
-        <span>Date:</span>
-        <span class="underline">${escapeHtml(context.issueDateDisplay)}</span>
+      <div class="meta">
+        <span class="meta-label">Date</span>
+        <span class="meta-value">${escapeHtml(context.issueDateDisplay)}</span>
       </div>
 
-      <section class="patient-info">
+      <section class="section">
         <div class="section-title">Patient Information</div>
-        <div class="field-line">
-          <span class="field-label">Name</span>
-          <span class="underline">${placeholder(context.patientName)}</span>
-        </div>
-        <div class="field-line">
-          <span class="field-label">Address</span>
-          <span class="underline">${placeholder(context.address, "Not provided")}</span>
-        </div>
-        <div class="field-grid">
-          <div class="field-line">
-            <span class="field-label">Age</span>
-            <span class="underline">${placeholder(context.age, "Not provided")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Sex</span>
-            <span class="underline">${placeholder(context.sex, "Not provided")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Program</span>
-            <span class="underline">${placeholder(context.program, "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Year Level</span>
-            <span class="underline">${placeholder(context.yearLevel, "Not recorded")}</span>
-          </div>
+        <div class="info-grid">
+          ${patientInfoHtml}
         </div>
       </section>
 
-      <section>
+      <section class="section">
         <div class="section-title">Vital Signs</div>
-        <div class="field-grid">
-          <div class="field-line">
-            <span class="field-label">BP</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">HR</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">RR</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Temp</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Weight</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Height</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">SpO₂</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Clinic</span>
-            <span class="underline">${placeholder(context.clinicName)}</span>
-          </div>
+        <div class="stats-grid">
+          ${vitalSignsHtml}
         </div>
       </section>
 
-      <section>
+      <section class="section">
         <div class="section-title">Medical History</div>
         <div class="checkbox-grid">
-          ${medicalHistoryBoxes}
+          ${medicalHistoryHtml}
         </div>
-        <div class="field-line">
-          <span class="field-label">Others</span>
-          <span class="underline">${placeholder(remainingMedical)}</span>
+        <div class="info-grid single">
+          ${renderInfoItem(
+            "Others",
+            uniqueOtherConditions.join(", "),
+            "None declared",
+            { full: true, compact: true }
+          )}
         </div>
       </section>
 
-      <section>
+      <section class="section">
         <div class="section-title">COVID-19 Vaccination</div>
-        <div class="field-line">
-          <span class="field-label">Vaccine</span>
-          <span class="underline">${placeholder("", "Not recorded")}</span>
-        </div>
-        <div class="field-grid">
-          <div class="field-line">
-            <span class="field-label">Dose 1</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">Dose 2</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">1st Booster</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
-          <div class="field-line">
-            <span class="field-label">2nd Booster</span>
-            <span class="underline">${placeholder("", "Not recorded")}</span>
-          </div>
+        <div class="stats-grid">
+          ${vaccinationHtml}
         </div>
       </section>
 
-      <section>
+      <section class="section">
         <div class="section-title">Allergies</div>
-        <div class="field-line">
-          <span class="field-label">Food / Drug</span>
-          <span class="underline">${placeholder(
-    allergiesList,
-    "No allergies declared"
-  )}</span>
+        <div class="info-grid single">
+          ${renderInfoItem(
+            "Food / Drug",
+            allergiesList,
+            "None declared",
+            { full: true, compact: true }
+          )}
         </div>
       </section>
 
-      <section>
+      <section class="section">
         <div class="section-title">Clinical Impression</div>
-        <div class="field-line">
-          <span class="field-label">Impression</span>
-          <span class="underline">${impression}</span>
-        </div>
-        <div class="field-line">
-          <span class="field-label">Recommendation</span>
-          <span class="underline">${recommendation}</span>
-        </div>
-        <div class="field-line notes">
-          <span class="field-label">Notes</span>
-          <span class="underline">${notes}</span>
+        <div class="info-grid single">
+          ${renderInfoItem(
+            "Impression",
+            context.diagnosis,
+            "Not recorded",
+            { full: true }
+          )}
+          ${renderInfoItem(
+            "Recommendation",
+            context.findings,
+            recommendationFallback,
+            { full: true }
+          )}
+          ${renderInfoItem(
+            "Notes",
+            notesText,
+            "No additional notes were recorded.",
+            { full: true }
+          )}
         </div>
       </section>
 
@@ -588,25 +711,25 @@ function renderCertificateHtml(context: CertificateContext) {
       <div class="signature-block">
         <div class="signature">
           <div class="line">${escapeHtml(context.doctorName)}</div>
-          <div>${escapeHtml(context.doctorTitle)}</div>
+          <div class="title">${escapeHtml(context.doctorTitle)}</div>
           <div class="credentials">
             <div class="credential">
               <span class="label">License No.</span>
-              <span class="underline">${credentialValue(context.licenseNumber)}</span>
+              <span class="value">${credentialValue(context.licenseNumber)}</span>
             </div>
             <div class="credential">
               <span class="label">PTR No.</span>
-              <span class="underline">${credentialValue(context.ptrNumber)}</span>
+              <span class="value">${credentialValue(context.ptrNumber)}</span>
             </div>
           </div>
         </div>
       </div>
 
       <footer>
-        <div>Valid until: ${escapeHtml(formatDateLong(context.validUntil))}</div>
+        <div>Valid until ${escapeHtml(formatDateLong(context.validUntil))}.</div>
         <div class="certificate-id">Certificate ID: ${escapeHtml(
-    context.certificateId
-  )}</div>
+          context.certificateId
+        )}</div>
         <div>
           This certificate is issued for any school-related activity and is valid for one (1) year from the date of issuance.
         </div>
@@ -790,6 +913,7 @@ export async function GET(
     const department = humanizeEnum(studentProfile.department);
     const yearLevel = humanizeEnum(studentProfile.year_level);
     const allergies = buildConditionList(studentProfile.allergies);
+    const medicalConditions = buildConditionList(studentProfile.medical_cond);
     const patientName = titleCase(
       [studentProfile.fname, studentProfile.mname, studentProfile.lname]
         .filter(Boolean)
@@ -814,7 +938,9 @@ export async function GET(
 
     const issueDateDisplay = formatDateLong(medcert.issue_date);
     const consultationDate =
-      formatManilaDateTime(appointment.appointment_timestart) ?? issueDateDisplay;
+      formatManilaDateTime(
+        appointment.consultation.updatedAt ?? appointment.appointment_timestart
+      ) || issueDateDisplay;
 
     const context: CertificateContext = {
       certificateId: medcert.certificate_id,
@@ -831,12 +957,15 @@ export async function GET(
       program,
       department,
       yearLevel,
-      clinicName: appointment.clinic.clinic_name,
+      clinicName: appointment.clinic?.clinic_name ?? "",
       consultationDate,
       diagnosis: appointment.consultation.diagnosis ?? "",
       findings: appointment.consultation.findings ?? "",
       reason: appointment.consultation.reason_of_visit ?? "",
       allergies,
+      medicalConditions,
+      vitals: {},
+      vaccination: {},
       doctorName,
       doctorTitle,
       licenseNumber: "",
