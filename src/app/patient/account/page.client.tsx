@@ -682,8 +682,11 @@ export function PatientAccountPageClient({
                                                         })
                                                     }
                                                 >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select department" />
+                                                    <SelectTrigger className="w-full whitespace-normal text-left leading-snug">
+                                                        <SelectValue
+                                                            className="line-clamp-none whitespace-normal text-left"
+                                                            placeholder="Select department"
+                                                        />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {departmentOptions.map((dept) => (
