@@ -918,7 +918,7 @@ export function NurseAccountsPageClient({
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        className="flex items-center justify-center gap-2 rounded-2xl border-emerald-200 bg-white/95 px-5 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-50 disabled:opacity-60"
+                                        className="flex items-center justify-center gap-2 rounded-2xl border-green-200 bg-white/95 px-5 py-2 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-50 disabled:opacity-60"
                                         onClick={() => void handleRefreshProfile()}
                                         disabled={profileLoading || refreshingProfile}
                                     >
@@ -932,7 +932,7 @@ export function NurseAccountsPageClient({
                                     </Button>
                                     <Button
                                         type="submit"
-                                        className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading ? (

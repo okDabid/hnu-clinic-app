@@ -186,7 +186,7 @@ export function AccountPasswordDialog({
                         triggerClassName
                     )}
                 >
-                    <Cog className="h-5 w-5 text-green-600" />
+                    <Cog className="h-5 w-5 text-white" />
                 </Button>
             </DialogTrigger>
 
