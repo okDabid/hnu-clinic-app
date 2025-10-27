@@ -134,23 +134,27 @@ export function PanelLayout({
                             <p className="text-sm font-semibold text-green-700">{fullName}</p>
                         </div>
                     </div>
-                    {navLinks}
-                    <Separator className="my-6" />
-                    <Button
-                        variant="default"
-                        className="mt-auto w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm transition-transform hover:scale-[1.01] hover:bg-green-700"
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                    >
-                        {isLoggingOut ? (
-                            "Signing out..."
-                        ) : (
-                            <>
-                                <LogOut className="h-4 w-4" />
-                                Logout
-                            </>
-                        )}
-                    </Button>
+                    <div className="flex flex-1 flex-col overflow-hidden">
+                        <div className="flex-1 overflow-y-auto pr-1">
+                            {navLinks}
+                        </div>
+                        <Separator className="my-6" />
+                        <Button
+                            variant="default"
+                            className="w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm transition-transform hover:scale-[1.01] hover:bg-green-700"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                        >
+                            {isLoggingOut ? (
+                                "Signing out..."
+                            ) : (
+                                <>
+                                    <LogOut className="h-4 w-4" />
+                                    Logout
+                                </>
+                            )}
+                        </Button>
+                    </div>
                 </aside>
 
                 <div className="flex flex-1 flex-col">
@@ -207,7 +211,9 @@ export function PanelLayout({
                                                     <p className="text-sm font-semibold text-green-700">{fullName}</p>
                                                 </div>
                                             </div>
-                                            {navLinks}
+                                            <div className="max-h-[60vh] overflow-y-auto pr-1">
+                                                {navLinks}
+                                            </div>
                                             <Button
                                                 variant="default"
                                                 className="w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm hover:bg-green-700"
