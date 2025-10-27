@@ -111,46 +111,50 @@ export function PanelLayout({
     return (
         <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-green-100">
             <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
-                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-green-100/80 bg-white/80 p-6 shadow-sm backdrop-blur lg:flex">
-                    <div className="flex items-center gap-3 pb-6">
-                        <Image
-                            src="/clinic-illustration.svg"
-                            alt="HNU Clinic"
-                            width={44}
-                            height={44}
-                            className="h-11 w-11 object-contain drop-shadow"
-                        />
-                        <div>
-                            <h1 className="text-xl font-bold text-green-700">HNU Clinic</h1>
+                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-green-100/80 bg-white/80 p-6 shadow-sm backdrop-blur lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
+                    <div className="flex h-full flex-col overflow-hidden">
+                        <div className="flex items-center gap-3 pb-6">
+                            <Image
+                                src="/clinic-illustration.svg"
+                                alt="HNU Clinic"
+                                width={44}
+                                height={44}
+                                className="h-11 w-11 object-contain drop-shadow"
+                            />
+                            <div>
+                                <h1 className="text-xl font-bold text-green-700">HNU Clinic</h1>
+                            </div>
                         </div>
-                    </div>
-                    <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
-                        <Avatar className="h-12 w-12 border border-green-100">
-                            <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                            <AvatarFallback className="bg-green-200 text-green-800">{avatarFallback}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="text-xs text-green-500">Signed in as</p>
-                            <p className="text-sm font-semibold text-green-700">{fullName}</p>
+                        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
+                            <Avatar className="h-12 w-12 border border-green-100">
+                                <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                                <AvatarFallback className="bg-green-200 text-green-800">{avatarFallback}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="text-xs text-green-500">Signed in as</p>
+                                <p className="text-sm font-semibold text-green-700">{fullName}</p>
+                            </div>
                         </div>
+                        <div className="flex-1 overflow-y-auto pr-2">
+                            {navLinks}
+                        </div>
+                        <Separator className="my-6" />
+                        <Button
+                            variant="default"
+                            className="mt-auto w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm transition-transform hover:scale-[1.01] hover:bg-green-700"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                        >
+                            {isLoggingOut ? (
+                                "Signing out..."
+                            ) : (
+                                <>
+                                    <LogOut className="h-4 w-4" />
+                                    Logout
+                                </>
+                            )}
+                        </Button>
                     </div>
-                    {navLinks}
-                    <Separator className="my-6" />
-                    <Button
-                        variant="default"
-                        className="mt-auto w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm transition-transform hover:scale-[1.01] hover:bg-green-700"
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                    >
-                        {isLoggingOut ? (
-                            "Signing out..."
-                        ) : (
-                            <>
-                                <LogOut className="h-4 w-4" />
-                                Logout
-                            </>
-                        )}
-                    </Button>
                 </aside>
 
                 <div className="flex flex-1 flex-col">
@@ -196,7 +200,7 @@ export function PanelLayout({
                                                 {sheetTitle}
                                             </SheetTitle>
                                         </SheetHeader>
-                                        <div className="space-y-6 px-6 py-6">
+                                        <div className="flex h-full flex-col gap-6 overflow-y-auto px-6 py-6">
                                             <div className="flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
                                                 <Avatar className="h-11 w-11 border border-green-100">
                                                     <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
