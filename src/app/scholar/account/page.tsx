@@ -647,10 +647,10 @@ export default function ScholarAccountPage() {
 
                                 <AccountSection
                                     icon={GraduationCap}
-                                    title="Academic details"
-                                    description="Ensure your department and year level are accurate."
+                                    title="Academic information"
+                                    description="Help the clinic coordinate with your department."
                                 >
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Department</Label>
                                             <Select
