@@ -62,6 +62,7 @@ import {
 import { AccountCard } from "@/components/account/account-card";
 import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
+import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 import { cn } from "@/lib/utils";
@@ -182,7 +183,7 @@ export function NurseAccountsPageClient({
         [users]
     );
 
-    const summaryItems = profile
+    const summaryItems: AccountSummaryItem[] = profile
         ? [
               {
                   icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
