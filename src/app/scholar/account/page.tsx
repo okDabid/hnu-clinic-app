@@ -19,6 +19,7 @@ import ScholarLayout from "@/components/scholar/scholar-layout";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
+import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -299,7 +300,7 @@ export default function ScholarAccountPage() {
             : "Add an emergency contact for urgent support."
         : null;
 
-    const summaryItems = profile
+    const summaryItems: AccountSummaryItem[] = profile
         ? [
               {
                   icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
