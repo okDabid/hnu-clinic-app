@@ -2,7 +2,21 @@
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Ban, CheckCircle2, Loader2, Search } from "lucide-react";
+import {
+    Ban,
+    CheckCircle2,
+    Loader2,
+    Search,
+    ShieldCheck,
+    ShieldAlert,
+    BarChart3,
+    ClipboardList,
+    UserRound,
+    Phone,
+    KeyRound,
+    HeartPulse,
+    LifeBuoy,
+} from "lucide-react";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
 
@@ -46,6 +60,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { AccountCard } from "@/components/account/account-card";
+import { AccountSection } from "@/components/account/account-section";
+import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 import { cn } from "@/lib/utils";
@@ -110,6 +126,7 @@ export function NurseAccountsPageClient({
 
     const [profile, setProfile] = useState<NurseAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
+    const [refreshingProfile, setRefreshingProfile] = useState(false);
 
     const [profileLoaded, setProfileLoaded] = useState(initialProfileLoaded);
     const [usersLoaded, setUsersLoaded] = useState(initialUsersLoaded);
@@ -133,6 +150,78 @@ export function NurseAccountsPageClient({
     const deferredSearch = useDeferredValue(search.trim().toLowerCase());
 
     const initializing = !(profileLoaded && usersLoaded);
+
+    const statusBadge = profile?.status ?? null;
+
+    const completionFields = profile
+        ? [
+              profile.email,
+              profile.contactno,
+              profile.address,
+              profile.bloodtype,
+              profile.emergencyco_name,
+              profile.emergencyco_num,
+              profile.emergencyco_relation,
+          ]
+        : [];
+
+    const completionCount = completionFields.filter((value) => {
+        if (typeof value === "string") {
+            return value.trim().length > 0;
+        }
+        return Boolean(value);
+    }).length;
+
+    const completionPercent = completionFields.length
+        ? Math.round((completionCount / completionFields.length) * 100)
+        : 0;
+
+    const managedAccounts = users.length;
+    const inactiveAccounts = useMemo(
+        () => users.filter((user) => user.status === "Inactive").length,
+        [users]
+    );
+
+    const summaryItems = profile
+        ? [
+              {
+                  icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
+                  label: "Account status",
+                  value: profile.status,
+                  helper:
+                      profile.status === "Active"
+                          ? "You can administer clinic accounts."
+                          : "Contact an administrator to restore your access.",
+                  accent: profile.status === "Active" ? "emerald" : "rose",
+              },
+              {
+                  icon: BarChart3,
+                  label: "Profile completeness",
+                  value: `${completionPercent}% complete`,
+                  helper:
+                      completionPercent >= 100
+                          ? "All key contact details are filled."
+                          : "Add missing contact or emergency information.",
+                  progress: completionPercent,
+                  accent:
+                      completionPercent >= 80
+                          ? "emerald"
+                          : completionPercent >= 50
+                            ? "amber"
+                            : "rose",
+              },
+              {
+                  icon: ClipboardList,
+                  label: "Accounts overseen",
+                  value: `${managedAccounts} accounts`,
+                  helper:
+                      inactiveAccounts > 0
+                          ? `${inactiveAccounts} inactive accounts need attention.`
+                          : "All accounts are currently active.",
+                  accent: inactiveAccounts > 0 ? "amber" : "teal",
+              },
+          ]
+        : [];
 
 
     // Fetch users (deduplicated but allows same visible ID across different roles)
@@ -177,6 +266,15 @@ export function NurseAccountsPageClient({
             setProfileLoaded(true);
         }
     }, []);
+
+    const handleRefreshProfile = useCallback(async () => {
+        try {
+            setRefreshingProfile(true);
+            await loadProfile();
+        } finally {
+            setRefreshingProfile(false);
+        }
+    }, [loadProfile]);
 
     useEffect(() => {
         if (!profileLoaded) {
@@ -530,299 +628,326 @@ export function NurseAccountsPageClient({
         <NurseLayout
             title="Accounts Management"
             description="Create and manage user accounts, update your profile, and control access from one workspace."
+            actions={
+                statusBadge ? (
+                    <span
+                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${
+                            statusBadge === "Active"
+                                ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                                : "border-rose-200 bg-rose-50/80 text-rose-600"
+                        }`}
+                    >
+                        <span
+                            className={`h-2 w-2 rounded-full ${
+                                statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                            }`}
+                        />
+                        Status: {statusBadge}
+                    </span>
+                ) : null
+            }
         >
             <section className="px-4 sm:px-6 py-6 sm:py-8 space-y-10 w-full max-w-6xl mx-auto">
                 {/* My Account */}
-                {profile && (
-                    <AccountCard
-                        title="My Account"
-                        description="Review and update your clinic profile details, emergency contacts, and credentials."
-                        onPasswordSubmit={handlePasswordSubmit}
-                        contentClassName="pt-6"
-                    >
-                        <form onSubmit={handleProfileUpdate} className="space-y-6">
-                            {/* Basic Info */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="block mb-1 font-medium">User ID</Label>
-                                    <Input value={profile.user_id} disabled />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Employee ID</Label>
-                                    <Input value={profile.username} disabled />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Role</Label>
-                                    <Input value={profile.role} disabled />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Status</Label>
-                                    <Input value={profile.status} disabled />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Date of Birth</Label>
+                {profile ? (
+                    <div className="space-y-8">
+                        <AccountSummaryGrid items={summaryItems} />
+                        <AccountCard
+                            title="My Account"
+                            description="Review and update your clinic profile details, emergency contacts, and credentials."
+                            onPasswordSubmit={handlePasswordSubmit}
+                        >
+                            <form onSubmit={handleProfileUpdate} className="space-y-10">
+                                <AccountSection
+                                    icon={KeyRound}
+                                    title="Account credentials"
+                                    description="Reference identifiers and access status."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">User ID</Label>
+                                            <Input value={profile.user_id} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Employee ID</Label>
+                                            <Input value={profile.username} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Role</Label>
+                                            <Input value={profile.role} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Status</Label>
+                                            <Input value={profile.status} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Date of birth</Label>
+                                            {profile.date_of_birth ? (
+                                                <Input type="date" value={profile.date_of_birth?.slice(0, 10) || ""} disabled />
+                                            ) : (
+                                                <>
+                                                    <Input
+                                                        type="date"
+                                                        value={tempDOB}
+                                                        onChange={(event) => setTempDOB(event.target.value)}
+                                                    />
+                                                    {tempDOB ? (
+                                                        <Button
+                                                            type="button"
+                                                            className="mt-2 w-max rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                                            onClick={() => setShowDOBConfirm(true)}
+                                                        >
+                                                            Confirm date
+                                                        </Button>
+                                                    ) : null}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        This can only be saved once. Double-check before confirming.
+                                                    </p>
+                                                    <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
+                                                        <AlertDialogContent className="max-w-sm sm:max-w-md rounded-3xl border border-emerald-100/80 bg-white/95">
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    You are about to set your Date of Birth to{' '}
+                                                                    <span className="font-semibold text-emerald-700">{tempDOB}</span>.
+                                                                    <br />
+                                                                    This action can only be done once and cannot be changed later.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter className="mt-4">
+                                                                <AlertDialogCancel
+                                                                    onClick={() => {
+                                                                        setTempDOB("");
+                                                                        setShowDOBConfirm(false);
+                                                                    }}
+                                                                >
+                                                                    Cancel
+                                                                </AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    className="bg-emerald-600 hover:bg-emerald-700"
+                                                                    onClick={async () => {
+                                                                        const contactValidation = validateAndNormalizeContacts({
+                                                                            email: profile.email,
+                                                                            contactNumber: profile.contactno,
+                                                                            emergencyNumber: profile.emergencyco_num,
+                                                                        });
 
-                                    {/* If already set → disable input */}
-                                    {profile.date_of_birth ? (
-                                        <Input
-                                            type="date"
-                                            value={profile.date_of_birth?.slice(0, 10) || ""}
-                                            disabled
-                                        />
-                                    ) : (
-                                        <>
-                                            <Input
-                                                type="date"
-                                                value={tempDOB}
-                                                onChange={(e) => setTempDOB(e.target.value)}
-                                            />
-                                            {tempDOB && (
-                                                <Button
-                                                    type="button"
-                                                    className="mt-2 bg-green-600 hover:bg-green-700 text-white text-sm"
-                                                    onClick={() => setShowDOBConfirm(true)}
-                                                >
-                                                    Confirm Date
-                                                </Button>
+                                                                        if (!contactValidation.success) {
+                                                                            toast.error(contactValidation.error);
+                                                                            return;
+                                                                        }
+
+                                                                        const updatedProfile = {
+                                                                            ...profile,
+                                                                            email: contactValidation.email,
+                                                                            contactno: contactValidation.contactNumber,
+                                                                            emergencyco_num: contactValidation.emergencyNumber,
+                                                                            date_of_birth: tempDOB,
+                                                                        };
+
+                                                                        setProfile(updatedProfile);
+                                                                        setShowDOBConfirm(false);
+
+                                                                        try {
+                                                                            setProfileLoading(true);
+                                                                            const payload = {
+                                                                                ...updatedProfile,
+                                                                                bloodtype:
+                                                                                    nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
+                                                                            };
+
+                                                                            const res = await fetch("/api/nurse/accounts/me", {
+                                                                                method: "PUT",
+                                                                                headers: { "Content-Type": "application/json" },
+                                                                                body: JSON.stringify({ profile: payload }),
+                                                                            });
+
+                                                                            const data = await res.json();
+                                                                            if (data.error) {
+                                                                                toast.error(data.error);
+                                                                            } else {
+                                                                                toast.success("Date of Birth saved!");
+                                                                                await loadProfile();
+                                                                            }
+                                                                        } catch {
+                                                                            toast.error("Failed to save Date of Birth");
+                                                                        } finally {
+                                                                            setProfileLoading(false);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Confirm
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </>
                                             )}
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                You can only set this once. Once saved, it cannot be changed.
-                                            </p>
+                                        </div>
+                                    </div>
+                                </AccountSection>
 
-                                            {/* Confirmation Dialog (shown only when user saves) */}
-                                            <AlertDialog open={showDOBConfirm} onOpenChange={setShowDOBConfirm}>
-                                                <AlertDialogContent className="max-w-sm sm:max-w-md">
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            You are about to set your Date of Birth to{" "}
-                                                            <span className="font-semibold text-green-700">{tempDOB}</span>.
-                                                            <br />
-                                                            This action can only be done once and cannot be changed later.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter className="mt-4">
-                                                        <AlertDialogCancel
-                                                            onClick={() => {
-                                                                setTempDOB("");
-                                                                setShowDOBConfirm(false);
-                                                            }}
-                                                        >
-                                                            Cancel
-                                                        </AlertDialogCancel>
-                                                        <AlertDialogAction
-                                                            className="bg-green-600 hover:bg-green-700"
-                                                            onClick={async () => {
-                                                                const contactValidation = validateAndNormalizeContacts({
-                                                                    email: profile.email,
-                                                                    contactNumber: profile.contactno,
-                                                                    emergencyNumber: profile.emergencyco_num,
-                                                                });
+                                <AccountSection
+                                    icon={UserRound}
+                                    title="Personal information"
+                                    description="Keep your name details up to date."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">First name</Label>
+                                            <Input value={profile.fname} onChange={(event) => setProfile({ ...profile, fname: event.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Middle name</Label>
+                                            <Input value={profile.mname || ""} onChange={(event) => setProfile({ ...profile, mname: event.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Last name</Label>
+                                            <Input value={profile.lname} onChange={(event) => setProfile({ ...profile, lname: event.target.value })} />
+                                        </div>
+                                    </div>
+                                </AccountSection>
 
-                                                                if (!contactValidation.success) {
-                                                                    toast.error(contactValidation.error);
-                                                                    return;
-                                                                }
+                                <AccountSection
+                                    icon={Phone}
+                                    title="Contact & address"
+                                    description="Make sure the clinic can reach you quickly."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Email</Label>
+                                            <Input
+                                                type="email"
+                                                placeholder="example@hnu.edu.ph"
+                                                value={profile.email || ""}
+                                                onChange={(event) => setProfile({ ...profile, email: event.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
+                                            <Input
+                                                type="tel"
+                                                placeholder="09XXXXXXXXX"
+                                                value={profile.contactno || ""}
+                                                onChange={(event) => setProfile({ ...profile, contactno: event.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-emerald-900">Address</Label>
+                                        <Input
+                                            value={profile.address || ""}
+                                            onChange={(event) => setProfile({ ...profile, address: event.target.value })}
+                                        />
+                                    </div>
+                                </AccountSection>
 
-                                                                const updatedProfile = {
-                                                                    ...profile,
-                                                                    email: contactValidation.email,
-                                                                    contactno: contactValidation.contactNumber,
-                                                                    emergencyco_num: contactValidation.emergencyNumber,
-                                                                    date_of_birth: tempDOB,
-                                                                };
+                                <AccountSection
+                                    icon={HeartPulse}
+                                    title="Medical background"
+                                    description="Supports emergency preparedness."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Blood type</Label>
+                                            <Select
+                                                value={profile.bloodtype || ""}
+                                                onValueChange={(value) => setProfile({ ...profile, bloodtype: value })}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select blood type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {bloodTypeOptions.map((type) => (
+                                                        <SelectItem key={type} value={type}>
+                                                            {type}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Allergies</Label>
+                                            <Input
+                                                value={profile.allergies || ""}
+                                                onChange={(event) => setProfile({ ...profile, allergies: event.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-emerald-900">Medical conditions</Label>
+                                        <Input
+                                            value={profile.medical_cond || ""}
+                                            onChange={(event) => setProfile({ ...profile, medical_cond: event.target.value })}
+                                        />
+                                    </div>
+                                </AccountSection>
 
-                                                                setProfile(updatedProfile);
-                                                                setShowDOBConfirm(false);
+                                <AccountSection
+                                    icon={LifeBuoy}
+                                    title="Emergency contact"
+                                    description="Provide someone we can reach when urgent coordination is needed."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Contact name</Label>
+                                            <Input
+                                                value={profile.emergencyco_name || ""}
+                                                onChange={(event) => setProfile({ ...profile, emergencyco_name: event.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
+                                            <Input
+                                                value={profile.emergencyco_num || ""}
+                                                onChange={(event) => setProfile({ ...profile, emergencyco_num: event.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Relationship</Label>
+                                            <Input
+                                                value={profile.emergencyco_relation || ""}
+                                                onChange={(event) => setProfile({ ...profile, emergencyco_relation: event.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </AccountSection>
 
-                                                                // Immediately save to the DB
-                                                                try {
-                                                                    setProfileLoading(true);
-                                                                    const payload = {
-                                                                        ...updatedProfile,
-                                                                        bloodtype: nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
-                                                                    };
-
-                                                                    const res = await fetch("/api/nurse/accounts/me", {
-                                                                        method: "PUT",
-                                                                        headers: { "Content-Type": "application/json" },
-                                                                        body: JSON.stringify({ profile: payload }),
-                                                                    });
-
-                                                                    const data = await res.json();
-                                                                    if (data.error) {
-                                                                        toast.error(data.error);
-                                                                    } else {
-                                                                        toast.success("Date of Birth saved!");
-                                                                        await loadProfile(); // Refresh with updated DOB
-                                                                    }
-                                                                } catch {
-                                                                    toast.error("Failed to save Date of Birth");
-                                                                } finally {
-                                                                    setProfileLoading(false);
-                                                                }
-                                                            }}
-                                                        >
-                                                            Confirm
-                                                        </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </>
-                                    )}
-                                </div>
-
-                            </div>
-
-                            {/* Personal Info */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <Label className="block mb-1 font-medium">First Name</Label>
-                                    <Input
-                                        value={profile.fname}
-                                        onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Middle Name</Label>
-                                    <Input
-                                        value={profile.mname || ""}
-                                        onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Last Name</Label>
-                                    <Input
-                                        value={profile.lname}
-                                        onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Contact Info */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="block mb-1 font-medium">Email</Label>
-                                    <Input
-                                        type="email"
-                                        placeholder="example@hnu.edu.ph"
-                                        value={profile.email || ""}
-                                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Contact No</Label>
-                                    <Input
-                                        type="tel"
-                                        placeholder="09XXXXXXXXX"
-                                        value={profile.contactno || ""}
-                                        onChange={(e) =>
-                                            setProfile({ ...profile, contactno: e.target.value })
-                                        }
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Address & Medical */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="block mb-1 font-medium">Address</Label>
-                                    <Input
-                                        value={profile.address || ""}
-                                        onChange={(e) => setProfile({ ...profile, address: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Allergies</Label>
-                                    <Input
-                                        value={profile.allergies || ""}
-                                        onChange={(e) =>
-                                            setProfile({ ...profile, allergies: e.target.value })
-                                        }
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <Label className="block mb-1 font-medium">Medical Conditions</Label>
-                                <Input
-                                    value={profile.medical_cond || ""}
-                                    onChange={(e) =>
-                                        setProfile({ ...profile, medical_cond: e.target.value })
-                                    }
-                                />
-                            </div>
-
-                            {/* Blood Type */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="block mb-1 font-medium">Blood Type</Label>
-                                    <Select
-                                        value={profile.bloodtype || ""}
-                                        onValueChange={(val) =>
-                                            setProfile({ ...profile, bloodtype: val })
-                                        }
+                                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="flex items-center justify-center gap-2 rounded-2xl border-emerald-200 bg-white/95 px-5 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-50 disabled:opacity-60"
+                                        onClick={() => void handleRefreshProfile()}
+                                        disabled={profileLoading || refreshingProfile}
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Blood Type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {bloodTypeOptions.map((type) => (
-                                                <SelectItem key={type} value={type}>
-                                                    {type}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        {refreshingProfile ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Refreshing…
+                                            </>
+                                        ) : (
+                                            "Refresh profile"
+                                        )}
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                                        disabled={profileLoading}
+                                    >
+                                        {profileLoading ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Saving…
+                                            </>
+                                        ) : (
+                                            "Save changes"
+                                        )}
+                                    </Button>
                                 </div>
-                            </div>
+                            </form>
+                        </AccountCard>
+                    </div>
+                ) : null}
 
-                            {/* Emergency Contact */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <Label className="block mb-1 font-medium">Emergency Contact Name</Label>
-                                    <Input
-                                        value={profile.emergencyco_name || ""}
-                                        onChange={(e) =>
-                                            setProfile({ ...profile, emergencyco_name: e.target.value })
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">
-                                        Emergency Contact Number
-                                    </Label>
-                                    <Input
-                                        value={profile.emergencyco_num || ""}
-                                        onChange={(e) =>
-                                            setProfile({ ...profile, emergencyco_num: e.target.value })
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">
-                                        Emergency Contact Relation
-                                    </Label>
-                                    <Input
-                                        value={profile.emergencyco_relation || ""}
-                                        onChange={(e) =>
-                                            setProfile({ ...profile, emergencyco_relation: e.target.value })
-                                        }
-                                    />
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
-                                disabled={profileLoading}
-                            >
-                                {profileLoading && <Loader2 className="h-5 w-5 animate-spin" />}
-                                {profileLoading ? "Saving..." : "Save Changes"}
-                            </Button>
-                        </form>
-                    </AccountCard>
-                )}
 
                 {/* Create User */}
                 <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">

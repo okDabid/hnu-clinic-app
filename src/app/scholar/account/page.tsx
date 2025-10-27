@@ -2,13 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import {
+    Loader2,
+    ShieldCheck,
+    ShieldAlert,
+    BarChart3,
+    GraduationCap,
+    Phone,
+    UserRound,
+    KeyRound,
+    HeartPulse,
+    LifeBuoy,
+} from "lucide-react";
 
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { AccountCard } from "@/components/account/account-card";
+import { AccountSection } from "@/components/account/account-section";
+import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -245,6 +258,87 @@ export default function ScholarAccountPage() {
         [profile?.department]
     );
 
+    const statusBadge = profile?.status ?? null;
+
+    const completionFields = profile
+        ? [
+              profile.email,
+              profile.contactno,
+              profile.address,
+              profile.bloodtype,
+              profile.emergencyco_name,
+              profile.emergencyco_num,
+              profile.emergencyco_relation,
+          ]
+        : [];
+
+    const completionCount = completionFields.filter((value) => {
+        if (typeof value === "string") {
+            return value.trim().length > 0;
+        }
+        return Boolean(value);
+    }).length;
+
+    const completionPercent = completionFields.length
+        ? Math.round((completionCount / completionFields.length) * 100)
+        : 0;
+
+    const emergencyReady = Boolean(
+        profile?.emergencyco_name?.trim() &&
+            profile?.emergencyco_num?.trim() &&
+            profile?.emergencyco_relation?.trim()
+    );
+
+    const academicReady = Boolean(
+        profile?.department?.trim() && profile?.program?.trim() && profile?.year_level?.trim()
+    );
+
+    const emergencySummary = profile
+        ? emergencyReady
+            ? `Emergency contact: ${profile.emergencyco_name || "—"}`
+            : "Add an emergency contact for urgent support."
+        : null;
+
+    const summaryItems = profile
+        ? [
+              {
+                  icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
+                  label: "Account status",
+                  value: profile.status,
+                  helper:
+                      profile.status === "Active"
+                          ? "You have full access to clinic services."
+                          : "Contact the clinic team to reactivate your access.",
+                  accent: profile.status === "Active" ? "emerald" : "rose",
+              },
+              {
+                  icon: BarChart3,
+                  label: "Profile completeness",
+                  value: `${completionPercent}% complete`,
+                  helper:
+                      completionPercent >= 100
+                          ? emergencySummary || "All essential contact details are provided."
+                          : "Add missing contact or emergency information.",
+                  progress: completionPercent,
+                  accent:
+                      completionPercent >= 80
+                          ? "emerald"
+                          : completionPercent >= 50
+                            ? "amber"
+                            : "rose",
+              },
+              {
+                  icon: GraduationCap,
+                  label: "Academic placement",
+                  value: academicReady ? profile.program ?? "" : "Select program",
+                  helper: academicReady
+                      ? `${profile.department ?? ""}${profile.year_level ? ` • ${profile.year_level}` : ""}`
+                      : "Choose your department, program, and year level.",
+                  accent: academicReady ? "indigo" : "amber",
+              },
+          ]
+        : [];
+
     const loadProfile = useCallback(async () => {
         try {
             setProfileLoading(true);
@@ -414,343 +508,422 @@ export default function ScholarAccountPage() {
         <ScholarLayout
             title="Account Management"
             description="Review your personal information, keep emergency contacts current, and manage your clinic credentials."
-        >
-            <section className="space-y-6">
-                {profileLoading ? (
-                    <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm">
-                        <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-                            <Loader2 className="h-5 w-5 animate-spin text-green-600" />
-                            Loading profile...
-                        </CardContent>
-                    </Card>
-                ) : profile ? (
-                    <AccountCard
-                        title="Scholar profile"
-                        description="Keep your details accurate so the clinic team can reach you quickly."
-                        onPasswordSubmit={handlePasswordSubmit}
-                        onPasswordSuccess={(message) => toast.success(message)}
+            actions={
+                statusBadge ? (
+                    <span
+                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${
+                            statusBadge === "Active"
+                                ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                                : "border-rose-200 bg-rose-50/80 text-rose-600"
+                        }`}
                     >
-                        <form className="space-y-6" onSubmit={handleProfileSubmit}>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <Label className="mb-1 block font-medium">User ID</Label>
-                                    <Input value={profile.user_id} disabled />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Scholar ID</Label>
-                                    <Input value={profile.username} disabled />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Role</Label>
-                                    <Input value={profile.role} disabled />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Status</Label>
-                                    <Input value={profile.status} disabled />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Date of birth</Label>
-                                    {profile.date_of_birth ? (
-                                        <Input type="date" value={profile.date_of_birth.slice(0, 10)} disabled />
-                                    ) : (
-                                        <>
+                        <span
+                            className={`h-2 w-2 rounded-full ${
+                                statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                            }`}
+                        />
+                        Status: {statusBadge}
+                    </span>
+                ) : null
+            }
+        >
+            <div className="mx-auto w-full max-w-5xl space-y-8">
+                {profileLoading ? (
+                    <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
+                        <div className="flex flex-col items-center gap-3 text-emerald-700">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <p className="text-sm font-medium">Loading your scholar profile…</p>
+                        </div>
+                    </Card>
+                ) : null}
+
+                {profile ? (
+                    <div className="space-y-8">
+                        <AccountSummaryGrid items={summaryItems} />
+                        <AccountCard
+                            title="Scholar profile"
+                            description="Keep your details accurate so the clinic team can reach you quickly."
+                            onPasswordSubmit={handlePasswordSubmit}
+                            onPasswordSuccess={(message) => toast.success(message)}
+                        >
+                            <form className="space-y-10" onSubmit={handleProfileSubmit}>
+                                <AccountSection
+                                    icon={KeyRound}
+                                    title="Account credentials"
+                                    description="Reference-only identifiers used across clinic services."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">User ID</Label>
+                                            <Input value={profile.user_id} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Scholar ID</Label>
+                                            <Input value={profile.username} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Role</Label>
+                                            <Input value={profile.role} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Status</Label>
+                                            <Input value={profile.status} disabled />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Date of birth</Label>
+                                            {profile.date_of_birth ? (
+                                                <Input type="date" value={profile.date_of_birth.slice(0, 10)} disabled />
+                                            ) : (
+                                                <>
+                                                    <Input
+                                                        type="date"
+                                                        value={tempDOB}
+                                                        onChange={(event) => setTempDOB(event.target.value)}
+                                                    />
+                                                    {tempDOB ? (
+                                                        <Button
+                                                            type="button"
+                                                            className="mt-2 w-max rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                                            onClick={() => setDobConfirmOpen(true)}
+                                                        >
+                                                            Confirm date
+                                                        </Button>
+                                                    ) : null}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        This can only be saved once. Double-check before confirming.
+                                                    </p>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Gender</Label>
+                                            <Input value={profile.gender ?? ""} disabled />
+                                        </div>
+                                    </div>
+                                </AccountSection>
+
+                                <AccountSection
+                                    icon={UserRound}
+                                    title="Personal information"
+                                    description="Update your core personal details."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">First name</Label>
                                             <Input
-                                                type="date"
-                                                value={tempDOB}
-                                                onChange={(event) => setTempDOB(event.target.value)}
+                                                value={profile.fname}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, fname: event.target.value } : prev
+                                                    )
+                                                }
                                             />
-                                            {tempDOB ? (
-                                                <Button
-                                                    type="button"
-                                                    className="mt-2 rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
-                                                    onClick={() => setDobConfirmOpen(true)}
-                                                >
-                                                    Confirm date
-                                                </Button>
-                                            ) : null}
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                You can only set this once. Once saved, it cannot be changed.
-                                            </p>
-                                        </>
-                                    )}
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Gender</Label>
-                                    <Input value={profile.gender ?? ""} disabled />
-                                </div>
-                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Middle name</Label>
+                                            <Input
+                                                value={profile.mname ?? ""}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, mname: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Last name</Label>
+                                            <Input
+                                                value={profile.lname}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, lname: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </AccountSection>
 
-                            <div className="grid gap-4 md:grid-cols-3">
-                                <div>
-                                    <Label className="mb-1 block font-medium">First name</Label>
-                                    <Input
-                                        value={profile.fname}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, fname: event.target.value } : prev
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Middle name</Label>
-                                    <Input
-                                        value={profile.mname ?? ""}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, mname: event.target.value } : prev
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Last name</Label>
-                                    <Input
-                                        value={profile.lname}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, lname: event.target.value } : prev
-                                            )
-                                        }
-                                    />
-                                </div>
-                            </div>
+                                <AccountSection
+                                    icon={GraduationCap}
+                                    title="Academic details"
+                                    description="Ensure your department and year level are accurate."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Department</Label>
+                                            <Select
+                                                value={profile.department ?? ""}
+                                                onValueChange={(value) =>
+                                                    setProfile((prev) =>
+                                                        prev
+                                                            ? {
+                                                                  ...prev,
+                                                                  department: value,
+                                                                  program: "",
+                                                                  year_level: "",
+                                                              }
+                                                            : prev
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select department" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {departmentOptions.map((department) => (
+                                                        <SelectItem key={department} value={department}>
+                                                            {department}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Program</Label>
+                                            <Select
+                                                value={profile.program ?? ""}
+                                                onValueChange={(value) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, program: value } : prev
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select program" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {availablePrograms.map((program) => (
+                                                        <SelectItem key={program} value={program}>
+                                                            {program}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Year level</Label>
+                                            <Select
+                                                value={profile.year_level ?? ""}
+                                                onValueChange={(value) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, year_level: value } : prev
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select year level" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {yearLevelOptions.map((level) => (
+                                                        <SelectItem key={level} value={level}>
+                                                            {level}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </AccountSection>
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <Label className="mb-1 block font-medium">Department</Label>
-                                    <Select
-                                        value={profile.department ?? ""}
-                                        onValueChange={(value) =>
-                                            setProfile((prev) =>
-                                                prev
-                                                    ? {
-                                                        ...prev,
-                                                        department: value,
-                                                        program: "",
-                                                        year_level: "",
-                                                    }
-                                                    : prev
-                                            )
-                                        }
+                                <AccountSection
+                                    icon={Phone}
+                                    title="Contact & address"
+                                    description="Provide reliable contact information for clinic coordination."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Email</Label>
+                                            <Input
+                                                type="email"
+                                                placeholder="example@hnu.edu.ph"
+                                                value={profile.email ?? ""}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, email: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
+                                            <Input
+                                                type="tel"
+                                                placeholder="09XXXXXXXXX"
+                                                value={profile.contactno ?? ""}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, contactno: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-emerald-900">Address</Label>
+                                        <Input
+                                            value={profile.address ?? ""}
+                                            onChange={(event) =>
+                                                setProfile((prev) =>
+                                                    prev ? { ...prev, address: event.target.value } : prev
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                </AccountSection>
+
+                                <AccountSection
+                                    icon={HeartPulse}
+                                    title="Medical background"
+                                    description="Helps the clinic respond quickly in emergencies."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Blood type</Label>
+                                            <Select
+                                                value={profile.bloodtype ?? ""}
+                                                onValueChange={(value) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, bloodtype: value } : prev
+                                                    )
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select blood type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {bloodTypeOptions.map((type) => (
+                                                        <SelectItem key={type} value={type}>
+                                                            {type}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Allergies</Label>
+                                            <Input
+                                                value={profile.allergies ?? ""}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, allergies: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-emerald-900">Medical conditions</Label>
+                                        <Input
+                                            value={profile.medical_cond ?? ""}
+                                            onChange={(event) =>
+                                                setProfile((prev) =>
+                                                    prev ? { ...prev, medical_cond: event.target.value } : prev
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                </AccountSection>
+
+                                <AccountSection
+                                    icon={LifeBuoy}
+                                    title="Emergency contact"
+                                    description="Provide someone we can reach in urgent situations."
+                                >
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Contact name</Label>
+                                            <Input
+                                                value={profile.emergencyco_name ?? ""}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, emergencyco_name: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
+                                            <Input
+                                                value={profile.emergencyco_num ?? ""}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, emergencyco_num: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Relationship</Label>
+                                            <Input
+                                                value={profile.emergencyco_relation ?? ""}
+                                                onChange={(event) =>
+                                                    setProfile((prev) =>
+                                                        prev ? { ...prev, emergencyco_relation: event.target.value } : prev
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </AccountSection>
+
+                                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="flex items-center justify-center gap-2 rounded-2xl border-emerald-200 bg-white/95 px-5 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-50 disabled:opacity-60"
+                                        onClick={() => void loadProfile()}
+                                        disabled={profileLoading || updating || dobSaving}
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select department" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {departmentOptions.map((department) => (
-                                                <SelectItem key={department} value={department}>
-                                                    {department}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Program</Label>
-                                    <Select
-                                        value={profile.program ?? ""}
-                                        onValueChange={(value) =>
-                                            setProfile((prev) => (prev ? { ...prev, program: value } : prev))
-                                        }
-                                        disabled={availablePrograms.length === 0}
+                                        {profileLoading ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Refreshing…
+                                            </>
+                                        ) : (
+                                            "Refresh profile"
+                                        )}
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+                                        disabled={updating || dobSaving}
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select program" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availablePrograms.map((program) => (
-                                                <SelectItem key={program} value={program}>
-                                                    {program}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        {updating || dobSaving ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Saving…
+                                            </>
+                                        ) : (
+                                            "Save changes"
+                                        )}
+                                    </Button>
                                 </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Year level</Label>
-                                    <Select
-                                        value={profile.year_level ?? ""}
-                                        onValueChange={(value) =>
-                                            setProfile((prev) => (prev ? { ...prev, year_level: value } : prev))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select year level" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {yearLevelOptions.map((level) => (
-                                                <SelectItem key={level} value={level}>
-                                                    {level}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <Label className="mb-1 block font-medium">Email</Label>
-                                    <Input
-                                        type="email"
-                                        value={profile.email ?? ""}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, email: event.target.value } : prev
-                                            )
-                                        }
-                                        placeholder="example@hnu.edu.ph"
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Contact number</Label>
-                                    <Input
-                                        value={profile.contactno ?? ""}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, contactno: event.target.value } : prev
-                                            )
-                                        }
-                                        placeholder="09XXXXXXXXX"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <Label className="mb-1 block font-medium">Address</Label>
-                                <Input
-                                    value={profile.address ?? ""}
-                                    onChange={(event) =>
-                                        setProfile((prev) =>
-                                            prev ? { ...prev, address: event.target.value } : prev
-                                        )
-                                    }
-                                />
-                            </div>
-
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                    <Label className="mb-1 block font-medium">Blood type</Label>
-                                    <Select
-                                        value={profile.bloodtype ?? ""}
-                                        onValueChange={(value) =>
-                                            setProfile((prev) => (prev ? { ...prev, bloodtype: value } : prev))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select blood type" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {bloodTypeOptions.map((type) => (
-                                                <SelectItem key={type} value={type}>
-                                                    {type}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Allergies</Label>
-                                    <Input
-                                        value={profile.allergies ?? ""}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, allergies: event.target.value } : prev
-                                            )
-                                        }
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <Label className="mb-1 block font-medium">Medical conditions</Label>
-                                <Input
-                                    value={profile.medical_cond ?? ""}
-                                    onChange={(event) =>
-                                        setProfile((prev) =>
-                                            prev ? { ...prev, medical_cond: event.target.value } : prev
-                                        )
-                                    }
-                                />
-                            </div>
-
-                            <div className="grid gap-4 md:grid-cols-3">
-                                <div>
-                                    <Label className="mb-1 block font-medium">Emergency contact name</Label>
-                                    <Input
-                                        value={profile.emergencyco_name ?? ""}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, emergencyco_name: event.target.value } : prev
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Emergency contact number</Label>
-                                    <Input
-                                        value={profile.emergencyco_num ?? ""}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev ? { ...prev, emergencyco_num: event.target.value } : prev
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div>
-                                    <Label className="mb-1 block font-medium">Emergency contact relation</Label>
-                                    <Input
-                                        value={profile.emergencyco_relation ?? ""}
-                                        onChange={(event) =>
-                                            setProfile((prev) =>
-                                                prev
-                                                    ? { ...prev, emergencyco_relation: event.target.value }
-                                                    : prev
-                                            )
-                                        }
-                                    />
-                                </div>
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
-                                disabled={updating}
-                            >
-                                {updating ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <Loader2 className="h-4 w-4 animate-spin" /> Saving changes...
-                                    </span>
-                                ) : (
-                                    "Save changes"
-                                )}
-                            </Button>
-                        </form>
-                    </AccountCard>
+                            </form>
+                        </AccountCard>
+                    </div>
                 ) : (
-                    <Card className="rounded-3xl border border-red-100/70 bg-white/80 shadow-sm">
-                        <CardContent className="space-y-4 py-16 text-center text-sm text-muted-foreground">
-                            <p>We couldn&apos;t load your scholar profile right now.</p>
+                    <Card className="rounded-[28px] border border-rose-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
+                        <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">We couldn&apos;t load your scholar profile right now.</p>
                             <Button
                                 variant="outline"
-                                className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/60"
+                                className="mx-auto w-full max-w-[200px] rounded-2xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                                 onClick={() => void loadProfile()}
+                                disabled={profileLoading}
                             >
                                 Try again
                             </Button>
-                        </CardContent>
+                        </div>
                     </Card>
                 )}
-            </section>
+            </div>
 
             <AlertDialog open={dobConfirmOpen} onOpenChange={setDobConfirmOpen}>
-                <AlertDialogContent className="max-w-sm rounded-3xl border border-green-100/80 bg-white/95">
+                <AlertDialogContent className="max-w-sm rounded-3xl border border-emerald-100/80 bg-white/95">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Confirm date of birth</AlertDialogTitle>
                         <AlertDialogDescription>
                             You are about to set your date of birth to
-                            <span className="font-semibold text-green-700"> {tempDOB}</span>.
+                            <span className="font-semibold text-emerald-700"> {tempDOB}</span>.
                             This action can only be done once and cannot be changed later.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -764,13 +937,13 @@ export default function ScholarAccountPage() {
                             Cancel
                         </AlertDialogCancel>
                         <AlertDialogAction
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-emerald-600 hover:bg-emerald-700"
                             onClick={() => void confirmDateOfBirth()}
                             disabled={dobSaving}
                         >
                             {dobSaving ? (
                                 <span className="flex items-center gap-2">
-                                    <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+                                    <Loader2 className="h-4 w-4 animate-spin" /> Saving…
                                 </span>
                             ) : (
                                 "Confirm"
@@ -781,4 +954,5 @@ export default function ScholarAccountPage() {
             </AlertDialog>
         </ScholarLayout>
     );
+
 }

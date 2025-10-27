@@ -46,26 +46,40 @@ export function AccountCard({
     triggerAriaLabel,
 }: AccountCardProps) {
     return (
-        <Card className={cn("rounded-3xl border border-green-100/80 bg-white/90 shadow-sm", className)}>
+        <Card
+            className={cn(
+                "relative overflow-hidden rounded-[32px] border border-green-100/70 bg-white/95 shadow-xl backdrop-blur",
+                className
+            )}
+        >
+            <div aria-hidden className="pointer-events-none absolute inset-0">
+                <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-emerald-100/40 blur-3xl" />
+                <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-green-200/40 blur-3xl" />
+                <div className="absolute bottom-0 left-1/2 h-24 w-24 -translate-x-1/2 rounded-full bg-emerald-50/60 blur-2xl" />
+            </div>
             <CardHeader
                 className={cn(
-                    "flex flex-col gap-3 border-b border-green-100/70 pb-4 md:flex-row md:items-center md:justify-between",
+                    "relative flex flex-col gap-4 border-b border-white/10 bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-500 px-6 py-6 text-white md:flex-row md:items-center md:justify-between",
                     headerClassName
                 )}
             >
                 <div className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-green-600">{title}</CardTitle>
+                    <CardTitle className="text-3xl font-semibold tracking-tight text-white drop-shadow-sm">
+                        {title}
+                    </CardTitle>
                     {description ? (
-                        <p className="text-sm text-muted-foreground">{description}</p>
+                        <p className="text-sm text-emerald-50/90 md:max-w-xl">{description}</p>
                     ) : null}
                 </div>
                 <AccountPasswordDialog
                     onSubmit={onPasswordSubmit}
                     onSuccess={onPasswordSuccess}
                     triggerAriaLabel={triggerAriaLabel}
+                    triggerClassName="rounded-2xl border-white/40 bg-white/20 text-white shadow-sm transition hover:bg-white/30 hover:text-white"
+                    dialogTitle="Update account password"
                 />
             </CardHeader>
-            <CardContent className={cn("pt-6", contentClassName)}>{children}</CardContent>
+            <CardContent className={cn("relative space-y-8 px-6 py-8", contentClassName)}>{children}</CardContent>
         </Card>
     );
 }
