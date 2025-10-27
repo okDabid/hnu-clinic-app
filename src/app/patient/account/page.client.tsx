@@ -42,6 +42,7 @@ import {
 import { AccountCard } from "@/components/account/account-card";
 import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
+import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 
@@ -238,7 +239,7 @@ export function PatientAccountPageClient({
             profile?.emergencyco_relation?.trim()
     );
 
-    const summaryItems = profile
+    const summaryItems: AccountSummaryItem[] = profile
         ? [
               {
                   icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
