@@ -57,6 +57,7 @@ type Profile = {
     mname?: string | null;
     lname: string;
     date_of_birth?: string;
+    gender?: string | null;
     email?: string;
     contactno?: string | null;
     address?: string | null;
@@ -124,6 +125,7 @@ export default function DoctorAccountPage() {
                 mname: data.profile?.mname || "",
                 lname: data.profile?.lname || "",
                 date_of_birth: data.profile?.date_of_birth || "",
+                gender: data.profile?.gender || "",
                 contactno: data.profile?.contactno || "",
                 email: data.profile?.email || "",
                 address: data.profile?.address || "",
@@ -247,13 +249,13 @@ export default function DoctorAccountPage() {
 
     const completionFields = profile
         ? [
-              profile.email,
-              profile.contactno,
-              profile.address,
-              profile.emergencyco_name,
-              profile.emergencyco_num,
-              profile.emergencyco_relation,
-          ]
+            profile.email,
+            profile.contactno,
+            profile.address,
+            profile.emergencyco_name,
+            profile.emergencyco_num,
+            profile.emergencyco_relation,
+        ]
         : [];
 
     const completionCount = completionFields.filter((value) => {
@@ -269,56 +271,54 @@ export default function DoctorAccountPage() {
 
     const emergencyReady = Boolean(
         profile?.emergencyco_name?.trim() &&
-            profile?.emergencyco_num?.trim() &&
-            profile?.emergencyco_relation?.trim()
+        profile?.emergencyco_num?.trim() &&
+        profile?.emergencyco_relation?.trim()
     );
 
     const medicalPrepared = Boolean(profile?.bloodtype?.trim());
 
     const summaryItems: AccountSummaryItem[] = profile
         ? [
-              {
-                  icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
-                  label: "Account status",
-                  value: profile.status,
-                  helper:
-                      profile.status === "Active"
-                          ? "Ready to access clinic systems."
-                          : "Contact the administrator to reactivate your access.",
-                  accent: profile.status === "Active" ? "emerald" : "rose",
-              },
-              {
-                  icon: BarChart3,
-                  label: "Profile completeness",
-                  value: `${completionPercent}% complete`,
-                  helper:
-                      completionPercent >= 100
-                          ? "All key contact details are filled."
-                          : "Add missing contact or emergency details.",
-                  progress: completionPercent,
-                  accent:
-                      completionPercent >= 80
-                          ? "emerald"
-                          : completionPercent >= 50
+            {
+                icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
+                label: "Account status",
+                value: profile.status,
+                helper:
+                    profile.status === "Active"
+                        ? "Ready to access clinic systems."
+                        : "Contact the administrator to reactivate your access.",
+                accent: profile.status === "Active" ? "emerald" : "rose",
+            },
+            {
+                icon: BarChart3,
+                label: "Profile completeness",
+                value: `${completionPercent}% complete`,
+                helper:
+                    completionPercent >= 100
+                        ? "All key contact details are filled."
+                        : "Add missing contact or emergency details.",
+                progress: completionPercent,
+                accent:
+                    completionPercent >= 80
+                        ? "emerald"
+                        : completionPercent >= 50
                             ? "amber"
                             : "rose",
-              },
-              {
-                  icon: HeartPulse,
-                  label: "Clinical readiness",
-                  value: medicalPrepared ? profile.bloodtype ?? "" : "Add blood type",
-                  helper: medicalPrepared
-                      ? `${
-                            profile.allergies?.trim() ? `Allergies: ${profile.allergies}` : "No allergies listed"
-                        }. ${
-                            emergencyReady
-                                ? `Emergency contact: ${profile.emergencyco_name || "—"}`
-                                : "Add an emergency contact for urgent coordination."
-                        }`
-                      : "Provide blood type and medical notes to aid urgent care.",
-                  accent: medicalPrepared ? "teal" : "amber",
-              },
-          ]
+            },
+            {
+                icon: HeartPulse,
+                label: "Clinical readiness",
+                value: medicalPrepared ? profile.bloodtype ?? "" : "Add blood type",
+                helper: medicalPrepared
+                    ? `${profile.allergies?.trim() ? `Allergies: ${profile.allergies}` : "No allergies listed"
+                    }. ${emergencyReady
+                        ? `Emergency contact: ${profile.emergencyco_name || "—"}`
+                        : "Add an emergency contact for urgent coordination."
+                    }`
+                    : "Provide blood type and medical notes to aid urgent care.",
+                accent: medicalPrepared ? "teal" : "amber",
+            },
+        ]
         : [];
 
     const handleManualRefresh = useCallback(async () => {
@@ -341,16 +341,14 @@ export default function DoctorAccountPage() {
             actions={
                 statusBadge ? (
                     <span
-                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${
-                            statusBadge === "Active"
-                                ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
-                                : "border-rose-200 bg-rose-50/80 text-rose-600"
-                        }`}
+                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
+                            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                            : "border-rose-200 bg-rose-50/80 text-rose-600"
+                            }`}
                     >
                         <span
-                            className={`h-2 w-2 rounded-full ${
-                                statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
-                            }`}
+                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                                }`}
                         />
                         Status: {statusBadge}
                     </span>
@@ -485,7 +483,7 @@ export default function DoctorAccountPage() {
                                                                                 ...updatedProfile,
                                                                                 bloodtype:
                                                                                     reverseBloodTypeEnumMap[
-                                                                                        updatedProfile?.bloodtype || ""
+                                                                                    updatedProfile?.bloodtype || ""
                                                                                     ] || null,
                                                                             };
 
@@ -516,6 +514,10 @@ export default function DoctorAccountPage() {
                                                     </AlertDialog>
                                                 </>
                                             )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Gender</Label>
+                                            <Input value={profile.gender || ""} disabled />
                                         </div>
                                     </div>
                                 </AccountSection>

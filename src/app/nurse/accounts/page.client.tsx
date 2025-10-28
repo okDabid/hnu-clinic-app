@@ -633,8 +633,8 @@ export function NurseAccountsPageClient({
                 statusBadge ? (
                     <span
                         className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
-                                ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
-                                : "border-rose-200 bg-rose-50/80 text-rose-600"
+                            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                            : "border-rose-200 bg-rose-50/80 text-rose-600"
                             }`}
                     >
                         <span
@@ -782,6 +782,10 @@ export function NurseAccountsPageClient({
                                                     </AlertDialog>
                                                 </>
                                             )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Gender</Label>
+                                            <Input value={profile.gender || ""} disabled />
                                         </div>
                                     </div>
                                 </AccountSection>

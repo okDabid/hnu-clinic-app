@@ -24,6 +24,7 @@ export type NurseAccountProfileApi = {
         mname?: string | null;
         lname?: string;
         date_of_birth?: string;
+        gender?: string | null;
         contactno?: string | null;
         email?: string;
         address?: string | null;
@@ -54,6 +55,7 @@ export type NurseAccountProfile = {
     mname?: string | null;
     lname: string;
     date_of_birth?: string;
+    gender?: string | null;
     contactno?: string | null;
     email?: string;
     address?: string | null;
@@ -146,6 +148,7 @@ export function normalizeNurseAccountProfile(
         mname: response.profile?.mname || "",
         lname: response.profile?.lname || "",
         date_of_birth: response.profile?.date_of_birth || "",
+        gender: response.profile?.gender || "",
         contactno: response.profile?.contactno || "",
         email: response.profile?.email || "",
         address: response.profile?.address || "",
