@@ -492,7 +492,7 @@ export default function DoctorPatientsPage() {
                                                 <TableHead className="min-w-[200px]">Patient</TableHead>
                                                 <TableHead className="min-w-[140px]">ID</TableHead>
                                                 <TableHead className="min-w-[120px]">Type</TableHead>
-                                                <TableHead className="min-w-[160px]">Program / Department</TableHead>
+                                                <TableHead className="min-w-[120px]">Program / Department</TableHead>
                                                 <TableHead className="min-w-[120px]">Status</TableHead>
                                                 <TableHead className="min-w-[200px]">Latest appointment</TableHead>
                                             </TableRow>

@@ -229,8 +229,8 @@ function RecordDetailsDialogComponent({
                             <form onSubmit={onSaveNotes} className="space-y-3">
                                 {!hasAppointment ? (
                                     <p className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-700">
-                                        This patient has no active appointment. Approve or schedule one to record consultation
-                                        notes.
+                                        This patient has no active appointment. You cannot save consultation notes without an
+                                        appointment.
                                     </p>
                                 ) : null}
                                 <div>
