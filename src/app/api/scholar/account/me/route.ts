@@ -10,7 +10,7 @@ import {
     BloodType,
     Prisma,
 } from "@prisma/client";
-import { issueEmailVerification } from "@/lib/email-verification";
+import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
 /** ---------- MAPPERS (College-only) ---------- */
@@ -202,6 +202,7 @@ export async function PUT(req: Request) {
         }
 
         let verificationEmail: string | null = null;
+        let shouldClearVerification = false;
         if (typeof profile.email === "string") {
             const trimmedEmail = profile.email.trim();
             const existingEmail = existingProfile.email ?? "";
@@ -209,7 +210,7 @@ export async function PUT(req: Request) {
             if (!trimmedEmail) {
                 if (existingEmail) {
                     data.email = null;
-                    data.email_verified_at = null;
+                    shouldClearVerification = true;
                 } else {
                     delete data.email;
                 }
@@ -234,7 +235,6 @@ export async function PUT(req: Request) {
                 }
 
                 data.email = trimmedEmail;
-                data.email_verified_at = null;
                 verificationEmail = trimmedEmail;
             } else {
                 delete data.email;
@@ -245,6 +245,10 @@ export async function PUT(req: Request) {
             where: { user_id: session.user.id },
             data,
         });
+
+        if (shouldClearVerification) {
+            await clearEmailVerifications(session.user.id);
+        }
 
         if (verificationEmail) {
             const displayName =

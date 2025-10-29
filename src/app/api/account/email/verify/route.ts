@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { EMAIL_VERIFICATION_TOKEN_TYPE } from "@/lib/email-verification";
 
 function htmlResponse(title: string, message: string, success: boolean) {
     const color = success ? "#047857" : "#b91c1c";
@@ -45,9 +46,9 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    const record = await prisma.emailVerificationToken.findUnique({ where: { token } });
+    const record = await prisma.passwordResetToken.findUnique({ where: { token } });
 
-    if (!record) {
+    if (!record || record.type !== EMAIL_VERIFICATION_TOKEN_TYPE) {
         return htmlResponse(
             "Verification link not found",
             "The verification link is invalid or has already been used. If you still need to verify your email, request a new link from your clinic profile settings.",
@@ -55,8 +56,8 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    if (record.expiresAt.getTime() < Date.now()) {
-        await prisma.emailVerificationToken.delete({ where: { id: record.id } });
+    if (record.expiresAt.getTime() < Date.now() && !record.verified) {
+        await prisma.passwordResetToken.delete({ where: { id: record.id } });
         return htmlResponse(
             "Verification link expired",
             "This verification link has expired. Please submit a new email verification request from your clinic profile.",
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     const user = await prisma.users.findUnique({
-        where: { user_id: record.user_id },
+        where: { user_id: record.userId },
         select: {
             user_id: true,
             role: true,
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-        await prisma.emailVerificationToken.delete({ where: { id: record.id } });
+        await prisma.passwordResetToken.delete({ where: { id: record.id } });
         return htmlResponse(
             "Account not found",
             "We couldn’t locate the account for this verification link. Please contact the clinic if this issue continues.",
@@ -83,9 +84,9 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    const currentEmail = user.student?.email ?? user.employee?.email ?? "";
-    if (currentEmail.toLowerCase() !== record.email.toLowerCase()) {
-        await prisma.emailVerificationToken.delete({ where: { id: record.id } });
+    const currentEmail = (user.student?.email ?? user.employee?.email ?? "").trim();
+    if (!currentEmail || currentEmail.toLowerCase() !== record.contact.toLowerCase()) {
+        await prisma.passwordResetToken.delete({ where: { id: record.id } });
         return htmlResponse(
             "Email changed before verification",
             "It looks like the email on this account was updated after this link was sent. Please use the most recent verification email to confirm your address.",
@@ -93,28 +94,18 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    const now = new Date();
+    await prisma.passwordResetToken.update({
+        where: { id: record.id },
+        data: { verified: true },
+    });
 
-    if (user.student) {
-        await prisma.student.update({
-            where: { user_id: user.user_id },
-            data: { email_verified_at: now },
-        });
-    } else if (user.employee) {
-        await prisma.employee.update({
-            where: { user_id: user.user_id },
-            data: { email_verified_at: now },
-        });
-    } else {
-        await prisma.emailVerificationToken.delete({ where: { id: record.id } });
-        return htmlResponse(
-            "Profile not eligible for verification",
-            "We could not find a clinic profile associated with this account. Please contact the clinic for assistance.",
-            false
-        );
-    }
-
-    await prisma.emailVerificationToken.deleteMany({ where: { user_id: user.user_id } });
+    await prisma.passwordResetToken.deleteMany({
+        where: {
+            userId: user.user_id,
+            type: EMAIL_VERIFICATION_TOKEN_TYPE,
+            NOT: { id: record.id },
+        },
+    });
 
     return htmlResponse(
         "Email verified",

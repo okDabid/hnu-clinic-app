@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 
+export const EMAIL_VERIFICATION_TOKEN_TYPE = "EMAIL_VERIFICATION";
 const VERIFICATION_EXPIRATION_HOURS = 24;
 
 function buildVerificationUrl(token: string): string {
@@ -51,6 +52,16 @@ function buildTextBody(name: string, verificationUrl: string): string {
     ].join("\n");
 }
 
+function normalizeEmail(value: string): string {
+    return value.trim().toLowerCase();
+}
+
+export async function clearEmailVerifications(userId: string): Promise<void> {
+    await prisma.passwordResetToken.deleteMany({
+        where: { userId, type: EMAIL_VERIFICATION_TOKEN_TYPE },
+    });
+}
+
 export async function issueEmailVerification(options: {
     userId: string;
     email: string;
@@ -58,15 +69,20 @@ export async function issueEmailVerification(options: {
 }): Promise<void> {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + VERIFICATION_EXPIRATION_HOURS * 60 * 60 * 1000);
+    const normalizedEmail = normalizeEmail(options.email);
 
-    await prisma.emailVerificationToken.deleteMany({ where: { user_id: options.userId } });
+    await prisma.passwordResetToken.deleteMany({
+        where: { userId: options.userId, type: EMAIL_VERIFICATION_TOKEN_TYPE },
+    });
 
-    const record = await prisma.emailVerificationToken.create({
+    const record = await prisma.passwordResetToken.create({
         data: {
-            user_id: options.userId,
-            email: options.email,
+            userId: options.userId,
+            contact: normalizedEmail,
             token,
             expiresAt,
+            type: EMAIL_VERIFICATION_TOKEN_TYPE,
+            verified: false,
         },
     });
 
@@ -75,9 +91,30 @@ export async function issueEmailVerification(options: {
     const text = buildTextBody(options.name, verificationUrl);
 
     await sendEmail({
-        to: options.email,
+        to: options.email.trim(),
         subject: "Verify your email address",
         html,
         text,
     });
+}
+
+export async function isEmailVerified(
+    userId: string,
+    email: string | null | undefined,
+): Promise<boolean> {
+    if (!email) return false;
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail) return false;
+
+    const record = await prisma.passwordResetToken.findFirst({
+        where: {
+            userId,
+            type: EMAIL_VERIFICATION_TOKEN_TYPE,
+            contact: normalizedEmail,
+            verified: true,
+        },
+        select: { id: true },
+    });
+
+    return Boolean(record);
 }

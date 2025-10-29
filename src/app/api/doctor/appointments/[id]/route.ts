@@ -14,6 +14,7 @@ import {
     startOfManilaDay,
 } from "@/lib/time";
 import { sendEmail } from "@/lib/email";
+import { EMAIL_VERIFICATION_TOKEN_TYPE } from "@/lib/email-verification";
 
 const EMAIL_BACKGROUND_COLOR = "#f0fdf4";
 const EMAIL_BORDER_COLOR = "#bbf7d0";
@@ -43,23 +44,25 @@ function formatPatientName(patient: {
 
 function getPatientEmail(patient: {
     username: string;
-    student: { email: string | null; email_verified_at: Date | null } | null;
-    employee: { email: string | null; email_verified_at: Date | null } | null;
+    student: { email: string | null } | null;
+    employee: { email: string | null } | null;
+    passwordResetTokens: { contact: string }[];
 }) {
-    const studentEmail =
-        patient.student?.email && patient.student.email_verified_at
-            ? patient.student.email
-            : null;
-    const employeeEmail =
-        patient.employee?.email && patient.employee.email_verified_at
-            ? patient.employee.email
-            : null;
-
-    return (
-        studentEmail ||
-        employeeEmail ||
-        (patient.username.includes("@") ? patient.username : "")
+    const verifiedContacts = new Set(
+        patient.passwordResetTokens.map((token) => token.contact.toLowerCase()),
     );
+
+    const studentEmail = patient.student?.email?.trim() ?? "";
+    if (studentEmail && verifiedContacts.has(studentEmail.toLowerCase())) {
+        return studentEmail;
+    }
+
+    const employeeEmail = patient.employee?.email?.trim() ?? "";
+    if (employeeEmail && verifiedContacts.has(employeeEmail.toLowerCase())) {
+        return employeeEmail;
+    }
+
+    return patient.username.includes("@") ? patient.username : "";
 }
 
 function formatDoctorName(doctor: {
@@ -235,10 +238,17 @@ export async function PATCH(
                     select: {
                         username: true,
                         student: {
-                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                            select: { fname: true, lname: true, email: true },
                         },
                         employee: {
-                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                            select: { fname: true, lname: true, email: true },
+                        },
+                        passwordResetTokens: {
+                            where: {
+                                type: EMAIL_VERIFICATION_TOKEN_TYPE,
+                                verified: true,
+                            },
+                            select: { contact: true },
                         },
                     },
                 },
@@ -372,10 +382,17 @@ export async function PATCH(
                         select: {
                             username: true,
                             student: {
-                                select: { fname: true, lname: true, email: true, email_verified_at: true },
+                                select: { fname: true, lname: true, email: true },
                             },
                             employee: {
-                                select: { fname: true, lname: true, email: true, email_verified_at: true },
+                                select: { fname: true, lname: true, email: true },
+                            },
+                            passwordResetTokens: {
+                                where: {
+                                    type: EMAIL_VERIFICATION_TOKEN_TYPE,
+                                    verified: true,
+                                },
+                                select: { contact: true },
                             },
                         },
                     },
@@ -559,10 +576,17 @@ export async function PATCH(
                     select: {
                         username: true,
                         student: {
-                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                            select: { fname: true, lname: true, email: true },
                         },
                         employee: {
-                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                            select: { fname: true, lname: true, email: true },
+                        },
+                        passwordResetTokens: {
+                            where: {
+                                type: EMAIL_VERIFICATION_TOKEN_TYPE,
+                                verified: true,
+                            },
+                            select: { contact: true },
                         },
                     },
                 },
