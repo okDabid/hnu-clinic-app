@@ -16,7 +16,7 @@ export default function PrivacyPage() {
                         </span>
                         <h1 className="text-3xl font-bold text-green-700 md:text-4xl">Privacy Policy</h1>
                         <p className="text-base leading-relaxed text-gray-700 md:text-lg">
-                            This policy explains how the HNU Clinic capstone application collects, uses, and protects information when you visit <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link> and use the scheduling, records, and notification features offered to the Holy Name University community.
+                            This policy explains how the HNU Clinic capstone application collects, uses, and protects information when you visit <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link>, request an account, and use the scheduling, records, and notification features offered to the Holy Name University community.
                         </p>
                     </div>
 
@@ -24,6 +24,9 @@ export default function PrivacyPage() {
                         <section className="space-y-3">
                             <h2 className="text-xl font-semibold text-green-700">Information we collect</h2>
                             <ul className="list-disc space-y-2 pl-6">
+                                <li>
+                                    <span className="font-medium text-green-700">Account request details:</span> when you ask for clinic portal access through the homepage contact form, you provide your Holy Name University student or employee status, school or employee ID, date of birth, gender, and a campus email address where the nurse can send the credentials.
+                                </li>
                                 <li>
                                     <span className="font-medium text-green-700">Google sign-in details:</span> your name, primary Google email address, and profile photo are provided by Google when you choose “Continue with Google.”
                                 </li>
@@ -42,11 +45,21 @@ export default function PrivacyPage() {
                         <section className="space-y-3">
                             <h2 className="text-xl font-semibold text-green-700">How we use your information</h2>
                             <ul className="list-disc space-y-2 pl-6">
-                                <li>Verify you belong to the Holy Name University community and let you access the clinic portal without creating a new password.</li>
+                                <li>Confirm you are a Holy Name University student or employee before a nurse creates your clinic account and issues a temporary password.</li>
                                 <li>Match you with the correct patient or employee record so staff can schedule visits, document care, manage medicine inventory, and prepare medical certificates.</li>
                                 <li>Send transactional emails—appointment requests, approvals, reschedules, cancellations, completion summaries, and password reset codes—through the Gmail API so patients and clinicians stay informed.</li>
                                 <li>Respond to questions you submit through the contact form or support email address and document follow-up for clinic staff.</li>
                             </ul>
+                        </section>
+
+                        <section className="space-y-3">
+                            <h2 className="text-xl font-semibold text-green-700">Requesting portal access</h2>
+                            <p>
+                                Clinic accounts are provisioned by the nursing team. Eligible users can request access through the homepage contact form by sharing their full name, campus role, Holy Name University school or employee ID, gender, and date of birth. The nurse reviews each request and, once approved, sends the username (matching the provided ID) and a temporary password to the institutional email address on file. You must change that password after your first sign-in.
+                            </p>
+                            <p>
+                                If you later add a personal email to your profile, the system will send a verification link to confirm ownership before notifications are delivered to that address.
+                            </p>
                         </section>
 
                         <section className="space-y-3">

@@ -642,6 +642,9 @@ export function PatientAccountPageClient({
                                                 value={profile.email || ""}
                                                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                                             />
+                                            <p className="text-xs text-emerald-700">
+                                                Adding a new email will trigger a verification link before the clinic sends notifications there.
+                                            </p>
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
