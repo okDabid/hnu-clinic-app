@@ -2,10 +2,13 @@ import { cookies, headers } from "next/headers";
 
 const APP_ORIGIN_ENV_VARS = [
     "EMAIL_VERIFICATION_URL",
+    "NEXTAUTH_URL",
+    "NEXTAUTH_URL_INTERNAL",
+    "AUTH_URL",
+    "AUTH_ORIGIN",
     "APP_ORIGIN",
     "APP_URL",
     "SITE_URL",
-    "NEXTAUTH_URL",
     "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_APP_URL",
 ];
@@ -53,18 +56,24 @@ async function buildCookieHeader(): Promise<string | undefined> {
 }
 
 export async function getServerBaseUrl() {
+    const configured = resolveConfiguredBaseUrl();
+    if (configured) {
+        return configured;
+    }
+
     const headersList = await Promise.resolve(headers());
     const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
-    if (!host) {
-        const configured = resolveConfiguredBaseUrl();
-        if (configured) {
-            return configured;
-        }
-        return "http://localhost:3000";
+    if (host) {
+        const protocol =
+            headersList.get("x-forwarded-proto") ?? (process.env.NODE_ENV === "development" ? "http" : "https");
+        return `${protocol}://${host}`;
     }
-    const protocol =
-        headersList.get("x-forwarded-proto") ?? (process.env.NODE_ENV === "development" ? "http" : "https");
-    return `${protocol}://${host}`;
+
+    console.warn(
+        "Falling back to http://localhost:3000 for serverFetch requests because no base URL environment variables or host headers were available.",
+    );
+
+    return "http://localhost:3000";
 }
 
 export async function serverFetch<T>(path: string, init: RequestInit = {}): Promise<T | null> {

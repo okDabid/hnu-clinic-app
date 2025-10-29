@@ -8,10 +8,13 @@ const VERIFICATION_EXPIRATION_HOURS = 24;
 
 const APP_ORIGIN_ENV_VARS = [
     "EMAIL_VERIFICATION_URL",
+    "NEXTAUTH_URL",
+    "NEXTAUTH_URL_INTERNAL",
+    "AUTH_URL",
+    "AUTH_ORIGIN",
     "APP_ORIGIN",
     "APP_URL",
     "SITE_URL",
-    "NEXTAUTH_URL",
     "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_APP_URL",
 ];
@@ -47,6 +50,10 @@ function resolveAppBaseUrl(): string {
     if (vercelUrl) {
         return normalizeBaseUrl(vercelUrl);
     }
+
+    console.warn(
+        "Falling back to http://localhost:3000 for verification links because no base URL environment variables were configured.",
+    );
 
     return "http://localhost:3000";
 }
