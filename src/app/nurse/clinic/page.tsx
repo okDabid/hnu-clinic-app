@@ -244,9 +244,9 @@ export default function NurseClinicPage() {
 
     const selectedDateLabel = selectedDate
         ? new Intl.DateTimeFormat("en-PH", {
-              dateStyle: "full",
-              timeZone: PH_TIME_ZONE,
-          }).format(selectedDate)
+            dateStyle: "full",
+            timeZone: PH_TIME_ZONE,
+        }).format(selectedDate)
         : "Select a date";
 
     async function handleAddClinic(e: React.FormEvent<HTMLFormElement>) {
@@ -315,137 +315,137 @@ export default function NurseClinicPage() {
             description="Maintain clinic locations, contact information, and update details for campus services."
         >
             <section className="px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b">
                         <div className="flex justify-between items-center flex-wrap gap-3">
-                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
-                                    Clinics
-                                </CardTitle>
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button className="bg-green-600 hover:bg-green-700 text-white">
-                                            + Add Clinic
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Add Clinic</DialogTitle>
-                                            <DialogDescription>Fill in the clinic details.</DialogDescription>
-                                        </DialogHeader>
-                                        <form onSubmit={handleAddClinic} className="space-y-4">
-                                            <div>
-                                                <Label className="block mb-1">Clinic Name</Label>
-                                                <Input name="clinic_name" required />
-                                            </div>
-                                            <div>
-                                                <Label className="block mb-1">Location</Label>
-                                                <Input name="clinic_location" required />
-                                            </div>
-                                            <div>
-                                                <Label className="block mb-1">Contact No</Label>
-                                                <Input name="clinic_contactno" required />
-                                            </div>
-                                            <DialogFooter>
-                                                <Button
-                                                    type="submit"
-                                                    disabled={loading}
-                                                    className="bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
-                                                >
-                                                    {loading ? (
-                                                        <>
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                                            Saving...
-                                                        </>
-                                                    ) : (
-                                                        "Save"
-                                                    )}
-                                                </Button>
-                                            </DialogFooter>
-                                        </form>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                        </CardHeader>
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                Clinics
+                            </CardTitle>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                        + Add Clinic
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Add Clinic</DialogTitle>
+                                        <DialogDescription>Fill in the clinic details.</DialogDescription>
+                                    </DialogHeader>
+                                    <form onSubmit={handleAddClinic} className="space-y-4">
+                                        <div>
+                                            <Label className="block mb-1">Clinic Name</Label>
+                                            <Input name="clinic_name" required />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1">Location</Label>
+                                            <Input name="clinic_location" required />
+                                        </div>
+                                        <div>
+                                            <Label className="block mb-1">Contact No</Label>
+                                            <Input name="clinic_contactno" required />
+                                        </div>
+                                        <DialogFooter>
+                                            <Button
+                                                type="submit"
+                                                disabled={loading}
+                                                className="bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                                            >
+                                                {loading ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Saving...
+                                                    </>
+                                                ) : (
+                                                    "Save"
+                                                )}
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </CardHeader>
 
 
-                        <CardContent className="overflow-x-auto">
-                            <table className="w-full border-collapse border border-gray-200 text-sm sm:text-base">
-                                <thead className="bg-green-50">
-                                    <tr>
-                                        <th className="border p-2">Name</th>
-                                        <th className="border p-2">Location</th>
-                                        <th className="border p-2">Contact</th>
-                                        <th className="border p-2">Actions</th>
+                    <CardContent className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-gray-200 text-sm sm:text-base">
+                            <thead className="bg-green-50">
+                                <tr>
+                                    <th className="border p-2">Name</th>
+                                    <th className="border p-2">Location</th>
+                                    <th className="border p-2">Contact</th>
+                                    <th className="border p-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {clinics.map((clinic) => (
+                                    <tr key={clinic.clinic_id} className="hover:bg-green-50 transition">
+                                        <td className="border p-2">{clinic.clinic_name}</td>
+                                        <td className="border p-2">{clinic.clinic_location}</td>
+                                        <td className="border p-2">{clinic.clinic_contactno}</td>
+                                        <td className="border p-2">
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => setSelectedClinic(clinic)}
+                                                    >
+                                                        Update
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <DialogHeader>
+                                                        <DialogTitle>Update Clinic</DialogTitle>
+                                                        <DialogDescription>
+                                                            Update location or contact number.
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <form onSubmit={handleUpdateClinic} className="space-y-4">
+                                                        <div>
+                                                            <Label className="block mb-1">Location</Label>
+                                                            <Input
+                                                                name="clinic_location"
+                                                                defaultValue={clinic.clinic_location}
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <Label className="block mb-1">Contact No</Label>
+                                                            <Input
+                                                                name="clinic_contactno"
+                                                                defaultValue={clinic.clinic_contactno}
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <DialogFooter>
+                                                            <Button
+                                                                type="submit"
+                                                                disabled={loading}
+                                                                className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                                            >
+                                                                {loading ? (
+                                                                    <>
+                                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                                        Saving changes...
+                                                                    </>
+                                                                ) : (
+                                                                    "Save Changes"
+                                                                )}
+                                                            </Button>
+                                                        </DialogFooter>
+                                                    </form>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {clinics.map((clinic) => (
-                                        <tr key={clinic.clinic_id} className="hover:bg-green-50 transition">
-                                            <td className="border p-2">{clinic.clinic_name}</td>
-                                            <td className="border p-2">{clinic.clinic_location}</td>
-                                            <td className="border p-2">{clinic.clinic_contactno}</td>
-                                            <td className="border p-2">
-                                                <Dialog>
-                                                    <DialogTrigger asChild>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => setSelectedClinic(clinic)}
-                                                        >
-                                                            Update
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                        <DialogHeader>
-                                                            <DialogTitle>Update Clinic</DialogTitle>
-                                                            <DialogDescription>
-                                                                Update location or contact number.
-                                                            </DialogDescription>
-                                                        </DialogHeader>
-                                                        <form onSubmit={handleUpdateClinic} className="space-y-4">
-                                                            <div>
-                                                                <Label className="block mb-1">Location</Label>
-                                                                <Input
-                                                                    name="clinic_location"
-                                                                    defaultValue={clinic.clinic_location}
-                                                                    required
-                                                                />
-                                                            </div>
-                                                            <div>
-                                                                <Label className="block mb-1">Contact No</Label>
-                                                                <Input
-                                                                    name="clinic_contactno"
-                                                                    defaultValue={clinic.clinic_contactno}
-                                                                    required
-                                                                />
-                                                            </div>
-                                                            <DialogFooter>
-                                                                <Button
-                                                                    type="submit"
-                                                                    disabled={loading}
-                                                                    className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                                                                >
-                                                                    {loading ? (
-                                                                        <>
-                                                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                                                            Saving changes...
-                                                                        </>
-                                                                    ) : (
-                                                                        "Save Changes"
-                                                                    )}
-                                                                </Button>
-                                                            </DialogFooter>
-                                                        </form>
-                                                    </DialogContent>
-                                                </Dialog>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </CardContent>
-                    </Card>
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                                ))}
+                            </tbody>
+                        </table>
+                    </CardContent>
+                </Card>
+                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-pxver:shadow-md">
                     <CardHeader className="border-b">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="space-y-1">
@@ -512,7 +512,7 @@ export default function NurseClinicPage() {
                                                 hasAppointments:
                                                     "[&>button]:border [&>button]:border-emerald-200 [&>button]:bg-emerald-50 [&>button]:text-emerald-700 [&>button[data-selected-single=true]]:!border-transparent [&>button[data-selected-single=true]]:!bg-emerald-500 [&>button[data-selected-single=true]]:!text-white [&>button[data-selected-single=true]]:!shadow-[0_10px_30px_-12px_rgba(16,185,129,0.55)] [&>button[data-selected-single=true]]:!ring-2 [&>button[data-selected-single=true]]:!ring-emerald-200/70 [&>button[data-selected-single=true]]:!ring-offset-0",
                                             }}
-                                            className="mx-auto w-full max-w-sm [--cell-size:2.4rem] sm:[--cell-size:2.7rem] [&_button[data-selected-single=true]]:!border-transparent [&_button[data-selected-single=true]]:!bg-emerald-500 [&_button[data-selected-single=true]]:!text-white [&_button[data-selected-single=true]]:!shadow-[0_10px_30px_-12px_rgba(16,185,129,0.55)] [&_button[data-selected-single=true]]:!ring-2 [&_button[data-selected-single=true]]:!ring-emerald-200/70 [&_button[data-selected-single=true]]:!ring-offset-0 [&_button[data-selected-single=true]]:!outline-none [&_button[data-selected-single=true]]:transition [&_button[data-selected-single=true]]:duration-150 [&_button[data-selected-single=true]]:ease-out [&_button[data-selected-single=true]]:scale-[1.02]"
+                                            className="mx-auto w-full max-w-sm [--cell-size:2.4rem] sm:[--cell-size:2.7rem] [&_button[data-selected-single=true]]:border-transparent! [&_button[data-selected-single=true]]:bg-emerald-500! [&_button[data-selected-single=true]]:text-white! [&_button[data-selected-single=true]]:shadow-[0_10px_30px_-12px_rgba(16,185,129,0.55)]! [&_button[data-selected-single=true]]:ring-2! [&_button[data-selected-single=true]]:ring-emerald-200/70! [&_button[data-selected-single=true]]:ring-offset-0! [&_button[data-selected-single=true]]:outline-none! [&_button[data-selected-single=true]]:transition [&_button[data-selected-single=true]]:duration-150 [&_button[data-selected-single=true]]:ease-out [&_button[data-selected-single=true]]:scale-[1.02]"
                                         />
                                     </div>
                                 </div>
@@ -525,9 +525,8 @@ export default function NurseClinicPage() {
                                     <h3 className="text-lg font-semibold text-slate-900">{selectedDateLabel}</h3>
                                     <p className="text-sm text-muted-foreground">
                                         {selectedAppointments.length > 0
-                                            ? `${selectedAppointments.length} appointment${
-                                                  selectedAppointments.length === 1 ? "" : "s"
-                                              } scheduled`
+                                            ? `${selectedAppointments.length} appointment${selectedAppointments.length === 1 ? "" : "s"
+                                            } scheduled`
                                             : "No appointments scheduled for this day."}
                                     </p>
                                 </div>

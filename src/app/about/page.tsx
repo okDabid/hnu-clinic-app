@@ -30,28 +30,28 @@ export default function AboutPage() {
         {
             name: "Shanna Kathleen M. Escalona, MD",
             role: "Head, Health Services Department",
-            img: "/head-illustration.png",
+            img: "/profile/clinic/head-illustration.png",
         },
         {
             name: "Lovella I. Calvelo, MD",
             role: "School Physician",
-            img: "/physician-illustration.png",
+            img: "/profile/clinic/physician-illustration.png",
         },
     ];
 
     const dentists = [
-        { name: "Minette B. Barrete", role: "School Dentist", img: "/dentist1-illustration.png" },
-        { name: "Roche T. Pamaran", role: "School Dentist", img: "/dentist2-illustration.png" },
+        { name: "Minette B. Barrete", role: "School Dentist", img: "/profile/clinic/dentist1-illustration.png" },
+        { name: "Roche T. Pamaran", role: "School Dentist", img: "/profile/clinic/dentist2-illustration.png" },
     ];
 
     const nurses = [
-        { name: "Cherly Marie B. Lagura, RN", role: "School Nurse", img: "/nurse1-illustration.png" },
-        { name: "Evangeline Y. Guieb, RN", role: "School Nurse", img: "/nurse2-illustration.png" },
-        { name: "Rhiza Rosario G. Magallones, RN", role: "School Nurse", img: "/nurse3-illustration.png" },
+        { name: "Cherly Marie B. Lagura, RN", role: "School Nurse", img: "/profile/clinic/nurse1-illustration.png" },
+        { name: "Evangeline Y. Guieb, RN", role: "School Nurse", img: "/profile/clinic/nurse2-illustration.png" },
+        { name: "Rhiza Rosario G. Magallones, RN", role: "School Nurse", img: "/profile/clinic/nurse3-illustration.png" },
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-b from-green-50 via-white to-green-50">
+        <div className="flex flex-col min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
             {/* Header */}
             <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
                 <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
@@ -117,7 +117,7 @@ export default function AboutPage() {
 
             {/* Hero Section */}
             <section className="relative overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-gradient-to-br from-green-100 via-white to-green-50" />
+                <div className="absolute inset-0 -z-10 bg-linear-to-br from-green-100 via-white to-green-50" />
                 <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-green-200/40 blur-3xl" />
                 <div className="max-w-6xl mx-auto px-6 md:px-12 py-20 md:py-24">
                     <div className="max-w-3xl space-y-6 text-center md:text-left">
