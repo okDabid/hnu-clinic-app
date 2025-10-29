@@ -59,7 +59,7 @@ const workflowSteps = [
 
 const stats = [
     { label: "Serving Holy Name University", value: "Trusted campus partner" },
-    { label: "Verified domain", value: "https://clinic.hnu.edu" },
+    { label: "Public site", value: "https://hnu-clinic-app.vercel.app/" },
     { label: "Patient privacy", value: "Encrypted and access controlled" },
 ];
 
@@ -81,7 +81,7 @@ export default function HomePage() {
                                 Healthcare management for the Holy Name University community.
                             </h2>
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
-                                Our verified domain, <Link href="https://clinic.hnu.edu" className="font-semibold text-green-700 underline underline-offset-2">clinic.hnu.edu</Link>, hosts the digital front door for appointments, electronic medical records, and campus-wide health coordination.
+                                Our public homepage at <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link> introduces the system students, faculty, and staff use to request appointments, manage records, and coordinate care.
                             </p>
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
                                 We help patients schedule visits, notify doctors of updates, and keep sensitive information synchronized between care teams—all while upholding the privacy expectations of the HNU community.
@@ -214,7 +214,7 @@ export default function HomePage() {
                         <div className="space-y-4 text-center md:text-left">
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Why we ask to connect your Google account</h3>
                             <p className="text-gray-600">
-                                Google authentication lets us confirm you belong to the Holy Name University community without requesting new passwords. We only request your basic profile (name, email address) to match you with clinic records you already maintain with us.
+                                Google authentication lets us confirm you belong to the Holy Name University community without requesting new passwords. We only request your basic profile (name and email address) so the portal can recognize you and personalize notifications.
                             </p>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">
@@ -224,10 +224,10 @@ export default function HomePage() {
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
                                     <p>
-                                        When you choose “Continue with Google,” we receive your verified Holy Name University email address and profile name. We do not access your calendar, files, or any other Google data.
+                                        When you choose “Continue with Google,” the app receives your name, primary email address, and profile photo from Google. No calendars, files, Drive contents, or classroom data are requested or stored.
                                     </p>
                                     <p>
-                                        The information we collect is used only to create or confirm your clinic account so you can book appointments and review records.
+                                        We use these details to create or match your clinic account, display the right profile information, and send appointment and password reset emails.
                                     </p>
                                 </CardContent>
                             </Card>
@@ -258,7 +258,7 @@ export default function HomePage() {
                             <div className="space-y-4 rounded-2xl border border-green-100 bg-green-50/60 p-6 text-sm text-green-700">
                                 <p className="font-semibold text-green-700">Verified presence</p>
                                 <p>
-                                    This application is presented by HNU Clinic and hosted on <Link href="https://clinic.hnu.edu" className="font-semibold underline underline-offset-2">clinic.hnu.edu</Link>, the official domain managed by Holy Name University.
+                                    This application is presented by HNU Clinic and currently hosted on <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold underline underline-offset-2">hnu-clinic-app.vercel.app</Link>, where you can review privacy details before signing in.
                                 </p>
                                 <p>
                                     Our team typically responds within one business day.
@@ -272,24 +272,6 @@ export default function HomePage() {
                 </section>
             </main>
 
-            <footer className="border-t border-green-100 bg-white/95">
-                <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 text-sm text-gray-600 md:flex-row md:items-center md:justify-between md:px-12">
-                    <div className="space-y-1">
-                        <p className="text-base font-semibold text-green-700">HNU Clinic · Holy Name University</p>
-                        <p>
-                            A campus health records and appointment system designed for students, faculty, and staff seeking coordinated care.
-                        </p>
-                    </div>
-                    <div className="flex flex-col gap-2 md:items-end">
-                        <Link href="/privacy" className="font-medium text-green-700 underline underline-offset-2">
-                            Privacy Policy
-                        </Link>
-                        <Link href="mailto:clinic-support@hnu.edu" className="hover:text-green-600">
-                            clinic-support@hnu.edu
-                        </Link>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 }
