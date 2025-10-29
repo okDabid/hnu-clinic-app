@@ -80,6 +80,37 @@ function toBase64Url(input: Buffer): string {
         .replace(/=+$/, "");
 }
 
+function isAscii(value: string): boolean {
+    return /^[\x00-\x7F]*$/.test(value);
+}
+
+function encodeHeader(value: string): string {
+    if (isAscii(value)) {
+        return value;
+    }
+
+    const base64 = Buffer.from(value, "utf-8").toString("base64");
+    return `=?UTF-8?B?${base64}?=`;
+}
+
+function formatAddress(email: string, name?: string): string {
+    if (!name) {
+        return email;
+    }
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+        return email;
+    }
+
+    if (!isAscii(trimmedName)) {
+        return `${encodeHeader(trimmedName)} <${email}>`;
+    }
+
+    const escapedName = trimmedName.replace(/(["\\])/g, "\\$1");
+    return `"${escapedName}" <${email}>`;
+}
+
 function buildMimeMessage({
     from,
     to,
@@ -98,7 +129,7 @@ function buildMimeMessage({
     const headers = [
         `From: ${from}`,
         `To: ${to}`,
-        `Subject: ${subject}`,
+        `Subject: ${encodeHeader(subject)}`,
         "MIME-Version: 1.0",
     ];
 
@@ -170,16 +201,19 @@ export async function sendEmail({
     text,
 }: SendEmailOptions): Promise<void> {
     const emailUser = getRequiredEnv("EMAIL_USER");
+    const fromHeader = formatAddress(emailUser, fromName);
+    const toHeader = formatAddress(to);
+    const replyToHeader = replyTo ? formatAddress(replyTo) : undefined;
 
     const raw = toBase64Url(
         Buffer.from(
             buildMimeMessage({
-                from: `\"${fromName}\" <${emailUser}>`,
-                to,
+                from: fromHeader,
+                to: toHeader,
                 subject,
                 html,
                 text,
-                replyTo,
+                replyTo: replyToHeader,
             }),
             "utf-8",
         ),

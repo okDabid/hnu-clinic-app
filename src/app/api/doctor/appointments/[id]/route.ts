@@ -78,7 +78,7 @@ function buildStatusEmail({
     schedule: string;
     doctorName: string;
     cancelReason?: string | null;
-}): { subject: string; html: string } | null {
+}): { subject: string; html: string; text: string } | null {
     const safeName = escapeHtml(patientName);
     const safeClinic = escapeHtml(clinicName);
     const safeSchedule = escapeHtml(schedule);
@@ -91,29 +91,43 @@ function buildStatusEmail({
         { label: "Schedule", value: safeSchedule },
     ];
 
+    const textRows: Array<[string, string]> = [
+        ["Clinic", clinicName],
+        ["Doctor", doctorName],
+        ["Schedule", schedule],
+    ];
+
     let heading = "";
     let intro = "";
     let outro = `Thank you,<br/>${safeDoctor}<br/>HNU Clinic`;
     let subject = "";
+    let textIntro = "";
+    let textOutro = `Thank you,\n${doctorName}\nHNU Clinic`;
 
     switch (status) {
         case AppointmentStatus.Approved:
             heading = "Appointment Approved";
             intro = `<span style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Good news, <strong style="color: inherit;">${safeName}</strong>! <strong style="color: inherit;">${safeDoctor}</strong> has approved your appointment.</span>`;
             subject = "Your appointment has been approved";
+            textIntro = `Good news, ${patientName}! ${doctorName} has approved your appointment.`;
             break;
         case AppointmentStatus.Cancelled:
             heading = "Appointment Cancelled";
             intro = `<span style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Hello <strong style="color: inherit;">${safeName}</strong>, <strong style="color: inherit;">${safeDoctor}</strong> has cancelled your appointment.</span>`;
             subject = "Your appointment has been cancelled";
             if (safeReason) rows.push({ label: "Cancellation Reason", value: safeReason });
+            if (cancelReason) textRows.push(["Cancellation Reason", cancelReason]);
             outro = `If you still need assistance, please book another schedule through the patient portal.<br/><br/>Thank you,<br/>${safeDoctor}<br/>HNU Clinic`;
+            textIntro = `Hello ${patientName}, ${doctorName} has cancelled your appointment.`;
+            textOutro = `If you still need assistance, please book another schedule through the patient portal.\n\nThank you,\n${doctorName}\nHNU Clinic`;
             break;
         case AppointmentStatus.Completed:
             heading = "Appointment Completed";
             intro = `<span style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Hello <strong style="color: inherit;">${safeName}</strong>, <strong style="color: inherit;">${safeDoctor}</strong> has marked your appointment as completed.</span>`;
             subject = "Your appointment has been completed";
             outro = `We hope you had a good visit. You can review your consultation notes and next steps inside the patient portal.<br/><br/>Thank you,<br/>${safeDoctor}<br/>HNU Clinic`;
+            textIntro = `Hello ${patientName}, ${doctorName} has marked your appointment as completed.`;
+            textOutro = `We hope you had a good visit. You can review your consultation notes and next steps inside the patient portal.\n\nThank you,\n${doctorName}\nHNU Clinic`;
             break;
         default:
             return null;
@@ -139,9 +153,18 @@ function buildStatusEmail({
       <p style="margin-bottom: 0;">${outro}</p>
     </div>`;
 
-    return { subject, html };
-}
+    const text = [
+        textIntro,
+        "",
+        ...textRows.map(([label, value]) => `${label}: ${value}`),
+        "",
+        textOutro,
+    ]
+        .join("\n")
+        .trim();
 
+    return { subject, html, text };
+}
 function shapeResponse(appointment: {
     appointment_id: string;
     appointment_timestart: Date;
@@ -387,11 +410,28 @@ export async function PATCH(
                     </div>
                 `;
 
+                const text = [
+                    `Hello ${patientName},`,
+                    "",
+                    `${doctorName} has updated your appointment at ${updated.clinic.clinic_name}.`,
+                    "",
+                    `Previous Schedule: ${oldSchedule ?? "Unavailable"}`,
+                    `New Schedule: ${newSchedule ?? "Unavailable"}`,
+                    `Doctor's Note: ${trimmedReason}`,
+                    "",
+                    "Please log in to your patient portal if you need to reschedule again or have any questions.",
+                    "",
+                    "Thank you,",
+                    doctorName,
+                    "HNU Clinic",
+                ].join("\n");
+
                 try {
                     await sendEmail({
                         to: patientEmail,
                         subject: "Your appointment has been moved",
                         html,
+                        text,
                     });
                 } catch (emailErr) {
                     console.error("[PATCH /api/doctor/appointments/:id] email error", emailErr);
@@ -445,6 +485,7 @@ export async function PATCH(
                             to: patientEmail,
                             subject: emailPayload.subject,
                             html: emailPayload.html,
+                            text: emailPayload.text,
                         });
                     } catch (emailErr) {
                         console.error(
@@ -531,6 +572,7 @@ export async function PATCH(
                         to: patientEmail,
                         subject: emailPayload.subject,
                         html: emailPayload.html,
+                        text: emailPayload.text,
                     });
                 } catch (emailErr) {
                     console.error("[PATCH /api/doctor/appointments/:id] status email error", emailErr);
