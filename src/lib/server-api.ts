@@ -11,7 +11,18 @@ export async function getServerBaseUrl() {
     const headersList = await Promise.resolve(headers());
     const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
     if (!host) {
-        return process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+        const configuredUrl = process.env.NEXTAUTH_URL?.trim();
+        if (configuredUrl) {
+            return configuredUrl.replace(/\/$/, "");
+        }
+
+        const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ?? process.env.VERCEL_URL?.trim();
+        if (vercelUrl) {
+            const normalized = /^https?:\/\//i.test(vercelUrl) ? vercelUrl : `https://${vercelUrl}`;
+            return normalized.replace(/\/$/, "");
+        }
+
+        return "http://localhost:3000";
     }
     const protocol =
         headersList.get("x-forwarded-proto") ?? (process.env.NODE_ENV === "development" ? "http" : "https");

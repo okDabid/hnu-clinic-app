@@ -6,10 +6,29 @@ import { sendEmail } from "@/lib/email";
 export const EMAIL_VERIFICATION_TOKEN_TYPE = "EMAIL_VERIFICATION";
 const VERIFICATION_EXPIRATION_HOURS = 24;
 
-function resolveAppBaseUrl(): string {
-    const configuredUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+function stripTrailingSlash(value: string): string {
+    return value.replace(/\/$/, "");
+}
 
-    return configuredUrl.replace(/\/$/, "");
+function ensureProtocol(value: string): string {
+    if (!/^https?:\/\//i.test(value)) {
+        return `https://${value}`;
+    }
+    return value;
+}
+
+function resolveAppBaseUrl(): string {
+    const configuredUrl = process.env.NEXTAUTH_URL?.trim();
+    if (configuredUrl) {
+        return stripTrailingSlash(configuredUrl);
+    }
+
+    const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ?? process.env.VERCEL_URL?.trim();
+    if (vercelUrl) {
+        return stripTrailingSlash(ensureProtocol(vercelUrl));
+    }
+
+    return "http://localhost:3000";
 }
 
 function buildVerificationUrl(token: string): string {
