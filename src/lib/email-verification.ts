@@ -6,8 +6,60 @@ import { sendEmail } from "@/lib/email";
 export const EMAIL_VERIFICATION_TOKEN_TYPE = "EMAIL_VERIFICATION";
 const VERIFICATION_EXPIRATION_HOURS = 24;
 
+const APP_ORIGIN_ENV_VARS = [
+    "EMAIL_VERIFICATION_URL",
+    "NEXTAUTH_URL",
+    "NEXTAUTH_URL_INTERNAL",
+    "AUTH_URL",
+    "AUTH_ORIGIN",
+    "APP_ORIGIN",
+    "APP_URL",
+    "SITE_URL",
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_APP_URL",
+];
+
+function stripTrailingSlash(value: string): string {
+    return value.replace(/\/$/, "");
+}
+
+function ensureProtocol(value: string): string {
+    if (!/^https?:\/\//i.test(value)) {
+        return `https://${value}`;
+    }
+    return value;
+}
+
+function normalizeBaseUrl(value: string): string {
+    return stripTrailingSlash(ensureProtocol(value));
+}
+
+function resolveAppBaseUrl(): string {
+    for (const envVar of APP_ORIGIN_ENV_VARS) {
+        const candidate = process.env[envVar]?.trim();
+        if (candidate) {
+            return normalizeBaseUrl(candidate);
+        }
+    }
+
+    const vercelUrl =
+        process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ??
+        process.env.VERCEL_BRANCH_URL?.trim() ??
+        process.env.NEXT_PUBLIC_VERCEL_URL?.trim() ??
+        process.env.VERCEL_URL?.trim();
+    if (vercelUrl) {
+        return normalizeBaseUrl(vercelUrl);
+    }
+
+    console.warn(
+        "Falling back to http://localhost:3000 for verification links because no base URL environment variables were configured.",
+    );
+
+    return "http://localhost:3000";
+}
+
 function buildVerificationUrl(token: string): string {
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+    const baseUrl = resolveAppBaseUrl();
     const encodedToken = encodeURIComponent(token);
     return `${baseUrl}/api/account/email/verify?token=${encodedToken}`;
 }
