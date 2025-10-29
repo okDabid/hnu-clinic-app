@@ -72,7 +72,7 @@ export default function HomePage() {
                                 HNU Clinic · Official campus health system
                             </span>
                             <h2 className="text-3xl font-bold leading-tight text-green-600 md:text-5xl">
-                                Healthcare management for the Holy Name University community.
+                                Manage health records, book visits, and stay connected.
                             </h2>
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
                                 Our public homepage at <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link> introduces the system students, faculty, and staff use to request appointments, manage records, and coordinate care.
