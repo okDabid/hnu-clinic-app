@@ -11,7 +11,7 @@ export async function getServerBaseUrl() {
     const headersList = await Promise.resolve(headers());
     const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
     if (!host) {
-        return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+        return process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     }
     const protocol =
         headersList.get("x-forwarded-proto") ?? (process.env.NODE_ENV === "development" ? "http" : "https");

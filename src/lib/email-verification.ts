@@ -6,8 +6,14 @@ import { sendEmail } from "@/lib/email";
 export const EMAIL_VERIFICATION_TOKEN_TYPE = "EMAIL_VERIFICATION";
 const VERIFICATION_EXPIRATION_HOURS = 24;
 
+function resolveAppBaseUrl(): string {
+    const configuredUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+    return configuredUrl.replace(/\/$/, "");
+}
+
 function buildVerificationUrl(token: string): string {
-    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+    const baseUrl = resolveAppBaseUrl();
     const encodedToken = encodeURIComponent(token);
     return `${baseUrl}/api/account/email/verify?token=${encodedToken}`;
 }
