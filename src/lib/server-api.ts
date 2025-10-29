@@ -1,5 +1,50 @@
 import { cookies, headers } from "next/headers";
 
+const APP_ORIGIN_ENV_VARS = [
+    "EMAIL_VERIFICATION_URL",
+    "APP_ORIGIN",
+    "APP_URL",
+    "SITE_URL",
+    "NEXTAUTH_URL",
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_APP_URL",
+];
+
+function stripTrailingSlash(value: string): string {
+    return value.replace(/\/$/, "");
+}
+
+function ensureProtocol(value: string): string {
+    if (!/^https?:\/\//i.test(value)) {
+        return `https://${value}`;
+    }
+    return value;
+}
+
+function normalizeBaseUrl(value: string): string {
+    return stripTrailingSlash(ensureProtocol(value));
+}
+
+function resolveConfiguredBaseUrl(): string | null {
+    for (const envVar of APP_ORIGIN_ENV_VARS) {
+        const candidate = process.env[envVar]?.trim();
+        if (candidate) {
+            return normalizeBaseUrl(candidate);
+        }
+    }
+
+    const vercelUrl =
+        process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ??
+        process.env.VERCEL_BRANCH_URL?.trim() ??
+        process.env.NEXT_PUBLIC_VERCEL_URL?.trim() ??
+        process.env.VERCEL_URL?.trim();
+    if (vercelUrl) {
+        return normalizeBaseUrl(vercelUrl);
+    }
+
+    return null;
+}
+
 async function buildCookieHeader(): Promise<string | undefined> {
     const cookieStore = await Promise.resolve(cookies());
     const entries = cookieStore.getAll();
@@ -11,17 +56,10 @@ export async function getServerBaseUrl() {
     const headersList = await Promise.resolve(headers());
     const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
     if (!host) {
-        const configuredUrl = process.env.NEXTAUTH_URL?.trim();
-        if (configuredUrl) {
-            return configuredUrl.replace(/\/$/, "");
+        const configured = resolveConfiguredBaseUrl();
+        if (configured) {
+            return configured;
         }
-
-        const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ?? process.env.VERCEL_URL?.trim();
-        if (vercelUrl) {
-            const normalized = /^https?:\/\//i.test(vercelUrl) ? vercelUrl : `https://${vercelUrl}`;
-            return normalized.replace(/\/$/, "");
-        }
-
         return "http://localhost:3000";
     }
     const protocol =

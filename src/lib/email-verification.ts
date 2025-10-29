@@ -6,6 +6,16 @@ import { sendEmail } from "@/lib/email";
 export const EMAIL_VERIFICATION_TOKEN_TYPE = "EMAIL_VERIFICATION";
 const VERIFICATION_EXPIRATION_HOURS = 24;
 
+const APP_ORIGIN_ENV_VARS = [
+    "EMAIL_VERIFICATION_URL",
+    "APP_ORIGIN",
+    "APP_URL",
+    "SITE_URL",
+    "NEXTAUTH_URL",
+    "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_APP_URL",
+];
+
 function stripTrailingSlash(value: string): string {
     return value.replace(/\/$/, "");
 }
@@ -17,15 +27,25 @@ function ensureProtocol(value: string): string {
     return value;
 }
 
+function normalizeBaseUrl(value: string): string {
+    return stripTrailingSlash(ensureProtocol(value));
+}
+
 function resolveAppBaseUrl(): string {
-    const configuredUrl = process.env.NEXTAUTH_URL?.trim();
-    if (configuredUrl) {
-        return stripTrailingSlash(configuredUrl);
+    for (const envVar of APP_ORIGIN_ENV_VARS) {
+        const candidate = process.env[envVar]?.trim();
+        if (candidate) {
+            return normalizeBaseUrl(candidate);
+        }
     }
 
-    const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ?? process.env.VERCEL_URL?.trim();
+    const vercelUrl =
+        process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ??
+        process.env.VERCEL_BRANCH_URL?.trim() ??
+        process.env.NEXT_PUBLIC_VERCEL_URL?.trim() ??
+        process.env.VERCEL_URL?.trim();
     if (vercelUrl) {
-        return stripTrailingSlash(ensureProtocol(vercelUrl));
+        return normalizeBaseUrl(vercelUrl);
     }
 
     return "http://localhost:3000";
