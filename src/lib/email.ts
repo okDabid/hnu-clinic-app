@@ -1,57 +1,146 @@
-import nodemailer from "nodemailer";
+import fetch from "node-fetch";
 
-let cachedTransporter: nodemailer.Transporter | null = null;
-let cachedVerifyPromise: Promise<void> | null = null;
-
-/**
- * Returns a cached Nodemailer transporter instance to avoid repeated setup.
- */
-async function getTransporter() {
-    if (cachedTransporter) return cachedTransporter;
-
-    const EMAIL_USER = process.env.EMAIL_USER;
-    const EMAIL_PASS = process.env.EMAIL_PASS;
-
-    if (!EMAIL_USER || !EMAIL_PASS) {
-        throw new Error("Missing EMAIL_USER or EMAIL_PASS in environment");
-    }
-
-    cachedTransporter = nodemailer.createTransport({
-        pool: true,
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false, // STARTTLS
-        auth: {
-            user: EMAIL_USER,
-            pass: EMAIL_PASS,
-        },
-        tls: {
-            rejectUnauthorized: false,
-        },
-        maxConnections: 3,
-        maxMessages: 100,
-    });
-
-    return cachedTransporter;
+interface CachedAccessToken {
+    token: string;
+    expiry: number;
 }
 
-async function ensureTransporterReady(transporter: nodemailer.Transporter) {
-    if (!cachedVerifyPromise) {
-        cachedVerifyPromise = transporter
-            .verify()
-            .then(() => {
-                console.log("Gmail transporter ready");
+let cachedAccessToken: CachedAccessToken | null = null;
+let accessTokenPromise: Promise<string> | null = null;
+
+function getRequiredEnv(name: string): string {
+    const value = process.env[name];
+    if (!value) {
+        throw new Error(`Missing ${name} in environment`);
+    }
+    return value;
+}
+
+async function fetchAccessToken(): Promise<string> {
+    if (cachedAccessToken && cachedAccessToken.expiry > Date.now()) {
+        return cachedAccessToken.token;
+    }
+
+    if (!accessTokenPromise) {
+        const clientId = getRequiredEnv("GMAIL_CLIENT_ID");
+        const clientSecret = getRequiredEnv("GMAIL_CLIENT_SECRET");
+        const refreshToken = getRequiredEnv("GMAIL_REFRESH_TOKEN");
+
+        const body = new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: refreshToken,
+            grant_type: "refresh_token",
+        });
+
+        accessTokenPromise = fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: body.toString(),
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(
+                        `Failed to refresh Gmail access token: ${response.status} ${response.statusText} - ${errorBody}`,
+                    );
+                }
+
+                const json = (await response.json()) as {
+                    access_token?: string;
+                    expires_in?: number;
+                };
+
+                if (!json.access_token || !json.expires_in) {
+                    throw new Error("Gmail token response missing access_token or expires_in");
+                }
+
+                cachedAccessToken = {
+                    token: json.access_token,
+                    expiry: Date.now() + (json.expires_in - 60) * 1000,
+                };
+
+                return json.access_token;
             })
-            .catch((verifyErr) => {
-                console.error("Gmail transporter verification failed:", verifyErr);
+            .finally(() => {
+                accessTokenPromise = null;
             });
     }
 
-    try {
-        await cachedVerifyPromise;
-    } catch {
-        cachedVerifyPromise = null;
+    return accessTokenPromise as Promise<string>;
+}
+
+function toBase64Url(input: Buffer): string {
+    return input
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+}
+
+function buildMimeMessage({
+    from,
+    to,
+    subject,
+    html,
+    text,
+    replyTo,
+}: {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+    text?: string;
+    replyTo?: string;
+}): string {
+    const headers = [
+        `From: ${from}`,
+        `To: ${to}`,
+        `Subject: ${subject}`,
+        "MIME-Version: 1.0",
+    ];
+
+    if (replyTo) {
+        headers.push(`Reply-To: ${replyTo}`);
     }
+
+    const boundary = `mail_${Date.now().toString(36)}`;
+
+    if (text) {
+        headers.push(`Content-Type: multipart/alternative; boundary=\"${boundary}\"`, "", `--${boundary}`);
+        headers.push("Content-Type: text/plain; charset=UTF-8", "", text, "", `--${boundary}`);
+        headers.push("Content-Type: text/html; charset=UTF-8", "", html, "", `--${boundary}--`, "");
+    } else {
+        headers.push("Content-Type: text/html; charset=UTF-8", "", html);
+    }
+
+    return headers.join("\r\n");
+}
+
+async function sendWithGmail(rawMessage: string) {
+    const accessToken = await fetchAccessToken();
+
+    const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ raw: rawMessage }),
+    });
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            cachedAccessToken = null;
+        }
+
+        const errorBody = await response.text();
+        throw new Error(`Gmail API send failed: ${response.status} ${response.statusText} - ${errorBody}`);
+    }
+
+    return (await response.json()) as { id?: string };
 }
 
 export interface SendEmailOptions {
@@ -63,8 +152,13 @@ export interface SendEmailOptions {
     text?: string;
 }
 
+function clearTokenCache() {
+    cachedAccessToken = null;
+    accessTokenPromise = null;
+}
+
 /**
- * Sends an email using a pooled Gmail transporter.
+ * Sends an email using the Gmail API with OAuth 2.0 credentials.
  * Automatically retries once if sending fails.
  */
 export async function sendEmail({
@@ -75,32 +169,30 @@ export async function sendEmail({
     replyTo,
     text,
 }: SendEmailOptions): Promise<void> {
-    const transporter = await getTransporter();
-    const EMAIL_USER = process.env.EMAIL_USER;
+    const emailUser = getRequiredEnv("EMAIL_USER");
 
-    await ensureTransporterReady(transporter);
+    const raw = toBase64Url(
+        Buffer.from(
+            buildMimeMessage({
+                from: `\"${fromName}\" <${emailUser}>`,
+                to,
+                subject,
+                html,
+                text,
+                replyTo,
+            }),
+            "utf-8",
+        ),
+    );
 
     try {
-        const info = await transporter.sendMail({
-            from: `"${fromName}" <${EMAIL_USER}>`,
-            to,
-            subject,
-            html,
-            replyTo,
-            text,
-        });
-        console.log("Email sent:", info.messageId);
+        const result = await sendWithGmail(raw);
+        console.log("Email sent via Gmail API:", result.id ?? "unknown id");
     } catch (err) {
         console.error("Email send failed, retrying once:", err);
         await new Promise((res) => setTimeout(res, 2000));
-        const info = await transporter.sendMail({
-            from: `"${fromName}" <${EMAIL_USER}>`,
-            to,
-            subject,
-            html,
-            replyTo,
-            text,
-        });
-        console.log("Email sent after retry:", info.messageId);
+        clearTokenCache();
+        const result = await sendWithGmail(raw);
+        console.log("Email sent via Gmail API after retry:", result.id ?? "unknown id");
     }
 }
