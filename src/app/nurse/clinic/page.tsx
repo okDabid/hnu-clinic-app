@@ -510,9 +510,9 @@ export default function NurseClinicPage() {
                                             modifiers={{ hasAppointments: highlightedDates }}
                                             modifiersClassNames={{
                                                 hasAppointments:
-                                                    "border border-green-200 bg-emerald-50 text-green-700 data-[selected=true]:bg-green-600 data-[selected=true]:text-white",
+                                                    "[&>button]:border [&>button]:border-emerald-200 [&>button]:bg-emerald-50 [&>button]:text-emerald-700 [&>button[data-selected-single=true]]:!border-transparent [&>button[data-selected-single=true]]:!bg-emerald-500 [&>button[data-selected-single=true]]:!text-white [&>button[data-selected-single=true]]:!shadow-[0_10px_30px_-12px_rgba(16,185,129,0.55)] [&>button[data-selected-single=true]]:!ring-2 [&>button[data-selected-single=true]]:!ring-emerald-200/70 [&>button[data-selected-single=true]]:!ring-offset-0",
                                             }}
-                                            className="mx-auto w-full max-w-sm [--cell-size:2.4rem] sm:[--cell-size:2.7rem]"
+                                            className="mx-auto w-full max-w-sm [--cell-size:2.4rem] sm:[--cell-size:2.7rem] [&_button[data-selected-single=true]]:!border-transparent [&_button[data-selected-single=true]]:!bg-emerald-500 [&_button[data-selected-single=true]]:!text-white [&_button[data-selected-single=true]]:!shadow-[0_10px_30px_-12px_rgba(16,185,129,0.55)] [&_button[data-selected-single=true]]:!ring-2 [&_button[data-selected-single=true]]:!ring-emerald-200/70 [&_button[data-selected-single=true]]:!ring-offset-0 [&_button[data-selected-single=true]]:!outline-none [&_button[data-selected-single=true]]:transition [&_button[data-selected-single=true]]:duration-150 [&_button[data-selected-single=true]]:ease-out [&_button[data-selected-single=true]]:scale-[1.02]"
                                         />
                                     </div>
                                 </div>
