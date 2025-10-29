@@ -18,7 +18,9 @@ import {
 const navigation = [
     { href: "#features", label: "Features" },
     { href: "#workflow", label: "Workflow" },
+    { href: "#data-use", label: "Data Use" },
     { href: "/about", label: "About" },
+    { href: "/privacy", label: "Privacy" },
     { href: "#contact", label: "Contact" },
 ];
 
@@ -55,12 +57,6 @@ const workflowSteps = [
     },
 ];
 
-const stats = [
-    { label: "24/7 Portal Access", value: "Always on" },
-    { label: "Integrated Health Records", value: "Unified" },
-    { label: "Secure Patient Data", value: "Encrypted" },
-];
-
 export default function HomePage() {
     return (
         <div className="flex min-h-screen flex-col bg-linear-to-b from-green-50 via-white to-green-50">
@@ -73,13 +69,16 @@ export default function HomePage() {
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-12 px-6 py-16 md:flex-row md:px-12 md:py-24">
                         <div className="max-w-xl space-y-6 text-center md:text-left">
                             <span className="inline-flex items-center rounded-full border border-green-100 bg-white px-4 py-1 text-sm font-medium text-green-700 shadow-sm">
-                                Comprehensive Care, Digitally Delivered
+                                HNU Clinic · Official campus health system
                             </span>
                             <h2 className="text-3xl font-bold leading-tight text-green-600 md:text-5xl">
-                                Manage health records, book visits, and stay connected to your care team.
+                                Healthcare management for the Holy Name University community.
                             </h2>
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
-                                The HNU Clinic platform streamlines appointments, consolidates health histories, and keeps patients informed every step of the way—securely and intuitively.
+                                Our public homepage at <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link> introduces the system students, faculty, and staff use to request appointments, manage records, and coordinate care.
+                            </p>
+                            <p className="text-base leading-relaxed text-gray-700 md:text-lg">
+                                We help patients schedule visits, notify doctors of updates, and keep sensitive information synchronized between care teams—all while upholding the privacy expectations of the HNU community.
                             </p>
                             <div className="flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row md:justify-start">
                                 <Link href="/login" className="w-full sm:w-auto">
@@ -96,17 +95,6 @@ export default function HomePage() {
                                         Explore the Platform
                                     </Button>
                                 </Link>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4 text-left sm:grid-cols-3 sm:text-center">
-                                {stats.map((item) => (
-                                    <div
-                                        key={item.label}
-                                        className="rounded-xl border border-green-100 bg-white/80 px-4 py-3 text-gray-700 shadow-sm"
-                                    >
-                                        <p className="text-sm font-medium uppercase tracking-wide text-green-500">{item.value}</p>
-                                        <p className="text-sm">{item.label}</p>
-                                    </div>
-                                ))}
                             </div>
                         </div>
                         <div className="flex flex-1 justify-center md:justify-end">
@@ -201,15 +189,63 @@ export default function HomePage() {
                     </div>
                 </section>
 
-                <section id="contact" className="bg-white px-6 py-16 md:px-12 md:py-20">
+                <section
+                    id="data-use"
+                    className="bg-white px-6 py-16 md:px-12 md:py-20"
+                >
+                    <div className="mx-auto max-w-6xl space-y-10">
+                        <div className="space-y-4 text-center md:text-left">
+                            <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Why we ask to connect your Google account</h3>
+                            <p className="text-gray-600">
+                                Google authentication lets us confirm you belong to the Holy Name University community without requesting new passwords. We only request your basic profile (name and email address) so the portal can recognize you and personalize notifications.
+                            </p>
+                        </div>
+                        <div className="grid gap-6 md:grid-cols-2">
+                            <Card className="rounded-2xl border-green-100 bg-white/95 shadow-lg">
+                                <CardHeader>
+                                    <CardTitle className="text-xl text-green-700">Data we receive</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
+                                    <p>
+                                        When you choose “Continue with Google,” the app receives your name, primary email address, and profile photo from Google. No calendars, files, Drive contents, or classroom data are requested or stored.
+                                    </p>
+                                    <p>
+                                        We use these details to create or match your clinic account, display the right profile information, and send appointment and password reset emails.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                            <Card className="rounded-2xl border-green-100 bg-white/95 shadow-lg">
+                                <CardHeader>
+                                    <CardTitle className="text-xl text-green-700">How we protect your information</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
+                                    <p>
+                                        HNU Clinic encrypts data at rest and in transit. Only authorized clinic personnel can view your record, and every action is audited.
+                                    </p>
+                                    <p>
+                                        Review the full details in our <Link href="/privacy" className="font-semibold text-green-700 underline underline-offset-2">Privacy Policy</Link>. You can revoke access at any time by contacting the clinic support desk.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="contact" className="bg-white px-6 pb-16 md:px-12 md:pb-20">
                     <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2">
                         <div className="space-y-4">
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Let’s connect</h3>
                             <p className="text-gray-600">
                                 Reach out to learn more about the HNU Clinic platform or request a walkthrough for your team.
                             </p>
-                            <div className="rounded-2xl border border-green-100 bg-green-50/60 p-6 text-sm text-green-700">
-                                Our team typically responds within one business day.
+                            <div className="space-y-4 rounded-2xl border border-green-100 bg-green-50/60 p-6 text-sm text-green-700">
+                                <p className="font-semibold text-green-700">Verified presence</p>
+                                <p>
+                                    This application is presented by HNU Clinic and currently hosted on <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold underline underline-offset-2">hnu-clinic-app.vercel.app</Link>, where you can review privacy details before signing in.
+                                </p>
+                                <p>
+                                    Our team typically responds within one business day.
+                                </p>
                             </div>
                         </div>
                         <div className="rounded-2xl border border-green-100 bg-white/90 p-6 shadow-lg">
@@ -218,6 +254,7 @@ export default function HomePage() {
                     </div>
                 </section>
             </main>
+
         </div>
     );
 }

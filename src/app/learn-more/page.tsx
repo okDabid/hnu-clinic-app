@@ -17,8 +17,11 @@ import {
 
 const navigation = [
     { href: "/#features", label: "Features" },
+    { href: "/#workflow", label: "Workflow" },
+    { href: "/#data-use", label: "Data Use" },
     { href: "/about", label: "About" },
     { href: "/learn-more", label: "Learn More" },
+    { href: "/privacy", label: "Privacy" },
     { href: "/#contact", label: "Contact" },
 ];
 

@@ -80,6 +80,89 @@ function toBase64Url(input: Buffer): string {
         .replace(/=+$/, "");
 }
 
+function isAscii(value: string): boolean {
+    return /^[\x00-\x7F]*$/.test(value);
+}
+
+const Q_SAFE = new Set([
+    ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)), // A-Z
+    ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(97 + i)), // a-z
+    ...Array.from({ length: 10 }, (_, i) => String.fromCharCode(48 + i)), // 0-9
+    "!",
+    "*",
+    "+",
+    "-",
+    ".",
+    "/",
+]);
+
+function encodeHeader(value: string): string {
+    const sanitized = value.replace(/[\r\n]+/g, " ").trim();
+
+    if (isAscii(sanitized)) {
+        return sanitized;
+    }
+
+    const bytes = Buffer.from(sanitized, "utf-8");
+    const tokens: string[] = [];
+
+    for (const byte of bytes) {
+        const char = String.fromCharCode(byte);
+        if (char === " ") {
+            tokens.push("_");
+        } else if (Q_SAFE.has(char)) {
+            tokens.push(char);
+        } else {
+            tokens.push(`=${byte.toString(16).toUpperCase().padStart(2, "0")}`);
+        }
+    }
+
+    const prefix = "=?UTF-8?Q?";
+    const suffix = "?=";
+    const maxLength = 75 - prefix.length - suffix.length;
+    const segments: string[] = [];
+    let current = "";
+
+    for (const token of tokens) {
+        if (current.length + token.length > maxLength && current) {
+            segments.push(current);
+            current = "";
+        }
+
+        if (token.length > maxLength) {
+            // Token is longer than allowed (should only happen for =XX sequences)
+            segments.push(token);
+            continue;
+        }
+
+        current += token;
+    }
+
+    if (current) {
+        segments.push(current);
+    }
+
+    return segments.map((part) => `${prefix}${part}${suffix}`).join(" ");
+}
+
+function formatAddress(email: string, name?: string): string {
+    if (!name) {
+        return email;
+    }
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+        return email;
+    }
+
+    if (!isAscii(trimmedName)) {
+        return `${encodeHeader(trimmedName)} <${email}>`;
+    }
+
+    const escapedName = trimmedName.replace(/(["\\])/g, "\\$1");
+    return `"${escapedName}" <${email}>`;
+}
+
 function buildMimeMessage({
     from,
     to,
@@ -98,7 +181,7 @@ function buildMimeMessage({
     const headers = [
         `From: ${from}`,
         `To: ${to}`,
-        `Subject: ${subject}`,
+        `Subject: ${encodeHeader(subject)}`,
         "MIME-Version: 1.0",
     ];
 
@@ -170,16 +253,19 @@ export async function sendEmail({
     text,
 }: SendEmailOptions): Promise<void> {
     const emailUser = getRequiredEnv("EMAIL_USER");
+    const fromHeader = formatAddress(emailUser, fromName);
+    const toHeader = formatAddress(to);
+    const replyToHeader = replyTo ? formatAddress(replyTo) : undefined;
 
     const raw = toBase64Url(
         Buffer.from(
             buildMimeMessage({
-                from: `\"${fromName}\" <${emailUser}>`,
-                to,
+                from: fromHeader,
+                to: toHeader,
                 subject,
                 html,
                 text,
-                replyTo,
+                replyTo: replyToHeader,
             }),
             "utf-8",
         ),

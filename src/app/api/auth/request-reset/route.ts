@@ -132,11 +132,24 @@ async function handler(req: Request) {
         </div>
       `;
 
+        const textContent = `Hello, ${fullName}!
+
+You requested to reset your password. Please use the code below to proceed:
+
+${code}
+
+This code will expire in 10 minutes.
+
+If you didn't request this, please ignore this email.
+
+This message was automatically sent from the HNU Clinic Capstone Project website.`;
+
         await sendEmail({
             to: normalized.normalized,
             subject: "Password Reset Code",
             html: htmlContent,
             fromName: "HNU Clinic",
+            text: textContent,
         });
 
         return NextResponse.json({

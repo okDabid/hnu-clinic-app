@@ -339,6 +339,14 @@ export function PatientAccountPageClient({
                         ? "Employee profile updated successfully!"
                         : "Profile updated successfully!"
                 );
+                if (data.verificationEmailSent) {
+                    const targetEmail = data.profile?.email?.trim();
+                    toast.success(
+                        targetEmail
+                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                            : "A verification email was sent. Please check your inbox to confirm the address."
+                    );
+                }
                 setProfile((prev) => ({
                     ...prev!,
                     ...data.profile,
@@ -573,6 +581,15 @@ export function PatientAccountPageClient({
                                                                                     toast.error(data.error);
                                                                                 } else {
                                                                                     toast.success("Date of Birth saved!");
+                                                                                    if (data.verificationEmailSent) {
+                                                                                        const targetEmail =
+                                                                                            data.profile?.email?.trim();
+                                                                                        toast.success(
+                                                                                            targetEmail
+                                                                                                ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                                                                                                : "A verification email was sent. Please check your inbox to confirm the address."
+                                                                                        );
+                                                                                    }
                                                                                     await loadProfile();
                                                                                 }
                                                                             } catch {
@@ -642,6 +659,9 @@ export function PatientAccountPageClient({
                                                 value={profile.email || ""}
                                                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                                             />
+                                            <p className="text-xs text-emerald-700">
+                                                Adding a new email will trigger a verification link before the clinic sends notifications there.
+                                            </p>
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>

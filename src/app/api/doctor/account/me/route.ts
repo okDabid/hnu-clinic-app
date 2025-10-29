@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Role, Gender, BloodType, Prisma, Employee } from "@prisma/client";
+import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 // ---------------- HELPERS ----------------
 function isGender(val: unknown): val is Gender {
@@ -143,20 +145,62 @@ export async function PUT(req: Request) {
         // Remove unchanged / null / empty fields safely
         if (existingDOB) delete data.date_of_birth;
 
-        (Object.keys(data) as (keyof Prisma.EmployeeUpdateInput)[]).forEach(
-            (key) => {
-                const val = data[key];
-                const existingVal = existing[key as keyof Employee];
-                if (
-                    val === null ||
-                    val === undefined ||
-                    (typeof val === "string" && val.trim() === "") ||
-                    val === existingVal
-                ) {
-                    delete data[key];
+        let verificationEmail: string | null = null;
+        let shouldClearVerification = false;
+        if (typeof profile.email === "string") {
+            const trimmedEmail = profile.email.trim();
+            const existingEmail = existing.email ?? "";
+
+            if (!trimmedEmail) {
+                if (existingEmail) {
+                    data.email = null;
+                    shouldClearVerification = true;
+                } else {
+                    delete data.email;
                 }
+            } else if (trimmedEmail.toLowerCase() !== existingEmail.toLowerCase()) {
+                const rate = consumeRateLimit(
+                    `email-verify:${session.user.id}`,
+                    3,
+                    60 * 60_000
+                );
+                if (!rate.success) {
+                    const minutes = rate.retryAfterMs
+                        ? Math.ceil(rate.retryAfterMs / 60000)
+                        : null;
+                    const waitMessage =
+                        minutes && minutes > 0
+                            ? `Please wait ${minutes} minute${minutes === 1 ? "" : "s"} before requesting another verification email.`
+                            : "Please wait before requesting another verification email.";
+                    return NextResponse.json(
+                        { error: `Too many verification requests. ${waitMessage}` },
+                        { status: 429 }
+                    );
+                }
+
+                data.email = trimmedEmail;
+                verificationEmail = trimmedEmail;
+            } else {
+                delete data.email;
             }
-        );
+        }
+
+        (Object.keys(data) as (keyof Prisma.EmployeeUpdateInput)[]).forEach((key) => {
+            if (key === "email") {
+                return;
+            }
+
+            const val = data[key];
+            const existingVal = existing[key as keyof Employee];
+            if (
+                val === null ||
+                val === undefined ||
+                (typeof val === "string" && val.trim() === "") ||
+                val === existingVal
+            ) {
+                delete data[key];
+            }
+        });
 
         // Nothing to update
         if (Object.keys(data).length === 0) {
@@ -183,7 +227,7 @@ export async function PUT(req: Request) {
             }
         }
 
-        if (data.email) {
+        if (typeof data.email === "string") {
             const duplicateEmail = await prisma.employee.findFirst({
                 where: {
                     email: data.email as string,
@@ -204,7 +248,34 @@ export async function PUT(req: Request) {
             data,
         });
 
-        return NextResponse.json({ success: true, profile: updated });
+        if (shouldClearVerification) {
+            await clearEmailVerifications(session.user.id);
+        }
+
+        if (verificationEmail) {
+            const displayName =
+                `${updated.fname ?? ""} ${updated.lname ?? ""}`.trim() ||
+                user.username ||
+                "Clinic user";
+            try {
+                await issueEmailVerification({
+                    userId: session.user.id,
+                    email: verificationEmail,
+                    name: displayName,
+                });
+            } catch (error) {
+                console.error("[Doctor email verification]", error);
+                return NextResponse.json(
+                    {
+                        error:
+                            "Profile saved but the verification email could not be sent. Please try again later.",
+                    },
+                    { status: 500 }
+                );
+            }
+        }
+
+        return NextResponse.json({ success: true, profile: updated, verificationEmailSent: Boolean(verificationEmail) });
     } catch (error) {
         if (error instanceof Error && "code" in error && (error as { code?: string }).code === "P2002") {
             return NextResponse.json(

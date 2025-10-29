@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export type RateLimitedRequest = Request | NextRequest;
 
-interface RateLimitResult {
+export interface RateLimitResult {
     success: boolean;
     retryAfterMs?: number;
 }
@@ -135,6 +135,14 @@ if (!globalObject[globalKey]) {
 }
 
 const limiter = globalObject[globalKey];
+
+export function consumeRateLimit(
+    key: string,
+    limit: number,
+    windowMs: number
+): RateLimitResult {
+    return limiter.consume(key, limit, windowMs);
+}
 
 export interface RateLimitRule {
     key?: (request: RateLimitedRequest) => Promise<string | null> | string | null;
