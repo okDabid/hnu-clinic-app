@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { sendEmail } from "@/lib/email";
+import {
+  getMissingEmailEnvVars,
+  isEmailServiceConfigured,
+  sendEmail,
+} from "@/lib/email";
 import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
 
 interface ContactFormData {
@@ -47,10 +51,29 @@ async function handler(req: Request) {
       </div>
     `;
 
+    if (!isEmailServiceConfigured()) {
+      const missing = getMissingEmailEnvVars();
+      const guidance = missing.length
+        ? `Missing environment variables: ${missing.join(", ")}.`
+        : "Set the Gmail API environment variables (GMAIL_CLIENT_EMAIL, GMAIL_PRIVATE_KEY, GMAIL_SENDER).";
+
+      return NextResponse.json(
+        {
+          error: "Email service is not configured.",
+          details: `${guidance} Update your environment configuration and try again.`,
+        },
+        { status: 500 }
+      );
+    }
+
     const inbox = process.env.GMAIL_CONTACT_RECIPIENT ?? process.env.GMAIL_SENDER;
     if (!inbox) {
       return NextResponse.json(
-        { error: "Email service is not configured." },
+        {
+          error: "Email recipient is not configured.",
+          details:
+            "Set GMAIL_CONTACT_RECIPIENT to the inbox that should receive contact form messages, or rely on GMAIL_SENDER as the default.",
+        },
         { status: 500 }
       );
     }

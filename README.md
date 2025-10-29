@@ -77,6 +77,15 @@ prisma/
 
 Create a `.env` file with the variables above before running the app.
 
+### Configuring the Gmail API service account
+
+1. Visit the [Google Cloud Console](https://console.cloud.google.com) and create a project (or choose an existing one).
+2. Enable the **Gmail API** for the project (`APIs & Services` → `Library`).
+3. Create a **service account** (`IAM & Admin` → `Service Accounts`) and generate a JSON key. Copy the account email to `GMAIL_CLIENT_EMAIL` and paste the private key into `GMAIL_PRIVATE_KEY` (replace literal newlines with `\n`).
+4. In the **Google Workspace Admin Console**, grant the service account domain-wide delegation for the `https://www.googleapis.com/auth/gmail.send` scope and authorize the user address that should send email.
+5. Set `GMAIL_SENDER` to the delegated Gmail address and, optionally, `GMAIL_CONTACT_RECIPIENT` to the inbox that should receive contact form submissions.
+6. Redeploy or restart the app so the new environment variables are available.
+
 ## 📦 NPM Scripts
 | Script | Description 
 | --- | --- |

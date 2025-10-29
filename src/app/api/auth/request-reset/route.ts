@@ -2,7 +2,11 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email";
+import {
+    getMissingEmailEnvVars,
+    isEmailServiceConfigured,
+    sendEmail,
+} from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { generateNumericCode } from "@/lib/security";
 import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
@@ -10,6 +14,23 @@ import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
 async function handler(req: Request) {
     try {
         const { contact } = await req.json();
+
+        if (!isEmailServiceConfigured()) {
+            const missing = getMissingEmailEnvVars();
+            console.error(
+                "[POST /api/auth/request-reset] Email service misconfigured.",
+                missing.length ? `Missing: ${missing.join(", ")}` : ""
+            );
+
+            return NextResponse.json(
+                {
+                    error: "Password reset email service is not configured.",
+                    details:
+                        "Ask your administrator to set GMAIL_CLIENT_EMAIL, GMAIL_PRIVATE_KEY, and GMAIL_SENDER before requesting a reset.",
+                },
+                { status: 503 }
+            );
+        }
 
         if (typeof contact !== "string") {
             return NextResponse.json(

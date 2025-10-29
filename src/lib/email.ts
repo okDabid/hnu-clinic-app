@@ -7,6 +7,23 @@ interface AccessToken {
 
 let cachedAccessToken: AccessToken | null = null;
 
+const REQUIRED_GMAIL_ENV_VARS = [
+    "GMAIL_CLIENT_EMAIL",
+    "GMAIL_PRIVATE_KEY",
+    "GMAIL_SENDER",
+] as const;
+
+export function getMissingEmailEnvVars(): string[] {
+    return REQUIRED_GMAIL_ENV_VARS.filter((key) => {
+        const value = process.env[key];
+        return typeof value !== "string" || value.trim() === "";
+    });
+}
+
+export function isEmailServiceConfigured(): boolean {
+    return getMissingEmailEnvVars().length === 0;
+}
+
 const GMAIL_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GMAIL_API_URL = "https://gmail.googleapis.com/gmail/v1/users";
 const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.send";
