@@ -70,7 +70,12 @@ prisma/
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
 | `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
-| `EMAIL_USER`, `EMAIL_PASS` | SMTP credentials for contact emails (`src/app/api/contact/route.ts`, `src/lib/email.ts`). |
+| `EMAIL_USER`, `EMAIL_PASS` | Base SMTP credentials for outbound emails (`src/app/api/contact/route.ts`, `src/lib/email.ts`). |
+| `EMAIL_FROM` | Verified sender email used in the `From` header (`src/lib/email.ts`). Falls back to `EMAIL_USER` if omitted. |
+| `EMAIL_CONTACT_INBOX` | Destination inbox for contact form submissions (defaults to `EMAIL_FROM` or `EMAIL_USER`). |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_SECURE`, `EMAIL_SMTP_REQUIRE_TLS`, `EMAIL_SMTP_REJECT_UNAUTHORIZED` | Optional SMTP tuning values to use a non-Gmail provider for notifications. |
+| `EMAIL_MAX_CONNECTIONS`, `EMAIL_MAX_MESSAGES` | Optional pooling controls for the Nodemailer transporter. |
+| `EMAIL_LIST_UNSUBSCRIBE` | Optional List-Unsubscribe header appended to all outbound emails. |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 

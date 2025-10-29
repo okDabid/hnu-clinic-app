@@ -47,7 +47,7 @@ async function handler(req: Request) {
       </div>
     `;
 
-    const inbox = process.env.EMAIL_USER;
+    const inbox = process.env.EMAIL_CONTACT_INBOX || process.env.EMAIL_FROM || process.env.EMAIL_USER;
     if (!inbox) {
       return NextResponse.json(
         { error: "Email service is not configured." },
