@@ -70,7 +70,8 @@ prisma/
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
 | `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
-| `EMAIL_USER`, `EMAIL_PASS` | SMTP credentials for contact emails (`src/app/api/contact/route.ts`, `src/lib/email.ts`). |
+| `GMAIL_CLIENT_EMAIL`, `GMAIL_PRIVATE_KEY`, `GMAIL_SENDER` | Gmail API service account details and the delegated sender address used by `sendEmail` (`src/lib/email.ts`). |
+| `GMAIL_CONTACT_RECIPIENT` | Optional override for the contact form recipient (`src/app/api/contact/route.ts`). Defaults to `GMAIL_SENDER`. |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 
