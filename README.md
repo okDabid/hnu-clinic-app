@@ -71,13 +71,21 @@ prisma/
 | `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
 | `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
 | `GMAIL_CLIENT_EMAIL`, `GMAIL_PRIVATE_KEY`, `GMAIL_SENDER` | Gmail API service account details and the delegated sender address used by `sendEmail` (`src/lib/email.ts`). |
-| `GMAIL_CONTACT_RECIPIENT` | Optional override for the contact form recipient (`src/app/api/contact/route.ts`). Defaults to `GMAIL_SENDER`. |
+| `EMAIL_USER`, `EMAIL_PASS` | Gmail SMTP credentials (use an app password) for personal Gmail accounts when a Workspace domain is unavailable. |
+| `GMAIL_CONTACT_RECIPIENT` / `EMAIL_CONTACT_RECIPIENT` | Optional override for the contact form recipient (`src/app/api/contact/route.ts`). Defaults to the configured sender. |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 
 Create a `.env` file with the variables above before running the app.
 
-### Configuring the Gmail API service account
+### Configuring email delivery
+
+You can wire up outbound email one of two ways:
+
+- **Google Workspace + Gmail API (recommended for organizations):** requires a Workspace domain and a delegated Gmail sender.
+- **Personal Gmail + SMTP app password:** works with consumer Gmail accounts via an app password and Gmail's SMTP servers.
+
+#### Option A: Gmail API service account
 
 1. Visit the [Google Cloud Console](https://console.cloud.google.com) and create a project (or choose an existing one).
 2. Enable the **Gmail API** for the project (`APIs & Services` → `Library`).
@@ -85,6 +93,14 @@ Create a `.env` file with the variables above before running the app.
 4. In the **Google Workspace Admin Console**, grant the service account domain-wide delegation for the `https://www.googleapis.com/auth/gmail.send` scope and authorize the user address that should send email.
 5. Set `GMAIL_SENDER` to the delegated Gmail address and, optionally, `GMAIL_CONTACT_RECIPIENT` to the inbox that should receive contact form submissions.
 6. Redeploy or restart the app so the new environment variables are available.
+
+#### Option B: Gmail SMTP with an app password
+
+1. Enable 2-Step Verification on the Gmail account that should send email.
+2. Generate an [App Password](https://myaccount.google.com/apppasswords) for "Mail" on the device of your choice.
+3. Set `EMAIL_USER` to the Gmail address and `EMAIL_PASS` to the generated app password.
+4. Optionally, set `EMAIL_CONTACT_RECIPIENT` if contact form submissions should go to a different inbox.
+5. Redeploy or restart the app to apply the new environment variables.
 
 ## 📦 NPM Scripts
 | Script | Description 

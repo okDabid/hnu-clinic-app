@@ -2,11 +2,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {
-    getMissingEmailEnvVars,
-    isEmailServiceConfigured,
-    sendEmail,
-} from "@/lib/email";
+import { getEmailServiceStatus, sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { generateNumericCode } from "@/lib/security";
 import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
@@ -15,18 +11,22 @@ async function handler(req: Request) {
     try {
         const { contact } = await req.json();
 
-        if (!isEmailServiceConfigured()) {
-            const missing = getMissingEmailEnvVars();
+        const emailStatus = getEmailServiceStatus();
+
+        if (!emailStatus.configured) {
+            const missingGmail = emailStatus.missingByProvider["gmail-api"];
+            const missingSmtp = emailStatus.missingByProvider.smtp;
+
             console.error(
                 "[POST /api/auth/request-reset] Email service misconfigured.",
-                missing.length ? `Missing: ${missing.join(", ")}` : ""
+                `Gmail API missing: ${missingGmail.join(", ") || "none"}; SMTP missing: ${missingSmtp.join(", ") || "none"}`
             );
 
             return NextResponse.json(
                 {
                     error: "Password reset email service is not configured.",
                     details:
-                        "Ask your administrator to set GMAIL_CLIENT_EMAIL, GMAIL_PRIVATE_KEY, and GMAIL_SENDER before requesting a reset.",
+                        "Configure Gmail API variables (GMAIL_CLIENT_EMAIL, GMAIL_PRIVATE_KEY, GMAIL_SENDER) or provide Gmail SMTP credentials (EMAIL_USER, EMAIL_PASS with an app password) before requesting a reset.",
                 },
                 { status: 503 }
             );

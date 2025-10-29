@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
-  getMissingEmailEnvVars,
-  isEmailServiceConfigured,
+  getEmailServiceStatus,
   sendEmail,
 } from "@/lib/email";
 import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
@@ -51,28 +50,41 @@ async function handler(req: Request) {
       </div>
     `;
 
-    if (!isEmailServiceConfigured()) {
-      const missing = getMissingEmailEnvVars();
-      const guidance = missing.length
-        ? `Missing environment variables: ${missing.join(", ")}.`
-        : "Set the Gmail API environment variables (GMAIL_CLIENT_EMAIL, GMAIL_PRIVATE_KEY, GMAIL_SENDER).";
+    const emailStatus = getEmailServiceStatus();
+
+    if (!emailStatus.configured) {
+      const missingGmail = emailStatus.missingByProvider["gmail-api"];
+      const missingSmtp = emailStatus.missingByProvider.smtp;
+
+      const guidanceParts = [
+        "Provide either:",
+        `• Gmail API service account variables (GMAIL_CLIENT_EMAIL, GMAIL_PRIVATE_KEY, GMAIL_SENDER)${
+          missingGmail.length ? ` — missing ${missingGmail.join(", ")}` : ""
+        }`,
+        `• Gmail SMTP credentials with an app password (EMAIL_USER, EMAIL_PASS)${
+          missingSmtp.length ? ` — missing ${missingSmtp.join(", ")}` : ""
+        }`,
+      ];
 
       return NextResponse.json(
         {
           error: "Email service is not configured.",
-          details: `${guidance} Update your environment configuration and try again.`,
+          details: guidanceParts.join("\n"),
         },
         { status: 500 }
       );
     }
 
-    const inbox = process.env.GMAIL_CONTACT_RECIPIENT ?? process.env.GMAIL_SENDER;
+    const inbox =
+      process.env.GMAIL_CONTACT_RECIPIENT ??
+      process.env.EMAIL_CONTACT_RECIPIENT ??
+      emailStatus.sender;
     if (!inbox) {
       return NextResponse.json(
         {
           error: "Email recipient is not configured.",
           details:
-            "Set GMAIL_CONTACT_RECIPIENT to the inbox that should receive contact form messages, or rely on GMAIL_SENDER as the default.",
+            "Set GMAIL_CONTACT_RECIPIENT or EMAIL_CONTACT_RECIPIENT to the inbox that should receive contact form messages, or rely on the configured sender as the default.",
         },
         { status: 500 }
       );

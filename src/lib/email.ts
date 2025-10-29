@@ -1,3 +1,4 @@
+import nodemailer from "nodemailer";
 import { createSign } from "crypto";
 
 interface AccessToken {
@@ -13,15 +14,78 @@ const REQUIRED_GMAIL_ENV_VARS = [
     "GMAIL_SENDER",
 ] as const;
 
-export function getMissingEmailEnvVars(): string[] {
-    return REQUIRED_GMAIL_ENV_VARS.filter((key) => {
+const REQUIRED_SMTP_ENV_VARS = [
+    "EMAIL_USER",
+    "EMAIL_PASS",
+] as const;
+
+type EmailProvider = "gmail-api" | "smtp";
+
+interface EmailServiceStatus {
+    configured: boolean;
+    provider: EmailProvider | null;
+    sender: string | null;
+    missing: string[];
+    missingByProvider: Record<EmailProvider, string[]>;
+}
+
+export function getEmailServiceStatus(): EmailServiceStatus {
+    const missingGmail = REQUIRED_GMAIL_ENV_VARS.filter((key) => {
         const value = process.env[key];
         return typeof value !== "string" || value.trim() === "";
     });
+
+    const missingSmtp = REQUIRED_SMTP_ENV_VARS.filter((key) => {
+        const value = process.env[key];
+        return typeof value !== "string" || value.trim() === "";
+    });
+
+    if (missingGmail.length === 0) {
+        return {
+            configured: true,
+            provider: "gmail-api",
+            sender: process.env.GMAIL_SENDER ?? null,
+            missing: [],
+            missingByProvider: {
+                "gmail-api": [],
+                smtp: missingSmtp,
+            },
+        };
+    }
+
+    if (missingSmtp.length === 0) {
+        return {
+            configured: true,
+            provider: "smtp",
+            sender: process.env.EMAIL_USER ?? null,
+            missing: [],
+            missingByProvider: {
+                "gmail-api": missingGmail,
+                smtp: [],
+            },
+        };
+    }
+
+    const useGmail = missingGmail.length <= missingSmtp.length;
+
+    return {
+        configured: false,
+        provider: null,
+        sender: null,
+        missing: useGmail ? missingGmail : missingSmtp,
+        missingByProvider: {
+            "gmail-api": missingGmail,
+            smtp: missingSmtp,
+        },
+    };
+}
+
+export function getMissingEmailEnvVars(): string[] {
+    return getEmailServiceStatus().missing;
 }
 
 export function isEmailServiceConfigured(): boolean {
-    return getMissingEmailEnvVars().length === 0;
+    return getEmailServiceStatus().configured;
 }
 
 const GMAIL_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -34,6 +98,27 @@ function getEnv(name: string) {
         throw new Error(`Missing required environment variable: ${name}`);
     }
     return value;
+}
+
+let smtpTransporter: nodemailer.Transporter | null = null;
+
+function getSmtpTransporter() {
+    if (!smtpTransporter) {
+        const user = getEnv("EMAIL_USER");
+        const pass = getEnv("EMAIL_PASS");
+
+        smtpTransporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
+            auth: {
+                user,
+                pass,
+            },
+        });
+    }
+
+    return smtpTransporter;
 }
 
 function base64UrlEncode(input: string | Buffer) {
@@ -181,15 +266,15 @@ export interface SendEmailOptions {
     text?: string;
 }
 
-export async function sendEmail({
+async function sendWithGmailApi({
     to,
     subject,
     html,
-    fromName = "HNU Clinic",
+    fromName,
     replyTo,
     text,
-}: SendEmailOptions): Promise<void> {
-    const sender = getEnv("GMAIL_SENDER");
+    sender,
+}: SendEmailOptions & { sender: string }): Promise<void> {
     const accessToken = await getAccessToken();
     const mimeMessage = buildMimeMessage({
         fromName,
@@ -219,4 +304,65 @@ export async function sendEmail({
     }
 
     console.log("Email sent via Gmail API");
+}
+
+async function sendWithSmtp({
+    to,
+    subject,
+    html,
+    fromName,
+    replyTo,
+    text,
+    sender,
+}: SendEmailOptions & { sender: string }): Promise<void> {
+    const transporter = getSmtpTransporter();
+
+    await transporter.sendMail({
+        to,
+        subject,
+        html,
+        from: `${fromName} <${sender}>`,
+        replyTo,
+        text: text ?? buildPlainText(html),
+    });
+
+    console.log("Email sent via Gmail SMTP");
+}
+
+export async function sendEmail({
+    to,
+    subject,
+    html,
+    fromName = "HNU Clinic",
+    replyTo,
+    text,
+}: SendEmailOptions): Promise<void> {
+    const status = getEmailServiceStatus();
+
+    if (!status.configured || !status.provider || !status.sender) {
+        throw new Error("Email service is not configured");
+    }
+
+    if (status.provider === "gmail-api") {
+        await sendWithGmailApi({
+            to,
+            subject,
+            html,
+            fromName,
+            replyTo,
+            text,
+            sender: status.sender,
+        });
+        return;
+    }
+
+    await sendWithSmtp({
+        to,
+        subject,
+        html,
+        fromName,
+        replyTo,
+        text,
+        sender: status.sender,
+    });
 }
