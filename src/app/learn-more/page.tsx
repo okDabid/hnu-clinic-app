@@ -106,7 +106,7 @@ export default function LearnMorePage() {
                             <span className="inline-flex items-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
                                 Platform Overview
                             </span>
-                            <h2 className="text-3xl font-bold leading-tight text-green-700 md:text-5xl">
+                            <h2 className="text-3xl font-bold leading-tight text-green-600 md:text-5xl">
                                 HNU Clinic’s digital system keeps campus healthcare organized, secure, and accessible.
                             </h2>
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
