@@ -57,12 +57,6 @@ const workflowSteps = [
     },
 ];
 
-const stats = [
-    { label: "Serving Holy Name University", value: "Trusted campus partner" },
-    { label: "Public site", value: "https://hnu-clinic-app.vercel.app/" },
-    { label: "Patient privacy", value: "Encrypted and access controlled" },
-];
-
 export default function HomePage() {
     return (
         <div className="flex min-h-screen flex-col bg-linear-to-b from-green-50 via-white to-green-50">
@@ -101,17 +95,6 @@ export default function HomePage() {
                                         Explore the Platform
                                     </Button>
                                 </Link>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4 text-left sm:grid-cols-3 sm:text-center">
-                                {stats.map((item) => (
-                                    <div
-                                        key={item.label}
-                                        className="rounded-xl border border-green-100 bg-white/80 px-4 py-3 text-gray-700 shadow-sm"
-                                    >
-                                        <p className="text-sm font-medium uppercase tracking-wide text-green-500">{item.value}</p>
-                                        <p className="text-sm">{item.label}</p>
-                                    </div>
-                                ))}
                             </div>
                         </div>
                         <div className="flex flex-1 justify-center md:justify-end">

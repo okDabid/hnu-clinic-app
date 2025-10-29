@@ -16,7 +16,7 @@ export default function PrivacyPage() {
                         </span>
                         <h1 className="text-3xl font-bold text-green-700 md:text-4xl">Privacy Policy</h1>
                         <p className="text-base leading-relaxed text-gray-700 md:text-lg">
-                            This policy explains how the HNU Clinic capstone application collects, uses, and protects information when you visit <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link> and use the connected scheduling and notification tools.
+                            This policy explains how the HNU Clinic capstone application collects, uses, and protects information when you visit <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link> and use the scheduling, records, and notification features offered to the Holy Name University community.
                         </p>
                     </div>
 
@@ -28,10 +28,10 @@ export default function PrivacyPage() {
                                     <span className="font-medium text-green-700">Google sign-in details:</span> your name, primary Google email address, and profile photo are provided by Google when you choose “Continue with Google.”
                                 </li>
                                 <li>
-                                    <span className="font-medium text-green-700">Account and health records:</span> clinic staff may add or update demographic profiles, appointment bookings, consultation notes, prescriptions, and medical certificates required for campus care.
+                                    <span className="font-medium text-green-700">Account and health records:</span> clinic staff may add or update demographic profiles, appointment bookings, consultation notes, prescriptions, medical certificates, and other campus clinic documentation tied to your profile.
                                 </li>
                                 <li>
-                                    <span className="font-medium text-green-700">Support messages:</span> inquiries submitted through the website contact form include your name, email, and message so the clinic can reply. These details are emailed to the clinic inbox and are not stored in the app database.
+                                    <span className="font-medium text-green-700">Support and inquiry messages:</span> inquiries submitted through the contact form or support email include your name, email, and message so the clinic can reply. These details are emailed to the clinic inbox and are not stored in the app database.
                                 </li>
                                 <li>
                                     <span className="font-medium text-green-700">System logs:</span> the platform records basic audit events (such as appointment updates and notification deliveries) to help administrators troubleshoot issues.
@@ -43,9 +43,9 @@ export default function PrivacyPage() {
                             <h2 className="text-xl font-semibold text-green-700">How we use your information</h2>
                             <ul className="list-disc space-y-2 pl-6">
                                 <li>Verify you belong to the Holy Name University community and let you access the clinic portal without creating a new password.</li>
-                                <li>Match you with the correct patient or employee record so staff can schedule visits, document care, and manage medicine inventory.</li>
-                                <li>Send transactional emails, including appointment updates, doctor notifications, and password reset links, via the Gmail API.</li>
-                                <li>Respond to questions you submit through the contact form or support email address.</li>
+                                <li>Match you with the correct patient or employee record so staff can schedule visits, document care, manage medicine inventory, and prepare medical certificates.</li>
+                                <li>Send transactional emails—appointment requests, approvals, reschedules, cancellations, completion summaries, and password reset codes—through the Gmail API so patients and clinicians stay informed.</li>
+                                <li>Respond to questions you submit through the contact form or support email address and document follow-up for clinic staff.</li>
                             </ul>
                         </section>
 
@@ -54,12 +54,15 @@ export default function PrivacyPage() {
                             <p>
                                 We do not sell your information or share it with advertisers. Google provides authentication and email delivery services to the app. Email content is transmitted through Google’s Gmail API based on the clinic’s account configuration.
                             </p>
+                            <p>
+                                The application is hosted on Vercel, and supporting services such as database hosting are administered by the HNU Clinic capstone team. No marketing or analytics platforms ingest your health information.
+                            </p>
                         </section>
 
                         <section className="space-y-3">
                             <h2 className="text-xl font-semibold text-green-700">Data retention and control</h2>
                             <p>
-                                Health records managed inside the application follow Holy Name University clinic retention guidelines. You may request corrections or deactivation of your portal access by contacting the clinic support desk at <Link href="mailto:clinic-support@hnu.edu" className="font-medium text-green-700 underline underline-offset-2">clinic-support@hnu.edu</Link>.
+                                Health records managed inside the application follow Holy Name University clinic retention guidelines. You may request corrections or deactivation of your portal access by contacting the clinic support desk at <Link href="mailto:hnucliniccapstone@gmail.com" className="font-medium text-green-700 underline underline-offset-2">hnucliniccapstone@gmail.com</Link>.
                             </p>
                             <p>
                                 To disconnect Google access, revoke the HNU Clinic app from your Google account permissions and notify clinic staff so they can complete the removal in the portal.
@@ -79,7 +82,7 @@ export default function PrivacyPage() {
                         <section className="space-y-3">
                             <h2 className="text-xl font-semibold text-green-700">Contact us</h2>
                             <p>
-                                Questions about this policy or your data can be directed to <Link href="mailto:clinic-support@hnu.edu" className="font-medium text-green-700 underline underline-offset-2">clinic-support@hnu.edu</Link>. You may also reach the clinic office at Holy Name University Main Campus during regular operating hours.
+                                Questions about this policy or your data can be directed to <Link href="mailto:hnucliniccapstone@gmail.com" className="font-medium text-green-700 underline underline-offset-2">hnucliniccapstone@gmail.com</Link>. You may also reach the clinic office at Holy Name University Main Campus during regular operating hours.
                             </p>
                         </section>
                     </div>
