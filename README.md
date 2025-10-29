@@ -74,8 +74,13 @@ prisma/
 | `EMAIL_FROM` | Verified sender email used in the `From` header (`src/lib/email.ts`). Falls back to `EMAIL_USER` if omitted. |
 | `EMAIL_CONTACT_INBOX` | Destination inbox for contact form submissions (defaults to `EMAIL_FROM` or `EMAIL_USER`). |
 | `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_SECURE`, `EMAIL_SMTP_REQUIRE_TLS`, `EMAIL_SMTP_REJECT_UNAUTHORIZED` | Optional SMTP tuning values to use a non-Gmail provider for notifications. |
-| `EMAIL_MAX_CONNECTIONS`, `EMAIL_MAX_MESSAGES` | Optional pooling controls for the Nodemailer transporter. |
-| `EMAIL_LIST_UNSUBSCRIBE` | Optional List-Unsubscribe header appended to all outbound emails. |
+| `EMAIL_SMTP_POOL`, `EMAIL_MAX_CONNECTIONS`, `EMAIL_MAX_MESSAGES` | Configure pooled delivery behaviour. Disable pooling entirely by setting `EMAIL_SMTP_POOL=0`. |
+| `EMAIL_SMTP_NAME`, `EMAIL_SMTP_LOCAL_ADDRESS` | Optional SMTP `name` greeting override and local network address binding. |
+| `EMAIL_SMTP_CONNECTION_TIMEOUT_MS`, `EMAIL_SMTP_GREETING_TIMEOUT_MS`, `EMAIL_SMTP_SOCKET_TIMEOUT_MS` | Optional timeout overrides (in milliseconds) for stubborn SMTP providers. |
+| `EMAIL_SMTP_TLS_MIN_VERSION`, `EMAIL_SMTP_TLS_CIPHERS` | Optional TLS hardening knobs for compliance with modern providers. |
+| `EMAIL_DKIM_DOMAIN`, `EMAIL_DKIM_SELECTOR`, `EMAIL_DKIM_PRIVATE_KEY`, `EMAIL_DKIM_PRIVATE_KEY_PATH`, `EMAIL_DKIM_CACHE_DIR` | Optional DKIM signing configuration to improve deliverability; provide either the raw key (`EMAIL_DKIM_PRIVATE_KEY`) or a path (`EMAIL_DKIM_PRIVATE_KEY_PATH`). |
+| `EMAIL_LIST_UNSUBSCRIBE`, `EMAIL_LIST_UNSUBSCRIBE_POST` | Optional List-Unsubscribe headers appended to all outbound emails. |
+| `EMAIL_X_MAILER` | Override the default `X-Mailer` header value (`"HNU Clinic Mailer"`). |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 
