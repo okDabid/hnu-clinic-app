@@ -197,6 +197,14 @@ export default function DoctorAccountPage() {
                 toast.error(data.error);
             } else {
                 toast.success("Profile updated successfully!");
+                if (data.verificationEmailSent) {
+                    const targetEmail = data.profile?.email?.trim();
+                    toast.success(
+                        targetEmail
+                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                            : "A verification email was sent. Please check your inbox to confirm the address."
+                    );
+                }
 
                 // Update local state to reflect readable blood type again
                 setProfile((prev) => ({
@@ -498,6 +506,15 @@ export default function DoctorAccountPage() {
                                                                                 toast.error(data.error);
                                                                             } else {
                                                                                 toast.success("Date of Birth saved!");
+                                                                                if (data.verificationEmailSent) {
+                                                                                    const targetEmail =
+                                                                                        data.profile?.email?.trim();
+                                                                                    toast.success(
+                                                                                        targetEmail
+                                                                                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                                                                                            : "A verification email was sent. Please check your inbox to confirm the address."
+                                                                                    );
+                                                                                }
                                                                                 await loadProfile();
                                                                             }
                                                                         } catch {

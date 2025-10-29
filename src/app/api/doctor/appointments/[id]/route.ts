@@ -43,12 +43,21 @@ function formatPatientName(patient: {
 
 function getPatientEmail(patient: {
     username: string;
-    student: { email: string | null } | null;
-    employee: { email: string | null } | null;
+    student: { email: string | null; email_verified_at: Date | null } | null;
+    employee: { email: string | null; email_verified_at: Date | null } | null;
 }) {
+    const studentEmail =
+        patient.student?.email && patient.student.email_verified_at
+            ? patient.student.email
+            : null;
+    const employeeEmail =
+        patient.employee?.email && patient.employee.email_verified_at
+            ? patient.employee.email
+            : null;
+
     return (
-        patient.student?.email ||
-        patient.employee?.email ||
+        studentEmail ||
+        employeeEmail ||
         (patient.username.includes("@") ? patient.username : "")
     );
 }
@@ -225,8 +234,12 @@ export async function PATCH(
                 patient: {
                     select: {
                         username: true,
-                        student: { select: { fname: true, lname: true, email: true } },
-                        employee: { select: { fname: true, lname: true, email: true } },
+                        student: {
+                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                        },
+                        employee: {
+                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                        },
                     },
                 },
                 clinic: { select: { clinic_name: true } },
@@ -358,8 +371,12 @@ export async function PATCH(
                     patient: {
                         select: {
                             username: true,
-                            student: { select: { fname: true, lname: true, email: true } },
-                            employee: { select: { fname: true, lname: true, email: true } },
+                            student: {
+                                select: { fname: true, lname: true, email: true, email_verified_at: true },
+                            },
+                            employee: {
+                                select: { fname: true, lname: true, email: true, email_verified_at: true },
+                            },
                         },
                     },
                     clinic: { select: { clinic_name: true } },
@@ -541,8 +558,12 @@ export async function PATCH(
                 patient: {
                     select: {
                         username: true,
-                        student: { select: { fname: true, lname: true, email: true } },
-                        employee: { select: { fname: true, lname: true, email: true } },
+                        student: {
+                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                        },
+                        employee: {
+                            select: { fname: true, lname: true, email: true, email_verified_at: true },
+                        },
                     },
                 },
                 clinic: { select: { clinic_name: true } },

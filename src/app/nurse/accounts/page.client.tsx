@@ -509,6 +509,14 @@ export function NurseAccountsPageClient({
                 toast.error(data.error);
             } else {
                 toast.success("Profile updated!");
+                if (data.verificationEmailSent) {
+                    const targetEmail = data.profile?.email?.trim();
+                    toast.success(
+                        targetEmail
+                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                            : "A verification email was sent. Please check your inbox to confirm the address."
+                    );
+                }
                 await loadProfile(); // reload with fresh data
             }
         } catch {
@@ -766,6 +774,15 @@ export function NurseAccountsPageClient({
                                                                                 toast.error(data.error);
                                                                             } else {
                                                                                 toast.success("Date of Birth saved!");
+                                                                                if (data.verificationEmailSent) {
+                                                                                    const targetEmail =
+                                                                                        data.profile?.email?.trim();
+                                                                                    toast.success(
+                                                                                        targetEmail
+                                                                                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                                                                                            : "A verification email was sent. Please check your inbox to confirm the address."
+                                                                                    );
+                                                                                }
                                                                                 await loadProfile();
                                                                             }
                                                                         } catch {

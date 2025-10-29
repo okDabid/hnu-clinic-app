@@ -10,6 +10,8 @@ import {
     BloodType,
     Prisma,
 } from "@prisma/client";
+import { issueEmailVerification } from "@/lib/email-verification";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 /** ---------- MAPPERS (College-only) ---------- */
 function mapDepartment(val?: string | null): Department | undefined {
@@ -199,12 +201,79 @@ export async function PUT(req: Request) {
             delete data.date_of_birth;
         }
 
+        let verificationEmail: string | null = null;
+        if (typeof profile.email === "string") {
+            const trimmedEmail = profile.email.trim();
+            const existingEmail = existingProfile.email ?? "";
+
+            if (!trimmedEmail) {
+                if (existingEmail) {
+                    data.email = null;
+                    data.email_verified_at = null;
+                } else {
+                    delete data.email;
+                }
+            } else if (trimmedEmail.toLowerCase() !== existingEmail.toLowerCase()) {
+                const rate = consumeRateLimit(
+                    `email-verify:${session.user.id}`,
+                    3,
+                    60 * 60_000
+                );
+                if (!rate.success) {
+                    const minutes = rate.retryAfterMs
+                        ? Math.ceil(rate.retryAfterMs / 60000)
+                        : null;
+                    const waitMessage =
+                        minutes && minutes > 0
+                            ? `Please wait ${minutes} minute${minutes === 1 ? "" : "s"} before requesting another verification email.`
+                            : "Please wait before requesting another verification email.";
+                    return NextResponse.json(
+                        { error: `Too many verification requests. ${waitMessage}` },
+                        { status: 429 }
+                    );
+                }
+
+                data.email = trimmedEmail;
+                data.email_verified_at = null;
+                verificationEmail = trimmedEmail;
+            } else {
+                delete data.email;
+            }
+        }
+
         const updated = await prisma.student.update({
             where: { user_id: session.user.id },
             data,
         });
 
-        return NextResponse.json({ success: true, profile: updated });
+        if (verificationEmail) {
+            const displayName =
+                `${updated.fname ?? ""} ${updated.lname ?? ""}`.trim() ||
+                user.username ||
+                "Clinic user";
+            try {
+                await issueEmailVerification({
+                    userId: session.user.id,
+                    email: verificationEmail,
+                    name: displayName,
+                });
+            } catch (error) {
+                console.error("[Scholar email verification]", error);
+                return NextResponse.json(
+                    {
+                        error:
+                            "Profile saved but the verification email could not be sent. Please try again later.",
+                    },
+                    { status: 500 }
+                );
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            profile: updated,
+            verificationEmailSent: Boolean(verificationEmail),
+        });
     } catch (err) {
         console.error("[PUT /api/scholar/account/me]", err);
         return NextResponse.json(

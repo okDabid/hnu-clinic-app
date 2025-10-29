@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Role, Gender, Prisma, BloodType } from "@prisma/client";
+import { issueEmailVerification } from "@/lib/email-verification";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 // Blood type mapping (text ⇄ enum)
 const bloodTypeMap: Record<string, BloodType> = {
@@ -154,12 +156,44 @@ export async function PUT(req: Request) {
 
         const current = user.employee;
 
-        // Prevent duplicate or blank email updates
-        if (
-            typeof data.email === "string" &&
-            (data.email.trim() === "" || data.email === current.email)
-        ) {
-            delete data.email;
+        let verificationEmail: string | null = null;
+        if (typeof profile.email === "string") {
+            const trimmedEmail = profile.email.trim();
+            const existingEmail = current.email ?? "";
+
+            if (!trimmedEmail) {
+                if (existingEmail) {
+                    data.email = null;
+                    data.email_verified_at = null;
+                } else {
+                    delete data.email;
+                }
+            } else if (trimmedEmail.toLowerCase() !== existingEmail.toLowerCase()) {
+                const rate = consumeRateLimit(
+                    `email-verify:${session.user.id}`,
+                    3,
+                    60 * 60_000
+                );
+                if (!rate.success) {
+                    const minutes = rate.retryAfterMs
+                        ? Math.ceil(rate.retryAfterMs / 60000)
+                        : null;
+                    const waitMessage =
+                        minutes && minutes > 0
+                            ? `Please wait ${minutes} minute${minutes === 1 ? "" : "s"} before requesting another verification email.`
+                            : "Please wait before requesting another verification email.";
+                    return NextResponse.json(
+                        { error: `Too many verification requests. ${waitMessage}` },
+                        { status: 429 }
+                    );
+                }
+
+                data.email = trimmedEmail;
+                data.email_verified_at = null;
+                verificationEmail = trimmedEmail;
+            } else {
+                delete data.email;
+            }
         }
 
         // Prevent duplicate or blank contact updates
@@ -186,6 +220,29 @@ export async function PUT(req: Request) {
             data,
         });
 
+        if (verificationEmail) {
+            const displayName =
+                `${updated.fname ?? ""} ${updated.lname ?? ""}`.trim() ||
+                user.username ||
+                "Clinic user";
+            try {
+                await issueEmailVerification({
+                    userId: session.user.id,
+                    email: verificationEmail,
+                    name: displayName,
+                });
+            } catch (error) {
+                console.error("[Nurse email verification]", error);
+                return NextResponse.json(
+                    {
+                        error:
+                            "Profile saved but the verification email could not be sent. Please try again later.",
+                    },
+                    { status: 500 }
+                );
+            }
+        }
+
         return NextResponse.json({
             success: true,
             profile: {
@@ -195,6 +252,7 @@ export async function PUT(req: Request) {
                     ? bloodTypeEnumMap[updated.bloodtype] || updated.bloodtype
                     : null,
             },
+            verificationEmailSent: Boolean(verificationEmail),
         });
     } catch (err: unknown) {
         console.error("[PUT /api/nurse/accounts/me]", err);
