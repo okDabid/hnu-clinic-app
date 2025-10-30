@@ -252,7 +252,7 @@ export async function sendEmail({
     replyTo,
     text,
 }: SendEmailOptions): Promise<void> {
-    const emailUser = getRequiredEnv("EMAIL_USER");
+    const emailUser = getRequiredEnv("GMAIL_USER");
     const fromHeader = formatAddress(emailUser, fromName);
     const toHeader = formatAddress(to);
     const replyToHeader = replyTo ? formatAddress(replyTo) : undefined;

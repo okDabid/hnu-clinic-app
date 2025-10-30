@@ -71,7 +71,7 @@ prisma/
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
 | `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
-| `EMAIL_USER` | Gmail address used as the sender in notifications (`src/lib/email.ts`). |
+| `GMAIL_USER` | Gmail address used as the sender in notifications (`src/lib/email.ts`). |
 | `GMAIL_CLIENT_ID` | OAuth client ID for Gmail API access (`src/lib/email.ts`). |
 | `GMAIL_CLIENT_SECRET` | OAuth client secret paired with the client ID (`src/lib/email.ts`). |
 | `GMAIL_REFRESH_TOKEN` | Long-lived refresh token used to mint Gmail access tokens (`src/lib/email.ts`). |
