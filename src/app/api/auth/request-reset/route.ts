@@ -91,14 +91,6 @@ async function handler(req: Request) {
 
         // Atomic token handling with rate limit
         const createdToken = await prisma.$transaction(async (tx) => {
-            const existing = await tx.passwordResetToken.findFirst({
-                where: { userId: user.user_id, expiresAt: { gt: new Date() } },
-            });
-
-            if (existing) {
-                throw new Error("Reset already requested recently.");
-            }
-
             await tx.passwordResetToken.deleteMany({
                 where: { userId: user.user_id, contact: normalized.normalized },
             });
@@ -208,16 +200,6 @@ This message was automatically sent from the HNU Clinic Capstone Project website
         console.error("REQUEST-RESET ERROR DETAILS:", error);
         const message =
             error instanceof Error ? error.message : "Unknown error occurred";
-
-        if (message === "Reset already requested recently.") {
-            return NextResponse.json(
-                {
-                    error:
-                        "A reset code was already sent recently. Please try again later.",
-                },
-                { status: 429 }
-            );
-        }
 
         if (message === "Unable to generate reset code. Please try again.") {
             return NextResponse.json(
