@@ -17,6 +17,7 @@ export async function middleware(req: NextRequest) {
         "/verify-reset",
         "/api/auth",
         "/api/contact",
+        "/api/account/email/verify",
     ];
 
     if (publicPaths.some((path) => pathname.startsWith(path))) {
