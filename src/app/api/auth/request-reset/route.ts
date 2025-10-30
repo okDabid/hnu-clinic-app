@@ -189,7 +189,21 @@ This message was automatically sent from the HNU Clinic Capstone Project website
                 );
             }
 
-            throw new Error("Failed to send reset email. Please try again later.");
+            const missingSender =
+                emailError instanceof Error &&
+                emailError.message.includes("Missing GMAIL_USER in environment");
+
+            if (missingSender) {
+                return NextResponse.json(
+                    { error: "Email service is not configured." },
+                    { status: 500 },
+                );
+            }
+
+            return NextResponse.json(
+                { error: "Failed to send reset email. Please try again later." },
+                { status: 500 },
+            );
         }
 
         return NextResponse.json({
@@ -204,13 +218,6 @@ This message was automatically sent from the HNU Clinic Capstone Project website
         if (message === "Unable to generate reset code. Please try again.") {
             return NextResponse.json(
                 { error: "Unable to generate reset code. Please try again." },
-                { status: 500 }
-            );
-        }
-
-        if (message === "Failed to send reset email. Please try again later.") {
-            return NextResponse.json(
-                { error: "Failed to send reset email. Please try again later." },
                 { status: 500 }
             );
         }
