@@ -197,7 +197,7 @@ export default function HomePage() {
                         <div className="space-y-4 text-center md:text-left">
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Why we ask to connect your Google account</h3>
                             <p className="text-gray-600">
-                                Google authentication lets us confirm you belong to the Holy Name University community without requesting new passwords. We only request your basic profile (name and email address) so the portal can recognize you and personalize notifications.
+                                Google authentication lets us confirm you belong to the Holy Name University community without requesting new passwords. We request only your basic Google profile so the portal can recognize you, match you with the right clinic record, and deliver notifications described in our privacy policy.
                             </p>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">
@@ -207,10 +207,10 @@ export default function HomePage() {
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
                                     <p>
-                                        When you choose “Continue with Google,” the app receives your name, primary email address, and profile photo from Google. No calendars, files, Drive contents, or classroom data are requested or stored.
+                                        When you choose “Continue with Google,” the app receives your name, primary email address, and (if available) your profile photo. No calendars, files, Drive contents, or classroom data are requested or stored, and we do not gain access to your Gmail inbox.
                                     </p>
                                     <p>
-                                        We use these details to create or match your clinic account, display the right profile information, and send appointment and password reset emails.
+                                        We use these details to create or match your clinic account, display the right profile information, and send appointment and password reset emails. If clinic staff need additional demographics—such as the campus ID and birthdate listed in our privacy policy—they will only collect them during the manual account provisioning process.
                                     </p>
                                 </CardContent>
                             </Card>
@@ -223,7 +223,7 @@ export default function HomePage() {
                                         HNU Clinic encrypts data at rest and in transit. Only authorized clinic personnel can view your record, and every action is audited.
                                     </p>
                                     <p>
-                                        Review the full details in our <Link href="/privacy" className="font-semibold text-green-700 underline underline-offset-2">Privacy Policy</Link>. You can revoke access at any time by contacting the clinic support desk.
+                                        Review the full details in our <Link href="/privacy" className="font-semibold text-green-700 underline underline-offset-2">Privacy Policy</Link>. It covers how long information is retained, what additional information is captured during clinic visits, and how to contact us to revoke access or request account removal.
                                     </p>
                                 </CardContent>
                             </Card>
