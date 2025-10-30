@@ -197,7 +197,7 @@ export default function HomePage() {
                         <div className="space-y-4 text-center md:text-left">
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Why we ask to connect your Google account</h3>
                             <p className="text-gray-600">
-                                You connect your own clinic Gmail account that was provisioned by the school nurse. Using that account is how we verify you are part of the Holy Name University community without requiring another password and how we look up the record referenced in our privacy policy.
+                                Signing in with the clinic Gmail account that the school nurse created for you lets us confirm you are an HNU patient and routes you to the correct chart without asking for a separate username and password. The connection only happens when you choose to sign in, and it follows the access rules described in our privacy policy.
                             </p>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">
@@ -207,10 +207,10 @@ export default function HomePage() {
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
                                     <p>
-                                        When you connect that nurse-provisioned clinic Gmail account, the app receives your name, primary email address, and (if available) your profile photo. We do not accept personal Gmail accounts, we do not read your inbox, and we never request calendars, files, or Drive contents.
+                                        Connecting that nurse-issued Gmail account shares your name, primary email address, and (if available) your profile photo with the app. We refuse personal Gmail accounts, never read your inbox, and do not request calendars, files, or Drive contents.
                                     </p>
                                     <p>
-                                        Those limited details allow us to confirm which clinic profile was created for you, display the correct information, and send appointment or password reset emails. Any additional demographics—such as the campus ID and birthdate listed in our privacy policy—are collected only by clinic staff during the manual account setup handled by the school nurse.
+                                        We use only those basics to match you to the clinic record already prepared for you, show the right information, and send appointment or password reset notices. Any extra demographics—like the campus ID or birthdate referenced in the privacy policy—come directly from the nurse who set up your profile, not from Google.
                                     </p>
                                 </CardContent>
                             </Card>
@@ -220,10 +220,10 @@ export default function HomePage() {
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
                                     <p>
-                                        HNU Clinic encrypts data at rest and in transit. Only authorized clinic personnel can view your record, and every action is audited.
+                                        HNU Clinic encrypts data at rest and in transit, limits access to authorized medical staff, and records an audit trail of every sign-in and chart update.
                                     </p>
                                     <p>
-                                        Review the full details in our <Link href="/privacy" className="font-semibold text-green-700 underline underline-offset-2">Privacy Policy</Link>. It covers how long information is retained, what additional information is captured during clinic visits, and how to contact us to revoke access or request account removal.
+                                        You can review retention timelines, request removal, or contact the clinic team for help at any time through our <Link href="/privacy" className="font-semibold text-green-700 underline underline-offset-2">Privacy Policy</Link>.
                                     </p>
                                 </CardContent>
                             </Card>
