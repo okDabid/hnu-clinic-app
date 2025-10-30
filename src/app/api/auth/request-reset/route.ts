@@ -1,15 +1,30 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { generateNumericCode } from "@/lib/security";
-import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
+import { ipKey, withRateLimit } from "@/lib/rate-limit";
 
 async function handler(req: Request) {
     try {
-        const { contact } = await req.json();
+        let body: unknown;
+        try {
+            body = await req.json();
+        } catch {
+            return NextResponse.json(
+                { error: "Invalid JSON payload." },
+                { status: 400 }
+            );
+        }
+
+        const contact =
+            typeof body === "object" && body && "contact" in body
+                ? (body as { contact?: unknown }).contact
+                : undefined;
 
         if (typeof contact !== "string") {
             return NextResponse.json(
@@ -72,33 +87,44 @@ async function handler(req: Request) {
         if (user.employee) fullName = `${user.employee.fname} ${user.employee.lname}`;
 
         // Generate OTP and expiry
-        const code = generateNumericCode(6);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
         // Atomic token handling with rate limit
-        await prisma.$transaction(async (tx) => {
-            const existing = await tx.passwordResetToken.findFirst({
-                where: { userId: user.user_id, expiresAt: { gt: new Date() } },
-            });
-
-            if (existing) {
-                throw new Error("Reset already requested recently.");
-            }
-
+        const createdToken = await prisma.$transaction(async (tx) => {
             await tx.passwordResetToken.deleteMany({
                 where: { userId: user.user_id, contact: normalized.normalized },
             });
 
-            await tx.passwordResetToken.create({
-                data: {
-                    userId: user.user_id,
-                    token: code,
-                    contact: normalized.normalized,
-                    type: normalized.type,
-                    expiresAt,
-                },
-            });
+            for (let attempt = 0; attempt < 5; attempt += 1) {
+                const code = generateNumericCode(6);
+
+                try {
+                    return await tx.passwordResetToken.create({
+                        data: {
+                            userId: user.user_id,
+                            token: code,
+                            contact: normalized.normalized,
+                            type: normalized.type,
+                            expiresAt,
+                        },
+                        select: { id: true, token: true },
+                    });
+                } catch (error) {
+                    if (
+                        error instanceof Prisma.PrismaClientKnownRequestError &&
+                        error.code === "P2002"
+                    ) {
+                        continue;
+                    }
+
+                    throw error;
+                }
+            }
+
+            throw new Error("Unable to generate reset code. Please try again.");
         });
+
+        const code = createdToken.token;
 
         const htmlContent = `
         <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0fdf4; padding: 24px; border-radius: 16px; border: 1px solid #bbf7d0;">
@@ -144,13 +170,27 @@ If you didn't request this, please ignore this email.
 
 This message was automatically sent from the HNU Clinic Capstone Project website.`;
 
-        await sendEmail({
-            to: normalized.normalized,
-            subject: "Password Reset Code",
-            html: htmlContent,
-            fromName: "HNU Clinic",
-            text: textContent,
-        });
+        try {
+            await sendEmail({
+                to: normalized.normalized,
+                subject: "Password Reset Code",
+                html: htmlContent,
+                fromName: "HNU Clinic",
+                text: textContent,
+            });
+        } catch (emailError) {
+            console.error("Failed to send reset email:", emailError);
+            try {
+                await prisma.passwordResetToken.delete({ where: { id: createdToken.id } });
+            } catch (cleanupError) {
+                console.error(
+                    "Failed to clean up reset token after email error:",
+                    cleanupError,
+                );
+            }
+
+            throw new Error("Failed to send reset email. Please try again later.");
+        }
 
         return NextResponse.json({
             success: true,
@@ -161,37 +201,33 @@ This message was automatically sent from the HNU Clinic Capstone Project website
         const message =
             error instanceof Error ? error.message : "Unknown error occurred";
 
-        if (message === "Reset already requested recently.") {
+        if (message === "Unable to generate reset code. Please try again.") {
             return NextResponse.json(
-                {
-                    error:
-                        "A reset code was already sent recently. Please try again later.",
-                },
-                { status: 429 }
+                { error: "Unable to generate reset code. Please try again." },
+                { status: 500 }
+            );
+        }
+
+        if (message === "Failed to send reset email. Please try again later.") {
+            return NextResponse.json(
+                { error: "Failed to send reset email. Please try again later." },
+                { status: 500 }
             );
         }
 
         return NextResponse.json(
-            { error: "Internal server error.", details: message },
+            { error: "Internal server error." },
             { status: 500 }
         );
     }
 }
 
 export const POST = withRateLimit(
-    [
-        {
-            key: ipKey("auth:request-reset:ip"),
-            limit: 5,
-            windowMs: 10 * 60_000,
-            message: "Too many reset requests from this IP. Please wait before trying again.",
-        },
-        {
-            key: jsonFieldKey("contact", "auth:request-reset:contact"),
-            limit: 3,
-            windowMs: 15 * 60_000,
-            message: "A reset code was already sent recently. Please check your inbox or try later.",
-        },
-    ],
+    {
+        key: ipKey("auth:request-reset:ip"),
+        limit: 5,
+        windowMs: 10 * 60_000,
+        message: "Too many reset requests from this IP. Please wait before trying again.",
+    },
     handler
 );
