@@ -18,7 +18,6 @@ import {
 const navigation = [
     { href: "#features", label: "Features" },
     { href: "#workflow", label: "Workflow" },
-    { href: "#data-use", label: "Data Use" },
     { href: "/about", label: "About" },
     { href: "/privacy", label: "Privacy" },
     { href: "#contact", label: "Contact" },
@@ -185,48 +184,6 @@ export default function HomePage() {
                                     </Card>
                                 ))}
                             </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section
-                    id="data-use"
-                    className="bg-white px-6 py-16 md:px-12 md:py-20"
-                >
-                    <div className="mx-auto max-w-6xl space-y-10">
-                        <div className="space-y-4 text-center md:text-left">
-                            <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Why we ask to connect your Google account</h3>
-                            <p className="text-gray-600">
-                                Signing in with the clinic Gmail account that the school nurse created for you lets us confirm you are an HNU patient and routes you to the correct chart without asking for a separate username and password. The connection only happens when you choose to sign in, and it follows the access rules described in our privacy policy.
-                            </p>
-                        </div>
-                        <div className="grid gap-6 md:grid-cols-2">
-                            <Card className="rounded-2xl border-green-100 bg-white/95 shadow-lg">
-                                <CardHeader>
-                                    <CardTitle className="text-xl text-green-700">Data we receive</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
-                                    <p>
-                                        Connecting that nurse-issued Gmail account shares your name, primary email address, and (if available) your profile photo with the app. We refuse personal Gmail accounts, never read your inbox, and do not request calendars, files, or Drive contents.
-                                    </p>
-                                    <p>
-                                        We use only those basics to match you to the clinic record already prepared for you, show the right information, and send appointment or password reset notices. Any extra demographics—like the campus ID or birthdate referenced in the privacy policy—come directly from the nurse who set up your profile, not from Google.
-                                    </p>
-                                </CardContent>
-                            </Card>
-                            <Card className="rounded-2xl border-green-100 bg-white/95 shadow-lg">
-                                <CardHeader>
-                                    <CardTitle className="text-xl text-green-700">How we protect your information</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
-                                    <p>
-                                        HNU Clinic encrypts data at rest and in transit, limits access to authorized medical staff, and records an audit trail of every sign-in and chart update.
-                                    </p>
-                                    <p>
-                                        You can review retention timelines, request removal, or contact the clinic team for help at any time through our <Link href="/privacy" className="font-semibold text-green-700 underline underline-offset-2">Privacy Policy</Link>.
-                                    </p>
-                                </CardContent>
-                            </Card>
                         </div>
                     </div>
                 </section>
