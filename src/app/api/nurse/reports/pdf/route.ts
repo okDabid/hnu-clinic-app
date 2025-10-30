@@ -443,7 +443,7 @@ export async function GET(req: NextRequest) {
     let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { searchParams } = new URL(req.url);
         const yearParam = Number.parseInt(searchParams.get("year") ?? "", 10);

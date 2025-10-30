@@ -6,7 +6,7 @@ import { Role } from "@prisma/client";
 
 export async function POST(req: Request) {
     try {
-        const session = await requireRole([Role.NURSE, Role.ADMIN]);
+        const session = await requireRole([Role.NURSE]);
 
         const body = await req.json();
         const { appointment_id, reason_of_visit, findings, diagnosis } = body;

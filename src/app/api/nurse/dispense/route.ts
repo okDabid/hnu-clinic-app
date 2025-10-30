@@ -5,7 +5,7 @@ import { Role } from "@prisma/client";
 
 export async function GET() {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const dispenses = await listDispenses();
         return NextResponse.json(dispenses);
@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const {
             med_id,

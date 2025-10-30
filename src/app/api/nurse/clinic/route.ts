@@ -6,7 +6,7 @@ import { handleAuthError, requireRole } from "@/lib/authorization";
 // GET /api/nurse/clinic
 export async function GET() {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const clinics = await prisma.clinic.findMany();
         return NextResponse.json(clinics);
@@ -21,7 +21,7 @@ export async function GET() {
 // POST /api/nurse/clinic
 export async function POST(req: NextRequest) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { clinic_name, clinic_location, clinic_contactno } = await req.json();
 

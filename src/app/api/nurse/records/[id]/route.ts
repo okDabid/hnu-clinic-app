@@ -13,7 +13,7 @@ export async function PATCH(
     { params }: RecordRouteContext
 ) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { id } = await params;
 

@@ -6,7 +6,7 @@ import { Role } from "@prisma/client";
 
 export async function GET() {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const records = await fetchPatientRecords();
         return NextResponse.json(records);

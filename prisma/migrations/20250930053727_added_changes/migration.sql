@@ -8,7 +8,7 @@
 
 */
 -- CreateEnum
-CREATE TYPE "public"."Role" AS ENUM ('NURSE', 'DOCTOR', 'SCHOLAR', 'PATIENT', 'ADMIN');
+CREATE TYPE "public"."Role" AS ENUM ('NURSE', 'DOCTOR', 'SCHOLAR', 'PATIENT');
 
 -- CreateEnum
 CREATE TYPE "public"."AppointmentStatus" AS ENUM ('Pending', 'Approved', 'Moved', 'Cancelled', 'Completed');

@@ -6,7 +6,7 @@ import { Role } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { searchParams } = new URL(req.url);
 

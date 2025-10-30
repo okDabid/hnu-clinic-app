@@ -81,7 +81,7 @@ function resolveMonthRange(monthParam: string | null) {
 
 export async function GET(req: NextRequest, { params }: RouteContext) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { id } = await params;
         if (!id) {

@@ -6,7 +6,7 @@ import { handleAuthError, requireRole } from "@/lib/authorization";
 // GET stays the same (no changes)
 export async function GET() {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const now = new Date();
 
@@ -162,7 +162,7 @@ export async function GET() {
 // POST updated to support enums + strength
 export async function POST(req: Request) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const body = await req.json();
         const { clinic_id, item_name, quantity, expiry, category, item_type, strength, unit } = body as {
