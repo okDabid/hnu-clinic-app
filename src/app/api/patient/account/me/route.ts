@@ -154,10 +154,21 @@ function buildEmployeeUpdateInput(
 ): Prisma.EmployeeUpdateInput {
     const data: Prisma.EmployeeUpdateInput = {};
 
-    if (typeof raw.fname === "string") data.fname = raw.fname;
-    if (typeof raw.mname === "string") data.mname = raw.mname;
-    if (typeof raw.lname === "string") data.lname = raw.lname;
-    if (typeof raw.email === "string") data.email = raw.email;
+    const stringField = (key: string) =>
+        typeof raw[key] === "string" ? (raw[key] as string).trim() : undefined;
+
+    const fname = stringField("fname");
+    if (fname !== undefined) data.fname = fname;
+
+    const mname = stringField("mname");
+    if (mname !== undefined) data.mname = mname;
+
+    const lname = stringField("lname");
+    if (lname !== undefined) data.lname = lname;
+
+    const email = stringField("email");
+    if (email !== undefined) data.email = email;
+
     if (isGender(raw.gender)) data.gender = raw.gender;
 
     const dob = toDate(raw.date_of_birth);
@@ -166,16 +177,27 @@ function buildEmployeeUpdateInput(
     const bloodtype = mapBloodType(raw.bloodtype as string);
     if (bloodtype) data.bloodtype = bloodtype;
 
-    if (typeof raw.contactno === "string") data.contactno = raw.contactno;
-    if (typeof raw.address === "string") data.address = raw.address;
-    if (typeof raw.allergies === "string") data.allergies = raw.allergies;
-    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
-    if (typeof raw.emergencyco_name === "string")
-        data.emergencyco_name = raw.emergencyco_name;
-    if (typeof raw.emergencyco_num === "string")
-        data.emergencyco_num = raw.emergencyco_num;
-    if (typeof raw.emergencyco_relation === "string")
-        data.emergencyco_relation = raw.emergencyco_relation;
+    const contactno = stringField("contactno");
+    if (contactno !== undefined) data.contactno = contactno;
+
+    const address = stringField("address");
+    if (address !== undefined) data.address = address;
+
+    const allergies = stringField("allergies");
+    if (allergies !== undefined) data.allergies = allergies;
+
+    const medicalCond = stringField("medical_cond");
+    if (medicalCond !== undefined) data.medical_cond = medicalCond;
+
+    const emergencyName = stringField("emergencyco_name");
+    if (emergencyName !== undefined) data.emergencyco_name = emergencyName;
+
+    const emergencyNumber = stringField("emergencyco_num");
+    if (emergencyNumber !== undefined) data.emergencyco_num = emergencyNumber;
+
+    const emergencyRelation = stringField("emergencyco_relation");
+    if (emergencyRelation !== undefined)
+        data.emergencyco_relation = emergencyRelation;
 
     return data;
 }
@@ -384,6 +406,51 @@ export async function PUT(req: Request) {
                 }
             }
 
+            if (typeof data.contactno === "string") {
+                const trimmedContact = data.contactno.trim();
+
+                if (!trimmedContact) {
+                    if (employeeProfile.contactno) {
+                        data.contactno = null;
+                    } else {
+                        delete data.contactno;
+                    }
+                } else {
+                    if (trimmedContact === employeeProfile.contactno) {
+                        delete data.contactno;
+                    } else {
+                        data.contactno = trimmedContact;
+                        const duplicateContact = await prisma.employee.findFirst({
+                            where: {
+                                contactno: trimmedContact,
+                                NOT: { user_id: session.user.id },
+                            },
+                        });
+                        if (duplicateContact) {
+                            return NextResponse.json(
+                                { error: "Contact number already exists." },
+                                { status: 400 }
+                            );
+                        }
+                    }
+                }
+            }
+
+            if (typeof data.email === "string") {
+                const duplicateEmail = await prisma.employee.findFirst({
+                    where: {
+                        email: data.email,
+                        NOT: { user_id: session.user.id },
+                    },
+                });
+                if (duplicateEmail) {
+                    return NextResponse.json(
+                        { error: "Email already exists." },
+                        { status: 400 }
+                    );
+                }
+            }
+
             const updated = await prisma.employee.update({
                 where: { user_id: session.user.id },
                 data,
@@ -429,6 +496,14 @@ export async function PUT(req: Request) {
             { status: 404 }
         );
     } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+            const field = (err.meta?.target as string[])?.[0] ?? "field";
+            return NextResponse.json(
+                { error: `Duplicate ${field} — this value is already in use.` },
+                { status: 400 }
+            );
+        }
+
         console.error("[PUT /api/patient/account/me]", err);
         return NextResponse.json(
             { error: "Failed to update profile" },
