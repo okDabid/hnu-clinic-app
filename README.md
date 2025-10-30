@@ -20,6 +20,7 @@ A role-based health record and appointment platform built with Next.js for the H
 - **Tailwind CSS v4** powers responsive styling, complemented by **shadcn/ui** components in `src/components/ui` for consistent theming and Radix-powered interactions.
 - **Lucide React icons** provide the iconography across dashboards and shared components.
 - **NextAuth Credentials provider** (configured in `src/lib/auth.ts`) manages secure role-aware authentication.
+- **Direct Gmail API integration** in `src/lib/email.ts` delivers transactional mail without relying on Nodemailer.
 - **Zod schemas** validate API payloads, hardening endpoints such as `src/app/api/nurse/accounts/password/route.ts`.
 
 ## 🏥 Platform Overview
@@ -70,7 +71,10 @@ prisma/
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
 | `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
-| `EMAIL_USER`, `EMAIL_PASS` | SMTP credentials for contact emails (`src/app/api/contact/route.ts`, `src/lib/email.ts`). |
+| `EMAIL_USER` | Gmail address used as the sender in notifications (`src/lib/email.ts`). |
+| `GMAIL_CLIENT_ID` | OAuth client ID for Gmail API access (`src/lib/email.ts`). |
+| `GMAIL_CLIENT_SECRET` | OAuth client secret paired with the client ID (`src/lib/email.ts`). |
+| `GMAIL_REFRESH_TOKEN` | Long-lived refresh token used to mint Gmail access tokens (`src/lib/email.ts`). |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 
