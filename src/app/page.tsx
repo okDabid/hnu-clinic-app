@@ -74,7 +74,7 @@ export default function HomePage() {
                                 Manage health records, book visits, and stay connected.
                             </h2>
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
-                                Our public homepage at <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link> introduces the system students, faculty, and staff use to request appointments, manage records, and coordinate care.
+                                Our public homepage at <Link href="https://www.hnu-clinic-app.com/" className="font-semibold text-green-700 underline underline-offset-2">www.hnu-clinic-app.com</Link> introduces the system students, faculty, and staff use to request appointments, manage records, and coordinate care.
                             </p>
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
                                 We help patients schedule visits, notify doctors of updates, and keep sensitive information synchronized between care teams—all while upholding the privacy expectations of the HNU community.
@@ -198,7 +198,7 @@ export default function HomePage() {
                             <div className="space-y-4 rounded-2xl border border-green-100 bg-green-50/60 p-6 text-sm text-green-700">
                                 <p className="font-semibold text-green-700">Verified presence</p>
                                 <p>
-                                    This application is presented by HNU Clinic and currently hosted on <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold underline underline-offset-2">hnu-clinic-app.vercel.app</Link>, where you can review privacy details before signing in.
+                                    This application is presented by HNU Clinic and currently hosted on <Link href="https://www.hnu-clinic-app.com/" className="font-semibold underline underline-offset-2">www.hnu-clinic-app.com</Link>, where you can review privacy details before signing in.
                                 </p>
                                 <p>
                                     Our team typically responds within one business day.
