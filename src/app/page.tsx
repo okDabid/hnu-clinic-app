@@ -197,7 +197,7 @@ export default function HomePage() {
                         <div className="space-y-4 text-center md:text-left">
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Why we ask to connect your Google account</h3>
                             <p className="text-gray-600">
-                                We use Google sign-in only with the clinic Gmail accounts issued by the school nurse. Signing in with that clinic-managed account confirms you belong to the Holy Name University community without creating another password and lets us match you to the record referenced in our privacy policy.
+                                You connect your own clinic Gmail account that was provisioned by the school nurse. Using that account is how we verify you are part of the Holy Name University community without requiring another password and how we look up the record referenced in our privacy policy.
                             </p>
                         </div>
                         <div className="grid gap-6 md:grid-cols-2">
@@ -207,7 +207,7 @@ export default function HomePage() {
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-sm leading-relaxed text-gray-600">
                                     <p>
-                                        When you choose “Continue with Google” using the nurse-provisioned clinic Gmail account, the app receives your name, primary email address, and (if available) your profile photo. We do not accept personal Gmail accounts, we do not read your inbox, and we never request calendars, files, or Drive contents.
+                                        When you connect that nurse-provisioned clinic Gmail account, the app receives your name, primary email address, and (if available) your profile photo. We do not accept personal Gmail accounts, we do not read your inbox, and we never request calendars, files, or Drive contents.
                                     </p>
                                     <p>
                                         Those limited details allow us to confirm which clinic profile was created for you, display the correct information, and send appointment or password reset emails. Any additional demographics—such as the campus ID and birthdate listed in our privacy policy—are collected only by clinic staff during the manual account setup handled by the school nurse.
