@@ -23,7 +23,7 @@ function handleError(error: unknown, message = "Server error") {
 // --------------------
 export async function POST(req: Request) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const body = await req.json();
 
@@ -155,7 +155,7 @@ export async function POST(req: Request) {
 // --------------------
 export async function GET() {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const users = await prisma.users.findMany({
             include: {
@@ -190,7 +190,7 @@ export async function GET() {
 // --------------------
 export async function PATCH(req: Request) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { userId, status } = (await req.json()) as {
             userId: string;

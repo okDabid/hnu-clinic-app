@@ -13,7 +13,7 @@ export async function GET(
     { params }: ClinicRouteContext
 ) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { id } = await params;
 
@@ -44,7 +44,7 @@ export async function PUT(
     { params }: ClinicRouteContext
 ) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const { id } = await params;
 

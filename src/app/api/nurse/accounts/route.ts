@@ -70,7 +70,7 @@ async function ensureUniqueEmployeeId(value: string): Promise<string> {
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const payload = await req.json();
         const roleEnum = payload.role as Role;
@@ -213,7 +213,7 @@ export async function POST(req: Request) {
 // ---------------- LIST USERS ----------------
 export async function GET() {
     try {
-        await requireRole([Role.NURSE, Role.ADMIN]);
+        await requireRole([Role.NURSE]);
 
         const users = await prisma.users.findMany({
             include: { student: true, employee: true },
@@ -268,7 +268,7 @@ export async function GET() {
 // ---------------- UPDATE USER STATUS (Activate / Deactivate) ----------------
 export async function PUT(req: Request) {
     try {
-        const session = await requireRole([Role.NURSE, Role.ADMIN]);
+        const session = await requireRole([Role.NURSE]);
 
         const { user_id, newStatus } = await req.json();
 
