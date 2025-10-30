@@ -211,7 +211,43 @@ export default function HomePage() {
                     </div>
                 </section>
             </main>
-
+            <footer className="bg-green-900 text-green-50">
+                <div className="mx-auto grid max-w-7xl gap-8 px-6 py-12 md:px-12 md:grid-cols-3">
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">HNU Clinic</p>
+                        <p className="text-sm leading-relaxed text-green-100">
+                            Dedicated to providing a safe and welcoming health experience for the Holy Name University community.
+                        </p>
+                    </div>
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">Quick Links</p>
+                        <ul className="space-y-2 text-sm text-green-100">
+                            {navigation.map((item) => (
+                                <li key={item.label}>
+                                    <Link href={item.href} className="transition hover:text-white">
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="space-y-3">
+                        <p className="text-lg font-semibold">Connect with Us</p>
+                        <p className="text-sm leading-relaxed text-green-100">
+                            Reach out to the clinic staff for guidance on scheduling, records, or wellness programs tailored to campus needs.
+                        </p>
+                        <Link
+                            href="/learn-more"
+                            className="inline-flex text-sm font-medium text-white underline-offset-4 hover:underline"
+                        >
+                            Learn more about the system
+                        </Link>
+                    </div>
+                </div>
+                <div className="border-t border-green-700/60 py-4 text-center text-xs text-green-200">
+                    © {new Date().getFullYear()} HNU Clinic Capstone Project
+                </div>
+            </footer>
         </div>
     );
 }
