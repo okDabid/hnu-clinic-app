@@ -16,7 +16,7 @@ export default function PrivacyPage() {
                         </span>
                         <h1 className="text-3xl font-bold text-green-700 md:text-4xl">Privacy Policy</h1>
                         <p className="text-base leading-relaxed text-gray-700 md:text-lg">
-                            This policy explains how the HNU Clinic capstone application collects, uses, and protects information when you visit <Link href="https://hnu-clinic-app.vercel.app/" className="font-semibold text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link>, request an account, and use the scheduling, records, and notification features offered to the Holy Name University community.
+                            This policy explains how the HNU Clinic capstone application collects, uses, and protects information when you visit <Link href="https://www.hnu-clinic-app.com/" className="font-semibold text-green-700 underline underline-offset-2">www.hnu-clinic-app.com</Link>, request an account, and use the scheduling, records, and notification features offered to the Holy Name University community.
                         </p>
                     </div>
 
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
                                 The application encrypts information in transit and at rest. Role-based permissions ensure only authorized clinic personnel can view or update sensitive records, and key actions are logged for auditing.
                             </p>
                             <p>
-                                Hosting is currently provided through Vercel at <Link href="https://hnu-clinic-app.vercel.app/" className="font-medium text-green-700 underline underline-offset-2">hnu-clinic-app.vercel.app</Link>. Access is limited to the HNU Clinic team responsible for this capstone project.
+                                Hosting is currently provided through Vercel at <Link href="https://www.hnu-clinic-app.com/" className="font-medium text-green-700 underline underline-offset-2">www.hnu-clinic-app.com</Link>. Access is limited to the HNU Clinic team responsible for this capstone project.
                             </p>
                         </section>
 

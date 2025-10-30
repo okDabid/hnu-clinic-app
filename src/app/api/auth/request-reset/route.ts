@@ -131,7 +131,7 @@ async function handler(req: Request) {
           <div style="text-align: center; margin-bottom: 20px;">
             <div style="display: inline-block; background-color: #ffffff; border-radius: 50%; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
               <img
-                src="https://hnu-clinic-app.vercel.app/clinic-illustration.png"
+                src="https://www.hnu-clinic-app.com/clinic-illustration.png"
                 alt="HNU Clinic Logo"
                 width="48"
                 height="48"
