@@ -116,6 +116,7 @@ export function NurseAccountsPageClient({
     initialProfileLoaded,
 }: NurseAccountsPageClientProps) {
     const [users, setUsers] = useState<NurseAccountUser[]>(() => [...initialUsers]);
+    const [pendingStatusIds, setPendingStatusIds] = useState<string[]>([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -226,19 +227,37 @@ export function NurseAccountsPageClient({
 
 
     // Fetch users (deduplicated but allows same visible ID across different roles)
-    const loadUsers = useCallback(async () => {
+    const fetchUsers = useCallback(async () => {
+        const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
+        const data = await res.json();
+
+        if (!res.ok) {
+            const errorMessage =
+                data && typeof data === "object" && "error" in data
+                    ? (data as { error?: string }).error
+                    : "Failed to load users";
+            throw new Error(errorMessage || "Failed to load users");
+        }
+
+        return normalizeNurseAccountUsers(data as NurseAccountsUserApi[]);
+    }, []);
+
+    const loadUsers = useCallback(async (options?: { silent?: boolean }) => {
         try {
-            const res = await fetch("/api/nurse/accounts", { cache: "no-store" });
-            const data = await res.json();
-            const normalized = normalizeNurseAccountUsers(data as NurseAccountsUserApi[]);
-            startUsersTransition(() => setUsers(normalized));
+            const normalized = await fetchUsers();
+            if (options?.silent) {
+                setUsers(normalized);
+            } else {
+                startUsersTransition(() => setUsers(normalized));
+            }
         } catch (err) {
             console.error("Failed to load users:", err);
-            toast.error("Failed to load users", { position: "top-center" });
+            const message = err instanceof Error ? err.message : "Failed to load users";
+            toast.error(message, { position: "top-center" });
         } finally {
             setUsersLoaded(true);
         }
-    }, [startUsersTransition]);
+    }, [fetchUsers, startUsersTransition]);
 
 
     // Fetch own profile
@@ -555,6 +574,7 @@ export function NurseAccountsPageClient({
     // Toggle status
     async function handleToggle(user_id: string, current: "Active" | "Inactive") {
         const newStatus = current === "Active" ? "Inactive" : "Active";
+        setPendingStatusIds((prev) => (prev.includes(user_id) ? prev : [...prev, user_id]));
         try {
             const res = await fetch("/api/nurse/accounts", {
                 method: "PUT",
@@ -565,17 +585,18 @@ export function NurseAccountsPageClient({
             const data = await res.json();
 
             if (!res.ok) {
-                // Backend returned an error (e.g., 403)
-                toast.error(data.error || "Failed to update user status", { position: "top-center" });
-                return;
+                throw new Error((data && data.error) || "Failed to update user status");
             }
 
             // Successful update
             toast.success(data.message || `User ${newStatus}`, { position: "top-center" });
-            loadUsers();
+            await loadUsers({ silent: true });
         } catch (err) {
             console.error("Error toggling user:", err);
-            toast.error("Failed to update user status", { position: "top-center" });
+            const message = err instanceof Error ? err.message : "Failed to update user status";
+            toast.error(message, { position: "top-center" });
+        } finally {
+            setPendingStatusIds((prev) => prev.filter((id) => id !== user_id));
         }
     }
 
@@ -1325,64 +1346,73 @@ export function NurseAccountsPageClient({
                                     ) : filteredUsers.length > 0 ? (
                                         filteredUsers
                                             .slice((currentPage - 1) * 8, currentPage * 8)
-                                            .map((user) => (
-                                                <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-green-50 transition">
-                                                    <TableCell className="whitespace-nowrap text-xs sm:text-sm">{user.user_id}</TableCell>
-                                                    <TableCell className="whitespace-nowrap">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium text-gray-900">{user.role}</span>
-                                                            {user.role === "DOCTOR" && (
-                                                                user.specialization ? (
-                                                                    <span className="text-xs font-medium text-green-700">
-                                                                        {user.specialization}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-xs italic text-gray-500">
-                                                                        No specialization
-                                                                    </span>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>{user.fullName}</TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={`px-3 py-1 ${user.status === "Active"
-                                                                ? "bg-green-100 text-green-700 border-green-200"
-                                                                : "bg-red-100 text-red-700 border-red-200"
-                                                                }`}
-                                                        >
-                                                            {user.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    className={cn(
-                                                                        "gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors",
-                                                                        user.status === "Active"
-                                                                            ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-                                                                            : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
-                                                                    )}
-                                                                >
-                                                                    {user.status === "Active" ? (
-                                                                        <>
-                                                                            <Ban className="h-4 w-4" /> Deactivate
-                                                                        </>
+                                            .map((user) => {
+                                                const isStatusUpdating = pendingStatusIds.includes(user.accountId);
+                                                return (
+                                                    <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-green-50 transition">
+                                                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{user.user_id}</TableCell>
+                                                        <TableCell className="whitespace-nowrap">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-gray-900">{user.role}</span>
+                                                                {user.role === "DOCTOR" && (
+                                                                    user.specialization ? (
+                                                                        <span className="text-xs font-medium text-green-700">
+                                                                            {user.specialization}
+                                                                        </span>
                                                                     ) : (
-                                                                        <>
-                                                                            <CheckCircle2 className="h-4 w-4" /> Activate
-                                                                        </>
-                                                                    )}
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>
+                                                                        <span className="text-xs italic text-gray-500">
+                                                                            No specialization
+                                                                        </span>
+                                                                    )
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>{user.fullName}</TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`px-3 py-1 ${
+                                                                    user.status === "Active"
+                                                                        ? "bg-green-100 text-green-700 border-green-200"
+                                                                        : "bg-red-100 text-red-700 border-red-200"
+                                                                }`}
+                                                            >
+                                                                {user.status}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className={cn(
+                                                                            "gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors",
+                                                                            user.status === "Active"
+                                                                                ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                                                                : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
+                                                                        )}
+                                                                        disabled={isStatusUpdating}
+                                                                    >
+                                                                        {isStatusUpdating ? (
+                                                                            <>
+                                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                                                Updating...
+                                                                            </>
+                                                                        ) : user.status === "Active" ? (
+                                                                            <>
+                                                                                <Ban className="h-4 w-4" /> Deactivate
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <CheckCircle2 className="h-4 w-4" /> Activate
+                                                                            </>
+                                                                        )}
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>
                                                                         {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
                                                                     </AlertDialogTitle>
                                                                     <AlertDialogDescription>
@@ -1407,6 +1437,7 @@ export function NurseAccountsPageClient({
                                                                                 ? "bg-red-600 hover:bg-red-700 focus:ring-red-200"
                                                                                 : "bg-green-600 hover:bg-green-700 focus:ring-green-200"
                                                                         )}
+                                                                        disabled={isStatusUpdating}
                                                                         onClick={() => handleToggle(user.accountId, user.status)}
                                                                     >
                                                                         {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
@@ -1416,7 +1447,8 @@ export function NurseAccountsPageClient({
                                                         </AlertDialog>
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
+                                                );
+                                            })
                                     ) : (
                                         <TableRow>
                                             <TableCell colSpan={6} className="text-center text-gray-500 py-6">
