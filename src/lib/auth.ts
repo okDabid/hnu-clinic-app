@@ -70,47 +70,152 @@ export const authOptions: NextAuthOptions = {
                 }
                 const role = roleStr as Role;
 
-                // Find user (indexed query)
-                const user = await withDb(() =>
+                const baseUserSelect = {
+                    user_id: true,
+                    password: true,
+                    role: true,
+                    status: true,
+                } as const;
+
+                const baseUserWithRelationsSelect = {
+                    ...baseUserSelect,
+                    student: { select: { fname: true, lname: true } },
+                    employee: { select: { fname: true, lname: true } },
+                } as const;
+
+                type SelectedUser = {
+                    user_id: string;
+                    password: string;
+                    role: Role;
+                    status: AccountStatus;
+                    student?: { fname: string; lname: string } | null;
+                    employee?: { fname: string; lname: string } | null;
+                };
+
+                type UserQueryResult = {
+                    user: SelectedUser;
+                    profileName?: string | null;
+                } | null;
+
+                const byUsername: UserQueryResult = await withDb(() =>
                     prisma.users.findFirst({
                         where: {
                             role,
                             OR: [
                                 { username: id },
                                 { username: { startsWith: `${id}-` } },
-                                { student: { is: { student_id: id } } },
-                                { employee: { is: { employee_id: id } } },
                             ],
                         },
-                        select: {
-                            user_id: true,
-                            password: true,
-                            role: true,
-                            status: true,
-                            student: { select: { fname: true, lname: true } },
-                            employee: { select: { fname: true, lname: true } },
-                        },
-                    })
+                        select: baseUserWithRelationsSelect,
+                    }).then((user) => (user ? { user } : null))
                 );
 
+                let user: UserQueryResult = byUsername;
+
+                if (!user && (role === Role.DOCTOR || role === Role.NURSE)) {
+                    user = await withDb(() =>
+                        prisma.employee.findUnique({
+                            where: { employee_id: id },
+                            select: {
+                                fname: true,
+                                lname: true,
+                                user: { select: baseUserSelect },
+                            },
+                        }).then((record) =>
+                            record && record.user
+                                ? {
+                                      user: record.user,
+                                      profileName: `${record.fname} ${record.lname}`,
+                                  }
+                                : null
+                        )
+                    );
+                }
+
+                if (!user && role === Role.SCHOLAR) {
+                    user = await withDb(() =>
+                        prisma.student.findUnique({
+                            where: { student_id: id },
+                            select: {
+                                fname: true,
+                                lname: true,
+                                user: { select: baseUserSelect },
+                            },
+                        }).then((record) =>
+                            record && record.user
+                                ? {
+                                      user: record.user,
+                                      profileName: `${record.fname} ${record.lname}`,
+                                  }
+                                : null
+                        )
+                    );
+                }
+
+                if (!user && role === Role.PATIENT) {
+                    user = await withDb(() =>
+                        prisma.student.findUnique({
+                            where: { student_id: id },
+                            select: {
+                                fname: true,
+                                lname: true,
+                                user: { select: baseUserSelect },
+                            },
+                        }).then((record) =>
+                            record && record.user
+                                ? {
+                                      user: record.user,
+                                      profileName: `${record.fname} ${record.lname}`,
+                                  }
+                                : null
+                        )
+                    );
+
+                    if (!user) {
+                        user = await withDb(() =>
+                            prisma.employee.findUnique({
+                                where: { employee_id: id },
+                                select: {
+                                    fname: true,
+                                    lname: true,
+                                    user: { select: baseUserSelect },
+                                },
+                            }).then((record) =>
+                                record && record.user
+                                    ? {
+                                          user: record.user,
+                                          profileName: `${record.fname} ${record.lname}`,
+                                      }
+                                    : null
+                            )
+                        );
+                    }
+                }
+
                 if (!user) throw new Error("No account found with these credentials.");
-                if (user.status === AccountStatus.Inactive)
+
+                if (user.user.role !== role)
+                    throw new Error("Role mismatch for provided credentials.");
+
+                if (user.user.status === AccountStatus.Inactive)
                     throw new Error("This account is inactive. Please contact the administrator.");
 
-                // Password verification (non-blocking)
-                const ok = await bcrypt.compare(password, user.password);
+                const ok = await bcrypt.compare(password, user.user.password);
                 if (!ok) throw new Error("Invalid password.");
 
-                // Return user payload
+                const derivedName =
+                    user.profileName?.trim() ||
+                    (user.user.student
+                        ? `${user.user.student.fname} ${user.user.student.lname}`
+                        : user.user.employee
+                            ? `${user.user.employee.fname} ${user.user.employee.lname}`
+                            : "User");
+
                 return {
-                    id: user.user_id,
-                    name: user.student
-                        ? `${user.student.fname} ${user.student.lname}`
-                        : user.employee
-                            ? `${user.employee.fname} ${user.employee.lname}`
-                            : "User",
-                    role: user.role,
-                    status: user.status,
+                    id: user.user.user_id,
+                    name: derivedName,
+                    role: user.user.role,
+                    status: user.user.status,
                 };
             },
         }),
