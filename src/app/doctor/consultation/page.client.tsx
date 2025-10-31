@@ -36,6 +36,7 @@ import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Switch } from "@/components/ui/switch";
 
 import {
+    PH_TIME_ZONE,
     formatManilaISODate,
     formatTimeRange,
     manilaNow,
@@ -56,11 +57,39 @@ import {
 
 const MANILA_TIME_SUFFIX = "+08:00";
 
+function extractManilaDateParts(date: Date) {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: PH_TIME_ZONE,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
+
+    const parts = Object.fromEntries(
+        formatter.formatToParts(date).map((part) => [part.type, part.value])
+    );
+
+    const year = Number(parts.year ?? "");
+    const month = Number(parts.month ?? "");
+    const day = Number(parts.day ?? "");
+
+    if (!year || !month || !day) return null;
+
+    return { year, month, day };
+}
+
 function toCalendarDate(value: string | null | undefined) {
     if (!value) return null;
     const normalized = value.includes("T") ? value : `${value}T12:00:00${MANILA_TIME_SUFFIX}`;
     const date = new Date(normalized);
-    return Number.isNaN(date.getTime()) ? null : date;
+    if (Number.isNaN(date.getTime())) return null;
+
+    const parts = extractManilaDateParts(date);
+    if (!parts) return null;
+
+    const { year, month, day } = parts;
+
+    return new Date(year, month - 1, day, 12);
 }
 
 function formatMonthKeyFromDate(date: Date): string {
