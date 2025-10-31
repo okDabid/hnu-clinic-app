@@ -3,8 +3,9 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { ipKey, withRateLimit } from "@/lib/rate-limit";
 
-// define minimal relation types manually
-type UserRelation = {
+type MinimalUserRelation = {
+    fname: string;
+    lname: string;
     user: {
         user_id: string;
         role: string;
@@ -12,46 +13,84 @@ type UserRelation = {
     } | null;
 };
 
-type EmployeeWithUser = {
-    fname: string;
-    lname: string;
-} & UserRelation;
-
-type StudentWithUser = {
-    fname: string;
-    lname: string;
-} & UserRelation;
+const baseSelect = {
+    fname: true,
+    lname: true,
+    user: {
+        select: {
+            user_id: true,
+            role: true,
+            password: true,
+        },
+    },
+} as const;
 
 async function handler(req: Request) {
     try {
         const { role, employee_id, school_id, patient_id, password } =
             await req.json();
 
-        let userRecord: EmployeeWithUser | StudentWithUser | null = null;
+        const normalizedRole =
+            typeof role === "string" ? role.trim().toUpperCase() : "";
 
-        if (role === "NURSE" || role === "DOCTOR") {
-            userRecord = (await prisma.employee.findUnique({
-                where: { employee_id },
-                include: { user: true },
-            })) as EmployeeWithUser | null;
-        } else if (role === "SCHOLAR") {
-            userRecord = (await prisma.student.findUnique({
-                where: { student_id: school_id },
-                include: { user: true },
-            })) as StudentWithUser | null;
-        } else if (role === "PATIENT") {
-            userRecord =
-                ((await prisma.student.findUnique({
-                    where: { student_id: patient_id },
-                    include: { user: true },
-                })) as StudentWithUser | null) ||
-                ((await prisma.employee.findUnique({
-                    where: { employee_id: patient_id },
-                    include: { user: true },
-                })) as EmployeeWithUser | null);
+        if (typeof password !== "string" || password.length === 0) {
+            return NextResponse.json(
+                { error: "Password is required" },
+                { status: 400 }
+            );
         }
 
-        // not found
+        let userRecord: MinimalUserRelation | null = null;
+
+        if (normalizedRole === "NURSE" || normalizedRole === "DOCTOR") {
+            if (typeof employee_id !== "string" || employee_id.length === 0) {
+                return NextResponse.json(
+                    { error: "Employee ID is required" },
+                    { status: 400 }
+                );
+            }
+            userRecord = await prisma.employee.findUnique({
+                where: { employee_id },
+                select: baseSelect,
+            });
+        } else if (normalizedRole === "SCHOLAR") {
+            if (typeof school_id !== "string" || school_id.length === 0) {
+                return NextResponse.json(
+                    { error: "School ID is required" },
+                    { status: 400 }
+                );
+            }
+            userRecord = await prisma.student.findUnique({
+                where: { student_id: school_id },
+                select: baseSelect,
+            });
+        } else if (normalizedRole === "PATIENT") {
+            if (typeof patient_id !== "string" || patient_id.length === 0) {
+                return NextResponse.json(
+                    { error: "Patient ID is required" },
+                    { status: 400 }
+                );
+            }
+
+            const [studentRecord, employeeRecord] = await Promise.all([
+                prisma.student.findUnique({
+                    where: { student_id: patient_id },
+                    select: baseSelect,
+                }),
+                prisma.employee.findUnique({
+                    where: { employee_id: patient_id },
+                    select: baseSelect,
+                }),
+            ]);
+
+            userRecord = studentRecord || employeeRecord;
+        } else {
+            return NextResponse.json(
+                { error: "Unsupported role" },
+                { status: 400 }
+            );
+        }
+
         if (!userRecord || !userRecord.user) {
             return NextResponse.json(
                 { error: "Invalid credentials" },
@@ -59,7 +98,6 @@ async function handler(req: Request) {
             );
         }
 
-        // password check
         const isValid = await bcrypt.compare(password, userRecord.user.password);
         if (!isValid) {
             return NextResponse.json(
