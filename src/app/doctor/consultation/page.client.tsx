@@ -56,9 +56,21 @@ import {
 
 const MANILA_TIME_SUFFIX = "+08:00";
 
-function toCalendarDate(value: string | null | undefined) {
+function toCalendarDate(value: string | Date | null | undefined) {
     if (!value) return null;
-    const normalized = value.includes("T") ? value : `${value}T12:00:00${MANILA_TIME_SUFFIX}`;
+
+    if (value instanceof Date) {
+        const manilaDate = formatManilaISODate(value);
+        return toCalendarDate(manilaDate);
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const manilaDate = trimmed.includes("T") ? toManilaDateString(trimmed) : trimmed;
+    if (!manilaDate) return null;
+
+    const normalized = `${manilaDate}T12:00:00${MANILA_TIME_SUFFIX}`;
     const date = new Date(normalized);
     return Number.isNaN(date.getTime()) ? null : date;
 }
