@@ -255,50 +255,50 @@ export default function NurseInventoryPage() {
                                 <p className="text-sm text-slate-600">{totalInventoryQuantity.toLocaleString()} total units in circulation</p>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                                <div className="relative w-full sm:w-72">
-                                    <Input
-                                        placeholder="Search items or clinics"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="h-10 rounded-xl border border-green-100 bg-white pl-10 text-sm shadow-inner shadow-green-100/60 focus-visible:ring-green-200"
-                                    />
-                                    <PackageSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-400" />
-                                </div>
+                        <div className="flex w-full flex-col gap-3 rounded-2xl border border-green-100/80 bg-white/80 p-3 shadow-inner shadow-green-100/40 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="relative w-full sm:max-w-xs md:max-w-sm">
+                                <Input
+                                    placeholder="Search items or clinics"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="h-10 rounded-xl border border-green-100/80 bg-white pl-10 text-sm text-slate-700 shadow-sm focus-visible:border-green-200 focus-visible:ring-green-200/70"
+                                />
+                                <PackageSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-400" />
+                            </div>
 
-                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-                                    <select
-                                        value={statusFilter}
-                                        onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="h-10 rounded-xl border border-green-100 bg-white px-3 text-sm font-medium text-green-700 shadow-inner shadow-green-100/60 focus:outline-none focus:ring-2 focus:ring-green-200"
-                                    >
-                                        <option value="All">All Statuses</option>
-                                        <option value="Valid">Valid</option>
-                                        <option value="Expiring Soon">Expiring Soon</option>
-                                        <option value="Expiring Very Soon">Expiring Very Soon</option>
-                                        <option value="Expired">Expired</option>
-                                    </select>
+                            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="h-10 w-full rounded-xl border border-green-100/80 bg-white px-3 text-sm font-medium text-green-800 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70 sm:w-44"
+                                >
+                                    <option value="All">All Statuses</option>
+                                    <option value="Valid">Valid</option>
+                                    <option value="Expiring Soon">Expiring Soon</option>
+                                    <option value="Expiring Very Soon">Expiring Very Soon</option>
+                                    <option value="Expired">Expired</option>
+                                </select>
 
-                                    <select
-                                        value={clinicFilter}
-                                        onChange={(e) => setClinicFilter(e.target.value)}
-                                        className="h-10 rounded-xl border border-green-100 bg-white px-3 text-sm font-medium text-green-700 shadow-inner shadow-green-100/60 focus:outline-none focus:ring-2 focus:ring-green-200"
-                                    >
-                                        <option value="All">All Clinics</option>
-                                        {clinics.map((clinic) => (
-                                            <option key={clinic.clinic_id} value={clinic.clinic_name}>
-                                                {clinic.clinic_name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                <select
+                                    value={clinicFilter}
+                                    onChange={(e) => setClinicFilter(e.target.value)}
+                                    className="h-10 w-full rounded-xl border border-green-100/80 bg-white px-3 text-sm font-medium text-green-800 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70 sm:w-44"
+                                >
+                                    <option value="All">All Clinics</option>
+                                    {clinics.map((clinic) => (
+                                        <option key={clinic.clinic_id} value={clinic.clinic_name}>
+                                            {clinic.clinic_name}
+                                        </option>
+                                    ))}
+                                </select>
 
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button className="h-10 rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm shadow-green-200 transition hover:-translate-y-[1px] hover:bg-green-700">
-                                                <Plus className="h-4 w-4" />
-                                                <span className="ml-2">Add Stock</span>
-                                            </Button>
-                                        </DialogTrigger>
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button className="h-10 w-full rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-md shadow-green-200 transition hover:-translate-y-[1px] hover:bg-green-700 focus-visible:ring-green-200/70 sm:w-auto">
+                                            <Plus className="h-4 w-4" />
+                                            <span className="ml-1.5">Add Stock</span>
+                                        </Button>
+                                    </DialogTrigger>
                                         <DialogContent
                                             className="w-[95%] max-w-lg rounded-2xl border border-green-100 max-h-[80vh] overflow-y-auto sm:max-h-none sm:overflow-visible"
                                         >
