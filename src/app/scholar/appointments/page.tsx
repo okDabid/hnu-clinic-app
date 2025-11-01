@@ -706,11 +706,11 @@ export default function ScholarAppointmentsPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                        <TableHead className="min-w-[160px]">Patient</TableHead>
-                                        <TableHead className="min-w-[160px]">Clinic</TableHead>
-                                        <TableHead className="min-w-[140px]">Doctor</TableHead>
-                                        <TableHead className="min-w-[110px]">Date</TableHead>
-                                        <TableHead className="min-w-[140px]">Time</TableHead>
+                                        <TableHead className="min-w-[120px]">Patient</TableHead>
+                                        <TableHead className="min-w-[120px]">Clinic</TableHead>
+                                        <TableHead className="min-w-[120px]">Doctor</TableHead>
+                                        <TableHead className="min-w-[120px]">Date</TableHead>
+                                        <TableHead className="min-w-[120px]">Time</TableHead>
                                         <TableHead className="min-w-[120px]">Status</TableHead>
                                         <TableHead className="min-w-[120px]">Service</TableHead>
                                     </TableRow>
