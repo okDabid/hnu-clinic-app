@@ -232,7 +232,7 @@ async function postHandler(req: Request) {
         const scholarId = session.user.id;
         const burstLimit = consumeRateLimit(
             `scholar:appointments:create:burst:${scholarId}`,
-            8,
+            3,
             60_000
         );
         if (!burstLimit.success)
@@ -243,7 +243,7 @@ async function postHandler(req: Request) {
 
         const dailyLimit = consumeRateLimit(
             `scholar:appointments:create:day:${scholarId}`,
-            40,
+            3,
             24 * 60 * 60_000
         );
         if (!dailyLimit.success)
@@ -399,7 +399,7 @@ async function postHandler(req: Request) {
 export const POST = withRateLimit(
     {
         key: ipKey("scholar:appointments:create:ip"),
-        limit: 40,
+        limit: 3,
         windowMs: 60_000,
         message: "Too many appointment submissions from this IP. Please wait before trying again.",
     },

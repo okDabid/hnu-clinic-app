@@ -233,7 +233,7 @@ export const POST = withRateLimit(
     [
         {
             key: ipKey("auth:request-reset:ip"),
-            limit: 15,
+            limit: 3,
             windowMs: 60 * 60_000,
             message:
                 "Too many reset requests from this network. Please wait before trying again.",

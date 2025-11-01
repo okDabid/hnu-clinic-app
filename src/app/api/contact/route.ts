@@ -89,7 +89,7 @@ export const POST = withRateLimit(
     [
         {
             key: ipKey("contact:ip"),
-            limit: 5,
+            limit: 3,
             windowMs: 60_000,
             message: "Too many messages from this IP. Please try again later.",
         },

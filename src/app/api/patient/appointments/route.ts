@@ -104,7 +104,7 @@ async function postHandler(req: Request) {
 
         const burstLimit = consumeRateLimit(
             `patient:appointments:create:burst:${patient_user_id}`,
-            5,
+            3,
             60_000
         );
         if (!burstLimit.success)
@@ -115,7 +115,7 @@ async function postHandler(req: Request) {
 
         const dailyLimit = consumeRateLimit(
             `patient:appointments:create:day:${patient_user_id}`,
-            20,
+            3,
             24 * 60 * 60_000
         );
         if (!dailyLimit.success)
@@ -237,7 +237,7 @@ async function postHandler(req: Request) {
 export const POST = withRateLimit(
     {
         key: ipKey("patient:appointments:create:ip"),
-        limit: 20,
+        limit: 3,
         windowMs: 60_000,
         message: "Too many appointment requests from this IP. Please slow down before trying again.",
     },
@@ -254,7 +254,7 @@ async function patchHandler(req: Request) {
 
         const burstLimit = consumeRateLimit(
             `patient:appointments:reschedule:burst:${patient_user_id}`,
-            5,
+            3,
             60_000
         );
         if (!burstLimit.success)
@@ -265,7 +265,7 @@ async function patchHandler(req: Request) {
 
         const dailyLimit = consumeRateLimit(
             `patient:appointments:reschedule:day:${patient_user_id}`,
-            30,
+            3,
             24 * 60 * 60_000
         );
         if (!dailyLimit.success)
@@ -407,7 +407,7 @@ async function patchHandler(req: Request) {
 export const PATCH = withRateLimit(
     {
         key: ipKey("patient:appointments:reschedule:ip"),
-        limit: 30,
+        limit: 3,
         windowMs: 60_000,
         message: "Too many appointment updates from this IP. Please slow down before trying again.",
     },
@@ -424,7 +424,7 @@ async function deleteHandler(req: Request) {
 
         const burstLimit = consumeRateLimit(
             `patient:appointments:cancel:burst:${patient_user_id}`,
-            5,
+            3,
             60_000
         );
         if (!burstLimit.success)
@@ -435,7 +435,7 @@ async function deleteHandler(req: Request) {
 
         const dailyLimit = consumeRateLimit(
             `patient:appointments:cancel:day:${patient_user_id}`,
-            20,
+            3,
             24 * 60 * 60_000
         );
         if (!dailyLimit.success)
@@ -494,7 +494,7 @@ async function deleteHandler(req: Request) {
 export const DELETE = withRateLimit(
     {
         key: ipKey("patient:appointments:cancel:ip"),
-        limit: 30,
+        limit: 3,
         windowMs: 60_000,
         message: "Too many appointment cancellations from this IP. Please slow down before trying again.",
     },

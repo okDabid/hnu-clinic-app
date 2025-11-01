@@ -124,7 +124,7 @@ export const GET = withRateLimit(
             const doctor = searchParams.get("doctor_user_id") ?? "any";
             return `meta:doctor-availability:${ip}:${doctor}`;
         },
-        limit: 20,
+        limit: 3,
         windowMs: 60_000,
         message: "Too many availability checks. Please wait before trying again.",
     },

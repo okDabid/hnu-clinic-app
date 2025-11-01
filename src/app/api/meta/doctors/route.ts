@@ -88,7 +88,7 @@ export const GET = withRateLimit(
             const clinic = searchParams.get("clinic_id") ?? "any";
             return `meta:doctors:${ip}:${clinic}`;
         },
-        limit: 30,
+        limit: 3,
         windowMs: 60_000,
         message: "Too many doctor directory requests. Please try again later.",
     },
