@@ -219,7 +219,7 @@ export default function NurseInventoryPage() {
             description="Monitor clinic stocks, update batch details, and keep replenishments on track."
         >
             <section className="relative px-4 sm:px-6 pt-6 sm:pt-10 pb-12 space-y-10 w-full max-w-7xl mx-auto flex-1 flex flex-col">
-                <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-gradient-to-br from-green-100 via-white to-white blur-3xl opacity-60" />
+                <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-linear-to-br from-green-100 via-white to-white blur-3xl opacity-60" />
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-2xl border border-green-100 bg-white px-5 py-4 shadow-sm shadow-green-100/40">
                         <div className="flex items-center justify-between text-sm text-green-700">
@@ -248,7 +248,7 @@ export default function NurseInventoryPage() {
                 </div>
 
                 <Card className="flex-1 flex flex-col rounded-3xl border border-green-100/70 bg-white shadow-lg shadow-green-100/40">
-                    <CardHeader className="flex flex-col gap-6 border-b border-green-100/60 bg-gradient-to-br from-white via-green-50/40 to-white/90 pb-6 pt-6 sm:pt-7 backdrop-blur-sm rounded-t-3xl">
+                    <CardHeader className="flex flex-col gap-6 border-b border-green-100/60 bg-linear-to-br from-white via-green-50/40 to-white/90 pb-6 pt-6 sm:pt-7 backdrop-blur-sm rounded-t-3xl">
                         <div className="flex flex-col gap-1">
                             <CardTitle className="text-xl sm:text-2xl font-bold text-green-900">Stock Overview</CardTitle>
                             <p className="text-sm text-slate-600">
@@ -299,7 +299,7 @@ export default function NurseInventoryPage() {
                             <div className="flex w-full justify-start sm:w-auto lg:justify-end">
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button className="h-11 w-full rounded-xl bg-green-500 px-5 text-sm font-semibold text-white shadow-sm shadow-green-200 transition hover:-translate-y-[1px] hover:bg-green-600 focus-visible:ring-green-200/80 sm:w-auto">
+                                        <Button className="h-11 w-full rounded-xl bg-green-500 px-5 text-sm font-semibold text-white shadow-sm shadow-green-200 transition hover:-translate-y-px hover:bg-green-600 focus-visible:ring-green-200/80 sm:w-auto">
                                             <Plus className="h-4 w-4" />
                                             <span className="ml-1.5">Add Stock</span>
                                         </Button>
@@ -497,7 +497,7 @@ export default function NurseInventoryPage() {
                                                 <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Dispensed (All Time)</TableHead>
                                                 <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Walk-in Dispensed</TableHead>
                                                 <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Expiry Batches</TableHead>
-                                        </TableRow>
+                                            </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {filteredItems.length > 0 ? (
@@ -572,7 +572,7 @@ export default function NurseInventoryPage() {
                 </Card>
 
                 <Card className="rounded-3xl border border-green-100/70 bg-white shadow-lg shadow-green-100/40">
-                    <CardHeader className="flex flex-col gap-2 border-b border-green-50 bg-gradient-to-r from-white via-green-50 to-white rounded-t-3xl">
+                    <CardHeader className="flex flex-col gap-2 border-b border-green-50 bg-linear-to-r from-white via-green-50 to-white rounded-t-3xl">
                         <CardTitle className="text-xl sm:text-2xl font-bold text-green-900">
                             Archived (Expired) Batches
                         </CardTitle>
