@@ -14,6 +14,20 @@ import {
     startOfManilaDay,
     toManilaTimeString,
 } from "@/lib/time";
+import {
+    consumeRateLimit,
+    ipKey,
+    type RateLimitResult,
+    withRateLimit,
+} from "@/lib/rate-limit";
+
+function rateLimitResponse(message: string, result: RateLimitResult) {
+    const response = NextResponse.json({ error: message }, { status: 429 });
+    if (result.retryAfterMs) {
+        response.headers.set("Retry-After", Math.ceil(result.retryAfterMs / 1000).toString());
+    }
+    return response;
+}
 
 function getCurrentMonthStart(): Date {
     const now = manilaNow();
@@ -136,7 +150,7 @@ export async function GET(req: Request) {
 /**
  * POST — Create new consultation slot (Manila-local)
  */
-export async function POST(req: Request) {
+async function postHandler(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
@@ -151,7 +165,31 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
+        const doctorId = doctor.user_id;
+
+        const hourlyLimit = consumeRateLimit(
+            `doctor:consultation:generate:hour:${doctorId}`,
+            2,
+            60 * 60_000
+        );
+        if (!hourlyLimit.success)
+            return rateLimitResponse(
+                "You've recently regenerated your duty hours. Please wait before trying again.",
+                hourlyLimit
+            );
+
+        const dailyLimit = consumeRateLimit(
+            `doctor:consultation:generate:day:${doctorId}`,
+            5,
+            24 * 60 * 60_000
+        );
+        if (!dailyLimit.success)
+            return rateLimitResponse(
+                "You've reached the daily limit for regenerating duty hours. Please try again later or update slots individually.",
+                dailyLimit
+            );
+
+        await archiveExpiredDutyHours({ doctor_user_id: doctorId });
 
         const {
             clinic_id,
@@ -212,7 +250,7 @@ export async function POST(req: Request) {
 
             generatedDates.push(manilaDate);
             toCreate.push({
-                doctor_user_id: doctor.user_id,
+                doctor_user_id: doctorId,
                 clinic_id,
                 available_date: startOfManilaDay(manilaDate),
                 available_timestart: slotStart,
@@ -248,7 +286,7 @@ export async function POST(req: Request) {
 
         const existingForYear = await prisma.doctorAvailability.count({
             where: {
-                doctor_user_id: doctor.user_id,
+                doctor_user_id: doctorId,
                 archivedAt: null,
                 available_date: { gte: rangeStart, lt: endExclusive },
             },
@@ -266,7 +304,7 @@ export async function POST(req: Request) {
 
         const conflicting = await prisma.doctorAvailability.findMany({
             where: {
-                doctor_user_id: doctor.user_id,
+                doctor_user_id: doctorId,
                 archivedAt: null,
                 clinic_id: { not: clinic_id },
                 available_date: { gte: rangeStart, lte: rangeEnd },
@@ -314,7 +352,7 @@ export async function POST(req: Request) {
         await prisma.$transaction(async (tx) => {
             await tx.doctorAvailability.deleteMany({
                 where: {
-                    doctor_user_id: doctor.user_id,
+                    doctor_user_id: doctorId,
                     clinic_id,
                     archivedAt: null,
                     available_date: { gte: rangeStart, lte: rangeEnd },
@@ -324,7 +362,7 @@ export async function POST(req: Request) {
             await tx.doctorAvailability.createMany({ data: toCreate });
         });
 
-        await archiveExpiredDutyHours({ doctor_user_id: doctor.user_id });
+        await archiveExpiredDutyHours({ doctor_user_id: doctorId });
 
         const firstDay = generatedDates[0] ?? formatManilaISODate(monthStart);
         const lastDay =
@@ -345,6 +383,16 @@ export async function POST(req: Request) {
         );
     }
 }
+
+export const POST = withRateLimit(
+    {
+        key: ipKey("doctor:consultation:generate:ip"),
+        limit: 5,
+        windowMs: 60_000,
+        message: "Too many duty hour generation attempts from this IP. Please wait before trying again.",
+    },
+    postHandler
+);
 
 /**
  * PUT — Update existing consultation slot (Manila-local)

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { EMAIL_VERIFICATION_TOKEN_TYPE } from "@/lib/email-verification";
+import { ipKey, withRateLimit } from "@/lib/rate-limit";
 
 function htmlResponse(title: string, message: string, success: boolean) {
     const color = success ? "#047857" : "#b91c1c";
@@ -35,7 +36,7 @@ function htmlResponse(title: string, message: string, success: boolean) {
     });
 }
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
     const token = request.nextUrl.searchParams.get("token");
 
     if (!token) {
@@ -113,3 +114,13 @@ export async function GET(request: NextRequest) {
         true
     );
 }
+
+export const GET = withRateLimit(
+    {
+        key: ipKey("account:email-verify:ip"),
+        limit: 10,
+        windowMs: 60_000,
+        message: "Too many verification attempts from this IP. Please wait before trying again.",
+    },
+    getHandler
+);
