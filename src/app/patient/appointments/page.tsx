@@ -46,6 +46,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
 import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -304,6 +305,9 @@ export default function PatientAppointmentsPage() {
             });
             const data = await res.json();
             if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many reschedule attempts. Please wait before trying again.")) {
+                    return;
+                }
                 toast.error(data?.message ?? "Failed to reschedule appointment");
                 return;
             }
@@ -339,6 +343,9 @@ export default function PatientAppointmentsPage() {
             });
             const data = await res.json();
             if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many cancellation attempts. Please wait before trying again.")) {
+                    return;
+                }
                 toast.error(data?.message ?? "Failed to cancel appointment");
                 return;
             }
@@ -382,6 +389,14 @@ export default function PatientAppointmentsPage() {
                 const params = new URLSearchParams({ clinic_id: clinicId });
                 const res = await fetch(`/api/meta/doctors?${params}`);
                 const data = await res.json();
+                if (!res.ok) {
+                    if (handleRateLimitError(res, data, "Too many doctor lookups. Please wait before trying again.")) {
+                        setDoctors([]);
+                        return;
+                    }
+                    toast.error(data?.error ?? "Failed to load doctors");
+                    return;
+                }
                 setDoctors(data);
             } catch {
                 toast.error("Failed to load doctors");
@@ -442,6 +457,26 @@ export default function PatientAppointmentsPage() {
                 const data = await res.json();
 
                 if (cancelled) return;
+
+                if (!res.ok) {
+                    if (handleRateLimitError(
+                        res,
+                        data,
+                        "Too many availability checks. Please wait before trying again."
+                    )) {
+                        return;
+                    }
+                    setDoctorAvailability((prev) => ({
+                        ...prev,
+                        [doctor.user_id]: {
+                            slots: [],
+                            loading: false,
+                            error: data?.error ?? "Failed to load availability",
+                            onLeave: false,
+                        },
+                    }));
+                    return;
+                }
 
                 setDoctorAvailability((prev) => ({
                     ...prev,
@@ -547,6 +582,21 @@ export default function PatientAppointmentsPage() {
                 });
                 const res = await fetch(`/api/meta/doctor-availability?${params}`);
                 const data = await res.json();
+                if (!res.ok) {
+                    if (
+                        handleRateLimitError(
+                            res,
+                            data,
+                            "Too many availability checks. Please wait before trying again."
+                        )
+                    ) {
+                        setRescheduleSlots([]);
+                        return;
+                    }
+                    toast.error(data?.error ?? "Failed to load reschedule slots");
+                    setRescheduleSlots([]);
+                    return;
+                }
                 setRescheduleSlots(data?.slots || []);
             } catch {
                 toast.error("Failed to load reschedule slots");
@@ -605,6 +655,9 @@ export default function PatientAppointmentsPage() {
 
             const data = await res.json();
             if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many appointment requests. Please try again later.")) {
+                    return;
+                }
                 toast.error(data?.message ?? "Unable to create appointment");
                 return;
             }
@@ -629,8 +682,13 @@ export default function PatientAppointmentsPage() {
         try {
             setLoadingAppointments(true);
             const res = await fetch("/api/patient/appointments");
-            if (!res.ok) throw new Error("Failed to load appointments");
             const data = await res.json();
+            if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many appointment lookups. Please try again later.")) {
+                    return;
+                }
+                throw new Error("Failed to load appointments");
+            }
             setAppointments(Array.isArray(data) ? data : []);
         } catch {
             toast.error("Could not load your appointments");

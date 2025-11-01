@@ -16,6 +16,20 @@ import {
     computeDoctorEarliestBookingStart,
     DEFAULT_MIN_BOOKING_LEAD_DAYS,
 } from "@/lib/booking";
+import {
+    consumeRateLimit,
+    ipKey,
+    type RateLimitResult,
+    withRateLimit,
+} from "@/lib/rate-limit";
+
+function rateLimitResponse(message: string, result: RateLimitResult) {
+    const response = NextResponse.json({ message }, { status: 429 });
+    if (result.retryAfterMs) {
+        response.headers.set("Retry-After", Math.ceil(result.retryAfterMs / 1000).toString());
+    }
+    return response;
+}
 
 export async function GET() {
     try {
@@ -80,13 +94,36 @@ export async function GET() {
     }
 }
 
-export async function POST(req: Request) {
+async function postHandler(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id)
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const patient_user_id = session.user.id as string;
+
+        const burstLimit = consumeRateLimit(
+            `patient:appointments:create:burst:${patient_user_id}`,
+            5,
+            60_000
+        );
+        if (!burstLimit.success)
+            return rateLimitResponse(
+                "You're making appointment requests too quickly. Please wait a moment and try again.",
+                burstLimit
+            );
+
+        const dailyLimit = consumeRateLimit(
+            `patient:appointments:create:day:${patient_user_id}`,
+            12,
+            24 * 60 * 60_000
+        );
+        if (!dailyLimit.success)
+            return rateLimitResponse(
+                "You've reached the daily limit for creating appointments. Please try again tomorrow or contact the clinic for assistance.",
+                dailyLimit
+            );
+
         const body = await req.json();
         const { clinic_id, doctor_user_id, service_type, date, time_start, time_end } =
             body || {};
@@ -197,13 +234,46 @@ export async function POST(req: Request) {
     }
 }
 
-export async function PATCH(req: Request) {
+export const POST = withRateLimit(
+    {
+        key: ipKey("patient:appointments:create:ip"),
+        limit: 12,
+        windowMs: 60_000,
+        message: "Too many appointment requests from this IP. Please slow down before trying again.",
+    },
+    postHandler
+);
+
+async function patchHandler(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id)
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const patient_user_id = session.user.id as string;
+
+        const burstLimit = consumeRateLimit(
+            `patient:appointments:reschedule:burst:${patient_user_id}`,
+            5,
+            60_000
+        );
+        if (!burstLimit.success)
+            return rateLimitResponse(
+                "You're updating appointments too quickly. Please wait a moment before trying again.",
+                burstLimit
+            );
+
+        const dailyLimit = consumeRateLimit(
+            `patient:appointments:reschedule:day:${patient_user_id}`,
+            12,
+            24 * 60 * 60_000
+        );
+        if (!dailyLimit.success)
+            return rateLimitResponse(
+                "You've reached the daily limit for appointment changes. Please try again tomorrow or contact the clinic for assistance.",
+                dailyLimit
+            );
+
         const body = await req.json();
         const { appointment_id, date, time_start, time_end } = body || {};
 
@@ -334,13 +404,46 @@ export async function PATCH(req: Request) {
     }
 }
 
-export async function DELETE(req: Request) {
+export const PATCH = withRateLimit(
+    {
+        key: ipKey("patient:appointments:reschedule:ip"),
+        limit: 12,
+        windowMs: 60_000,
+        message: "Too many appointment updates from this IP. Please slow down before trying again.",
+    },
+    patchHandler
+);
+
+async function deleteHandler(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id)
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const patient_user_id = session.user.id as string;
+
+        const burstLimit = consumeRateLimit(
+            `patient:appointments:cancel:burst:${patient_user_id}`,
+            5,
+            60_000
+        );
+        if (!burstLimit.success)
+            return rateLimitResponse(
+                "You're cancelling appointments too quickly. Please wait a moment before trying again.",
+                burstLimit
+            );
+
+        const dailyLimit = consumeRateLimit(
+            `patient:appointments:cancel:day:${patient_user_id}`,
+            12,
+            24 * 60 * 60_000
+        );
+        if (!dailyLimit.success)
+            return rateLimitResponse(
+                "You've reached the daily limit for cancelling appointments. Please contact the clinic if you need additional assistance.",
+                dailyLimit
+            );
+
         const body = await req.json();
         const { appointment_id } = body || {};
 
@@ -387,3 +490,13 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export const DELETE = withRateLimit(
+    {
+        key: ipKey("patient:appointments:cancel:ip"),
+        limit: 12,
+        windowMs: 60_000,
+        message: "Too many appointment cancellations from this IP. Please slow down before trying again.",
+    },
+    deleteHandler
+);

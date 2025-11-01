@@ -43,6 +43,7 @@ import {
     toManilaTimeString,
 } from "@/lib/time";
 import { cn } from "@/lib/utils";
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 import DoctorConsultationLoading from "./loading";
 import {
@@ -430,6 +431,20 @@ export function DoctorConsultationPageClient({
             const firstData: SlotsResponse = await firstResponse.json();
 
             if (!firstResponse.ok || firstData.error) {
+                if (
+                    handleRateLimitError(
+                        firstResponse,
+                        firstData,
+                        "Too many consultation lookups. Please wait before trying again."
+                    )
+                ) {
+                    startTransition(() => {
+                        setSlots([]);
+                        setTotalSlots(0);
+                        setSlotsLoaded(true);
+                    });
+                    return;
+                }
                 toast.error(firstData.error ?? "Failed to load consultation slots");
                 startTransition(() => {
                     setSlots([]);
@@ -455,6 +470,15 @@ export function DoctorConsultationPageClient({
                         }).then(async (response) => {
                             const pageData: SlotsResponse = await response.json();
                             if (!response.ok || pageData.error) {
+                                if (
+                                    handleRateLimitError(
+                                        response,
+                                        pageData,
+                                        "Too many consultation lookups. Please wait before trying again."
+                                    )
+                                ) {
+                                    throw new Error(pageData.error ?? `Failed to load page ${page}`);
+                                }
                                 throw new Error(pageData.error ?? `Failed to load page ${page}`);
                             }
                             return pageData;
@@ -508,6 +532,15 @@ export function DoctorConsultationPageClient({
                 });
                 const data: CalendarSlotsResponse = await res.json();
                 if (!res.ok || data.error) {
+                    if (
+                        handleRateLimitError(
+                            res,
+                            data,
+                            "Too many consultation lookups. Please wait before trying again."
+                        )
+                    ) {
+                        return;
+                    }
                     toast.error(data.error ?? "Failed to load calendar data");
                     return;
                 }
@@ -643,6 +676,9 @@ export function DoctorConsultationPageClient({
             });
             const data = await res.json();
             if (!res.ok || data.error) {
+                if (handleRateLimitError(res, data, "Too many duty hour updates. Please wait before trying again.")) {
+                    return;
+                }
                 toast.error(data.error ?? "Failed to save duty hours");
             } else {
                 if (isEditing) {

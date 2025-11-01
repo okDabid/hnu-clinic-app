@@ -1,8 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { Role } from "@prisma/client";
+import {
+    consumeRateLimit,
+    ipKey,
+    type RateLimitedRequest,
+    type RateLimitResult,
+    withRateLimit,
+} from "@/lib/rate-limit";
+
+function rateLimitResponse(message: string, result: RateLimitResult) {
+    const response = NextResponse.json({ error: message }, { status: 429 });
+    if (result.retryAfterMs) {
+        response.headers.set("Retry-After", Math.ceil(result.retryAfterMs / 1000).toString());
+    }
+    return response;
+}
 
 import {
     QUARTERS,
@@ -439,13 +454,36 @@ function createReportHtml(report: ReportsResponse) {
 </html>`;
 }
 
-export async function GET(req: NextRequest) {
+async function getHandler(request: RateLimitedRequest) {
     let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 
     try {
-        await requireRole([Role.NURSE]);
+        const session = await requireRole([Role.NURSE]);
+        const nurseId = session.user.id as string;
 
-        const { searchParams } = new URL(req.url);
+        const burstLimit = consumeRateLimit(
+            `nurse:reports:pdf:burst:${nurseId}`,
+            5,
+            60_000
+        );
+        if (!burstLimit.success)
+            return rateLimitResponse(
+                "You're generating reports too quickly. Please wait a moment before trying again.",
+                burstLimit
+            );
+
+        const hourlyLimit = consumeRateLimit(
+            `nurse:reports:pdf:hour:${nurseId}`,
+            15,
+            60 * 60_000
+        );
+        if (!hourlyLimit.success)
+            return rateLimitResponse(
+                "You've reached the hourly limit for report downloads. Please try again later.",
+                hourlyLimit
+            );
+
+        const { searchParams } = new URL(request.url);
         const yearParam = Number.parseInt(searchParams.get("year") ?? "", 10);
         const quarterParam = Number.parseInt(searchParams.get("quarter") ?? "", 10);
 
@@ -499,3 +537,13 @@ export async function GET(req: NextRequest) {
         }
     }
 }
+
+export const GET = withRateLimit(
+    {
+        key: ipKey("nurse:reports:pdf:ip"),
+        limit: 8,
+        windowMs: 10 * 60_000,
+        message: "Too many PDF requests from this IP. Please slow down before trying again.",
+    },
+    getHandler
+);

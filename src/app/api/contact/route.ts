@@ -89,15 +89,15 @@ export const POST = withRateLimit(
     [
         {
             key: ipKey("contact:ip"),
-            limit: 5,
+            limit: 8,
             windowMs: 60_000,
             message: "Too many messages from this IP. Please try again later.",
         },
         {
             key: jsonFieldKey("email", "contact:email"),
-            limit: 3,
-            windowMs: 10 * 60_000,
-            message: "We already received a few messages from this email recently. Please wait before sending another.",
+            limit: 5,
+            windowMs: 15 * 60_000,
+            message: "We already received several messages from this email recently. Please wait before sending another.",
         },
     ],
     handler

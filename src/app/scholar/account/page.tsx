@@ -43,6 +43,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { validateAndNormalizeContacts } from "@/lib/validation";
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 import ScholarAccountLoading from "./loading";
 
@@ -346,8 +347,15 @@ export default function ScholarAccountPage() {
             const res = await fetch("/api/scholar/account/me", { cache: "no-store" });
             const data = await res.json();
 
-            if (!res.ok || data.error) {
+            if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many profile requests. Please wait before trying again.")) {
+                    return;
+                }
                 throw new Error(data.error ?? "Failed to load scholar profile");
+            }
+
+            if (data.error) {
+                throw new Error(data.error);
             }
 
             setProfile(normalizeProfile(data, data.profile ?? null));
@@ -406,8 +414,15 @@ export default function ScholarAccountPage() {
                 });
                 const data = await res.json();
 
-                if (!res.ok || data.error) {
+                if (!res.ok) {
+                    if (handleRateLimitError(res, data, "Too many profile updates. Please wait before trying again.")) {
+                        return;
+                    }
                     throw new Error(data.error ?? "Failed to update profile");
+                }
+
+                if (data.error) {
+                    throw new Error(data.error);
                 }
 
                 toast.success("Scholar profile updated successfully!");
@@ -493,8 +508,15 @@ export default function ScholarAccountPage() {
             });
             const data = await res.json();
 
-            if (!res.ok || data.error) {
+            if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many profile updates. Please wait before trying again.")) {
+                    return;
+                }
                 throw new Error(data.error ?? "Failed to save date of birth");
+            }
+
+            if (data.error) {
+                throw new Error(data.error);
             }
 
             toast.success("Date of birth saved!");

@@ -37,6 +37,7 @@ import {
     toManilaDateString,
 } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 import ScholarAppointmentsLoading from "./loading";
 
@@ -249,6 +250,9 @@ export default function ScholarAppointmentsPage() {
             const res = await fetch("/api/scholar/appointments?status=all", { cache: "no-store" });
             const data = await res.json();
             if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many appointment lookups. Please try again later.")) {
+                    return;
+                }
                 toast.error(data?.error ?? "Failed to load appointments");
                 return;
             }
@@ -307,6 +311,10 @@ export default function ScholarAppointmentsPage() {
                 const res = await fetch(`/api/meta/doctors?${params.toString()}`, { cache: "no-store" });
                 const data = await res.json();
                 if (!res.ok) {
+                    if (handleRateLimitError(res, data, "Too many doctor lookups. Please wait before trying again.")) {
+                        setDoctors([]);
+                        return;
+                    }
                     toast.error(data?.message ?? "Failed to load doctors");
                     return;
                 }
@@ -342,6 +350,16 @@ export default function ScholarAppointmentsPage() {
                 });
                 const data = await res.json();
                 if (!res.ok) {
+                    if (
+                        handleRateLimitError(
+                            res,
+                            data,
+                            "Too many availability checks. Please wait before trying again."
+                        )
+                    ) {
+                        setSlots([]);
+                        return;
+                    }
                     toast.error(data?.message ?? "Failed to load available slots");
                     return;
                 }
@@ -530,6 +548,9 @@ export default function ScholarAppointmentsPage() {
 
             const data = await res.json();
             if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many appointment submissions. Please wait before trying again.")) {
+                    return;
+                }
                 toast.error(data?.error ?? data?.message ?? "Failed to schedule walk-in appointment");
                 return;
             }

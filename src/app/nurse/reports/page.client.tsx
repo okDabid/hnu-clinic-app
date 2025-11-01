@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, BarChart2, CalendarRange, Loader2, PieChart, FileDown } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 
+import { toast } from "sonner";
+
 import { NurseLayout } from "@/components/nurse/nurse-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,7 @@ import { formatManilaDateTime } from "@/lib/time";
 
 import NurseReportsLoading from "./loading";
 import { type PatientTypeKey, type ReportsResponse } from "./types";
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 const QUARTER_OPTIONS = [
     { label: "Q1", value: "1" },
@@ -289,6 +292,15 @@ export function NurseReportsPageClient({
                                 const response = await fetch(`/api/nurse/reports/pdf?${params.toString()}`);
                                 if (!response.ok) {
                                     const body = await response.json().catch(() => null);
+                                    if (
+                                        handleRateLimitError(
+                                            response,
+                                            body,
+                                            "Too many PDF requests. Please wait before trying again."
+                                        )
+                                    ) {
+                                        return;
+                                    }
                                     throw new Error(body?.error ?? "Failed to generate PDF report");
                                 }
 
@@ -299,13 +311,11 @@ export function NurseReportsPageClient({
                                 downloadBlob(blob, filename, mobile);
                             } catch (pdfError) {
                                 console.error(pdfError);
-                                if (typeof window !== "undefined") {
-                                    window.alert(
-                                        pdfError instanceof Error
-                                            ? pdfError.message
-                                            : "Failed to generate PDF report"
-                                    );
-                                }
+                                const fallbackMessage =
+                                    pdfError instanceof Error
+                                        ? pdfError.message
+                                        : "Failed to generate PDF report";
+                                toast.error(fallbackMessage);
                             } finally {
                                 setExportingPdf(false);
                             }

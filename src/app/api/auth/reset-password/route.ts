@@ -116,7 +116,7 @@ export const POST = withRateLimit(
     [
         {
             key: ipKey("auth:reset-password:ip"),
-            limit: 10,
+            limit: 5,
             windowMs: 5 * 60_000,
             message: "Too many password reset attempts from this IP. Please try again later.",
         },

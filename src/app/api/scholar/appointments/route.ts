@@ -17,6 +17,20 @@ import {
     computeDoctorEarliestBookingStart,
     DEFAULT_MIN_BOOKING_LEAD_DAYS,
 } from "@/lib/booking";
+import {
+    consumeRateLimit,
+    ipKey,
+    type RateLimitResult,
+    withRateLimit,
+} from "@/lib/rate-limit";
+
+function rateLimitResponse(message: string, result: RateLimitResult) {
+    const response = NextResponse.json({ error: message }, { status: 429 });
+    if (result.retryAfterMs) {
+        response.headers.set("Retry-After", Math.ceil(result.retryAfterMs / 1000).toString());
+    }
+    return response;
+}
 
 function parseDate(value: string | null, type: "start" | "end") {
     if (!value) return null;
@@ -199,7 +213,7 @@ export async function GET(req: Request) {
     }
 }
 
-export async function POST(req: Request) {
+async function postHandler(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
@@ -214,6 +228,29 @@ export async function POST(req: Request) {
         if (!account || account.role !== Role.SCHOLAR) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
+
+        const scholarId = session.user.id;
+        const burstLimit = consumeRateLimit(
+            `scholar:appointments:create:burst:${scholarId}`,
+            8,
+            60_000
+        );
+        if (!burstLimit.success)
+            return rateLimitResponse(
+                "You're booking appointments too quickly. Please wait a moment before trying again.",
+                burstLimit
+            );
+
+        const dailyLimit = consumeRateLimit(
+            `scholar:appointments:create:day:${scholarId}`,
+            40,
+            24 * 60 * 60_000
+        );
+        if (!dailyLimit.success)
+            return rateLimitResponse(
+                "You've reached the daily limit for creating appointments. Please try again tomorrow or coordinate with the clinic.",
+                dailyLimit
+            );
 
         const body = await req.json();
         const patient_user_id = typeof body?.patient_user_id === "string" ? body.patient_user_id : "";
@@ -358,6 +395,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Failed to create appointment" }, { status: 500 });
     }
 }
+
+export const POST = withRateLimit(
+    {
+        key: ipKey("scholar:appointments:create:ip"),
+        limit: 15,
+        windowMs: 60_000,
+        message: "Too many appointment submissions from this IP. Please wait before trying again.",
+    },
+    postHandler
+);
 
 export async function PATCH(req: Request) {
     try {
