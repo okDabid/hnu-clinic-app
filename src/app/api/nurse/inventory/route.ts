@@ -57,7 +57,13 @@ export async function GET() {
             await prisma.$transaction(ops);
         }
 
-        const [inventory, archivedReplenishments, dispenseTotals, walkInDispenses] = await Promise.all([
+        const [
+            inventory,
+            archivedReplenishments,
+            dispenseTotals,
+            walkInDispenses,
+            dispensedByReplenishment,
+        ] = await Promise.all([
             prisma.medInventory.findMany({
                 include: {
                     clinic: { select: { clinic_name: true, clinic_location: true } },
@@ -90,6 +96,10 @@ export async function GET() {
                 where: { consultation_id: null },
                 _sum: { quantity: true },
             }),
+            prisma.dispenseBatch.groupBy({
+                by: ["replenishment_id"],
+                _sum: { quantity_used: true },
+            }),
         ]);
 
         const totalDispensedMap = new Map(
@@ -97,6 +107,12 @@ export async function GET() {
         );
         const walkInDispensedMap = new Map(
             walkInDispenses.map((record) => [record.med_id, record._sum.quantity ?? 0])
+        );
+        const dispensedFromReplenishmentMap = new Map(
+            dispensedByReplenishment.map((record) => [
+                record.replenishment_id,
+                record._sum.quantity_used ?? 0,
+            ])
         );
 
         const archived = archivedReplenishments.map((rep) => ({
@@ -114,8 +130,15 @@ export async function GET() {
                 }
                 : null,
             expiry_date: rep.expiry_date,
-            quantity_archived: newlyArchived.get(rep.replenishment_id)?.quantity_archived ?? 0,
-            archivedAt: newlyArchived.get(rep.replenishment_id)?.archivedAt ?? rep.expiry_date.toISOString(),
+            quantity_archived:
+                newlyArchived.get(rep.replenishment_id)?.quantity_archived ??
+                Math.max(
+                    rep.quantity_added - (dispensedFromReplenishmentMap.get(rep.replenishment_id) ?? 0),
+                    0
+                ),
+            archivedAt:
+                newlyArchived.get(rep.replenishment_id)?.archivedAt ??
+                rep.expiry_date.toISOString(),
         }));
 
         const archivedByMed = archived.reduce<Record<string, typeof archived[number][]>>((acc, rep) => {
@@ -123,6 +146,9 @@ export async function GET() {
             acc[rep.med_id].push(rep);
             return acc;
         }, {});
+
+        const VERY_SOON_THRESHOLD_DAYS = 7;
+        const SOON_THRESHOLD_DAYS = 30;
 
         const result = inventory.map((item) => {
             const activeReplenishments = item.replenishments
@@ -134,9 +160,11 @@ export async function GET() {
                         status:
                             daysLeft < 0
                                 ? "Expired"
-                                : daysLeft <= 30
-                                    ? "Expiring Soon"
-                                    : "Valid",
+                                : daysLeft <= VERY_SOON_THRESHOLD_DAYS
+                                    ? "Expiring Very Soon"
+                                    : daysLeft <= SOON_THRESHOLD_DAYS
+                                        ? "Expiring Soon"
+                                        : "Valid",
                         daysLeft,
                     };
                 });
