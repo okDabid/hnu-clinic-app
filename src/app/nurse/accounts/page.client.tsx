@@ -65,6 +65,7 @@ import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { validateAndNormalizeContacts } from "@/lib/validation";
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
 import { cn } from "@/lib/utils";
 
 import NurseAccountsLoading from "./loading";
@@ -269,6 +270,17 @@ export function NurseAccountsPageClient({
             });
 
             const data = await res.json();
+            if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many profile requests. Please wait before trying again.")) {
+                    return;
+                }
+                if (data?.error) {
+                    toast.error(data.error);
+                } else {
+                    toast.error("Failed to load profile");
+                }
+                return;
+            }
             const normalized = normalizeNurseAccountProfile(data as NurseAccountProfileApi);
             if (!normalized) {
                 if (data?.error) {
@@ -524,6 +536,13 @@ export function NurseAccountsPageClient({
             });
 
             const data = await res.json();
+            if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many profile updates. Please wait before trying again.")) {
+                    return;
+                }
+                toast.error(data.error ?? "Failed to update profile");
+                return;
+            }
             if (data.error) {
                 toast.error(data.error);
             } else {
@@ -791,7 +810,18 @@ export function NurseAccountsPageClient({
                                                                             });
 
                                                                             const data = await res.json();
-                                                                            if (data.error) {
+                                                                            if (!res.ok) {
+                                                                                if (
+                                                                                    handleRateLimitError(
+                                                                                        res,
+                                                                                        data,
+                                                                                        "Too many profile updates. Please wait before trying again."
+                                                                                    )
+                                                                                ) {
+                                                                                    return;
+                                                                                }
+                                                                                toast.error(data.error ?? "Failed to save Date of Birth");
+                                                                            } else if (data.error) {
                                                                                 toast.error(data.error);
                                                                             } else {
                                                                                 toast.success("Date of Birth saved!");

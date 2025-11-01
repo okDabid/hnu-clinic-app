@@ -21,6 +21,7 @@ import {
 import { normalizeResetContact } from "@/lib/password-reset";
 import { Progress } from "@/components/ui/progress";
 import { getPasswordStrength } from "@/lib/password-strength";
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 export default function LoginPageClient() {
     const [loadingRole, setLoadingRole] = useState<string | null>(null);
@@ -169,6 +170,9 @@ export default function LoginPageClient() {
                 setResendCooldown(60);
                 return true;
             }
+            if (handleRateLimitError(res, data, "Too many reset attempts. Please wait before trying again.")) {
+                return false;
+            }
             toast.error(data.error || "Account not found");
             return false;
         } catch {
@@ -228,6 +232,9 @@ export default function LoginPageClient() {
                 toast.success("Password reset successful!");
                 handleForgotToggle(false);
             } else {
+                if (handleRateLimitError(res, data, "Too many password reset attempts. Please wait and try again.")) {
+                    return;
+                }
                 if (typeof data.error === "string") {
                     const lower = data.error.toLowerCase();
                     if (lower.includes("code")) setCodeError(data.error);

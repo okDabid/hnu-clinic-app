@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 
 import { toast } from "sonner";
 
+import { handleRateLimitError } from "@/lib/rate-limit-toast";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +50,9 @@ export function ContactForm() {
                 });
                 setForm({ name: "", email: "", message: "" });
             } else {
+                if (handleRateLimitError(response, data, "Too many contact form submissions. Please wait before trying again.")) {
+                    return;
+                }
                 toast.error("❌ Failed to send message", {
                     description: data.error || "Something went wrong. Please try again.",
                     duration: 5000,
