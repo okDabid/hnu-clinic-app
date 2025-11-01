@@ -299,7 +299,9 @@ export default function NurseInventoryPage() {
                                                 <span className="ml-2">Add Stock</span>
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="w-[95%] max-w-lg rounded-2xl border border-green-100">
+                                        <DialogContent
+                                            className="w-[95%] max-w-lg rounded-2xl border border-green-100 max-h-[80vh] overflow-y-auto sm:max-h-none sm:overflow-visible"
+                                        >
                                             <DialogHeader>
                                                 <DialogTitle className="text-lg font-semibold text-green-900">Add New Stock</DialogTitle>
                                                 <DialogDescription className="text-sm text-slate-600">
