@@ -463,7 +463,7 @@ async function getHandler(request: RateLimitedRequest) {
 
         const burstLimit = consumeRateLimit(
             `nurse:reports:pdf:burst:${nurseId}`,
-            3,
+            5,
             60_000
         );
         if (!burstLimit.success)
@@ -474,7 +474,7 @@ async function getHandler(request: RateLimitedRequest) {
 
         const hourlyLimit = consumeRateLimit(
             `nurse:reports:pdf:hour:${nurseId}`,
-            3,
+            15,
             60 * 60_000
         );
         if (!hourlyLimit.success)
@@ -541,8 +541,8 @@ async function getHandler(request: RateLimitedRequest) {
 export const GET = withRateLimit(
     {
         key: ipKey("nurse:reports:pdf:ip"),
-        limit: 3,
-        windowMs: 60_000,
+        limit: 8,
+        windowMs: 10 * 60_000,
         message: "Too many PDF requests from this IP. Please slow down before trying again.",
     },
     getHandler

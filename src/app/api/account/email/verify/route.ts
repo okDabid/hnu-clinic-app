@@ -120,8 +120,8 @@ async function getHandler(request: RateLimitedRequest) {
 export const GET = withRateLimit(
     {
         key: ipKey("account:email-verify:ip"),
-        limit: 3,
-        windowMs: 60_000,
+        limit: 10,
+        windowMs: 5 * 60_000,
         message: "Too many verification attempts from this IP. Please wait before trying again.",
     },
     getHandler

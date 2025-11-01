@@ -116,13 +116,13 @@ export const POST = withRateLimit(
     [
         {
             key: ipKey("auth:reset-password:ip"),
-            limit: 3,
+            limit: 5,
             windowMs: 5 * 60_000,
             message: "Too many password reset attempts from this IP. Please try again later.",
         },
         {
             key: jsonFieldKey("contact", "auth:reset-password:contact"),
-            limit: 3,
+            limit: 5,
             windowMs: 5 * 60_000,
             message: "Too many verification attempts for this contact. Please wait before retrying.",
         },

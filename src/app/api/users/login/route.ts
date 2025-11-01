@@ -122,7 +122,7 @@ export const POST = withRateLimit(
     [
         {
             key: ipKey("users:login:ip"),
-            limit: 3,
+            limit: 10,
             windowMs: 60_000,
             message: "Too many login attempts from this IP. Please try again shortly.",
         },
@@ -144,7 +144,7 @@ export const POST = withRateLimit(
                     return null;
                 }
             },
-            limit: 3,
+            limit: 5,
             windowMs: 60_000,
             message: "Too many attempts for this account. Please wait before retrying.",
         },

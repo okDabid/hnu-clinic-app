@@ -169,7 +169,7 @@ async function postHandler(req: Request) {
 
         const hourlyLimit = consumeRateLimit(
             `doctor:consultation:generate:hour:${doctorId}`,
-            3,
+            2,
             60 * 60_000
         );
         if (!hourlyLimit.success)
@@ -180,7 +180,7 @@ async function postHandler(req: Request) {
 
         const dailyLimit = consumeRateLimit(
             `doctor:consultation:generate:day:${doctorId}`,
-            3,
+            6,
             24 * 60 * 60_000
         );
         if (!dailyLimit.success)
@@ -387,8 +387,8 @@ async function postHandler(req: Request) {
 export const POST = withRateLimit(
     {
         key: ipKey("doctor:consultation:generate:ip"),
-        limit: 3,
-        windowMs: 60_000,
+        limit: 6,
+        windowMs: 10 * 60_000,
         message: "Too many duty hour generation attempts from this IP. Please wait before trying again.",
     },
     postHandler
