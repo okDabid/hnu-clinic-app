@@ -272,7 +272,7 @@ export default function NurseInventoryPage() {
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="h-11 min-w-[150px] rounded-xl border border-green-100 bg-green-50/80 px-3 text-sm font-medium text-green-900 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70"
+                                        className="h-11 w-full sm:w-auto rounded-xl border border-green-100 bg-green-50/80 px-3 text-sm font-medium text-green-900 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70"
                                     >
                                         <option value="All">All Statuses</option>
                                         <option value="Valid">Valid</option>
@@ -284,7 +284,7 @@ export default function NurseInventoryPage() {
                                     <select
                                         value={clinicFilter}
                                         onChange={(e) => setClinicFilter(e.target.value)}
-                                        className="h-11 min-w-[150px] rounded-xl border border-green-100 bg-green-50/80 px-3 text-sm font-medium text-green-900 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70"
+                                        className="h-11 w-full sm:w-auto rounded-xl border border-green-100 bg-green-50/80 px-3 text-sm font-medium text-green-900 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70"
                                     >
                                         <option value="All">All Clinics</option>
                                         {clinics.map((clinic) => (
