@@ -248,227 +248,231 @@ export default function NurseInventoryPage() {
                 </div>
 
                 <Card className="flex-1 flex flex-col rounded-3xl border border-green-100/70 bg-white shadow-lg shadow-green-100/40">
-                    <CardHeader className="flex flex-col gap-5 border-b border-green-50 bg-gradient-to-br from-white via-green-50 to-white rounded-t-3xl">
-                        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-                            <div>
-                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-900">Stock Overview</CardTitle>
-                                <p className="text-sm text-slate-600">{totalInventoryQuantity.toLocaleString()} total units in circulation</p>
+                    <CardHeader className="flex flex-col gap-6 border-b border-green-100/60 bg-gradient-to-br from-white via-green-50/40 to-white/90 pb-6 pt-6 sm:pt-7 backdrop-blur-sm rounded-t-3xl">
+                        <div className="flex flex-col gap-1">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-900">Stock Overview</CardTitle>
+                            <p className="text-sm text-slate-600">
+                                {totalInventoryQuantity.toLocaleString()} total units in circulation
+                            </p>
+                        </div>
+
+                        <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+                                <div className="relative flex-1 min-w-[220px]">
+                                    <Input
+                                        placeholder="Search items or clinics"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="h-11 rounded-xl border border-green-100 bg-white/90 pl-10 text-sm text-slate-700 shadow-sm focus-visible:border-green-200 focus-visible:ring-green-200/80"
+                                    />
+                                    <PackageSearch className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-green-400" />
+                                </div>
+
+                                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="h-11 min-w-[150px] rounded-xl border border-green-100 bg-green-50/80 px-3 text-sm font-medium text-green-900 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70"
+                                    >
+                                        <option value="All">All Statuses</option>
+                                        <option value="Valid">Valid</option>
+                                        <option value="Expiring Soon">Expiring Soon</option>
+                                        <option value="Expiring Very Soon">Expiring Very Soon</option>
+                                        <option value="Expired">Expired</option>
+                                    </select>
+
+                                    <select
+                                        value={clinicFilter}
+                                        onChange={(e) => setClinicFilter(e.target.value)}
+                                        className="h-11 min-w-[150px] rounded-xl border border-green-100 bg-green-50/80 px-3 text-sm font-medium text-green-900 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70"
+                                    >
+                                        <option value="All">All Clinics</option>
+                                        {clinics.map((clinic) => (
+                                            <option key={clinic.clinic_id} value={clinic.clinic_name}>
+                                                {clinic.clinic_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
-                        <div className="flex w-full flex-col gap-3 rounded-2xl border border-green-100/80 bg-white/80 p-3 shadow-inner shadow-green-100/40 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="relative w-full sm:max-w-xs md:max-w-sm">
-                                <Input
-                                    placeholder="Search items or clinics"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="h-10 rounded-xl border border-green-100/80 bg-white pl-10 text-sm text-slate-700 shadow-sm focus-visible:border-green-200 focus-visible:ring-green-200/70"
-                                />
-                                <PackageSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-400" />
-                            </div>
-
-                            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="h-10 w-full rounded-xl border border-green-100/80 bg-white px-3 text-sm font-medium text-green-800 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70 sm:w-44"
-                                >
-                                    <option value="All">All Statuses</option>
-                                    <option value="Valid">Valid</option>
-                                    <option value="Expiring Soon">Expiring Soon</option>
-                                    <option value="Expiring Very Soon">Expiring Very Soon</option>
-                                    <option value="Expired">Expired</option>
-                                </select>
-
-                                <select
-                                    value={clinicFilter}
-                                    onChange={(e) => setClinicFilter(e.target.value)}
-                                    className="h-10 w-full rounded-xl border border-green-100/80 bg-white px-3 text-sm font-medium text-green-800 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-green-200/70 sm:w-44"
-                                >
-                                    <option value="All">All Clinics</option>
-                                    {clinics.map((clinic) => (
-                                        <option key={clinic.clinic_id} value={clinic.clinic_name}>
-                                            {clinic.clinic_name}
-                                        </option>
-                                    ))}
-                                </select>
-
+                            <div className="flex w-full justify-start sm:w-auto lg:justify-end">
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button className="h-10 w-full rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-md shadow-green-200 transition hover:-translate-y-[1px] hover:bg-green-700 focus-visible:ring-green-200/70 sm:w-auto">
+                                        <Button className="h-11 w-full rounded-xl bg-green-500 px-5 text-sm font-semibold text-white shadow-sm shadow-green-200 transition hover:-translate-y-[1px] hover:bg-green-600 focus-visible:ring-green-200/80 sm:w-auto">
                                             <Plus className="h-4 w-4" />
                                             <span className="ml-1.5">Add Stock</span>
                                         </Button>
                                     </DialogTrigger>
-                                        <DialogContent
-                                            className="w-[95%] max-w-lg rounded-2xl border border-green-100 max-h-[80vh] overflow-y-auto sm:max-h-none sm:overflow-visible"
+                                    <DialogContent
+                                        className="w-[95%] max-w-lg rounded-2xl border border-green-100 max-h-[80vh] overflow-y-auto sm:max-h-none sm:overflow-visible"
+                                    >
+                                        <DialogHeader>
+                                            <DialogTitle className="text-lg font-semibold text-green-900">Add New Stock</DialogTitle>
+                                            <DialogDescription className="text-sm text-slate-600">
+                                                Fill in the details of the stock item.
+                                            </DialogDescription>
+                                        </DialogHeader>
+
+                                        <form
+                                            className="space-y-4"
+                                            onSubmit={async (e) => {
+                                                e.preventDefault();
+                                                const form = e.currentTarget as HTMLFormElement;
+                                                setSavingStock(true);
+
+                                                const body = {
+                                                    clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
+                                                    item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value,
+                                                    quantity: Number((form.elements.namedItem("quantity") as HTMLInputElement).value),
+                                                    expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
+                                                    category: (form.elements.namedItem("category") as HTMLSelectElement).value,
+                                                    item_type: (form.elements.namedItem("item_type") as HTMLSelectElement).value,
+                                                    strength: parseFloat((form.elements.namedItem("strength") as HTMLInputElement).value),
+                                                    unit: (form.elements.namedItem("unit") as HTMLSelectElement).value,
+                                                };
+
+                                                const res = await fetch("/api/nurse/inventory", {
+                                                    method: "POST",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify(body),
+                                                });
+
+                                                if (res.ok) {
+                                                    await loadInventory();
+                                                    form.reset();
+                                                    toast.success("Stock added!");
+                                                } else {
+                                                    toast.error("Failed to add stock");
+                                                }
+
+                                                setSavingStock(false);
+                                            }}
                                         >
-                                            <DialogHeader>
-                                                <DialogTitle className="text-lg font-semibold text-green-900">Add New Stock</DialogTitle>
-                                                <DialogDescription className="text-sm text-slate-600">
-                                                    Fill in the details of the stock item.
-                                                </DialogDescription>
-                                            </DialogHeader>
-
-                                            <form
-                                                className="space-y-4"
-                                                onSubmit={async (e) => {
-                                                    e.preventDefault();
-                                                    const form = e.currentTarget as HTMLFormElement;
-                                                    setSavingStock(true);
-
-                                                    const body = {
-                                                        clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
-                                                        item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value,
-                                                        quantity: Number((form.elements.namedItem("quantity") as HTMLInputElement).value),
-                                                        expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
-                                                        category: (form.elements.namedItem("category") as HTMLSelectElement).value,
-                                                        item_type: (form.elements.namedItem("item_type") as HTMLSelectElement).value,
-                                                        strength: parseFloat((form.elements.namedItem("strength") as HTMLInputElement).value),
-                                                        unit: (form.elements.namedItem("unit") as HTMLSelectElement).value,
-                                                    };
-
-                                                    const res = await fetch("/api/nurse/inventory", {
-                                                        method: "POST",
-                                                        headers: { "Content-Type": "application/json" },
-                                                        body: JSON.stringify(body),
-                                                    });
-
-                                                    if (res.ok) {
-                                                        await loadInventory();
-                                                        form.reset();
-                                                        toast.success("Stock added!");
-                                                    } else {
-                                                        toast.error("Failed to add stock");
-                                                    }
-
-                                                    setSavingStock(false);
-                                                }}
-                                            >
-                                                <div className="grid gap-3 sm:grid-cols-2">
-                                                    <div className="sm:col-span-2">
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Clinic</Label>
-                                                        <select
-                                                            name="clinic_id"
-                                                            required
-                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
-                                                        >
-                                                            <option value="">Select clinic</option>
-                                                            {clinics.map((clinic) => (
-                                                                <option key={clinic.clinic_id} value={clinic.clinic_id}>
-                                                                    {clinic.clinic_name}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    <div className="sm:col-span-2">
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Name</Label>
-                                                        <Input
-                                                            name="item_name"
-                                                            required
-                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Quantity</Label>
-                                                        <Input
-                                                            type="number"
-                                                            name="quantity"
-                                                            required
-                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Expiry Date</Label>
-                                                        <Input
-                                                            type="date"
-                                                            name="expiry"
-                                                            required
-                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Category</Label>
-                                                        <select
-                                                            name="category"
-                                                            required
-                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
-                                                        >
-                                                            <option value="">Select category</option>
-                                                            {categories.map((c) => (
-                                                                <option key={c} value={c}>
-                                                                    {c}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Item Type</Label>
-                                                        <select
-                                                            name="item_type"
-                                                            required
-                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
-                                                        >
-                                                            <option value="">Select type</option>
-                                                            {medTypes.map((t) => (
-                                                                <option key={t} value={t}>
-                                                                    {t}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Strength</Label>
-                                                        <Input
-                                                            type="number"
-                                                            step="0.01"
-                                                            name="strength"
-                                                            placeholder="e.g., 500"
-                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Unit</Label>
-                                                        <select
-                                                            name="unit"
-                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
-                                                        >
-                                                            <option value="">Select unit</option>
-                                                            {units.map((u) => (
-                                                                <option key={u} value={u}>
-                                                                    {u}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
+                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                <div className="sm:col-span-2">
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Clinic</Label>
+                                                    <select
+                                                        name="clinic_id"
+                                                        required
+                                                        className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                                                    >
+                                                        <option value="">Select clinic</option>
+                                                        {clinics.map((clinic) => (
+                                                            <option key={clinic.clinic_id} value={clinic.clinic_id}>
+                                                                {clinic.clinic_name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                 </div>
 
-                                                <DialogFooter>
-                                                    <Button
-                                                        type="submit"
-                                                        className="w-full sm:w-auto rounded-xl bg-green-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
-                                                        disabled={savingStock}
+                                                <div className="sm:col-span-2">
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Name</Label>
+                                                    <Input
+                                                        name="item_name"
+                                                        required
+                                                        className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Quantity</Label>
+                                                    <Input
+                                                        type="number"
+                                                        name="quantity"
+                                                        required
+                                                        className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Expiry Date</Label>
+                                                    <Input
+                                                        type="date"
+                                                        name="expiry"
+                                                        required
+                                                        className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Category</Label>
+                                                    <select
+                                                        name="category"
+                                                        required
+                                                        className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                                                     >
-                                                        {savingStock ? (
-                                                            <>
-                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                                Saving...
-                                                            </>
-                                                        ) : (
-                                                            "Save"
-                                                        )}
-                                                    </Button>
-                                                </DialogFooter>
-                                            </form>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
+                                                        <option value="">Select category</option>
+                                                        {categories.map((c) => (
+                                                            <option key={c} value={c}>
+                                                                {c}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Item Type</Label>
+                                                    <select
+                                                        name="item_type"
+                                                        required
+                                                        className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                                                    >
+                                                        <option value="">Select type</option>
+                                                        {medTypes.map((t) => (
+                                                            <option key={t} value={t}>
+                                                                {t}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Strength</Label>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        name="strength"
+                                                        placeholder="e.g., 500"
+                                                        className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Label className="mb-1 block text-sm font-medium text-green-900">Unit</Label>
+                                                    <select
+                                                        name="unit"
+                                                        className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+                                                    >
+                                                        <option value="">Select unit</option>
+                                                        {units.map((u) => (
+                                                            <option key={u} value={u}>
+                                                                {u}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <DialogFooter>
+                                                <Button
+                                                    type="submit"
+                                                    className="w-full sm:w-auto rounded-xl bg-green-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+                                                    disabled={savingStock}
+                                                >
+                                                    {savingStock ? (
+                                                        <>
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            Saving...
+                                                        </>
+                                                    ) : (
+                                                        "Save"
+                                                    )}
+                                                </Button>
+                                            </DialogFooter>
+                                        </form>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </div>
                     </CardHeader>
