@@ -219,17 +219,17 @@ export default function NurseInventoryPage() {
             description="Monitor clinic stocks, update batch details, and keep replenishments on track."
         >
             <section className="relative px-4 sm:px-6 pt-6 sm:pt-10 pb-12 space-y-10 w-full max-w-7xl mx-auto flex-1 flex flex-col">
-                <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-gradient-to-br from-emerald-100 via-white to-white blur-3xl opacity-70" />
+                <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-gradient-to-br from-green-100 via-white to-white blur-3xl opacity-60" />
                 <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-emerald-100 bg-white/80 px-5 py-4 shadow-sm backdrop-blur">
-                        <div className="flex items-center justify-between text-sm text-emerald-700">
+                    <div className="rounded-2xl border border-green-100 bg-white px-5 py-4 shadow-sm shadow-green-100/40">
+                        <div className="flex items-center justify-between text-sm text-green-700">
                             <span>Total Items</span>
                             <PackageSearch className="h-4 w-4" />
                         </div>
-                        <p className="mt-2 text-2xl font-semibold text-emerald-900">{items.length}</p>
-                        <p className="text-xs text-emerald-600/80">Across all clinics</p>
+                        <p className="mt-2 text-2xl font-semibold text-green-900">{items.length}</p>
+                        <p className="text-xs text-slate-600">Across all clinics</p>
                     </div>
-                    <div className="rounded-2xl border border-amber-100 bg-white/80 px-5 py-4 shadow-sm backdrop-blur">
+                    <div className="rounded-2xl border border-amber-100 bg-white px-5 py-4 shadow-sm shadow-amber-100/40">
                         <div className="flex items-center justify-between text-sm text-amber-700">
                             <span>Expiring Soon</span>
                             <ShieldAlert className="h-4 w-4" />
@@ -237,7 +237,7 @@ export default function NurseInventoryPage() {
                         <p className="mt-2 text-2xl font-semibold text-amber-900">{expiringSoonCount}</p>
                         <p className="text-xs text-amber-600/80">Batches need attention</p>
                     </div>
-                    <div className="rounded-2xl border border-rose-100 bg-white/80 px-5 py-4 shadow-sm backdrop-blur">
+                    <div className="rounded-2xl border border-rose-100 bg-white px-5 py-4 shadow-sm shadow-rose-100/50">
                         <div className="flex items-center justify-between text-sm text-rose-700">
                             <span>Archived Units</span>
                             <Archive className="h-4 w-4" />
@@ -247,12 +247,12 @@ export default function NurseInventoryPage() {
                     </div>
                 </div>
 
-                <Card className="flex-1 flex flex-col rounded-3xl border border-emerald-100/80 bg-white/90 shadow-lg shadow-emerald-100/50">
-                    <CardHeader className="flex flex-col gap-5 border-b border-emerald-50/80 bg-gradient-to-br from-white via-emerald-50 to-white rounded-t-3xl">
+                <Card className="flex-1 flex flex-col rounded-3xl border border-green-100/70 bg-white shadow-lg shadow-green-100/40">
+                    <CardHeader className="flex flex-col gap-5 border-b border-green-50 bg-gradient-to-br from-white via-green-50 to-white rounded-t-3xl">
                         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                             <div>
-                                <CardTitle className="text-xl sm:text-2xl font-bold text-emerald-900">Stock Overview</CardTitle>
-                                <p className="text-sm text-emerald-600/80">{totalInventoryQuantity.toLocaleString()} total units in circulation</p>
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-900">Stock Overview</CardTitle>
+                                <p className="text-sm text-slate-600">{totalInventoryQuantity.toLocaleString()} total units in circulation</p>
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -261,16 +261,16 @@ export default function NurseInventoryPage() {
                                         placeholder="Search items or clinics"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="h-10 rounded-xl border-emerald-100 bg-white pl-10 text-sm shadow-inner shadow-emerald-100/60 focus-visible:ring-emerald-200"
+                                        className="h-10 rounded-xl border border-green-100 bg-white pl-10 text-sm shadow-inner shadow-green-100/60 focus-visible:ring-green-200"
                                     />
-                                    <PackageSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
+                                    <PackageSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-400" />
                                 </div>
 
                                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value)}
-                                        className="h-10 rounded-xl border border-emerald-100 bg-white px-3 text-sm font-medium text-emerald-700 shadow-inner shadow-emerald-100/60 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                        className="h-10 rounded-xl border border-green-100 bg-white px-3 text-sm font-medium text-green-700 shadow-inner shadow-green-100/60 focus:outline-none focus:ring-2 focus:ring-green-200"
                                     >
                                         <option value="All">All Statuses</option>
                                         <option value="Valid">Valid</option>
@@ -282,7 +282,7 @@ export default function NurseInventoryPage() {
                                     <select
                                         value={clinicFilter}
                                         onChange={(e) => setClinicFilter(e.target.value)}
-                                        className="h-10 rounded-xl border border-emerald-100 bg-white px-3 text-sm font-medium text-emerald-700 shadow-inner shadow-emerald-100/60 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                        className="h-10 rounded-xl border border-green-100 bg-white px-3 text-sm font-medium text-green-700 shadow-inner shadow-green-100/60 focus:outline-none focus:ring-2 focus:ring-green-200"
                                     >
                                         <option value="All">All Clinics</option>
                                         {clinics.map((clinic) => (
@@ -294,15 +294,15 @@ export default function NurseInventoryPage() {
 
                                     <Dialog>
                                         <DialogTrigger asChild>
-                                            <Button className="h-10 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition hover:-translate-y-[1px] hover:bg-emerald-700">
+                                            <Button className="h-10 rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm shadow-green-200 transition hover:-translate-y-[1px] hover:bg-green-700">
                                                 <Plus className="h-4 w-4" />
                                                 <span className="ml-2">Add Stock</span>
                                             </Button>
                                         </DialogTrigger>
-                                        <DialogContent className="w-[95%] max-w-lg rounded-2xl border-emerald-100">
+                                        <DialogContent className="w-[95%] max-w-lg rounded-2xl border border-green-100">
                                             <DialogHeader>
-                                                <DialogTitle className="text-lg font-semibold text-emerald-900">Add New Stock</DialogTitle>
-                                                <DialogDescription className="text-sm text-emerald-600/80">
+                                                <DialogTitle className="text-lg font-semibold text-green-900">Add New Stock</DialogTitle>
+                                                <DialogDescription className="text-sm text-slate-600">
                                                     Fill in the details of the stock item.
                                                 </DialogDescription>
                                             </DialogHeader>
@@ -344,11 +344,11 @@ export default function NurseInventoryPage() {
                                             >
                                                 <div className="grid gap-3 sm:grid-cols-2">
                                                     <div className="sm:col-span-2">
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Clinic</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Clinic</Label>
                                                         <select
                                                             name="clinic_id"
                                                             required
-                                                            className="h-10 w-full rounded-xl border border-emerald-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                                                         >
                                                             <option value="">Select clinic</option>
                                                             {clinics.map((clinic) => (
@@ -360,40 +360,40 @@ export default function NurseInventoryPage() {
                                                     </div>
 
                                                     <div className="sm:col-span-2">
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Name</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Name</Label>
                                                         <Input
                                                             name="item_name"
                                                             required
-                                                            className="h-10 rounded-xl border border-emerald-100 bg-white text-sm focus-visible:ring-emerald-200"
+                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Quantity</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Quantity</Label>
                                                         <Input
                                                             type="number"
                                                             name="quantity"
                                                             required
-                                                            className="h-10 rounded-xl border border-emerald-100 bg-white text-sm focus-visible:ring-emerald-200"
+                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Expiry Date</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Expiry Date</Label>
                                                         <Input
                                                             type="date"
                                                             name="expiry"
                                                             required
-                                                            className="h-10 rounded-xl border border-emerald-100 bg-white text-sm focus-visible:ring-emerald-200"
+                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Category</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Category</Label>
                                                         <select
                                                             name="category"
                                                             required
-                                                            className="h-10 w-full rounded-xl border border-emerald-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                                                         >
                                                             <option value="">Select category</option>
                                                             {categories.map((c) => (
@@ -405,11 +405,11 @@ export default function NurseInventoryPage() {
                                                     </div>
 
                                                     <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Item Type</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Item Type</Label>
                                                         <select
                                                             name="item_type"
                                                             required
-                                                            className="h-10 w-full rounded-xl border border-emerald-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                                                         >
                                                             <option value="">Select type</option>
                                                             {medTypes.map((t) => (
@@ -421,21 +421,21 @@ export default function NurseInventoryPage() {
                                                     </div>
 
                                                     <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Strength</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Strength</Label>
                                                         <Input
                                                             type="number"
                                                             step="0.01"
                                                             name="strength"
                                                             placeholder="e.g., 500"
-                                                            className="h-10 rounded-xl border border-emerald-100 bg-white text-sm focus-visible:ring-emerald-200"
+                                                            className="h-10 rounded-xl border border-green-100 bg-white text-sm focus-visible:ring-green-200"
                                                         />
                                                     </div>
 
                                                     <div>
-                                                        <Label className="mb-1 block text-sm font-medium text-emerald-900">Unit</Label>
+                                                        <Label className="mb-1 block text-sm font-medium text-green-900">Unit</Label>
                                                         <select
                                                             name="unit"
-                                                            className="h-10 w-full rounded-xl border border-emerald-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                                                            className="h-10 w-full rounded-xl border border-green-100 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-200"
                                                         >
                                                             <option value="">Select unit</option>
                                                             {units.map((u) => (
@@ -450,7 +450,7 @@ export default function NurseInventoryPage() {
                                                 <DialogFooter>
                                                     <Button
                                                         type="submit"
-                                                        className="w-full sm:w-auto rounded-xl bg-emerald-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                                        className="w-full sm:w-auto rounded-xl bg-green-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
                                                         disabled={savingStock}
                                                     >
                                                         {savingStock ? (
@@ -473,56 +473,56 @@ export default function NurseInventoryPage() {
 
                     <CardContent className="flex-1 flex flex-col px-0">
                         {loadingInventory ? (
-                            <div className="flex items-center justify-center py-10 text-emerald-600">
+                            <div className="flex items-center justify-center py-10 text-green-600">
                                 <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading inventory...
                             </div>
                         ) : (
                             <div className="overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <Table className="min-w-[860px]">
-                                        <TableHeader className="bg-emerald-50/70">
-                                            <TableRow className="text-emerald-900">
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Clinic</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Name</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Category</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Item Type</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Strength</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Total Quantity</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Dispensed (All Time)</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Walk-in Dispensed</TableHead>
-                                                <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Expiry Batches</TableHead>
-                                            </TableRow>
+                                        <TableHeader className="bg-green-50/70">
+                                            <TableRow className="text-slate-900">
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Clinic</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Name</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Category</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Item Type</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Strength</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Total Quantity</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Dispensed (All Time)</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Walk-in Dispensed</TableHead>
+                                                <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Expiry Batches</TableHead>
+                                        </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {filteredItems.length > 0 ? (
                                                 filteredItems.map((item) => (
-                                                    <TableRow key={item.med_id} className="transition hover:bg-emerald-50/70">
-                                                        <TableCell className="text-sm font-medium text-emerald-900">
+                                                    <TableRow key={item.med_id} className="transition hover:bg-green-50/70">
+                                                        <TableCell className="text-sm font-medium text-slate-900">
                                                             {item.clinic.clinic_name}
                                                         </TableCell>
-                                                        <TableCell className="text-sm text-emerald-800">{item.item_name}</TableCell>
-                                                        <TableCell className="text-sm text-emerald-800">{item.category}</TableCell>
-                                                        <TableCell className="text-sm text-emerald-800">{item.item_type || "-"}</TableCell>
-                                                        <TableCell className="text-sm text-emerald-800">
+                                                        <TableCell className="text-sm text-slate-800">{item.item_name}</TableCell>
+                                                        <TableCell className="text-sm text-slate-800">{item.category}</TableCell>
+                                                        <TableCell className="text-sm text-slate-800">{item.item_type || "-"}</TableCell>
+                                                        <TableCell className="text-sm text-slate-800">
                                                             {item.strength ? `${item.strength} ${item.unit || ""}` : "-"}
                                                         </TableCell>
-                                                        <TableCell className="text-sm font-semibold text-emerald-900">{item.quantity}</TableCell>
-                                                        <TableCell className="text-sm text-emerald-800">{item.totalDispensed}</TableCell>
-                                                        <TableCell className="text-sm text-emerald-800">{item.walkInDispensed}</TableCell>
+                                                        <TableCell className="text-sm font-semibold text-green-800">{item.quantity}</TableCell>
+                                                        <TableCell className="text-sm text-slate-800">{item.totalDispensed}</TableCell>
+                                                        <TableCell className="text-sm text-slate-800">{item.walkInDispensed}</TableCell>
                                                         <TableCell>
                                                             <div className="space-y-1">
                                                                 {item.replenishments.length > 0 ? (
                                                                     item.replenishments.map((rep, idx) => (
                                                                         <div
                                                                             key={idx}
-                                                                            className="flex flex-col gap-2 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-2"
+                                                                            className="flex flex-col gap-2 rounded-xl border border-green-100 bg-green-50/60 px-3 py-2"
                                                                         >
                                                                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                                                                 <div className="flex flex-col">
-                                                                                    <span className="text-sm font-semibold text-emerald-900">
+                                                                                    <span className="text-sm font-semibold text-green-900">
                                                                                         {new Date(rep.expiry_date).toLocaleDateString()}
                                                                                     </span>
-                                                                                    <span className="text-xs text-emerald-700/80">Qty left: {rep.remaining_qty}</span>
+                                                                                    <span className="text-xs text-green-700/80">Qty left: {rep.remaining_qty}</span>
                                                                                 </div>
                                                                                 <div className="flex items-center gap-2">
                                                                                     <Badge
@@ -531,7 +531,7 @@ export default function NurseInventoryPage() {
                                                                                     >
                                                                                         {rep.status}
                                                                                     </Badge>
-                                                                                    <span className="text-xs font-medium text-emerald-700/80">
+                                                                                    <span className="text-xs font-medium text-green-700/80">
                                                                                         {rep.daysLeft >= 0
                                                                                             ? `(${rep.daysLeft} day${rep.daysLeft === 1 ? "" : "s"} left)`
                                                                                             : "Expired"}
@@ -541,7 +541,7 @@ export default function NurseInventoryPage() {
                                                                         </div>
                                                                     ))
                                                                 ) : (
-                                                                    <div className="rounded-xl border border-dashed border-emerald-200 bg-white/70 p-3 text-xs text-emerald-600">
+                                                                    <div className="rounded-xl border border-dashed border-green-200 bg-white/70 p-3 text-xs text-green-700/80">
                                                                         All batches for this item are archived or expired.
                                                                     </div>
                                                                 )}
@@ -552,7 +552,7 @@ export default function NurseInventoryPage() {
                                                 ))
                                             ) : (
                                                 <TableRow>
-                                                    <TableCell colSpan={9} className="text-center text-sm text-emerald-600 py-6">
+                                                    <TableCell colSpan={9} className="text-center text-sm text-slate-500 py-6">
                                                         No items found. Adjust your filters to see inventory.
                                                     </TableCell>
                                                 </TableRow>
@@ -565,55 +565,55 @@ export default function NurseInventoryPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border border-emerald-100/80 bg-white/90 shadow-lg shadow-emerald-100/50">
-                    <CardHeader className="flex flex-col gap-2 border-b border-emerald-50/80 bg-gradient-to-r from-white via-emerald-50 to-white rounded-t-3xl">
-                        <CardTitle className="text-xl sm:text-2xl font-bold text-emerald-900">
+                <Card className="rounded-3xl border border-green-100/70 bg-white shadow-lg shadow-green-100/40">
+                    <CardHeader className="flex flex-col gap-2 border-b border-green-50 bg-gradient-to-r from-white via-green-50 to-white rounded-t-3xl">
+                        <CardTitle className="text-xl sm:text-2xl font-bold text-green-900">
                             Archived (Expired) Batches
                         </CardTitle>
-                        <p className="text-sm text-emerald-600/80">Historical record of expired stocks for traceability</p>
+                        <p className="text-sm text-slate-600">Historical record of expired stocks for traceability</p>
                     </CardHeader>
 
                     <CardContent className="flex-1 flex flex-col px-0">
                         <div className="overflow-hidden">
                             <div className="overflow-x-auto">
                                 <Table className="min-w-[860px]">
-                                    <TableHeader className="bg-emerald-50/70">
-                                        <TableRow className="text-emerald-900">
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Clinic</TableHead>
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Name</TableHead>
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Category</TableHead>
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Item Type</TableHead>
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Strength</TableHead>
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Quantity Archived</TableHead>
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Expiry Date</TableHead>
-                                            <TableHead className="sticky top-0 bg-emerald-50/90 backdrop-blur-sm">Archived On</TableHead>
+                                    <TableHeader className="bg-green-50/70">
+                                        <TableRow className="text-slate-900">
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Clinic</TableHead>
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Name</TableHead>
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Category</TableHead>
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Item Type</TableHead>
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Strength</TableHead>
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Quantity Archived</TableHead>
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Expiry Date</TableHead>
+                                            <TableHead className="sticky top-0 bg-green-50/90 backdrop-blur-sm">Archived On</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {archivedBatches.length > 0 ? (
                                             archivedBatches.map((batch) => (
-                                                <TableRow key={batch.replenishment_id} className="transition hover:bg-emerald-50/70">
-                                                    <TableCell className="text-sm font-medium text-emerald-900">
+                                                <TableRow key={batch.replenishment_id} className="transition hover:bg-green-50/70">
+                                                    <TableCell className="text-sm font-medium text-slate-900">
                                                         {batch.clinic?.clinic_name ?? "-"}
                                                     </TableCell>
-                                                    <TableCell className="text-sm text-emerald-800">{batch.item_name}</TableCell>
-                                                    <TableCell className="text-sm text-emerald-800">{batch.category ?? "-"}</TableCell>
-                                                    <TableCell className="text-sm text-emerald-800">{batch.item_type ?? "-"}</TableCell>
-                                                    <TableCell className="text-sm text-emerald-800">
+                                                    <TableCell className="text-sm text-slate-800">{batch.item_name}</TableCell>
+                                                    <TableCell className="text-sm text-slate-800">{batch.category ?? "-"}</TableCell>
+                                                    <TableCell className="text-sm text-slate-800">{batch.item_type ?? "-"}</TableCell>
+                                                    <TableCell className="text-sm text-slate-800">
                                                         {batch.strength ? `${batch.strength} ${batch.unit ?? ""}` : "-"}
                                                     </TableCell>
-                                                    <TableCell className="text-sm font-semibold text-emerald-900">{batch.quantity_archived}</TableCell>
-                                                    <TableCell className="text-sm text-emerald-800">
+                                                    <TableCell className="text-sm font-semibold text-green-800">{batch.quantity_archived}</TableCell>
+                                                    <TableCell className="text-sm text-slate-800">
                                                         {new Date(batch.expiry_date).toLocaleDateString()}
                                                     </TableCell>
-                                                    <TableCell className="text-sm text-emerald-800">
+                                                    <TableCell className="text-sm text-slate-800">
                                                         {new Date(batch.archivedAt).toLocaleString()}
                                                     </TableCell>
                                                 </TableRow>
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={8} className="text-center text-sm text-emerald-600 py-6">
+                                                <TableCell colSpan={8} className="text-center text-sm text-slate-500 py-6">
                                                     No archived batches yet.
                                                 </TableCell>
                                             </TableRow>
