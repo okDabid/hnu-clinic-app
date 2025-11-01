@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 import { handleAuthError, requireRole } from "@/lib/authorization";
@@ -6,6 +6,7 @@ import { Role } from "@prisma/client";
 import {
     consumeRateLimit,
     ipKey,
+    type RateLimitedRequest,
     type RateLimitResult,
     withRateLimit,
 } from "@/lib/rate-limit";
@@ -453,7 +454,7 @@ function createReportHtml(report: ReportsResponse) {
 </html>`;
 }
 
-async function getHandler(req: NextRequest) {
+async function getHandler(request: RateLimitedRequest) {
     let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 
     try {
@@ -482,7 +483,7 @@ async function getHandler(req: NextRequest) {
                 hourlyLimit
             );
 
-        const { searchParams } = new URL(req.url);
+        const { searchParams } = new URL(request.url);
         const yearParam = Number.parseInt(searchParams.get("year") ?? "", 10);
         const quarterParam = Number.parseInt(searchParams.get("quarter") ?? "", 10);
 
