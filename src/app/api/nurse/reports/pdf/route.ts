@@ -461,7 +461,7 @@ async function getHandler(request: RateLimitedRequest) {
         const session = await requireRole([Role.NURSE]);
         const nurseId = session.user.id as string;
 
-        const burstLimit = consumeRateLimit(
+        const burstLimit = await consumeRateLimit(
             `nurse:reports:pdf:burst:${nurseId}`,
             5,
             60_000
@@ -472,7 +472,7 @@ async function getHandler(request: RateLimitedRequest) {
                 burstLimit
             );
 
-        const hourlyLimit = consumeRateLimit(
+        const hourlyLimit = await consumeRateLimit(
             `nurse:reports:pdf:hour:${nurseId}`,
             15,
             60 * 60_000
