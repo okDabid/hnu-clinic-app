@@ -1,10 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export type RateLimitedRequest = Request | NextRequest;
 
 export interface RateLimitResult {
     success: boolean;
     retryAfterMs?: number;
+}
+
+interface RateLimiter {
+    consume(key: string, limit: number, windowMs: number): Promise<RateLimitResult>;
 }
 
 interface Bucket {
@@ -17,11 +23,11 @@ interface ExpirationEntry {
     expiresAt: number;
 }
 
-class MemoryRateLimiter {
+class MemoryRateLimiter implements RateLimiter {
     private buckets: Map<string, Bucket> = new Map();
     private expirations: ExpirationEntry[] = [];
 
-    consume(key: string, limit: number, windowMs: number): RateLimitResult {
+    async consume(key: string, limit: number, windowMs: number): Promise<RateLimitResult> {
         const now = Date.now();
         this.cleanup(now);
         const bucket = this.buckets.get(key);
@@ -127,6 +133,86 @@ class MemoryRateLimiter {
     }
 }
 
+const RATE_LIMIT_TABLE = '"RateLimitBucket"';
+let rateLimitTableReady = false;
+let ensureRateLimitTablePromise: Promise<void> | null = null;
+
+async function ensureRateLimitTable() {
+    if (rateLimitTableReady) {
+        return;
+    }
+
+    if (ensureRateLimitTablePromise) {
+        return ensureRateLimitTablePromise;
+    }
+
+    ensureRateLimitTablePromise = (async () => {
+        await prisma.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS ${RATE_LIMIT_TABLE} (
+                "key" text NOT NULL,
+                "window_start" timestamptz NOT NULL,
+                "count" integer NOT NULL DEFAULT 1,
+                "updatedAt" timestamptz NOT NULL DEFAULT now(),
+                CONSTRAINT "RateLimitBucket_pkey" PRIMARY KEY ("key", "window_start")
+            )
+        `);
+
+        await prisma.$executeRawUnsafe(`
+            CREATE INDEX IF NOT EXISTS "RateLimitBucket_window_start_idx"
+            ON ${RATE_LIMIT_TABLE} ("window_start")
+        `);
+
+        rateLimitTableReady = true;
+    })();
+
+    try {
+        await ensureRateLimitTablePromise;
+    } catch (error) {
+        ensureRateLimitTablePromise = null;
+        throw error;
+    }
+}
+
+class PrismaRateLimiter implements RateLimiter {
+    async consume(key: string, limit: number, windowMs: number): Promise<RateLimitResult> {
+        await ensureRateLimitTable();
+
+        const now = new Date();
+        const windowStartMs = Math.floor(now.getTime() / windowMs) * windowMs;
+        const windowStart = new Date(windowStartMs);
+        const windowEndMs = windowStartMs + windowMs;
+
+        try {
+            const rows = await prisma.$transaction(
+                async (tx) =>
+                    tx.$queryRaw<{ count: number }[]>`
+                        INSERT INTO "RateLimitBucket" ("key", "window_start", "count")
+                        VALUES (${key}, ${windowStart}, 1)
+                        ON CONFLICT ("key", "window_start")
+                        DO UPDATE SET
+                            "count" = "RateLimitBucket"."count" + 1,
+                            "updatedAt" = now()
+                        RETURNING "count"
+                    `,
+                { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+            );
+
+            const count = Number(rows?.[0]?.count ?? 1);
+            if (count > limit) {
+                return { success: false, retryAfterMs: Math.max(0, windowEndMs - now.getTime()) };
+            }
+
+            return { success: true };
+        } catch (error) {
+            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+                return { success: false, retryAfterMs: Math.max(0, windowEndMs - now.getTime()) };
+            }
+
+            throw error;
+        }
+    }
+}
+
 const globalKey = Symbol.for("hnu.rateLimiter");
 const globalObject = globalThis as typeof globalThis & { [globalKey]?: MemoryRateLimiter };
 
@@ -134,14 +220,43 @@ if (!globalObject[globalKey]) {
     globalObject[globalKey] = new MemoryRateLimiter();
 }
 
-const limiter = globalObject[globalKey];
+const memoryLimiter = globalObject[globalKey];
+const databaseLimiter = new PrismaRateLimiter();
+let useMemoryFallback = process.env.RATE_LIMIT_DRIVER === "memory";
+let fallbackLogged = false;
 
-export function consumeRateLimit(
+function logRateLimitFallback(error: unknown) {
+    if (fallbackLogged) return;
+    fallbackLogged = true;
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+        console.warn(
+            "[RateLimit] RateLimitBucket table is unavailable or could not be created. Falling back to in-memory limiter."
+        );
+        return;
+    }
+
+    console.error(
+        "[RateLimit] Failed to use database-backed limiter. Falling back to in-memory limiter.",
+        error
+    );
+}
+
+export async function consumeRateLimit(
     key: string,
     limit: number,
     windowMs: number
-): RateLimitResult {
-    return limiter.consume(key, limit, windowMs);
+): Promise<RateLimitResult> {
+    if (!useMemoryFallback) {
+        try {
+            return await databaseLimiter.consume(key, limit, windowMs);
+        } catch (error) {
+            logRateLimitFallback(error);
+            useMemoryFallback = true;
+        }
+    }
+
+    return memoryLimiter.consume(key, limit, windowMs);
 }
 
 export interface RateLimitRule {
@@ -167,7 +282,7 @@ export function withRateLimit<Args extends unknown[]>(
             const key = await (rule.key ?? defaultKey)(request);
             if (!key) continue;
 
-            const result = limiter.consume(key, rule.limit, rule.windowMs);
+            const result = await consumeRateLimit(key, rule.limit, rule.windowMs);
             if (!result.success) {
                 const retryAfterSeconds = result.retryAfterMs
                     ? Math.ceil(result.retryAfterMs / 1000)

@@ -3,14 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
-    rangesOverlap,
     buildManilaDate,
     startOfManilaDay,
     endOfManilaDay,
     manilaNow,
     formatManilaISODate,
 } from "@/lib/time";
-import { AppointmentStatus, Role, ServiceType } from "@prisma/client";
+import { AppointmentStatus, Prisma, Role, ServiceType } from "@prisma/client";
 import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import {
     computeDoctorEarliestBookingStart,
@@ -22,6 +21,26 @@ import {
     type RateLimitResult,
     withRateLimit,
 } from "@/lib/rate-limit";
+
+class AppointmentConflictError extends Error {
+    constructor(message = "Time slot already booked") {
+        super(message);
+        this.name = "AppointmentConflictError";
+    }
+}
+
+const ACTIVE_APPOINTMENT_STATUSES = [
+    AppointmentStatus.Pending,
+    AppointmentStatus.Approved,
+    AppointmentStatus.Moved,
+];
+
+function isPrismaOverlapError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
+    return (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        (error.code === "P2002" || error.code === "P2034" || error.code === "P2036")
+    );
+}
 
 function rateLimitResponse(message: string, result: RateLimitResult) {
     const response = NextResponse.json({ message }, { status: 429 });
@@ -102,7 +121,7 @@ async function postHandler(req: Request) {
 
         const patient_user_id = session.user.id as string;
 
-        const burstLimit = consumeRateLimit(
+        const burstLimit = await consumeRateLimit(
             `patient:appointments:create:burst:${patient_user_id}`,
             5,
             60_000
@@ -113,7 +132,7 @@ async function postHandler(req: Request) {
                 burstLimit
             );
 
-        const dailyLimit = consumeRateLimit(
+        const dailyLimit = await consumeRateLimit(
             `patient:appointments:create:day:${patient_user_id}`,
             12,
             24 * 60 * 60_000
@@ -189,40 +208,46 @@ async function postHandler(req: Request) {
                 { status: 400 }
             );
 
-        // Check overlapping appointments
-        const existing = await prisma.appointment.findMany({
-            where: {
-                doctor_user_id,
-                appointment_timestart: { gte: dayStart, lte: dayEnd },
-                status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved] },
-            },
-        });
+        let created: Awaited<ReturnType<typeof prisma.appointment.create>>;
+        try {
+            created = await prisma.$transaction(
+                async (tx) => {
+                    const conflict = await tx.appointment.findFirst({
+                        where: {
+                            doctor_user_id,
+                            status: { in: ACTIVE_APPOINTMENT_STATUSES },
+                            appointment_timestart: { lt: appointment_timeend },
+                            appointment_timeend: { gt: appointment_timestart },
+                        },
+                        select: { appointment_id: true },
+                    });
 
-        const conflict = existing.some((e) =>
-            rangesOverlap(
-                appointment_timestart,
-                appointment_timeend,
-                e.appointment_timestart,
-                e.appointment_timeend
-            )
-        );
+                    if (conflict) {
+                        throw new AppointmentConflictError();
+                    }
 
-        if (conflict)
-            return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
+                    return tx.appointment.create({
+                        data: {
+                            patient_user_id,
+                            clinic_id,
+                            doctor_user_id,
+                            appointment_date,
+                            appointment_timestart,
+                            appointment_timeend,
+                            service_type: service_type as ServiceType,
+                            status: AppointmentStatus.Pending,
+                        },
+                    });
+                },
+                { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+            );
+        } catch (error) {
+            if (error instanceof AppointmentConflictError || isPrismaOverlapError(error)) {
+                return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
+            }
 
-        // Create the appointment
-        const created = await prisma.appointment.create({
-            data: {
-                patient_user_id,
-                clinic_id,
-                doctor_user_id,
-                appointment_date,
-                appointment_timestart,
-                appointment_timeend,
-                service_type: service_type as ServiceType,
-                status: AppointmentStatus.Pending,
-            },
-        });
+            throw error;
+        }
 
         return NextResponse.json({
             appointment_id: created.appointment_id,
@@ -252,7 +277,7 @@ async function patchHandler(req: Request) {
 
         const patient_user_id = session.user.id as string;
 
-        const burstLimit = consumeRateLimit(
+        const burstLimit = await consumeRateLimit(
             `patient:appointments:reschedule:burst:${patient_user_id}`,
             5,
             60_000
@@ -263,7 +288,7 @@ async function patchHandler(req: Request) {
                 burstLimit
             );
 
-        const dailyLimit = consumeRateLimit(
+        const dailyLimit = await consumeRateLimit(
             `patient:appointments:reschedule:day:${patient_user_id}`,
             12,
             24 * 60 * 60_000
@@ -364,38 +389,44 @@ async function patchHandler(req: Request) {
             );
         }
 
-        const existing = await prisma.appointment.findMany({
-            where: {
-                doctor_user_id: appointment.doctor_user_id,
-                appointment_timestart: { gte: dayStart, lte: dayEnd },
-                status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved, AppointmentStatus.Moved] },
-                appointment_id: { not: appointment_id },
-            },
-        });
+        try {
+            await prisma.$transaction(
+                async (tx) => {
+                    const conflict = await tx.appointment.findFirst({
+                        where: {
+                            doctor_user_id: appointment.doctor_user_id,
+                            appointment_id: { not: appointment_id },
+                            status: { in: ACTIVE_APPOINTMENT_STATUSES },
+                            appointment_timestart: { lt: appointment_timeend },
+                            appointment_timeend: { gt: appointment_timestart },
+                        },
+                        select: { appointment_id: true },
+                    });
 
-        const conflict = existing.some((e) =>
-            rangesOverlap(
-                appointment_timestart,
-                appointment_timeend,
-                e.appointment_timestart,
-                e.appointment_timeend
-            )
-        );
+                    if (conflict) {
+                        throw new AppointmentConflictError();
+                    }
 
-        if (conflict) {
-            return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
+                    await tx.appointment.update({
+                        where: { appointment_id },
+                        data: {
+                            appointment_date,
+                            appointment_timestart,
+                            appointment_timeend,
+                            status: AppointmentStatus.Pending,
+                            remarks: null,
+                        },
+                    });
+                },
+                { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+            );
+        } catch (error) {
+            if (error instanceof AppointmentConflictError || isPrismaOverlapError(error)) {
+                return NextResponse.json({ message: "Time slot already booked" }, { status: 409 });
+            }
+
+            throw error;
         }
-
-        await prisma.appointment.update({
-            where: { appointment_id },
-            data: {
-                appointment_date,
-                appointment_timestart,
-                appointment_timeend,
-                status: AppointmentStatus.Pending,
-                remarks: null,
-            },
-        });
 
         return NextResponse.json({ message: "Reschedule request submitted" });
     } catch (error) {
@@ -422,7 +453,7 @@ async function deleteHandler(req: Request) {
 
         const patient_user_id = session.user.id as string;
 
-        const burstLimit = consumeRateLimit(
+        const burstLimit = await consumeRateLimit(
             `patient:appointments:cancel:burst:${patient_user_id}`,
             5,
             60_000
@@ -433,7 +464,7 @@ async function deleteHandler(req: Request) {
                 burstLimit
             );
 
-        const dailyLimit = consumeRateLimit(
+        const dailyLimit = await consumeRateLimit(
             `patient:appointments:cancel:day:${patient_user_id}`,
             12,
             24 * 60 * 60_000

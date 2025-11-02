@@ -167,7 +167,7 @@ async function postHandler(req: Request) {
 
         const doctorId = doctor.user_id;
 
-        const hourlyLimit = consumeRateLimit(
+        const hourlyLimit = await consumeRateLimit(
             `doctor:consultation:generate:hour:${doctorId}`,
             2,
             60 * 60_000
@@ -178,7 +178,7 @@ async function postHandler(req: Request) {
                 hourlyLimit
             );
 
-        const dailyLimit = consumeRateLimit(
+        const dailyLimit = await consumeRateLimit(
             `doctor:consultation:generate:day:${doctorId}`,
             6,
             24 * 60 * 60_000

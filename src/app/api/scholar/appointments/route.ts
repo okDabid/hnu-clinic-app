@@ -10,7 +10,6 @@ import {
     endOfManilaDay,
     formatManilaISODate,
     manilaNow,
-    rangesOverlap,
     startOfManilaDay,
 } from "@/lib/time";
 import {
@@ -95,6 +94,20 @@ const ACTIVE_STATUSES: AppointmentStatus[] = [
     AppointmentStatus.Approved,
     AppointmentStatus.Moved,
 ];
+
+class AppointmentConflictError extends Error {
+    constructor(message = "Time slot already booked") {
+        super(message);
+        this.name = "AppointmentConflictError";
+    }
+}
+
+function isPrismaOverlapError(error: unknown): error is Prisma.PrismaClientKnownRequestError {
+    return (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        (error.code === "P2002" || error.code === "P2034" || error.code === "P2036")
+    );
+}
 
 export async function GET(req: Request) {
     try {
@@ -230,7 +243,7 @@ async function postHandler(req: Request) {
         }
 
         const scholarId = session.user.id;
-        const burstLimit = consumeRateLimit(
+        const burstLimit = await consumeRateLimit(
             `scholar:appointments:create:burst:${scholarId}`,
             8,
             60_000
@@ -241,7 +254,7 @@ async function postHandler(req: Request) {
                 burstLimit
             );
 
-        const dailyLimit = consumeRateLimit(
+        const dailyLimit = await consumeRateLimit(
             `scholar:appointments:create:day:${scholarId}`,
             40,
             24 * 60 * 60_000
@@ -343,51 +356,52 @@ async function postHandler(req: Request) {
             );
         }
 
-        const conflicts = await prisma.appointment.findMany({
-            where: {
-                doctor_user_id,
-                appointment_timestart: { gte: dayStart, lte: dayEnd },
-                status: {
-                    in: [AppointmentStatus.Pending, AppointmentStatus.Approved, AppointmentStatus.Moved],
+        let created: { appointment_id: string; status: AppointmentStatus };
+        try {
+            created = await prisma.$transaction(
+                async (tx) => {
+                    const conflict = await tx.appointment.findFirst({
+                        where: {
+                            doctor_user_id,
+                            status: { in: ACTIVE_STATUSES },
+                            appointment_timestart: { lt: appointment_timeend },
+                            appointment_timeend: { gt: appointment_timestart },
+                        },
+                        select: { appointment_id: true },
+                    });
+
+                    if (conflict) {
+                        throw new AppointmentConflictError();
+                    }
+
+                    return tx.appointment.create({
+                        data: {
+                            patient_user_id,
+                            clinic_id,
+                            doctor_user_id,
+                            created_by_user_id: session.user.id,
+                            appointment_date,
+                            appointment_timestart,
+                            appointment_timeend,
+                            remarks: remarks.length > 0 ? remarks : null,
+                            service_type: service_type as ServiceType,
+                            status: AppointmentStatus.Pending,
+                        },
+                        select: {
+                            appointment_id: true,
+                            status: true,
+                        },
+                    });
                 },
-            },
-            select: {
-                appointment_timestart: true,
-                appointment_timeend: true,
-            },
-        });
+                { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+            );
+        } catch (error) {
+            if (error instanceof AppointmentConflictError || isPrismaOverlapError(error)) {
+                return NextResponse.json({ error: "Time slot already booked" }, { status: 409 });
+            }
 
-        const hasConflict = conflicts.some((existing) =>
-            rangesOverlap(
-                appointment_timestart,
-                appointment_timeend,
-                existing.appointment_timestart,
-                existing.appointment_timeend
-            )
-        );
-
-        if (hasConflict) {
-            return NextResponse.json({ error: "Time slot already booked" }, { status: 409 });
+            throw error;
         }
-
-        const created = await prisma.appointment.create({
-            data: {
-                patient_user_id,
-                clinic_id,
-                doctor_user_id,
-                created_by_user_id: session.user.id,
-                appointment_date,
-                appointment_timestart,
-                appointment_timeend,
-                remarks: remarks.length > 0 ? remarks : null,
-                service_type: service_type as ServiceType,
-                status: AppointmentStatus.Pending,
-            },
-            select: {
-                appointment_id: true,
-                status: true,
-            },
-        });
 
         return NextResponse.json(created, { status: 201 });
     } catch (err) {

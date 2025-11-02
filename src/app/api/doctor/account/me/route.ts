@@ -159,7 +159,7 @@ export async function PUT(req: Request) {
                     delete data.email;
                 }
             } else if (trimmedEmail.toLowerCase() !== existingEmail.toLowerCase()) {
-                const rate = consumeRateLimit(
+                const rate = await consumeRateLimit(
                     `email-verify:${session.user.id}`,
                     3,
                     60 * 60_000
