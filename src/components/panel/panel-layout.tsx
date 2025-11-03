@@ -114,7 +114,7 @@ export function PanelLayout({
                 <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-green-100/80 bg-white/85 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
                     <div className="flex h-full flex-col overflow-hidden">
                         <div className="flex items-center gap-3 pb-6">
-                            <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-green-100 bg-white shadow-sm">
+                            <span className="relative inline-flex h-11 w-11 items-center justify-center">
                                 <Image
                                     src="/clinic-illustration.svg"
                                     alt="HNU Clinic Health Record & Appointment System emblem"
@@ -170,7 +170,7 @@ export function PanelLayout({
                                     href={homeHref}
                                     className="group flex items-center gap-3 rounded-2xl border border-green-100 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-px hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
                                 >
-                                    <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-100 bg-white shadow-sm">
+                                    <span className="relative inline-flex h-9 w-9 items-center justify-center">
                                         <Image
                                             src="/clinic-illustration.svg"
                                             alt="HNU Clinic Health Record & Appointment System emblem"
