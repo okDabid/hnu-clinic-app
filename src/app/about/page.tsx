@@ -406,7 +406,7 @@ export default function AboutPage() {
                     </div>
                 </div>
                 <div className="border-t border-green-700/60 text-center py-4 text-xs text-green-200">
-                    © {new Date().getFullYear()} HNU Clinic Capstone Project
+                    © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System
                 </div>
             </footer>
         </div>
