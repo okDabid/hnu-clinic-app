@@ -33,7 +33,6 @@ export const metadata: Metadata = {
   },
   // Keep the manifest and theme color for PWA & Android
   manifest: "/site.webmanifest",
-  themeColor: "#15803D",
 };
 
 /**
