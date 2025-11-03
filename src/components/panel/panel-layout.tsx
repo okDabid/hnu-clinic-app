@@ -116,13 +116,18 @@ export function PanelLayout({
                         <div className="flex items-center gap-3 pb-6">
                             <Image
                                 src="/clinic-illustration.svg"
-                                alt="HNU Clinic"
+                                alt="HNU Clinic Health Record & Appointment System"
                                 width={44}
                                 height={44}
                                 className="h-11 w-11 object-contain drop-shadow"
                             />
-                            <div>
-                                <h1 className="text-xl font-bold text-green-700">HNU Clinic</h1>
+                            <div className="flex flex-col leading-tight text-left">
+                                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-green-500">
+                                    HNU Clinic
+                                </span>
+                                <h1 className="text-base font-semibold text-green-700 text-balance">
+                                    Health Record &amp; Appointment System
+                                </h1>
                             </div>
                         </div>
                         <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
@@ -167,12 +172,14 @@ export function PanelLayout({
                                 >
                                     <Image
                                         src="/clinic-illustration.svg"
-                                        alt="HNU Clinic"
+                                        alt="HNU Clinic Health Record & Appointment System"
                                         width={36}
                                         height={36}
                                         className="h-9 w-9 object-contain"
                                     />
-                                    <span>HNU Clinic</span>
+                                    <span className="text-left text-sm font-semibold leading-tight text-balance">
+                                        HNU Clinic Health Record &amp; Appointment System
+                                    </span>
                                 </Link>
                                 <p className="text-xs font-semibold uppercase tracking-wider text-green-500">{panelLabel}</p>
                                 <h2 className="text-2xl font-semibold text-green-700 md:text-3xl">{title}</h2>
@@ -238,7 +245,7 @@ export function PanelLayout({
 
                     <footer className="mt-10 rounded-3xl border border-green-100/70 bg-white/80 px-6 py-4 text-center text-sm text-muted-foreground shadow-sm backdrop-blur">
                         {footerNote ?? <>
-                            © {new Date().getFullYear()} HNU Clinic – {panelLabel}
+                            © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System – {panelLabel}
                         </>}
                     </footer>
                 </div>

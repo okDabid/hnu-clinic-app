@@ -36,13 +36,20 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                     >
                         <Image
                             src="/clinic-illustration.svg"
-                            alt="HNU Clinic logo"
+                            alt="HNU Clinic Health Record & Appointment System logo"
                             width={48}
                             height={48}
                             priority
                             className="md:w-14 md:h-14"
                         />
-                        <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none">HNU Clinic</h1>
+                        <div className="flex flex-col leading-tight text-left text-green-600">
+                            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-green-500 md:text-sm">
+                                HNU Clinic
+                            </span>
+                            <h1 className="text-base font-bold md:text-2xl md:font-semibold md:leading-snug text-balance">
+                                Health Record &amp; Appointment System
+                            </h1>
+                        </div>
                     </Link>
                 </div>
 
