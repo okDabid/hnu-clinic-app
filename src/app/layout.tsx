@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ReactNode } from "react";
+import { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import Providers from "./providers";
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -17,9 +18,14 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "HNU Clinic Health Record & Appointment System",
   description: "Health Record & Appointment System for HNU Clinic",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 /**
