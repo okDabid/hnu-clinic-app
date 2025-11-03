@@ -111,23 +111,23 @@ export function PanelLayout({
     return (
         <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-green-100">
             <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
-                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-green-100/80 bg-white/80 p-6 shadow-sm backdrop-blur lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
+                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-green-100/80 bg-white/85 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
                     <div className="flex h-full flex-col overflow-hidden">
                         <div className="flex items-center gap-3 pb-6">
-                            <Image
-                                src="/clinic-illustration.svg"
-                                alt="HNU Clinic Health Record & Appointment System"
-                                width={44}
-                                height={44}
-                                className="h-11 w-11 object-contain drop-shadow"
-                            />
+                            <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-green-100 bg-white shadow-sm">
+                                <Image
+                                    src="/clinic-illustration.svg"
+                                    alt="HNU Clinic Health Record & Appointment System emblem"
+                                    width={44}
+                                    height={44}
+                                    className="h-9 w-9 object-contain"
+                                />
+                            </span>
                             <div className="flex flex-col leading-tight text-left">
-                                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-green-500">
-                                    HNU Clinic
-                                </span>
-                                <h1 className="text-base font-semibold text-green-700 text-balance">
+                                <span className="text-sm font-semibold text-slate-900">HNU Clinic</span>
+                                <span className="text-xs font-medium text-slate-500">
                                     Health Record &amp; Appointment System
-                                </h1>
+                                </span>
                             </div>
                         </div>
                         <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
@@ -146,7 +146,7 @@ export function PanelLayout({
                         <Separator className="my-6" />
                         <Button
                             variant="default"
-                            className="mt-auto w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm transition-transform hover:scale-[1.01] hover:bg-green-700"
+                            className="mt-auto w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-green-700"
                             onClick={handleLogout}
                             disabled={isLoggingOut}
                         >
@@ -163,21 +163,23 @@ export function PanelLayout({
                 </aside>
 
                 <div className="flex flex-1 flex-col">
-                    <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-green-100/70 bg-white/80 px-4 py-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/60 md:px-6">
+                    <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-green-100/70 bg-white/85 px-4 py-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/65 md:px-6">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div className="space-y-3">
                                 <Link
                                     href={homeHref}
-                                    className="flex items-center gap-3 rounded-2xl border border-green-100 bg-white/90 px-3 py-2 text-sm font-semibold text-green-700 shadow-sm transition hover:-translate-y-px hover:bg-green-100/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
+                                    className="group flex items-center gap-3 rounded-2xl border border-green-100 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-px hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
                                 >
-                                    <Image
-                                        src="/clinic-illustration.svg"
-                                        alt="HNU Clinic Health Record & Appointment System"
-                                        width={36}
-                                        height={36}
-                                        className="h-9 w-9 object-contain"
-                                    />
-                                    <span className="text-left text-sm font-semibold leading-tight text-balance">
+                                    <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-100 bg-white shadow-sm">
+                                        <Image
+                                            src="/clinic-illustration.svg"
+                                            alt="HNU Clinic Health Record & Appointment System emblem"
+                                            width={32}
+                                            height={32}
+                                            className="h-7 w-7 object-contain"
+                                        />
+                                    </span>
+                                    <span className="text-left text-sm font-semibold leading-tight text-slate-600 text-balance">
                                         HNU Clinic Health Record &amp; Appointment System
                                     </span>
                                 </Link>
