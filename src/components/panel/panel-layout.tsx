@@ -124,8 +124,8 @@ export function PanelLayout({
                                 />
                             </span>
                             <div className="flex flex-col leading-tight text-left">
-                                <span className="text-sm font-semibold text-slate-900">HNU Clinic</span>
-                                <span className="text-xs font-medium text-slate-500">
+                                <span className="text-sm font-semibold text-green-700">HNU Clinic</span>
+                                <span className="text-xs font-medium text-green-900">
                                     Health Record &amp; Appointment System
                                 </span>
                             </div>
@@ -179,7 +179,7 @@ export function PanelLayout({
                                             className="h-7 w-7 object-contain"
                                         />
                                     </span>
-                                    <span className="text-left text-sm font-semibold leading-tight text-slate-600 text-balance">
+                                    <span className="text-left text-sm font-semibold leading-tight text-green-700 text-balance">
                                         HNU Clinic Health Record &amp; Appointment System
                                     </span>
                                 </Link>

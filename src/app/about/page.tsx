@@ -74,8 +74,8 @@ export default function AboutPage() {
                                 />
                             </span>
                             <div className="flex flex-col leading-tight text-left">
-                                <span className="text-sm font-semibold text-slate-900 md:text-base">HNU Clinic</span>
-                                <span className="text-xs font-medium text-slate-500 md:text-sm">
+                                <span className="text-sm font-semibold text-green-700 md:text-base">HNU Clinic</span>
+                                <span className="text-xs font-medium text-green-900 md:text-sm">
                                     Health Record &amp; Appointment System
                                 </span>
                             </div>

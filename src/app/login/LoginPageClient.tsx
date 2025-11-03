@@ -327,7 +327,7 @@ export default function LoginPageClient() {
                         Secure Access Portal
                     </span>
                     <h1 className="mt-6 text-3xl font-bold text-green-600 sm:text-4xl md:text-5xl">
-                        Welcome back to HNU Clinic
+                        Welcome back to HNU Clinic Health Record &amp; Appointment System
                     </h1>
                     <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
                         Sign in to manage appointments, review health records, and stay connected with the Holy
