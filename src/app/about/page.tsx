@@ -55,32 +55,42 @@ export default function AboutPage() {
     return (
         <div className="flex flex-col min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
             {/* Header */}
-            <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-green-100">
-                <div className="max-w-7xl mx-auto flex justify-between items-center px-4 md:px-8 py-3">
+            <header className="sticky top-0 z-50 w-full border-b border-green-100/70 bg-white/85 backdrop-blur supports-backdrop-filter:bg-white/70">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
                     {/* Logo + Title */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-3">
                         <Link
                             href="/"
-                            className="flex items-center gap-1 hover:opacity-90 transition-opacity"
+                            className="group flex items-center gap-3 rounded-2xl px-2 py-1 transition hover:bg-green-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                         >
-                            <Image
-                                src="/clinic-illustration.svg"
-                                alt="HNU Clinic logo"
-                                width={48}
-                                height={48}
-                                priority
-                                className="md:w-14 md:h-14"
-                            />
-                            <h1 className="text-lg md:text-2xl font-bold text-green-600 leading-none">
-                                HNU Clinic
-                            </h1>
+                            <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-green-100 bg-white shadow-sm transition group-hover:-translate-y-px group-hover:shadow-md md:h-12 md:w-12">
+                                <Image
+                                    src="/clinic-illustration.svg"
+                                    alt="HNU Clinic Health Record & Appointment System emblem"
+                                    width={44}
+                                    height={44}
+                                    priority
+                                    className="h-9 w-9 object-contain md:h-10 md:w-10"
+                                />
+                            </span>
+                            <div className="flex flex-col leading-tight text-left">
+                                <span className="text-sm font-semibold text-green-700 md:text-base">HNU Clinic</span>
+                                <span className="text-xs font-medium text-green-900 md:text-sm">
+                                    Health Record &amp; Appointment System
+                                </span>
+                            </div>
                         </Link>
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+                    <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
                         {navigation.map((item) => (
-                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="inline-flex items-center text-slate-600 transition hover:text-green-700"
+                                aria-label={item.label}
+                            >
                                 {item.label}
                             </Link>
                         ))}
@@ -91,22 +101,23 @@ export default function AboutPage() {
 
                     {/* Mobile Menu Button */}
                     <button
-                        className="md:hidden p-2"
+                        className="rounded-lg p-2 text-green-600 transition hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white md:hidden"
                         onClick={() => setMenuOpen(!menuOpen)}
+                        aria-label={menuOpen ? "Close menu" : "Open menu"}
                     >
-                        {menuOpen ? (
-                            <X className="w-6 h-6 text-green-600" />
-                        ) : (
-                            <Menu className="w-6 h-6 text-green-600" />
-                        )}
+                        {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                     </button>
                 </div>
 
                 {/* Mobile Dropdown Nav */}
                 {menuOpen && (
-                    <div className="flex flex-col gap-3 px-4 pb-5 md:hidden bg-white/95">
+                    <div className="flex flex-col gap-3 bg-white/95 px-4 pb-5 md:hidden">
                         {navigation.map((item) => (
-                            <Link key={item.label} href={item.href} className="text-gray-700 hover:text-green-600 transition">
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className="rounded-lg px-2 py-2 text-slate-700 transition hover:bg-green-50 hover:text-green-700"
+                            >
                                 {item.label}
                             </Link>
                         ))}
@@ -395,7 +406,7 @@ export default function AboutPage() {
                     </div>
                 </div>
                 <div className="border-t border-green-700/60 text-center py-4 text-xs text-green-200">
-                    © {new Date().getFullYear()} HNU Clinic Capstone Project
+                    © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System
                 </div>
             </footer>
         </div>
