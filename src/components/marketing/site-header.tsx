@@ -158,7 +158,6 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
             {menuOpen ? (
                 <div className="border-t border-green-100/80 bg-white/95 shadow-inner md:hidden">
                     <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 sm:px-6 lg:px-8">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-green-600/80">Navigate</span>
                         <div className="flex flex-col gap-2">
                             {navigation.map((item) => {
                                 const active = isItemActive(item.href) || isHashActive(item.href);
