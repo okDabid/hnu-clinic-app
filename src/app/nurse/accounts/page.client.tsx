@@ -1300,11 +1300,11 @@ export function NurseAccountsPageClient({
                 {/* Manage Users */}
                 <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="flex flex-col gap-4">
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
                                 Manage Existing Users
                             </CardTitle>
-                            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end">
+                            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end ml-auto">
                                 <div className="relative w-full md:w-60 lg:w-72">
                                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                                     <Input
@@ -1318,35 +1318,38 @@ export function NurseAccountsPageClient({
                                         disabled={loading || isRefreshingUsers}
                                     />
                                 </div>
-                                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end md:w-auto">
-                                    <Select
-                                        value={roleFilter}
-                                        onValueChange={(val) => setRoleFilter(val as RoleFilterValue)}
-                                    >
-                                        <SelectTrigger className="h-10 border-green-200">
-                                            <SelectValue placeholder="All roles" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="ALL">All roles</SelectItem>
-                                            <SelectItem value="DOCTOR">Doctor</SelectItem>
-                                            <SelectItem value="NURSE">Nurse</SelectItem>
-                                            <SelectItem value="PATIENT">Patient</SelectItem>
-                                            <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <Select
-                                        value={statusFilter}
-                                        onValueChange={(val) => setStatusFilter(val as StatusFilterValue)}
-                                    >
-                                        <SelectTrigger className="h-10 border-green-200">
-                                            <SelectValue placeholder="All statuses" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="ALL">All statuses</SelectItem>
-                                            <SelectItem value="Active">Active</SelectItem>
-                                            <SelectItem value="Inactive">Inactive</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                                        <Select
+                                            value={roleFilter}
+                                            onValueChange={(val) => setRoleFilter(val as RoleFilterValue)}
+                                        >
+                                            <SelectTrigger className="h-10 border-green-200">
+                                                <SelectValue placeholder="All roles" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="ALL">All roles</SelectItem>
+                                                <SelectItem value="DOCTOR">Doctor</SelectItem>
+                                                <SelectItem value="NURSE">Nurse</SelectItem>
+                                                <SelectItem value="PATIENT">Patient</SelectItem>
+                                                <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <Select
+                                            value={statusFilter}
+                                            onValueChange={(val) => setStatusFilter(val as StatusFilterValue)}
+                                        >
+                                            <SelectTrigger className="h-10 border-green-200">
+                                                <SelectValue placeholder="All statuses" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="ALL">All statuses</SelectItem>
+                                                <SelectItem value="Active">Active</SelectItem>
+                                                <SelectItem value="Inactive">Inactive</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -1401,11 +1404,10 @@ export function NurseAccountsPageClient({
                                                         <TableCell>
                                                             <Badge
                                                                 variant="outline"
-                                                                className={`px-3 py-1 ${
-                                                                    user.status === "Active"
-                                                                        ? "bg-green-100 text-green-700 border-green-200"
-                                                                        : "bg-red-100 text-red-700 border-red-200"
-                                                                }`}
+                                                                className={`px-3 py-1 ${user.status === "Active"
+                                                                    ? "bg-green-100 text-green-700 border-green-200"
+                                                                    : "bg-red-100 text-red-700 border-red-200"
+                                                                    }`}
                                                             >
                                                                 {user.status}
                                                             </Badge>
@@ -1443,40 +1445,40 @@ export function NurseAccountsPageClient({
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>
-                                                                        {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
-                                                                    </AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        {user.status === "Active"
-                                                                            ? "The account will be signed out and unable to access the system until reactivated."
-                                                                            : "The account will regain access to the clinic system."}
-                                                                    </AlertDialogDescription>
-                                                                    {user.role === "DOCTOR" && (
-                                                                        <p className="mt-3 rounded-lg bg-emerald-50/80 p-3 text-sm font-medium text-emerald-700">
+                                                                            {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
+                                                                        </AlertDialogTitle>
+                                                                        <AlertDialogDescription>
                                                                             {user.status === "Active"
-                                                                                ? "Deactivated doctors will no longer appear as options when patients book appointments."
-                                                                                : "Reactivated doctors will once again be available for patient appointment scheduling."}
-                                                                        </p>
-                                                                    )}
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        className={cn(
-                                                                            "text-white focus:outline-none focus:ring-2 focus:ring-offset-2",
-                                                                            user.status === "Active"
-                                                                                ? "bg-red-600 hover:bg-red-700 focus:ring-red-200"
-                                                                                : "bg-green-600 hover:bg-green-700 focus:ring-green-200"
+                                                                                ? "The account will be signed out and unable to access the system until reactivated."
+                                                                                : "The account will regain access to the clinic system."}
+                                                                        </AlertDialogDescription>
+                                                                        {user.role === "DOCTOR" && (
+                                                                            <p className="mt-3 rounded-lg bg-emerald-50/80 p-3 text-sm font-medium text-emerald-700">
+                                                                                {user.status === "Active"
+                                                                                    ? "Deactivated doctors will no longer appear as options when patients book appointments."
+                                                                                    : "Reactivated doctors will once again be available for patient appointment scheduling."}
+                                                                            </p>
                                                                         )}
-                                                                        disabled={isStatusUpdating}
-                                                                        onClick={() => handleToggle(user.accountId, user.status)}
-                                                                    >
-                                                                        {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </TableCell>
-                                                </TableRow>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            className={cn(
+                                                                                "text-white focus:outline-none focus:ring-2 focus:ring-offset-2",
+                                                                                user.status === "Active"
+                                                                                    ? "bg-red-600 hover:bg-red-700 focus:ring-red-200"
+                                                                                    : "bg-green-600 hover:bg-green-700 focus:ring-green-200"
+                                                                            )}
+                                                                            disabled={isStatusUpdating}
+                                                                            onClick={() => handleToggle(user.accountId, user.status)}
+                                                                        >
+                                                                            {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 );
                                             })
                                     ) : (
