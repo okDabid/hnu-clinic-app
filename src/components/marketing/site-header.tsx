@@ -133,7 +133,7 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                         </div>
                         <Link href="/login" onClick={closeMenu}>
                             <Button className="mt-2 w-full rounded-full bg-green-600 py-2 text-sm font-semibold hover:bg-green-700">
-                                Login to Portal
+                                Login
                             </Button>
                         </Link>
                     </div>
