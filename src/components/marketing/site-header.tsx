@@ -24,13 +24,59 @@ export type SiteHeaderNavItem = {
 
 export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [activeHash, setActiveHash] = useState<string | null>(null);
     const pathname = usePathname();
 
     useEffect(() => {
         setMenuOpen(false);
     }, [pathname]);
 
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const getCurrentHash = () => {
+            const hash = window.location.hash;
+            if (!hash) {
+                return null;
+            }
+
+            const hasNavigationItem = navigation.some((item) => item.href === hash);
+            return hasNavigationItem ? hash : null;
+        };
+
+        setActiveHash(getCurrentHash());
+
+        const handleHashChange = () => {
+            setActiveHash(getCurrentHash());
+        };
+
+        window.addEventListener("hashchange", handleHashChange);
+        return () => {
+            window.removeEventListener("hashchange", handleHashChange);
+        };
+    }, [navigation]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        if (!window.location.hash) {
+            setActiveHash(null);
+        }
+    }, [pathname]);
+
     const closeMenu = () => setMenuOpen(false);
+
+    const handleNavClick = (href: string) => {
+        if (href.startsWith("#")) {
+            setActiveHash(href);
+        } else {
+            setActiveHash(null);
+        }
+    };
 
     const isItemActive = (href: string) => {
         const [path] = href.split("#");
@@ -40,6 +86,8 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
 
         return path === pathname;
     };
+
+    const isHashActive = (href: string) => href.startsWith("#") && activeHash === href;
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-green-100/70 bg-white/85 shadow-[0_12px_40px_-24px_rgba(16,185,129,0.55)] backdrop-blur supports-backdrop-filter:bg-white/70">
@@ -69,7 +117,7 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
 
                 <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
                     {navigation.map((item) => {
-                        const active = isItemActive(item.href);
+                        const active = isItemActive(item.href) || isHashActive(item.href);
 
                         return (
                             <Link
@@ -78,11 +126,12 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                                 aria-label={item.label}
                                 aria-current={active ? "page" : undefined}
                                 className={cn(
-                                    "inline-flex items-center rounded-full px-3 py-2 transition-colors",
+                                    "inline-flex items-center rounded-full px-3 py-2 transition-all duration-200 ease-out",
                                     active
-                                        ? "bg-green-600 text-white shadow-sm"
+                                        ? "bg-green-600 text-white shadow-[0_10px_30px_rgba(16,185,129,0.35)]"
                                         : "text-slate-600 hover:bg-green-50 hover:text-green-700",
                                 )}
+                                onClick={() => handleNavClick(item.href)}
                             >
                                 {item.label}
                             </Link>
@@ -112,19 +161,22 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                         <span className="text-xs font-semibold uppercase tracking-wide text-green-600/80">Navigate</span>
                         <div className="flex flex-col gap-2">
                             {navigation.map((item) => {
-                                const active = isItemActive(item.href);
+                                const active = isItemActive(item.href) || isHashActive(item.href);
 
                                 return (
                                     <Link
                                         key={item.label}
                                         href={item.href}
                                         className={cn(
-                                            "rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
+                                            "rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-200 ease-out",
                                             active
                                                 ? "border-green-200 bg-green-600 text-white shadow-sm"
                                                 : "border-green-100/80 bg-white/70 text-slate-700 hover:border-green-200 hover:bg-green-50 hover:text-green-700",
                                         )}
-                                        onClick={closeMenu}
+                                        onClick={() => {
+                                            handleNavClick(item.href);
+                                            closeMenu();
+                                        }}
                                     >
                                         {item.label}
                                     </Link>
