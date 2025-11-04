@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const MenuIcon = dynamic(() => import("lucide-react").then((mod) => mod.Menu), {
     ssr: false,
@@ -22,6 +24,19 @@ export type SiteHeaderNavItem = {
 
 export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const pathname = usePathname();
+
+    const activeHref = useMemo(() => {
+        if (!pathname) return null;
+
+        return (
+            navigation.find((item) =>
+                item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href)
+            )?.href ?? null
+        );
+    }, [navigation, pathname]);
 
     const closeMenu = () => setMenuOpen(false);
 
@@ -53,17 +68,27 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                     </Link>
                 </div>
 
-                <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
-                    {navigation.map((item) => (
-                        <Link
-                            key={item.label}
-                            href={item.href}
-                            className="inline-flex items-center text-slate-600 transition hover:text-green-700"
-                            aria-label={item.label}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
+                <nav className="hidden items-center gap-2 text-sm font-medium text-slate-600 md:flex">
+                    {navigation.map((item) => {
+                        const isActive = activeHref === item.href;
+
+                        return (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className={cn(
+                                    "inline-flex items-center rounded-full px-4 py-2 transition-all duration-300 ease-out",
+                                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                                    isActive
+                                        ? "bg-green-600 text-white shadow-sm"
+                                        : "text-slate-600 hover:bg-green-50 hover:text-green-700"
+                                )}
+                                aria-label={item.label}
+                            >
+                                {item.label}
+                            </Link>
+                        );
+                    })}
                     <Link href="/login">
                         <Button className="bg-green-600 hover:bg-green-700 shadow-sm">Login</Button>
                     </Link>
@@ -81,16 +106,25 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
 
             {menuOpen ? (
                 <div className="flex flex-col gap-3 bg-white/95 px-4 pb-5 md:hidden">
-                    {navigation.map((item) => (
-                        <Link
-                            key={item.label}
-                            href={item.href}
-                            className="rounded-lg px-2 py-2 text-slate-700 transition hover:bg-green-50 hover:text-green-700"
-                            onClick={closeMenu}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
+                    {navigation.map((item) => {
+                        const isActive = activeHref === item.href;
+
+                        return (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className={cn(
+                                    "rounded-full px-3 py-2 text-sm font-medium transition-all duration-300 ease-out",
+                                    isActive
+                                        ? "bg-green-600 text-white shadow-sm"
+                                        : "text-slate-700 hover:bg-green-50 hover:text-green-700"
+                                )}
+                                onClick={closeMenu}
+                            >
+                                {item.label}
+                            </Link>
+                        );
+                    })}
                     <Link href="/login" onClick={closeMenu}>
                         <Button className="w-full bg-green-600 hover:bg-green-700">Login</Button>
                     </Link>
