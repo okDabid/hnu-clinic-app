@@ -13,9 +13,6 @@ import {
     BellRing,
     Workflow,
     ArrowRight,
-    Braces,
-    ServerCog,
-    Lock,
     Code2,
 } from "lucide-react";
 
@@ -70,33 +67,6 @@ const techStack = [
     { name: "NextAuth", logo: "/logos/nextauth.svg", href: "https://next-auth.js.org" },
     { name: "Zod", logo: "/logos/zod.svg", href: "https://zod.dev" },
     { name: "Vercel", logo: "/logos/vercel.svg", href: "https://vercel.com" },
-];
-
-const toolingHighlights = [
-    {
-        title: "Server-first architecture",
-        description:
-            "Next.js App Router and server components keep clinic tools responsive while reducing client overhead.",
-        icon: ServerCog,
-    },
-    {
-        title: "Typed business logic",
-        description:
-            "TypeScript with Zod validation ensures every dispense, consult, and report follows strict data contracts.",
-        icon: Braces,
-    },
-    {
-        title: "Automated guardrails",
-        description:
-            "Integrated workflows handle inventory adjustments, batching, and Prisma-backed rate limits to prevent abuse.",
-        icon: Workflow,
-    },
-    {
-        title: "Secure data pathways",
-        description:
-            "Prisma ORM, protected sessions, and audited access policies protect health information end to end.",
-        icon: Lock,
-    },
 ];
 
 const developers = [
@@ -193,7 +163,6 @@ export default function LearnMorePage() {
                         </div>
                     </div>
                 </section>
-
                 <section className="bg-white px-6 py-16 md:px-12 md:py-20">
                     <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.1fr_0.9fr] items-center">
                         <div className="space-y-6">
@@ -235,8 +204,7 @@ export default function LearnMorePage() {
                         </Card>
                     </div>
                 </section>
-
-                <section className="bg-white px-6 py-16 md:px-12 md:py-20">
+                <section className="bg-white px-6 py-16 md:px-12 md:py-10">
                     <div className="mx-auto max-w-6xl space-y-12">
                         <div className="space-y-4 text-center">
                             <Code2 className="mx-auto h-12 w-12 text-green-600" />
@@ -247,7 +215,7 @@ export default function LearnMorePage() {
                         </div>
 
                         <div className="space-y-10">
-                            <div className="overflow-hidden shadow-sm">
+                            <div className="overflow-hidden">
                                 <LogoLoop
                                     logos={techStack.map((tech) => ({
                                         src: tech.logo,
@@ -258,32 +226,16 @@ export default function LearnMorePage() {
                                         height: 48,
                                     }))}
                                     ariaLabel="Clinic technology stack logos"
-                                    speed={100}
+                                    speed={80}
                                     direction="left"
-                                    logoHeight={40}
-                                    gap={24}
+                                    logoHeight={45}
+                                    gap={20}
                                     pauseOnHover
                                     fadeOut
                                     fadeOutColor="rgba(248, 250, 252, 0.95)"
                                     scaleOnHover
                                     className="px-4 py-6"
                                 />
-                            </div>
-
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                                {toolingHighlights.map(({ title, description, icon: Icon }) => (
-                                    <Card key={title} className="rounded-2xl border-green-100 bg-white shadow-sm">
-                                        <CardContent className="space-y-4 p-6 text-left">
-                                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600 shadow-sm">
-                                                <Icon className="h-6 w-6" />
-                                            </span>
-                                            <div className="space-y-2">
-                                                <p className="text-base font-semibold text-green-700">{title}</p>
-                                                <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
                             </div>
                         </div>
                     </div>
