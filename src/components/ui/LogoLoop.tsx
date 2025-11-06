@@ -68,7 +68,7 @@ const useResizeObserver = (
 
     callback();
     return () => observers.forEach(o => o?.disconnect());
-  }, [callback, ...elements, ...dependencies]);
+  }, [callback, elements]);
 };
 
 const useImageLoader = (
@@ -105,7 +105,7 @@ const useImageLoader = (
         img.removeEventListener('error', handleImageLoad);
       });
     };
-  }, [seqRef, onLoad, ...dependencies]);
+  }, [seqRef, onLoad]);
 };
 
 const useAnimationLoop = (
@@ -331,7 +331,7 @@ export const LogoLoop = React.memo<LogoLoopProps>(
           </li>
         );
       },
-      [scaleOnHover]
+      [scaleOnHover, logoHeight]
     );
 
     const logoLists = useMemo(
