@@ -182,7 +182,7 @@ model MedDispense {
   med_id          String
   consultation_id String?
   scholar_user_id String?
-  walk_in_name    String?
+  walk_in_id_number String?
   walk_in_contact String?
   walk_in_notes   String?
   quantity        Int
@@ -204,6 +204,16 @@ model DispenseBatch {
   quantity_used    Int
   dispense         MedDispense   @relation(fields: [dispense_id], references: [dispense_id], onDelete: Cascade)
   replenishment    Replenishment @relation(fields: [replenishment_id], references: [replenishment_id], onDelete: Cascade)
+}
+
+model RateLimitBucket {
+  key          String
+  window_start DateTime
+  count        Int      @default(1)
+  updatedAt    DateTime @updatedAt
+
+  @@id([key, window_start])
+  @@index([window_start])
 }
 
 model PasswordResetToken {
