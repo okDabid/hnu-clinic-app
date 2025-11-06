@@ -49,7 +49,7 @@ const toCssLength = (value?: number | string): string | undefined =>
 const cx = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
 
 const useResizeObserver = (
-  callback: () => void, elements: Array<React.RefObject<Element | null>>, p0: (number | LogoItem[])[]) => {
+  callback: () => void, elements: Array<React.RefObject<Element | null>>) => {
   useEffect(() => {
     if (!window.ResizeObserver) {
       const handleResize = () => callback();
@@ -71,7 +71,7 @@ const useResizeObserver = (
 };
 
 const useImageLoader = (
-  seqRef: React.RefObject<HTMLUListElement | null>, onLoad: () => void, p0: (number | LogoItem[])[],
+  seqRef: React.RefObject<HTMLUListElement | null>, onLoad: () => void,
 ) => {
   useEffect(() => {
     const images = seqRef.current?.querySelectorAll<HTMLImageElement>('img') ?? [];
@@ -224,9 +224,9 @@ export const LogoLoop = React.memo<LogoLoopProps>(
       ariaLabel?: string;
     } => 'node' in item;
 
-    useResizeObserver(updateDimensions, [containerRef, seqRef], [logos, gap, logoHeight]);
+    useResizeObserver(updateDimensions, [containerRef, seqRef]);
 
-    useImageLoader(seqRef, updateDimensions, [logos, gap, logoHeight]);
+    useImageLoader(seqRef, updateDimensions);
 
     useAnimationLoop(trackRef, targetVelocity, seqWidth, isHovered, pauseOnHover);
 

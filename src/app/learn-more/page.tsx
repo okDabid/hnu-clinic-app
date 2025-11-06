@@ -123,12 +123,6 @@ const developers = [
 ];
 
 export default function LearnMorePage() {
-    const midpoint = Math.ceil(techStack.length / 2);
-    const logoRows = [
-        techStack.slice(0, midpoint),
-        techStack.slice(midpoint),
-    ].filter((row) => row.length > 0);
-
     return (
         <div className="flex min-h-screen flex-col bg-linear-to-b from-green-50 via-white to-green-50">
             <SiteHeader navigation={navigation} />
