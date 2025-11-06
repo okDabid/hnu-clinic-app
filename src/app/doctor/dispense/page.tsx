@@ -109,10 +109,10 @@ function formatDate(value: string | null | undefined) {
 function formatStaffName(
     staff:
         | {
-              username: string;
-              student: { fname: string | null; mname: string | null; lname: string | null } | null;
-              employee: { fname: string | null; mname: string | null; lname: string | null } | null;
-          }
+            username: string;
+            student: { fname: string | null; mname: string | null; lname: string | null } | null;
+            employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+        }
         | null
 ) {
     if (!staff) return "—";
@@ -277,7 +277,7 @@ export default function DoctorDispensePage() {
             <div className="space-y-6">
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-br from-green-50 via-white to-green-100/60 shadow-sm">
+                        <Card className="rounded-3xl border border-green-100/70 bg-linear-to-br from-green-50 via-white to-green-100/60 shadow-sm">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-sm font-medium text-muted-foreground">Dispenses logged</CardTitle>
                             </CardHeader>
