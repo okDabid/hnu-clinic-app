@@ -133,81 +133,49 @@ class MemoryRateLimiter implements RateLimiter {
     }
 }
 
-const RATE_LIMIT_TABLE = '"RateLimitBucket"';
-let rateLimitTableReady = false;
-let ensureRateLimitTablePromise: Promise<void> | null = null;
-
-async function ensureRateLimitTable() {
-    if (rateLimitTableReady) {
-        return;
-    }
-
-    if (ensureRateLimitTablePromise) {
-        return ensureRateLimitTablePromise;
-    }
-
-    ensureRateLimitTablePromise = (async () => {
-        await prisma.$executeRawUnsafe(`
-            CREATE TABLE IF NOT EXISTS ${RATE_LIMIT_TABLE} (
-                "key" text NOT NULL,
-                "window_start" timestamptz NOT NULL,
-                "count" integer NOT NULL DEFAULT 1,
-                "updatedAt" timestamptz NOT NULL DEFAULT now(),
-                CONSTRAINT "RateLimitBucket_pkey" PRIMARY KEY ("key", "window_start")
-            )
-        `);
-
-        await prisma.$executeRawUnsafe(`
-            CREATE INDEX IF NOT EXISTS "RateLimitBucket_window_start_idx"
-            ON ${RATE_LIMIT_TABLE} ("window_start")
-        `);
-
-        rateLimitTableReady = true;
-    })();
-
-    try {
-        await ensureRateLimitTablePromise;
-    } catch (error) {
-        ensureRateLimitTablePromise = null;
-        throw error;
-    }
-}
-
 class PrismaRateLimiter implements RateLimiter {
     async consume(key: string, limit: number, windowMs: number): Promise<RateLimitResult> {
-        await ensureRateLimitTable();
-
         const now = new Date();
         const windowStartMs = Math.floor(now.getTime() / windowMs) * windowMs;
         const windowStart = new Date(windowStartMs);
         const windowEndMs = windowStartMs + windowMs;
 
         try {
-            const rows = await prisma.$transaction(
-                async (tx) =>
-                    tx.$queryRaw<{ count: number }[]>`
-                        INSERT INTO "RateLimitBucket" ("key", "window_start", "count")
-                        VALUES (${key}, ${windowStart}, 1)
-                        ON CONFLICT ("key", "window_start")
-                        DO UPDATE SET
-                            "count" = "RateLimitBucket"."count" + 1,
-                            "updatedAt" = now()
-                        RETURNING "count"
-                    `,
-                { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
-            );
+            const bucket = await prisma.rateLimitBucket.upsert({
+                where: {
+                    key_window_start: {
+                        key,
+                        window_start: windowStart,
+                    },
+                },
+                create: {
+                    key,
+                    window_start: windowStart,
+                    count: 1,
+                },
+                update: {
+                    count: { increment: 1 },
+                },
+            });
 
-            const count = Number(rows?.[0]?.count ?? 1);
-            if (count > limit) {
+            if (bucket.count > limit) {
                 return { success: false, retryAfterMs: Math.max(0, windowEndMs - now.getTime()) };
             }
+
+            void prisma.rateLimitBucket
+                .deleteMany({
+                    where: {
+                        window_start: {
+                            lt: new Date(now.getTime() - windowMs * 10),
+                        },
+                    },
+                })
+                .catch((cleanupError) => {
+                    console.warn("[RateLimit] Failed to clean up expired rate limit buckets", cleanupError);
+                });
 
             return { success: true };
         } catch (error) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
-                return { success: false, retryAfterMs: Math.max(0, windowEndMs - now.getTime()) };
-            }
-
             throw error;
         }
     }
@@ -231,7 +199,7 @@ function logRateLimitFallback(error: unknown) {
 
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
         console.warn(
-            "[RateLimit] RateLimitBucket table is unavailable or could not be created. Falling back to in-memory limiter."
+            "[RateLimit] RateLimitBucket table is unavailable. Ensure database migrations are up to date. Falling back to in-memory limiter."
         );
         return;
     }

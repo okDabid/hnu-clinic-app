@@ -28,7 +28,7 @@ export async function POST(req: Request) {
             med_id,
             consultation_id,
             quantity,
-            walkInName,
+            walkInIdNumber,
             walkInContact,
             walkInNotes,
             scholarUserId,
@@ -41,14 +41,14 @@ export async function POST(req: Request) {
             );
         }
 
-        if (!consultation_id && !walkInName) {
+        if (!consultation_id && !walkInIdNumber) {
             return NextResponse.json(
-                { error: "Provide a consultation_id or walk-in name" },
+                { error: "Provide a consultation_id or walk-in ID number" },
                 { status: 400 }
             );
         }
 
-        if (!consultation_id && walkInName && !scholarUserId) {
+        if (!consultation_id && walkInIdNumber && !scholarUserId) {
             return NextResponse.json(
                 { error: "Walk-in dispenses must include the assisting scholar" },
                 { status: 400 }
@@ -59,14 +59,14 @@ export async function POST(req: Request) {
             med_id,
             consultation_id: consultation_id ?? null,
             quantity: Number(quantity),
-            walkIn: walkInName
+            walkIn: walkInIdNumber
                 ? {
-                    name: walkInName,
+                    idNumber: walkInIdNumber,
                     contact: walkInContact ?? null,
                     notes: walkInNotes ?? null,
                 }
                 : undefined,
-            scholar_user_id: walkInName ? scholarUserId ?? null : null,
+            scholar_user_id: walkInIdNumber ? scholarUserId ?? null : null,
         });
         return NextResponse.json(newDispense);
     } catch (err) {

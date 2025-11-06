@@ -45,7 +45,7 @@ type DispenseRecord = {
         doctor: { username: string } | null;
         nurse: { username: string } | null;
     } | null;
-    walk_in_name: string | null;
+    walk_in_id_number: string | null;
     walk_in_contact: string | null;
     walk_in_notes: string | null;
     scholar: {
@@ -463,7 +463,7 @@ export default function DoctorDispensePage() {
                                         <TableHeader className="bg-green-50 text-green-700">
                                             <TableRow>
                                                 <TableHead className="whitespace-nowrap">Clinic</TableHead>
-                                                <TableHead className="whitespace-nowrap">Recipient</TableHead>
+                                                <TableHead className="whitespace-nowrap">Recipient / ID</TableHead>
                                                 <TableHead className="whitespace-nowrap">Visit Type</TableHead>
                                                 <TableHead className="whitespace-nowrap">Medicine</TableHead>
                                                 <TableHead className="whitespace-nowrap">Quantity</TableHead>
@@ -491,8 +491,7 @@ export default function DoctorDispensePage() {
                                                             <div className="flex flex-col gap-1">
                                                                 <span className="font-semibold text-gray-900">
                                                                     {d.consultation?.appointment?.patient?.username ??
-                                                                        d.walk_in_name ??
-                                                                        "—"}
+                                                                        (d.walk_in_id_number ? `ID: ${d.walk_in_id_number}` : "—")}
                                                                 </span>
                                                                 {!d.consultation && (
                                                                     <>

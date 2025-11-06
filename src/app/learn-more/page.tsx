@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { SiteHeader } from "@/components/marketing/site-header";
+import { LogoLoop } from "@/components/marketing/logo-loop";
 import {
     Users,
     Code2,
@@ -13,6 +14,9 @@ import {
     BellRing,
     Workflow,
     ArrowRight,
+    Cpu,
+    Palette,
+    LockKeyhole,
 } from "lucide-react";
 
 const navigation = [
@@ -66,6 +70,32 @@ const techStack = [
     { name: "NextAuth", logo: "/logos/nextauth.svg" },
     { name: "Zod", logo: "/logos/zod.svg" },
     { name: "Vercel", logo: "/logos/vercel.svg" },
+];
+
+const techLoopRows = [
+    techStack.slice(0, Math.ceil(techStack.length / 2)),
+    [
+        ...techStack.slice(Math.ceil(techStack.length / 2)),
+        ...techStack.slice(0, Math.ceil(techStack.length / 2)),
+    ],
+];
+
+const techHighlights = [
+    {
+        title: "Typed data flows",
+        description: "TypeScript and Prisma enforce a consistent schema from the UI to the database layer.",
+        icon: Cpu,
+    },
+    {
+        title: "Polished interfaces",
+        description: "Tailwind CSS with shadcn/ui makes it easy to ship accessible, branded clinic screens.",
+        icon: Palette,
+    },
+    {
+        title: "Secure by design",
+        description: "NextAuth, granular roles, and rate limiting safeguard every interaction with clinic data.",
+        icon: LockKeyhole,
+    },
 ];
 
 const developers = [
@@ -206,26 +236,42 @@ export default function LearnMorePage() {
                 </section>
 
                 <section className="bg-white px-6 py-16 md:px-12 md:py-20">
-                    <div className="mx-auto max-w-6xl space-y-10">
+                    <div className="mx-auto max-w-6xl space-y-12">
                         <div className="space-y-4 text-center">
                             <Code2 className="mx-auto h-12 w-12 text-green-600" />
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Modern tools that power the experience</h3>
                             <p className="mx-auto max-w-3xl text-gray-600">
-                                Our technology stack combines reliable frameworks and UI libraries to keep the platform scalable and intuitive.
+                                A cohesive toolkit keeps the HNU Clinic portal fast, reliable, and easy to maintain—from typed APIs and automated schema checks to polished interface components and resilient security guards.
                             </p>
                         </div>
 
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                            {techStack.map((tech) => (
-                                <Card key={tech.name} className="rounded-2xl border-green-100 bg-white shadow-sm">
-                                    <CardContent className="flex flex-col items-center gap-4 p-6">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-                                            <Image src={tech.logo} alt={tech.name} width={48} height={48} className="object-contain" />
-                                        </div>
-                                        <p className="text-sm font-medium text-green-700">{tech.name}</p>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        <div className="space-y-6">
+                            <LogoLoop logos={techLoopRows[0]} className="rounded-3xl border border-green-100 bg-white/90 shadow-sm" />
+                            <LogoLoop
+                                logos={techLoopRows[1]}
+                                direction="right"
+                                speedSeconds={32}
+                                className="rounded-3xl border border-green-100 bg-white/90 shadow-sm md:translate-x-16"
+                            />
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {techHighlights.map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                    <Card key={item.title} className="rounded-3xl border border-green-100/80 bg-white/95 shadow-sm">
+                                        <CardContent className="flex flex-col gap-4 p-6">
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-green-100 bg-green-50">
+                                                <Icon className="h-5 w-5 text-green-600" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="text-base font-semibold text-green-700">{item.title}</h4>
+                                                <p className="text-sm leading-relaxed text-gray-600">{item.description}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
                         </div>
                     </div>
                 </section>
