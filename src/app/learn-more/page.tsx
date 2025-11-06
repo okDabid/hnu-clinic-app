@@ -228,7 +228,7 @@ export default function LearnMorePage() {
                                     ariaLabel="Clinic technology stack logos"
                                     speed={80}
                                     direction="left"
-                                    logoHeight={45}
+                                    logoHeight={50}
                                     gap={20}
                                     pauseOnHover
                                     fadeOut
