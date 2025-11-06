@@ -5,14 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { SiteHeader } from "@/components/marketing/site-header";
+import { LogoLoop } from "@/components/ui/LogoLoop";
 import {
     Users,
-    Code2,
     LayoutDashboard,
     ShieldCheck,
     BellRing,
     Workflow,
     ArrowRight,
+    Code2,
 } from "lucide-react";
 
 const navigation = [
@@ -58,14 +59,14 @@ const process = [
 ];
 
 const techStack = [
-    { name: "Next.js", logo: "/logos/nextjs.svg" },
-    { name: "TypeScript", logo: "/logos/typescript.svg" },
-    { name: "Tailwind CSS", logo: "/logos/tailwind.svg" },
-    { name: "ShadCN/UI", logo: "/logos/shadcn.svg" },
-    { name: "Lucide Icons", logo: "/logos/lucide.svg" },
-    { name: "NextAuth", logo: "/logos/nextauth.svg" },
-    { name: "Zod", logo: "/logos/zod.svg" },
-    { name: "Vercel", logo: "/logos/vercel.svg" },
+    { name: "Next.js", logo: "/logos/nextjs.svg", href: "https://nextjs.org" },
+    { name: "TypeScript", logo: "/logos/typescript.svg", href: "https://www.typescriptlang.org" },
+    { name: "Tailwind CSS", logo: "/logos/tailwind.svg", href: "https://tailwindcss.com" },
+    { name: "ShadCN/UI", logo: "/logos/shadcn.svg", href: "https://ui.shadcn.com" },
+    { name: "Lucide Icons", logo: "/logos/lucide.svg", href: "https://lucide.dev" },
+    { name: "NextAuth", logo: "/logos/nextauth.svg", href: "https://next-auth.js.org" },
+    { name: "Zod", logo: "/logos/zod.svg", href: "https://zod.dev" },
+    { name: "Vercel", logo: "/logos/vercel.svg", href: "https://vercel.com" },
 ];
 
 const developers = [
@@ -162,7 +163,6 @@ export default function LearnMorePage() {
                         </div>
                     </div>
                 </section>
-
                 <section className="bg-white px-6 py-16 md:px-12 md:py-20">
                     <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.1fr_0.9fr] items-center">
                         <div className="space-y-6">
@@ -204,9 +204,8 @@ export default function LearnMorePage() {
                         </Card>
                     </div>
                 </section>
-
-                <section className="bg-white px-6 py-16 md:px-12 md:py-20">
-                    <div className="mx-auto max-w-6xl space-y-10">
+                <section className="bg-white px-6 py-16 md:px-12 md:py-10">
+                    <div className="mx-auto max-w-6xl space-y-12">
                         <div className="space-y-4 text-center">
                             <Code2 className="mx-auto h-12 w-12 text-green-600" />
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Modern tools that power the experience</h3>
@@ -215,17 +214,29 @@ export default function LearnMorePage() {
                             </p>
                         </div>
 
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                            {techStack.map((tech) => (
-                                <Card key={tech.name} className="rounded-2xl border-green-100 bg-white shadow-sm">
-                                    <CardContent className="flex flex-col items-center gap-4 p-6">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-                                            <Image src={tech.logo} alt={tech.name} width={48} height={48} className="object-contain" />
-                                        </div>
-                                        <p className="text-sm font-medium text-green-700">{tech.name}</p>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        <div className="space-y-10">
+                            <div className="overflow-hidden">
+                                <LogoLoop
+                                    logos={techStack.map((tech) => ({
+                                        src: tech.logo,
+                                        alt: tech.name,
+                                        title: tech.name,
+                                        href: tech.href,
+                                        width: 128,
+                                        height: 48,
+                                    }))}
+                                    ariaLabel="Clinic technology stack logos"
+                                    speed={80}
+                                    direction="left"
+                                    logoHeight={50}
+                                    gap={20}
+                                    pauseOnHover
+                                    fadeOut
+                                    fadeOutColor="rgba(248, 250, 252, 0.95)"
+                                    scaleOnHover
+                                    className="px-4 py-6"
+                                />
+                            </div>
                         </div>
                     </div>
                 </section>
