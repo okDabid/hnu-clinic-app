@@ -13,10 +13,10 @@ import {
     BellRing,
     Workflow,
     ArrowRight,
-    Cpu,
     Braces,
     ServerCog,
     Lock,
+    Code2,
 } from "lucide-react";
 
 const navigation = [
@@ -62,14 +62,14 @@ const process = [
 ];
 
 const techStack = [
-    { name: "Next.js", logo: "/logos/nextjs.svg" },
-    { name: "TypeScript", logo: "/logos/typescript.svg" },
-    { name: "Tailwind CSS", logo: "/logos/tailwind.svg" },
-    { name: "ShadCN/UI", logo: "/logos/shadcn.svg" },
-    { name: "Lucide Icons", logo: "/logos/lucide.svg" },
-    { name: "NextAuth", logo: "/logos/nextauth.svg" },
-    { name: "Zod", logo: "/logos/zod.svg" },
-    { name: "Vercel", logo: "/logos/vercel.svg" },
+    { name: "Next.js", logo: "/logos/nextjs.svg", href: "https://nextjs.org" },
+    { name: "TypeScript", logo: "/logos/typescript.svg", href: "https://www.typescriptlang.org" },
+    { name: "Tailwind CSS", logo: "/logos/tailwind.svg", href: "https://tailwindcss.com" },
+    { name: "ShadCN/UI", logo: "/logos/shadcn.svg", href: "https://ui.shadcn.com" },
+    { name: "Lucide Icons", logo: "/logos/lucide.svg", href: "https://lucide.dev" },
+    { name: "NextAuth", logo: "/logos/nextauth.svg", href: "https://next-auth.js.org" },
+    { name: "Zod", logo: "/logos/zod.svg", href: "https://zod.dev" },
+    { name: "Vercel", logo: "/logos/vercel.svg", href: "https://vercel.com" },
 ];
 
 const toolingHighlights = [
@@ -245,40 +245,35 @@ export default function LearnMorePage() {
                 <section className="bg-white px-6 py-16 md:px-12 md:py-20">
                     <div className="mx-auto max-w-6xl space-y-12">
                         <div className="space-y-4 text-center">
-                            <Cpu className="mx-auto h-12 w-12 text-green-600" />
+                            <Code2 className="mx-auto h-12 w-12 text-green-600" />
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Modern tools that power the experience</h3>
                             <p className="mx-auto max-w-3xl text-gray-600">
-                                Our technology stack blends fast rendering, strict type-safety, and dependable automation so the clinic can focus on care—not upkeep.
+                                Our technology stack combines reliable frameworks and UI libraries to keep the platform scalable and intuitive.
                             </p>
                         </div>
 
                         <div className="space-y-10">
-                            <div className="space-y-4">
-                                {logoRows.map((row, index) => (
-                                    <div
-                                        key={`logo-loop-${index}`}
-                                        className="overflow-hidden rounded-3xl border border-green-100/70 bg-white/90 shadow-sm"
-                                    >
-                                        <LogoLoop
-                                            logos={row.map((tech) => ({
-                                                src: tech.logo,
-                                                alt: tech.name,
-                                                title: tech.name,
-                                                width: 128,
-                                                height: 48,
-                                            }))}
-                                            ariaLabel="Clinic technology stack logos"
-                                            speed={index % 2 === 0 ? 90 : 120}
-                                            direction={index % 2 === 0 ? "left" : "right"}
-                                            logoHeight={40}
-                                            gap={48}
-                                            pauseOnHover
-                                            fadeOut
-                                            fadeOutColor="rgba(248, 250, 252, 0.95)"
-                                            className="px-4 py-6"
-                                        />
-                                    </div>
-                                ))}
+                            <div className="overflow-hidden rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                                <LogoLoop
+                                    logos={techStack.map((tech) => ({
+                                        src: tech.logo,
+                                        alt: tech.name,
+                                        title: tech.name,
+                                        href: tech.href,
+                                        width: 128,
+                                        height: 48,
+                                    }))}
+                                    ariaLabel="Clinic technology stack logos"
+                                    speed={105}
+                                    direction="left"
+                                    logoHeight={40}
+                                    gap={48}
+                                    pauseOnHover
+                                    fadeOut
+                                    fadeOutColor="rgba(248, 250, 252, 0.95)"
+                                    scaleOnHover
+                                    className="px-4 py-6"
+                                />
                             </div>
 
                             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
