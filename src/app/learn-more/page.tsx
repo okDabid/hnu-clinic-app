@@ -247,7 +247,7 @@ export default function LearnMorePage() {
                         </div>
 
                         <div className="space-y-10">
-                            <div className="overflow-hidden rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                            <div className="overflow-hidden shadow-sm">
                                 <LogoLoop
                                     logos={techStack.map((tech) => ({
                                         src: tech.logo,
@@ -258,10 +258,10 @@ export default function LearnMorePage() {
                                         height: 48,
                                     }))}
                                     ariaLabel="Clinic technology stack logos"
-                                    speed={105}
+                                    speed={100}
                                     direction="left"
                                     logoHeight={40}
-                                    gap={48}
+                                    gap={24}
                                     pauseOnHover
                                     fadeOut
                                     fadeOutColor="rgba(248, 250, 252, 0.95)"
