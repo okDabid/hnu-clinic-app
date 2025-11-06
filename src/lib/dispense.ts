@@ -79,7 +79,7 @@ export async function recordDispense({
     consultation_id?: string | null;
     quantity: number;
     walkIn?: {
-        name: string;
+        idNumber: string;
         contact?: string | null;
         notes?: string | null;
     };
@@ -89,12 +89,12 @@ export async function recordDispense({
         throw new DispenseError("med_id is required", 400);
     }
 
-    const walkInName = walkIn?.name?.trim();
+    const walkInIdNumber = walkIn?.idNumber?.trim();
     const walkInContact = walkIn?.contact ? walkIn.contact.trim() : null;
     const walkInNotes = walkIn?.notes ? walkIn.notes.trim() : null;
 
     const hasConsultation = Boolean(consultation_id);
-    const hasWalkIn = Boolean(walkInName);
+    const hasWalkIn = Boolean(walkInIdNumber);
 
     if (!hasConsultation && !hasWalkIn) {
         throw new DispenseError("Either consultation_id or walk-in details are required", 400);
@@ -185,7 +185,7 @@ export async function recordDispense({
                 med_id,
                 consultation_id: hasConsultation ? consultation_id : null,
                 scholar_user_id: hasWalkIn ? scholar_user_id ?? null : null,
-                walk_in_name: hasWalkIn ? walkInName : null,
+                walk_in_id_number: hasWalkIn ? walkInIdNumber : null,
                 walk_in_contact: hasWalkIn ? walkInContact : null,
                 walk_in_notes: hasWalkIn ? walkInNotes : null,
                 quantity: qtyNeeded,

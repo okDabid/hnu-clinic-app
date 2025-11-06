@@ -91,11 +91,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const { med_id, quantity, walkInName, walkInContact, walkInNotes } = await req.json();
+        const { med_id, quantity, walkInIdNumber, walkInContact, walkInNotes } = await req.json();
 
-        if (!med_id || quantity === undefined || !walkInName) {
+        if (!med_id || quantity === undefined || !walkInIdNumber) {
             return NextResponse.json(
-                { error: "med_id, quantity, and walkInName are required" },
+                { error: "med_id, quantity, and walkInIdNumber are required" },
                 { status: 400 }
             );
         }
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
             med_id,
             quantity: Number(quantity),
             walkIn: {
-                name: walkInName,
+                idNumber: walkInIdNumber,
                 contact: walkInContact ?? null,
                 notes: walkInNotes ?? null,
             },

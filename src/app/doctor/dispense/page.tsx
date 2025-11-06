@@ -45,7 +45,7 @@ type DispenseRecord = {
         doctor: { username: string } | null;
         nurse: { username: string } | null;
     } | null;
-    walk_in_name: string | null;
+    walk_in_id_number: string | null;
     walk_in_contact: string | null;
     walk_in_notes: string | null;
     scholar: {
@@ -491,8 +491,9 @@ export default function DoctorDispensePage() {
                                                             <div className="flex flex-col gap-1">
                                                                 <span className="font-semibold text-gray-900">
                                                                     {d.consultation?.appointment?.patient?.username ??
-                                                                        d.walk_in_name ??
-                                                                        "—"}
+                                                                        (d.walk_in_id_number
+                                                                            ? `Walk-in ID: ${d.walk_in_id_number}`
+                                                                            : "—")}
                                                                 </span>
                                                                 {!d.consultation && (
                                                                     <>
