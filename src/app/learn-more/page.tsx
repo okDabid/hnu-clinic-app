@@ -5,14 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { SiteHeader } from "@/components/marketing/site-header";
+import { LogoLoop } from "@/components/ui/LogoLoop";
 import {
     Users,
-    Code2,
     LayoutDashboard,
     ShieldCheck,
     BellRing,
     Workflow,
     ArrowRight,
+    Cpu,
+    Braces,
+    ServerCog,
+    Lock,
 } from "lucide-react";
 
 const navigation = [
@@ -68,6 +72,33 @@ const techStack = [
     { name: "Vercel", logo: "/logos/vercel.svg" },
 ];
 
+const toolingHighlights = [
+    {
+        title: "Server-first architecture",
+        description:
+            "Next.js App Router and server components keep clinic tools responsive while reducing client overhead.",
+        icon: ServerCog,
+    },
+    {
+        title: "Typed business logic",
+        description:
+            "TypeScript with Zod validation ensures every dispense, consult, and report follows strict data contracts.",
+        icon: Braces,
+    },
+    {
+        title: "Automated guardrails",
+        description:
+            "Integrated workflows handle inventory adjustments, batching, and Prisma-backed rate limits to prevent abuse.",
+        icon: Workflow,
+    },
+    {
+        title: "Secure data pathways",
+        description:
+            "Prisma ORM, protected sessions, and audited access policies protect health information end to end.",
+        icon: Lock,
+    },
+];
+
 const developers = [
     {
         name: "David Matthew Maniwang",
@@ -92,6 +123,12 @@ const developers = [
 ];
 
 export default function LearnMorePage() {
+    const midpoint = Math.ceil(techStack.length / 2);
+    const logoRows = [
+        techStack.slice(0, midpoint),
+        techStack.slice(midpoint),
+    ].filter((row) => row.length > 0);
+
     return (
         <div className="flex min-h-screen flex-col bg-linear-to-b from-green-50 via-white to-green-50">
             <SiteHeader navigation={navigation} />
@@ -206,26 +243,59 @@ export default function LearnMorePage() {
                 </section>
 
                 <section className="bg-white px-6 py-16 md:px-12 md:py-20">
-                    <div className="mx-auto max-w-6xl space-y-10">
+                    <div className="mx-auto max-w-6xl space-y-12">
                         <div className="space-y-4 text-center">
-                            <Code2 className="mx-auto h-12 w-12 text-green-600" />
+                            <Cpu className="mx-auto h-12 w-12 text-green-600" />
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Modern tools that power the experience</h3>
                             <p className="mx-auto max-w-3xl text-gray-600">
-                                Our technology stack combines reliable frameworks and UI libraries to keep the platform scalable and intuitive.
+                                Our technology stack blends fast rendering, strict type-safety, and dependable automation so the clinic can focus on care—not upkeep.
                             </p>
                         </div>
 
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                            {techStack.map((tech) => (
-                                <Card key={tech.name} className="rounded-2xl border-green-100 bg-white shadow-sm">
-                                    <CardContent className="flex flex-col items-center gap-4 p-6">
-                                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-50">
-                                            <Image src={tech.logo} alt={tech.name} width={48} height={48} className="object-contain" />
-                                        </div>
-                                        <p className="text-sm font-medium text-green-700">{tech.name}</p>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        <div className="space-y-10">
+                            <div className="space-y-4">
+                                {logoRows.map((row, index) => (
+                                    <div
+                                        key={`logo-loop-${index}`}
+                                        className="overflow-hidden rounded-3xl border border-green-100/70 bg-white/90 shadow-sm"
+                                    >
+                                        <LogoLoop
+                                            logos={row.map((tech) => ({
+                                                src: tech.logo,
+                                                alt: tech.name,
+                                                title: tech.name,
+                                                width: 128,
+                                                height: 48,
+                                            }))}
+                                            ariaLabel="Clinic technology stack logos"
+                                            speed={index % 2 === 0 ? 90 : 120}
+                                            direction={index % 2 === 0 ? "left" : "right"}
+                                            logoHeight={40}
+                                            gap={48}
+                                            pauseOnHover
+                                            fadeOut
+                                            fadeOutColor="rgba(248, 250, 252, 0.95)"
+                                            className="px-4 py-6"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                                {toolingHighlights.map(({ title, description, icon: Icon }) => (
+                                    <Card key={title} className="rounded-2xl border-green-100 bg-white shadow-sm">
+                                        <CardContent className="space-y-4 p-6 text-left">
+                                            <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600 shadow-sm">
+                                                <Icon className="h-6 w-6" />
+                                            </span>
+                                            <div className="space-y-2">
+                                                <p className="text-base font-semibold text-green-700">{title}</p>
+                                                <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </section>

@@ -38,7 +38,7 @@ type DispenseRecord = {
         item_name: string;
         clinic: { clinic_name: string };
     };
-    walk_in_name: string | null;
+    walk_in_id_number: string | null;
     walk_in_contact: string | null;
     walk_in_notes: string | null;
     scholar: {
@@ -92,7 +92,7 @@ export default function ScholarDispensePage() {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
-        name: "",
+        idNumber: "",
         contact: "",
         notes: "",
         med_id: "",
@@ -155,7 +155,7 @@ export default function ScholarDispensePage() {
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (!form.name.trim() || !form.med_id || !form.quantity) {
+        if (!form.idNumber.trim() || !form.med_id || !form.quantity) {
             toast.error("Please complete the required fields");
             return;
         }
@@ -179,7 +179,7 @@ export default function ScholarDispensePage() {
                 body: JSON.stringify({
                     med_id: form.med_id,
                     quantity,
-                    walkInName: form.name.trim(),
+                    walkInIdNumber: form.idNumber.trim(),
                     walkInContact: form.contact.trim() || null,
                     walkInNotes: form.notes.trim() || null,
                 }),
@@ -199,7 +199,7 @@ export default function ScholarDispensePage() {
                         : medicine
                 )
             );
-            setForm({ name: "", contact: "", notes: "", med_id: "", quantity: "" });
+            setForm({ idNumber: "", contact: "", notes: "", med_id: "", quantity: "" });
             toast.success("Walk-in dispense recorded");
         } catch (error) {
             console.error(error);
@@ -289,11 +289,11 @@ export default function ScholarDispensePage() {
                     <CardContent className="pt-6">
                         <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
                             <div className="space-y-2">
-                                <Label className="font-medium text-green-700">Walk-in name</Label>
+                                <Label className="font-medium text-green-700">Walk-in ID number</Label>
                                 <Input
-                                    value={form.name}
-                                    onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                                    placeholder="Enter walk-in's name"
+                                    value={form.idNumber}
+                                    onChange={(event) => setForm((prev) => ({ ...prev, idNumber: event.target.value }))}
+                                    placeholder="Enter walk-in's ID number"
                                     required
                                     className="rounded-xl border border-green-100/80 bg-white/80 focus-visible:ring-green-500"
                                 />
@@ -400,7 +400,7 @@ export default function ScholarDispensePage() {
                                     <TableHeader className="bg-green-50 text-green-700">
                                         <TableRow>
                                             <TableHead className="whitespace-nowrap">Clinic</TableHead>
-                                            <TableHead className="whitespace-nowrap">Walk-in</TableHead>
+                                            <TableHead className="whitespace-nowrap">Walk-in ID</TableHead>
                                             <TableHead className="whitespace-nowrap">Medicine</TableHead>
                                             <TableHead className="whitespace-nowrap">Quantity</TableHead>
                                             <TableHead className="whitespace-nowrap">Scholar</TableHead>
@@ -421,7 +421,7 @@ export default function ScholarDispensePage() {
                                                 <TableCell>
                                                     <div className="flex flex-col gap-1">
                                                         <span className="font-semibold text-gray-900">
-                                                            {dispense.walk_in_name ?? "—"}
+                                                            {dispense.walk_in_id_number ?? "—"}
                                                         </span>
                                                         {dispense.walk_in_contact ? (
                                                             <span className="text-xs text-muted-foreground">
