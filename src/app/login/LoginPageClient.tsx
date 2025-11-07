@@ -90,6 +90,13 @@ export default function LoginPageClient() {
     };
 
     // ---------- LOGIN ----------
+    const roleDestinations = {
+        NURSE: "/nurse",
+        DOCTOR: "/doctor",
+        SCHOLAR: "/scholar",
+        PATIENT: "/patient",
+    } as const;
+
     async function handleLogin(e: React.FormEvent<HTMLFormElement>, role: string) {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -106,7 +113,14 @@ export default function LoginPageClient() {
         try {
             setLoadingRole(role);
 
-            const result = await signIn("credentials", { redirect: false, ...payload });
+            const normalizedRole = payload.role as keyof typeof roleDestinations;
+            const defaultDestination = roleDestinations[normalizedRole] ?? "/login";
+
+            const result = await signIn("credentials", {
+                redirect: false,
+                callbackUrl: defaultDestination,
+                ...payload,
+            });
 
             if (result?.error) {
                 const message = result.error.includes("inactive")
@@ -119,23 +133,8 @@ export default function LoginPageClient() {
 
             toast.success("Successful login!", { position: "top-center" });
 
-            // Redirect by role
-            switch (payload.role) {
-                case "NURSE":
-                    router.push("/nurse");
-                    break;
-                case "DOCTOR":
-                    router.push("/doctor");
-                    break;
-                case "SCHOLAR":
-                    router.push("/scholar");
-                    break;
-                case "PATIENT":
-                    router.push("/patient");
-                    break;
-                default:
-                    router.push("/login");
-            }
+            const targetUrl = result?.url ?? defaultDestination;
+            router.replace(targetUrl);
         } catch (error) {
             const message =
                 error instanceof Error ? error.message : "Unexpected error occurred.";

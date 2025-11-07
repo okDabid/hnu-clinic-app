@@ -21,6 +21,13 @@ const ROLE_GUARDS = [
 
 type GuardRole = (typeof ROLE_GUARDS)[number]["role"];
 
+const ROLE_HOME: Record<GuardRole, string> = {
+    NURSE: "/nurse",
+    DOCTOR: "/doctor",
+    SCHOLAR: "/scholar",
+    PATIENT: "/patient",
+};
+
 function isPublicPath(pathname: string) {
     for (const prefix of PUBLIC_PATH_PREFIXES) {
         if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
@@ -49,6 +56,12 @@ function allowRequest() {
     return response;
 }
 
+function resolveRoleHome(role: unknown) {
+    if (typeof role !== "string") return null;
+    const normalized = role.toUpperCase() as GuardRole;
+    return ROLE_HOME[normalized] ?? null;
+}
+
 /**
  * Guards protected routes by validating the session token and role access.
  */
@@ -59,11 +72,17 @@ export async function middleware(req: NextRequest) {
         return allowRequest();
     }
 
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
     if (isPublicPath(pathname)) {
+        if (pathname.startsWith("/login")) {
+            const redirectPath = resolveRoleHome(token?.role);
+            if (redirectPath) {
+                return createRedirect(req, redirectPath);
+            }
+        }
         return allowRequest();
     }
-
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
     if (!token) {
         return guardResponse(req, 401, "Unauthorized: no session token", "/login");
@@ -92,5 +111,6 @@ export const config = {
         "/scholar/:path*",
         "/patient/:path*",
         "/api/:path*", // secure API routes too
+        "/login",
     ],
 };
