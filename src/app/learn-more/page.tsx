@@ -222,14 +222,14 @@ export default function LearnMorePage() {
                                         alt: tech.name,
                                         title: tech.name,
                                         href: tech.href,
-                                        width: 128,
+                                        width: 84,
                                         height: 48,
                                     }))}
                                     ariaLabel="Clinic technology stack logos"
-                                    speed={80}
+                                    speed={85}
                                     direction="left"
                                     logoHeight={50}
-                                    gap={20}
+                                    gap={48}
                                     pauseOnHover
                                     fadeOut
                                     fadeOutColor="rgba(248, 250, 252, 0.95)"
