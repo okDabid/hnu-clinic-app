@@ -1,9 +1,9 @@
 "use client";
 
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { LogOut, Menu, type LucideIcon } from "lucide-react";
 
@@ -60,10 +60,18 @@ export function PanelLayout({
     isNavItemActive,
 }: PanelLayoutProps) {
     const pathname = usePathname();
-    const { data: session } = useSession();
+    const router = useRouter();
+    const hasRedirectedRef = useRef(false);
+    const { data: session, status } = useSession({
+        required: true,
+        onUnauthenticated() {
+            if (hasRedirectedRef.current) return;
+            hasRedirectedRef.current = true;
+            router.replace("/login");
+        },
+    });
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
-
     const fullName = session?.user?.name ?? defaultName;
 
     const avatarFallback = useMemo(() => {
@@ -72,10 +80,25 @@ export function PanelLayout({
         return initials || fallbackInitials;
     }, [fullName, fallbackInitials]);
 
+    if (status === "loading") {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-green-50 via-white to-green-100 p-6" aria-busy>
+                <p className="text-sm font-medium text-muted-foreground">Verifying your session…</p>
+            </div>
+        );
+    }
+
     async function handleLogout() {
         try {
             setIsLoggingOut(true);
-            await signOut({ callbackUrl: "/login?logout=success" });
+            setMobileOpen(false);
+            const data = await signOut({ redirect: false, callbackUrl: "/login?logout=success" });
+            hasRedirectedRef.current = true;
+            if (data?.url) {
+                router.replace(data.url);
+            } else {
+                router.replace("/login?logout=success");
+            }
         } finally {
             setIsLoggingOut(false);
         }
