@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { Toaster, toast } from "sonner";
 
@@ -9,13 +10,20 @@ import { Toaster, toast } from "sonner";
  */
 function SessionWatcher() {
     const { data: session } = useSession();
+    const router = useRouter();
 
     useEffect(() => {
         if (session?.user?.status === "Inactive") {
             toast.error("Your account has been deactivated. Logging out...");
-            signOut({ callbackUrl: "/login" });
+            void signOut({ redirect: false, callbackUrl: "/login?error=inactive" })
+                .then((data) => {
+                    if (data?.url) router.replace(data.url);
+                })
+                .catch(() => {
+                    router.replace("/login?error=inactive");
+                });
         }
-    }, [session]);
+    }, [router, session]);
 
     return null;
 }
