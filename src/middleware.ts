@@ -73,9 +73,14 @@ export async function middleware(req: NextRequest) {
     }
 
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const status = typeof token?.status === "string" ? token.status : undefined;
 
     if (isPublicPath(pathname)) {
         if (pathname.startsWith("/login")) {
+            if (status === "Inactive") {
+                return allowRequest();
+            }
+
             const redirectPath = resolveRoleHome(token?.role);
             if (redirectPath) {
                 return createRedirect(req, redirectPath);
@@ -88,7 +93,6 @@ export async function middleware(req: NextRequest) {
         return guardResponse(req, 401, "Unauthorized: no session token", "/login");
     }
 
-    const status = typeof token.status === "string" ? token.status : undefined;
     if (status === "Inactive") {
         return guardResponse(req, 403, "Account inactive. Contact admin.", "/login?error=inactive");
     }
