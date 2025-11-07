@@ -1,7 +1,53 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { AccountStatus } from "@prisma/client";
+
+const PUBLIC_PATH_PREFIXES = new Set([
+    "/login",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-reset",
+    "/api/auth",
+    "/api/contact",
+    "/api/account/email/verify",
+]);
+
+const ROLE_GUARDS = [
+    { prefix: "/nurse", role: "NURSE" },
+    { prefix: "/doctor", role: "DOCTOR" },
+    { prefix: "/scholar", role: "SCHOLAR" },
+    { prefix: "/patient", role: "PATIENT" },
+] as const;
+
+type GuardRole = (typeof ROLE_GUARDS)[number]["role"];
+
+function isPublicPath(pathname: string) {
+    for (const prefix of PUBLIC_PATH_PREFIXES) {
+        if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function createRedirect(req: NextRequest, path: string) {
+    return NextResponse.redirect(new URL(path, req.url));
+}
+
+function guardResponse(req: NextRequest, status: number, message: string, redirectPath: string) {
+    if (req.nextUrl.pathname.startsWith("/api")) {
+        return NextResponse.json({ error: message }, { status });
+    }
+    return createRedirect(req, redirectPath);
+}
+
+function allowRequest() {
+    const response = NextResponse.next();
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    return response;
+}
 
 /**
  * Guards protected routes by validating the session token and role access.
@@ -9,73 +55,33 @@ import { AccountStatus } from "@prisma/client";
 export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
-    // Allow all public and auth routes without token
-    const publicPaths = [
-        "/login",
-        "/forgot-password",
-        "/reset-password",
-        "/verify-reset",
-        "/api/auth",
-        "/api/contact",
-        "/api/account/email/verify",
-    ];
-
-    if (publicPaths.some((path) => pathname.startsWith(path))) {
-        return NextResponse.next();
+    if (req.method === "OPTIONS") {
+        return allowRequest();
     }
 
-    // Extract session token
+    if (isPublicPath(pathname)) {
+        return allowRequest();
+    }
+
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-    // No token → redirect to login page
     if (!token) {
-        // For API routes, return 401 JSON instead of redirect
-        if (pathname.startsWith("/api")) {
-            return NextResponse.json(
-                { error: "Unauthorized: no session token" },
-                { status: 401 }
-            );
-        }
-        return NextResponse.redirect(new URL("/login", req.url));
+        return guardResponse(req, 401, "Unauthorized: no session token", "/login");
     }
 
-    // If token exists
-    const role = token.role as string | undefined;
-    const status = token.status as AccountStatus | undefined;
-
-    // Block inactive users
+    const status = typeof token.status === "string" ? token.status : undefined;
     if (status === "Inactive") {
-        if (pathname.startsWith("/api")) {
-            return NextResponse.json(
-                { error: "Account inactive. Contact admin." },
-                { status: 403 }
-            );
-        }
-        return NextResponse.redirect(new URL("/login?error=inactive", req.url));
+        return guardResponse(req, 403, "Account inactive. Contact admin.", "/login?error=inactive");
     }
 
-    // Role-based route guards
-    const roleGuardMap: Record<string, string> = {
-        "/nurse": "NURSE",
-        "/doctor": "DOCTOR",
-        "/scholar": "SCHOLAR",
-        "/patient": "PATIENT",
-    };
-
-    for (const prefix in roleGuardMap) {
-        if (pathname.startsWith(prefix) && role !== roleGuardMap[prefix]) {
-            if (pathname.startsWith("/api")) {
-                return NextResponse.json(
-                    { error: "Unauthorized: insufficient role" },
-                    { status: 403 }
-                );
-            }
-            return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
+    const role = typeof token.role === "string" ? (token.role.toUpperCase() as GuardRole) : undefined;
+    for (const { prefix, role: requiredRole } of ROLE_GUARDS) {
+        if (pathname.startsWith(prefix) && role !== requiredRole) {
+            return guardResponse(req, 403, "Unauthorized: insufficient role", "/login?error=unauthorized");
         }
     }
 
-    // Allow if all checks pass
-    return NextResponse.next();
+    return allowRequest();
 }
 
 // Apply only to protected routes
