@@ -68,7 +68,7 @@ export default function HomePage() {
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-12 px-6 py-16 md:flex-row md:px-12 md:py-24">
                         <div className="max-w-xl space-y-6 text-center md:text-left">
                             <span className="inline-flex items-center rounded-full border border-green-100 bg-white px-4 py-1 text-sm font-medium text-green-700 shadow-sm">
-                                HNU Clinic · Health Record &amp; Appointment System
+                                HNU Clinic · Capstone Project
                             </span>
                             <h2 className="text-3xl font-bold leading-tight text-green-600 md:text-5xl">
                                 Manage health records, book visits, and stay connected.
