@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ContactForm } from "@/components/marketing/contact-form";
@@ -69,7 +68,7 @@ export default function HomePage() {
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-12 px-6 py-16 md:flex-row md:px-12 md:py-24">
                         <div className="max-w-xl space-y-6 text-center md:text-left">
                             <span className="inline-flex items-center rounded-full border border-green-100 bg-white px-4 py-1 text-sm font-medium text-green-700 shadow-sm">
-                                HNU Clinic · Official campus health system
+                                HNU Clinic · Health Record &amp; Appointment System
                             </span>
                             <h2 className="text-3xl font-bold leading-tight text-green-600 md:text-5xl">
                                 Manage health records, book visits, and stay connected.
@@ -80,22 +79,6 @@ export default function HomePage() {
                             <p className="text-base leading-relaxed text-gray-700 md:text-lg">
                                 We help patients schedule visits, notify doctors of updates, and keep sensitive information synchronized between care teams—all while upholding the privacy expectations of the HNU community.
                             </p>
-                            <div className="flex w-full flex-col justify-center gap-4 sm:w-auto sm:flex-row md:justify-start">
-                                <Link href="/login" className="w-full sm:w-auto">
-                                    <Button size="lg" className="w-full bg-green-600 text-white shadow-md hover:bg-green-700">
-                                        Book an Appointment
-                                    </Button>
-                                </Link>
-                                <Link href="/learn-more" className="w-full sm:w-auto">
-                                    <Button
-                                        size="lg"
-                                        variant="outline"
-                                        className="w-full border-green-600 text-green-700 hover:bg-green-50 sm:w-auto"
-                                    >
-                                        Explore the Platform
-                                    </Button>
-                                </Link>
-                            </div>
                         </div>
                         <div className="flex flex-1 justify-center md:justify-end">
                             <Image
@@ -110,7 +93,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
-                <section id="features" className="bg-white px-6 py-16 md:px-12 md:py-20">
+                <section id="features" className="bg-white px-6 py-16 md:px-12 md:py-15">
                     <div className="mx-auto max-w-7xl space-y-12">
                         <div className="mx-auto max-w-3xl space-y-4 text-center">
                             <h3 className="text-2xl font-bold text-green-600 md:text-3xl">Built for dependable clinic operations</h3>
