@@ -33,9 +33,13 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
         y: 0,
         opacity: 0,
     });
+    const [indicatorTransitionEnabled, setIndicatorTransitionEnabled] = useState(false);
     const pathname = usePathname();
     const navRef = useRef<HTMLDivElement | null>(null);
     const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+    const restoreTransitionFrame = useRef<number | null>(null);
+    const hoveredItemRef = useRef<string | null>(null);
+    const activeHrefRef = useRef<string | null>(null);
 
     useEffect(() => {
         setMenuOpen(false);
@@ -141,9 +145,58 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
         });
     }, []);
 
+    const temporarilyDisableIndicatorTransition = useCallback(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        setIndicatorTransitionEnabled(false);
+
+        if (restoreTransitionFrame.current !== null) {
+            window.cancelAnimationFrame(restoreTransitionFrame.current);
+        }
+
+        restoreTransitionFrame.current = window.requestAnimationFrame(() => {
+            restoreTransitionFrame.current = window.requestAnimationFrame(() => {
+                setIndicatorTransitionEnabled(true);
+                restoreTransitionFrame.current = null;
+            });
+        });
+    }, []);
+
+    useEffect(() => {
+        temporarilyDisableIndicatorTransition();
+        const target = hoveredItemRef.current ?? activeHrefRef.current;
+        updateIndicatorForHref(target);
+    }, [pathname, updateIndicatorForHref, temporarilyDisableIndicatorTransition]);
+
     useEffect(() => {
         updateIndicatorForHref(hoveredItem ?? activeHref);
     }, [hoveredItem, activeHref, updateIndicatorForHref]);
+
+    useEffect(() => {
+        temporarilyDisableIndicatorTransition();
+    }, [temporarilyDisableIndicatorTransition]);
+
+    useEffect(() => {
+        hoveredItemRef.current = hoveredItem;
+    }, [hoveredItem]);
+
+    useEffect(() => {
+        activeHrefRef.current = activeHref;
+    }, [activeHref]);
+
+    useEffect(() => {
+        return () => {
+            if (typeof window === "undefined") {
+                return;
+            }
+
+            if (restoreTransitionFrame.current !== null) {
+                window.cancelAnimationFrame(restoreTransitionFrame.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -151,14 +204,16 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
         }
 
         const handleResize = () => {
-            updateIndicatorForHref(hoveredItem ?? activeHref);
+            temporarilyDisableIndicatorTransition();
+            const target = hoveredItemRef.current ?? activeHrefRef.current;
+            updateIndicatorForHref(target);
         };
 
         window.addEventListener("resize", handleResize);
         return () => {
             window.removeEventListener("resize", handleResize);
         };
-    }, [hoveredItem, activeHref, updateIndicatorForHref]);
+    }, [updateIndicatorForHref, temporarilyDisableIndicatorTransition]);
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-green-100/70 bg-white/85 shadow-[0_12px_40px_-24px_rgba(16,185,129,0.55)] backdrop-blur supports-backdrop-filter:bg-white/70">
@@ -193,7 +248,11 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                 >
                     <span
                         aria-hidden
-                        className="pointer-events-none absolute left-0 top-0 -z-10 rounded-full bg-green-600 shadow-[0_10px_30px_rgba(16,185,129,0.35)] transition-[opacity,transform,width,height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                        className={cn(
+                            "pointer-events-none absolute left-0 top-0 -z-10 rounded-full bg-green-600 shadow-[0_10px_30px_rgba(16,185,129,0.35)]",
+                            indicatorTransitionEnabled &&
+                                "transition-[opacity,transform,width,height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                        )}
                         style={{
                             opacity: indicatorStyle.opacity,
                             width: indicatorStyle.width,
