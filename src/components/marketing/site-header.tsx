@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -25,7 +25,17 @@ export type SiteHeaderNavItem = {
 export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeHash, setActiveHash] = useState<string | null>(null);
+    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+    const [indicatorStyle, setIndicatorStyle] = useState({
+        width: 0,
+        height: 0,
+        x: 0,
+        y: 0,
+        opacity: 0,
+    });
     const pathname = usePathname();
+    const navRef = useRef<HTMLDivElement | null>(null);
+    const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
 
     useEffect(() => {
         setMenuOpen(false);
@@ -89,6 +99,67 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
 
     const isHashActive = (href: string) => href.startsWith("#") && activeHash === href;
 
+    const activeHref = (() => {
+        for (const item of navigation) {
+            if (isHashActive(item.href) || isItemActive(item.href)) {
+                return item.href;
+            }
+        }
+
+        return null;
+    })();
+
+    const updateIndicatorForHref = useCallback((href: string | null) => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const container = navRef.current;
+        if (!container) {
+            return;
+        }
+
+        const target = href ? itemRefs.current[href] : null;
+
+        if (!target) {
+            setIndicatorStyle((previous) => ({
+                ...previous,
+                opacity: 0,
+            }));
+            return;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+
+        setIndicatorStyle({
+            width: targetRect.width,
+            height: targetRect.height,
+            x: targetRect.left - containerRect.left,
+            y: targetRect.top - containerRect.top,
+            opacity: 1,
+        });
+    }, []);
+
+    useEffect(() => {
+        updateIndicatorForHref(hoveredItem ?? activeHref);
+    }, [hoveredItem, activeHref, updateIndicatorForHref]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+
+        const handleResize = () => {
+            updateIndicatorForHref(hoveredItem ?? activeHref);
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [hoveredItem, activeHref, updateIndicatorForHref]);
+
     return (
         <header className="sticky top-0 z-50 w-full border-b border-green-100/70 bg-white/85 shadow-[0_12px_40px_-24px_rgba(16,185,129,0.55)] backdrop-blur supports-backdrop-filter:bg-white/70">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
@@ -115,9 +186,24 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                     </div>
                 </Link>
 
-                <nav className="hidden items-center gap-1 text-sm font-medium md:flex">
+                <nav
+                    ref={navRef}
+                    className="relative hidden items-center gap-1 text-sm font-medium md:flex"
+                    onMouseLeave={() => setHoveredItem(null)}
+                >
+                    <span
+                        aria-hidden
+                        className="pointer-events-none absolute left-0 top-0 -z-10 rounded-full bg-green-600 shadow-[0_10px_30px_rgba(16,185,129,0.35)] transition-[opacity,transform,width,height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                        style={{
+                            opacity: indicatorStyle.opacity,
+                            width: indicatorStyle.width,
+                            height: indicatorStyle.height,
+                            transform: `translate3d(${indicatorStyle.x}px, ${indicatorStyle.y}px, 0)`,
+                        }}
+                    />
                     {navigation.map((item) => {
                         const active = isItemActive(item.href) || isHashActive(item.href);
+                        const highlighted = hoveredItem ? hoveredItem === item.href : active;
 
                         return (
                             <Link
@@ -126,11 +212,22 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                                 aria-label={item.label}
                                 aria-current={active ? "page" : undefined}
                                 className={cn(
-                                    "inline-flex items-center rounded-full px-3 py-2 transition-all duration-200 ease-out",
-                                    active
-                                        ? "bg-green-600 text-white shadow-[0_10px_30px_rgba(16,185,129,0.35)]"
-                                        : "text-slate-600 hover:bg-green-50 hover:text-green-700",
+                                    "relative inline-flex items-center rounded-full px-3 py-2 transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                                    highlighted
+                                        ? "text-white"
+                                        : "text-slate-600 hover:text-green-700 focus-visible:text-green-700",
                                 )}
+                                ref={(node) => {
+                                    if (node) {
+                                        itemRefs.current[item.href] = node;
+                                    } else {
+                                        delete itemRefs.current[item.href];
+                                    }
+                                }}
+                                onMouseEnter={() => setHoveredItem(item.href)}
+                                onFocus={() => setHoveredItem(item.href)}
+                                onBlur={() => setHoveredItem(null)}
+                                onMouseLeave={() => setHoveredItem(null)}
                                 onClick={() => handleNavClick(item.href)}
                             >
                                 {item.label}
