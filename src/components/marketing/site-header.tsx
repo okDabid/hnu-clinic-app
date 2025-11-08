@@ -155,41 +155,56 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                 </button>
             </div>
 
-            {menuOpen ? (
-                <div className="border-t border-green-100/80 bg-white/95 shadow-inner md:hidden">
-                    <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 sm:px-6 lg:px-8">
-                        <div className="flex flex-col gap-2">
-                            {navigation.map((item) => {
-                                const active = isItemActive(item.href) || isHashActive(item.href);
+            <div
+                className={cn(
+                    "pointer-events-none fixed inset-0 z-40 bg-slate-900/40 opacity-0 transition-opacity duration-300 md:hidden",
+                    menuOpen && "pointer-events-auto opacity-100",
+                )}
+                aria-hidden={menuOpen ? undefined : true}
+                onClick={closeMenu}
+            />
+            <div
+                className={cn(
+                    "fixed inset-y-0 right-0 z-50 w-80 max-w-sm translate-x-full border-l border-green-100/80 bg-white/95 shadow-xl transition-transform duration-300 md:hidden",
+                    menuOpen && "translate-x-0",
+                )}
+                aria-hidden={menuOpen ? undefined : true}
+                role="dialog"
+                aria-modal={menuOpen ? true : undefined}
+                aria-label="Mobile navigation"
+            >
+                <div className="flex h-full flex-col gap-4 overflow-y-auto px-6 py-8">
+                    <div className="flex flex-col gap-2">
+                        {navigation.map((item) => {
+                            const active = isItemActive(item.href) || isHashActive(item.href);
 
-                                return (
-                                    <Link
-                                        key={item.label}
-                                        href={item.href}
-                                        className={cn(
-                                            "rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-200 ease-out",
-                                            active
-                                                ? "border-green-200 bg-green-600 text-white shadow-sm"
-                                                : "border-green-100/80 bg-white/70 text-slate-700 hover:border-green-200 hover:bg-green-50 hover:text-green-700",
-                                        )}
-                                        onClick={() => {
-                                            handleNavClick(item.href);
-                                            closeMenu();
-                                        }}
-                                    >
-                                        {item.label}
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                        <Link href="/login" onClick={closeMenu}>
-                            <Button className="mt-2 w-full rounded-full bg-green-600 py-2 text-sm font-semibold hover:bg-green-700">
-                                Login
-                            </Button>
-                        </Link>
+                            return (
+                                <Link
+                                    key={item.label}
+                                    href={item.href}
+                                    className={cn(
+                                        "rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-200 ease-out",
+                                        active
+                                            ? "border-green-200 bg-green-600 text-white shadow-sm"
+                                            : "border-green-100/80 bg-white/70 text-slate-700 hover:border-green-200 hover:bg-green-50 hover:text-green-700",
+                                    )}
+                                    onClick={() => {
+                                        handleNavClick(item.href);
+                                        closeMenu();
+                                    }}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
                     </div>
+                    <Link href="/login" onClick={closeMenu}>
+                        <Button className="mt-auto w-full rounded-full bg-green-600 py-2 text-sm font-semibold hover:bg-green-700">
+                            Login
+                        </Button>
+                    </Link>
                 </div>
-            ) : null}
+            </div>
         </header>
     );
 }
