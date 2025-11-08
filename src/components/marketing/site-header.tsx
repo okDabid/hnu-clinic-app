@@ -24,12 +24,43 @@ export type SiteHeaderNavItem = {
 
 export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) {
     const [menuOpen, setMenuOpen] = useState(false);
+    const [isMobileMenuVisible, setIsMobileMenuVisible] = useState(false);
     const [activeHash, setActiveHash] = useState<string | null>(null);
     const pathname = usePathname();
 
     useEffect(() => {
         setMenuOpen(false);
     }, [pathname]);
+
+    useEffect(() => {
+        if (menuOpen) {
+            setIsMobileMenuVisible(true);
+        } else {
+            const timeout = setTimeout(() => setIsMobileMenuVisible(false), 250);
+            return () => clearTimeout(timeout);
+        }
+    }, [menuOpen]);
+
+    useEffect(() => {
+        if (typeof document === "undefined") {
+            return;
+        }
+
+        if (menuOpen) {
+            const previousOverflow = document.body.style.overflow;
+            document.body.style.overflow = "hidden";
+
+            return () => {
+                document.body.style.overflow = previousOverflow;
+            };
+        }
+
+        document.body.style.overflow = "";
+
+        return () => {
+            document.body.style.overflow = "";
+        };
+    }, [menuOpen]);
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -155,38 +186,56 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                 </button>
             </div>
 
-            {menuOpen ? (
-                <div className="border-t border-green-100/80 bg-white/95 shadow-inner md:hidden">
-                    <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 sm:px-6 lg:px-8">
-                        <div className="flex flex-col gap-2">
-                            {navigation.map((item) => {
-                                const active = isItemActive(item.href) || isHashActive(item.href);
+            {isMobileMenuVisible ? (
+                <div className="md:hidden">
+                    <div
+                        className={cn(
+                            "fixed inset-0 z-40 bg-slate-900/10 backdrop-blur-sm transition-opacity duration-300",
+                            menuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+                        )}
+                        onClick={closeMenu}
+                    />
+                    <div
+                        className={cn(
+                            "fixed inset-y-0 right-0 z-50 w-full max-w-xs border-l border-green-100/80 bg-white shadow-xl transition-transform duration-300 ease-out",
+                            menuOpen ? "translate-x-0" : "translate-x-full",
+                        )}
+                    >
+                        <div className="flex h-full flex-col justify-between pt-20">
+                            <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-6 pb-6">
+                                <div className="flex flex-col gap-2">
+                                    {navigation.map((item) => {
+                                        const active = isItemActive(item.href) || isHashActive(item.href);
 
-                                return (
-                                    <Link
-                                        key={item.label}
-                                        href={item.href}
-                                        className={cn(
-                                            "rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-200 ease-out",
-                                            active
-                                                ? "border-green-200 bg-green-600 text-white shadow-sm"
-                                                : "border-green-100/80 bg-white/70 text-slate-700 hover:border-green-200 hover:bg-green-50 hover:text-green-700",
-                                        )}
-                                        onClick={() => {
-                                            handleNavClick(item.href);
-                                            closeMenu();
-                                        }}
-                                    >
-                                        {item.label}
-                                    </Link>
-                                );
-                            })}
+                                        return (
+                                            <Link
+                                                key={item.label}
+                                                href={item.href}
+                                                className={cn(
+                                                    "rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-200 ease-out",
+                                                    active
+                                                        ? "border-green-200 bg-green-600 text-white shadow-sm"
+                                                        : "border-green-100/80 bg-white/70 text-slate-700 hover:border-green-200 hover:bg-green-50 hover:text-green-700",
+                                                )}
+                                                onClick={() => {
+                                                    handleNavClick(item.href);
+                                                    closeMenu();
+                                                }}
+                                            >
+                                                {item.label}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div className="border-t border-green-100/80 bg-white/90 p-6">
+                                <Link href="/login" onClick={closeMenu}>
+                                    <Button className="w-full rounded-full bg-green-600 py-2 text-sm font-semibold hover:bg-green-700">
+                                        Login
+                                    </Button>
+                                </Link>
+                            </div>
                         </div>
-                        <Link href="/login" onClick={closeMenu}>
-                            <Button className="mt-2 w-full rounded-full bg-green-600 py-2 text-sm font-semibold hover:bg-green-700">
-                                Login
-                            </Button>
-                        </Link>
                     </div>
                 </div>
             ) : null}
