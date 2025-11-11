@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useTransition } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
     Loader2,
@@ -137,7 +137,7 @@ export function PatientAccountPageClient({
 
     const [tempDOB, setTempDOB] = useState("");
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
-    const [isRefreshingProfile, startProfileTransition] = useTransition();
+    const [refreshingProfile, setRefreshingProfile] = useState(false);
 
     useEffect(() => {
         if (initialProfileLoaded) {
@@ -164,8 +164,11 @@ export function PatientAccountPageClient({
         }
     };
 
-    const loadProfile = useCallback(async () => {
+    const loadProfile = useCallback(async ({ fromRefresh = false } = {}) => {
         try {
+            if (fromRefresh) {
+                setRefreshingProfile(true);
+            }
             setProfileLoading(true);
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
             const data = await res.json();
@@ -182,20 +185,21 @@ export function PatientAccountPageClient({
             }
 
             const normalized = normalizePatientAccountProfile(data as PatientAccountProfileApi);
-            startProfileTransition(() => {
-                const nextType =
-                    normalized.type === "student" || normalized.type === "employee" ? normalized.type : null;
-                setProfile(normalized.profile);
-                setProfileType(nextType);
-                setProfileLoaded(Boolean(normalized.profile));
-            });
+            const nextType =
+                normalized.type === "student" || normalized.type === "employee" ? normalized.type : null;
+            setProfile(normalized.profile);
+            setProfileType(nextType);
+            setProfileLoaded(Boolean(normalized.profile));
         } catch {
             toast.error("Failed to load profile");
         } finally {
             setProfileLoading(false);
             setInitializing(false);
+            if (fromRefresh) {
+                setRefreshingProfile(false);
+            }
         }
-    }, [startProfileTransition]);
+    }, []);
 
     useEffect(() => {
         if (!profileLoaded) {
@@ -203,7 +207,7 @@ export function PatientAccountPageClient({
         }
     }, [profileLoaded, loadProfile]);
 
-    const layoutTitle = profileLoading || isRefreshingProfile
+    const layoutTitle = profileLoading || refreshingProfile
         ? "Loading profile"
         : profileType === "employee"
           ? "Employee profile"
@@ -211,7 +215,7 @@ export function PatientAccountPageClient({
             ? "Student profile"
             : "Account overview";
 
-    const layoutDescription = profileLoading || isRefreshingProfile
+    const layoutDescription = profileLoading || refreshingProfile
         ? "Please wait while we retrieve your account data."
         : "Review and update your personal, academic, and emergency contact information to keep the clinic prepared.";
 
@@ -882,13 +886,9 @@ export function PatientAccountPageClient({
 
                                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                                     <AccountRefreshButton
-                                        onClick={() => {
-                                            startProfileTransition(() => {
-                                                void loadProfile();
-                                            });
-                                        }}
-                                        disabled={profileLoading || isRefreshingProfile}
-                                        isRefreshing={isRefreshingProfile}
+                                        onClick={() => void loadProfile({ fromRefresh: true })}
+                                        disabled={profileLoading || refreshingProfile}
+                                        isRefreshing={refreshingProfile}
                                     />
                                     <Button
                                         type="submit"
