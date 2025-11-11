@@ -129,6 +129,7 @@ export function PatientAccountPageClient({
             : null;
     const [profile, setProfile] = useState<PatientAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
+    const [hydratingProfile, setHydratingProfile] = useState(false);
 
     const [initializing, setInitializing] = useState(!initialProfileLoaded);
 
@@ -169,7 +170,7 @@ export function PatientAccountPageClient({
             if (fromRefresh) {
                 setRefreshingProfile(true);
             }
-            setProfileLoading(true);
+            setHydratingProfile(true);
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
             const data = await res.json();
             if (!res.ok) {
@@ -193,7 +194,7 @@ export function PatientAccountPageClient({
         } catch {
             toast.error("Failed to load profile");
         } finally {
-            setProfileLoading(false);
+            setHydratingProfile(false);
             setInitializing(false);
             if (fromRefresh) {
                 setRefreshingProfile(false);
@@ -207,7 +208,7 @@ export function PatientAccountPageClient({
         }
     }, [profileLoaded, loadProfile]);
 
-    const layoutTitle = profileLoading || refreshingProfile
+    const layoutTitle = hydratingProfile
         ? "Loading profile"
         : profileType === "employee"
           ? "Employee profile"
@@ -215,7 +216,7 @@ export function PatientAccountPageClient({
             ? "Student profile"
             : "Account overview";
 
-    const layoutDescription = profileLoading || refreshingProfile
+    const layoutDescription = hydratingProfile
         ? "Please wait while we retrieve your account data."
         : "Review and update your personal, academic, and emergency contact information to keep the clinic prepared.";
 
@@ -443,7 +444,7 @@ export function PatientAccountPageClient({
             }
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
-                {profileLoading ? (
+                {hydratingProfile ? (
                     <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
                         <div className="flex flex-col items-center gap-3 text-emerald-700">
                             <Loader2 className="h-6 w-6 animate-spin" />
@@ -452,7 +453,7 @@ export function PatientAccountPageClient({
                     </Card>
                 ) : null}
 
-                {!profileLoading && !profile ? (
+                {!hydratingProfile && !profile ? (
                     <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
                         <p className="text-sm text-muted-foreground">
                             We couldn&apos;t load your account information right now. Please refresh or contact the clinic team.
@@ -887,7 +888,7 @@ export function PatientAccountPageClient({
                                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                                     <AccountRefreshButton
                                         onClick={() => void loadProfile({ fromRefresh: true })}
-                                        disabled={profileLoading || refreshingProfile}
+                                        disabled={hydratingProfile || profileLoading}
                                         isRefreshing={refreshingProfile}
                                     />
                                     <Button
