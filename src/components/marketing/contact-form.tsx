@@ -85,7 +85,7 @@ export function ContactForm() {
                     type="email"
                     value={form.email}
                     onChange={updateField("email")}
-                    placeholder="you@example.com"
+                    placeholder="example@hnu.edu.ph"
                     required
                 />
             </div>
