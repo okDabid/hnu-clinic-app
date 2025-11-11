@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { AccountCard } from "@/components/account/account-card";
+import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
@@ -706,21 +707,11 @@ export default function DoctorAccountPage() {
                                 </AccountSection>
 
                                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="flex items-center justify-center gap-2 rounded-2xl border-green-200 bg-white/95 px-5 py-2 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-50 disabled:opacity-60"
+                                    <AccountRefreshButton
                                         onClick={() => void handleManualRefresh()}
                                         disabled={refreshing || profileLoading}
-                                    >
-                                        {refreshing ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin" /> Refreshing…
-                                            </>
-                                        ) : (
-                                            "Refresh profile"
-                                        )}
-                                    </Button>
+                                        isRefreshing={refreshing}
+                                    />
                                     <Button
                                         type="submit"
                                         className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"

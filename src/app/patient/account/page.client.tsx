@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useTransition } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import {
     Loader2,
@@ -40,6 +40,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { AccountCard } from "@/components/account/account-card";
+import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
@@ -128,6 +129,7 @@ export function PatientAccountPageClient({
             : null;
     const [profile, setProfile] = useState<PatientAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
+    const [hydratingProfile, setHydratingProfile] = useState(false);
 
     const [initializing, setInitializing] = useState(!initialProfileLoaded);
 
@@ -136,7 +138,7 @@ export function PatientAccountPageClient({
 
     const [tempDOB, setTempDOB] = useState("");
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
-    const [isRefreshingProfile, startProfileTransition] = useTransition();
+    const [refreshingProfile, setRefreshingProfile] = useState(false);
 
     useEffect(() => {
         if (initialProfileLoaded) {
@@ -163,9 +165,12 @@ export function PatientAccountPageClient({
         }
     };
 
-    const loadProfile = useCallback(async () => {
+    const loadProfile = useCallback(async ({ fromRefresh = false } = {}) => {
         try {
-            setProfileLoading(true);
+            if (fromRefresh) {
+                setRefreshingProfile(true);
+            }
+            setHydratingProfile(true);
             const res = await fetch("/api/patient/account/me", { cache: "no-store" });
             const data = await res.json();
             if (!res.ok) {
@@ -181,20 +186,21 @@ export function PatientAccountPageClient({
             }
 
             const normalized = normalizePatientAccountProfile(data as PatientAccountProfileApi);
-            startProfileTransition(() => {
-                const nextType =
-                    normalized.type === "student" || normalized.type === "employee" ? normalized.type : null;
-                setProfile(normalized.profile);
-                setProfileType(nextType);
-                setProfileLoaded(Boolean(normalized.profile));
-            });
+            const nextType =
+                normalized.type === "student" || normalized.type === "employee" ? normalized.type : null;
+            setProfile(normalized.profile);
+            setProfileType(nextType);
+            setProfileLoaded(Boolean(normalized.profile));
         } catch {
             toast.error("Failed to load profile");
         } finally {
-            setProfileLoading(false);
+            setHydratingProfile(false);
             setInitializing(false);
+            if (fromRefresh) {
+                setRefreshingProfile(false);
+            }
         }
-    }, [startProfileTransition]);
+    }, []);
 
     useEffect(() => {
         if (!profileLoaded) {
@@ -202,7 +208,7 @@ export function PatientAccountPageClient({
         }
     }, [profileLoaded, loadProfile]);
 
-    const layoutTitle = profileLoading || isRefreshingProfile
+    const layoutTitle = hydratingProfile
         ? "Loading profile"
         : profileType === "employee"
           ? "Employee profile"
@@ -210,7 +216,7 @@ export function PatientAccountPageClient({
             ? "Student profile"
             : "Account overview";
 
-    const layoutDescription = profileLoading || isRefreshingProfile
+    const layoutDescription = hydratingProfile
         ? "Please wait while we retrieve your account data."
         : "Review and update your personal, academic, and emergency contact information to keep the clinic prepared.";
 
@@ -438,7 +444,7 @@ export function PatientAccountPageClient({
             }
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
-                {profileLoading ? (
+                {hydratingProfile ? (
                     <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
                         <div className="flex flex-col items-center gap-3 text-emerald-700">
                             <Loader2 className="h-6 w-6 animate-spin" />
@@ -447,7 +453,7 @@ export function PatientAccountPageClient({
                     </Card>
                 ) : null}
 
-                {!profileLoading && !profile ? (
+                {!hydratingProfile && !profile ? (
                     <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
                         <p className="text-sm text-muted-foreground">
                             We couldn&apos;t load your account information right now. Please refresh or contact the clinic team.
@@ -880,25 +886,11 @@ export function PatientAccountPageClient({
                                 </AccountSection>
 
                                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="flex items-center justify-center gap-2 rounded-2xl border-green-200 bg-white/95 px-5 py-2 text-sm font-semibold text-green-700 shadow-sm transition hover:bg-green-50 disabled:opacity-60"
-                                        onClick={() => {
-                                            startProfileTransition(() => {
-                                                void loadProfile();
-                                            });
-                                        }}
-                                        disabled={profileLoading || isRefreshingProfile}
-                                    >
-                                        {isRefreshingProfile ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 animate-spin" /> Refreshing…
-                                            </>
-                                        ) : (
-                                            "Refresh profile"
-                                        )}
-                                    </Button>
+                                    <AccountRefreshButton
+                                        onClick={() => void loadProfile({ fromRefresh: true })}
+                                        disabled={hydratingProfile || profileLoading}
+                                        isRefreshing={refreshingProfile}
+                                    />
                                     <Button
                                         type="submit"
                                         className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
