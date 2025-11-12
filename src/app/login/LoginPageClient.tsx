@@ -369,7 +369,7 @@ export default function LoginPageClient() {
                             </div>
 
                             <Tabs defaultValue="doctor" className="w-full">
-                                <TabsList className="flex flex-wrap w-full grid-cols-2 gap-2 rounded-xl bg-green-100/60 p-1 text-sm sm:grid-cols-4">
+                                <TabsList className="grid w-full grid-cols-4 gap-2 rounded-xl bg-green-100/60 p-1 text-sm">
                                     <TabsTrigger
                                         className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
                                         value="doctor"
