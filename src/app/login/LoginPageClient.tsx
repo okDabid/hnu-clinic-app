@@ -320,13 +320,13 @@ export default function LoginPageClient() {
                 <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-green-300/40 blur-3xl" />
             </div>
 
-            <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-between gap-12 px-6 py-12 lg:flex-row lg:items-center lg:py-24">
-                <div className="mx-auto max-w-2xl text-center lg:mx-0 lg:max-w-lg lg:text-left">
+            <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-between gap-10 px-4 py-10 sm:px-6 sm:py-12 lg:flex-row lg:items-center lg:gap-12 lg:py-24">
+                <div className="mx-auto max-w-2xl text-center sm:text-left lg:mx-0 lg:max-w-lg">
                     <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1 text-sm font-medium text-green-700 shadow-sm">
                         <span className="h-2 w-2 rounded-full bg-green-500" />
                         Secure Access Portal
                     </span>
-                    <h1 className="mt-6 text-3xl font-bold text-green-600 sm:text-4xl md:text-5xl">
+                    <h1 className="mt-6 text-2xl font-bold text-green-600 sm:text-4xl md:text-5xl">
                         Welcome back to HNU Clinic Health Record &amp; Appointment System
                     </h1>
                     <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
