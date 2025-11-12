@@ -105,7 +105,7 @@ export function formatMedicalHistory(value: MedicalHistoryValue | null | undefin
     }
 
     const other = value.other?.trim() ?? "";
-    const parts = [...value.conditions];
+    const parts: string[] = [...value.conditions];
     if (other) {
         parts.push(other);
     }
