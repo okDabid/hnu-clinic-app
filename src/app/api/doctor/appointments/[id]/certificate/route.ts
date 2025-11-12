@@ -12,6 +12,12 @@ import {
   Role,
 } from "@prisma/client";
 import { formatManilaDateTime, manilaNow } from "@/lib/time";
+import {
+  MEDICAL_HISTORY_OPTIONS,
+  hasMedicalCondition,
+  parseMedicalHistory,
+  type MedicalHistoryValue,
+} from "@/lib/medical-history";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -111,6 +117,7 @@ type CertificateContext = {
   findings: string;
   reason: string;
   allergies: string[];
+  medicalHistory: MedicalHistoryValue;
   doctorName: string;
   doctorTitle: string;
   licenseNumber: string;
@@ -148,29 +155,18 @@ function renderCertificateHtml(context: CertificateContext) {
       context.patientName
     )}</strong>, a student of Holy Name University, was examined at the Holy Name University College Clinic.`;
 
-  const medicalHistoryOptions = [
-    "Asthma",
-    "Hypertension",
-    "Cancer",
-    "Epilepsy",
-    "Diabetes",
-    "Heart Disease",
-    "Kidney Disease",
-    "Nervous/Mental Disorder",
-  ];
-
-  const renderCheckbox = (label: string) => `
-        <div class="checkbox">
+  const renderCheckbox = (label: string, checked: boolean) => `
+        <div class="checkbox${checked ? " checked" : ""}">
           <span class="box" aria-hidden="true"></span>
           <span class="text">${escapeHtml(label)}</span>
         </div>
     `;
 
-  const medicalHistoryBoxes = medicalHistoryOptions
-    .map((option) => renderCheckbox(option))
-    .join("");
+  const medicalHistoryBoxes = MEDICAL_HISTORY_OPTIONS.map((option) =>
+    renderCheckbox(option, hasMedicalCondition(context.medicalHistory, option))
+  ).join("");
 
-  const remainingMedical = "";
+  const remainingMedical = context.medicalHistory.other?.trim() ?? "";
 
   const allergiesList = context.allergies
     .map((value) => titleCase(value))
@@ -364,6 +360,24 @@ function renderCertificateHtml(context: CertificateContext) {
         display: inline-block;
         margin-top: 1px;
         flex-shrink: 0;
+        position: relative;
+      }
+
+      .checkbox.checked .box {
+        background: #047857;
+        border-color: #047857;
+      }
+
+      .checkbox.checked .box::after {
+        content: "";
+        position: absolute;
+        top: 1px;
+        left: 3px;
+        width: 3px;
+        height: 6px;
+        border: solid #ffffff;
+        border-width: 0 1px 1px 0;
+        transform: rotate(45deg);
       }
 
       .statement {
@@ -784,6 +798,7 @@ export async function GET(
         },
       });
 
+    const medicalHistory = parseMedicalHistory(studentProfile.medical_cond);
     const age = computeAge(studentProfile.date_of_birth, now);
     const sex = studentProfile.gender ? titleCase(studentProfile.gender) : "";
     const program = titleCase(studentProfile.program);
@@ -837,6 +852,7 @@ export async function GET(
       findings: appointment.consultation.findings ?? "",
       reason: appointment.consultation.reason_of_visit ?? "",
       allergies,
+      medicalHistory,
       doctorName,
       doctorTitle,
       licenseNumber: "",

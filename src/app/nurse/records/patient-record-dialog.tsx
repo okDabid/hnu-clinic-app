@@ -13,6 +13,7 @@ import {
     formatStaffName,
     formatYearLevel,
 } from "@/lib/patient-format";
+import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ function RecordDetailsDialogComponent({
 }: RecordDetailsDialogProps) {
     if (!record) return null;
 
+    const medicalHistoryText = formatMedicalHistory(parseMedicalHistory(record.medical_cond));
     const isUpdating = updatingPatientId === record.id;
     const isSavingNotes = savingNotesPatientId === record.id;
     const hasAppointment = Boolean(record.latestAppointment?.id);
@@ -121,7 +123,7 @@ function RecordDetailsDialogComponent({
                                     <strong>Allergies:</strong> {record.allergies || "—"}
                                 </p>
                                 <p>
-                                    <strong>Medical Conditions:</strong> {record.medical_cond || "—"}
+                                    <strong>Medical Conditions:</strong> {medicalHistoryText || "—"}
                                 </p>
                                 <p>
                                     <strong>Emergency:</strong> {record.emergency?.name || "—"} ({

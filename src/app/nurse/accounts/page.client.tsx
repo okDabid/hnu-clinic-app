@@ -62,6 +62,7 @@ import {
 import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
+import { MedicalHistoryField } from "@/components/account/medical-history-field";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
@@ -74,6 +75,7 @@ import {
     normalizeNurseAccountProfile,
     normalizeNurseAccountUsers,
     nurseReverseBloodTypeEnumMap,
+    serializeNurseMedicalHistory,
     type NurseAccountProfile,
     type NurseAccountProfileApi,
     type NurseAccountUser,
@@ -520,8 +522,10 @@ export function NurseAccountsPageClient({
         try {
             setProfileLoading(true);
 
+            const { medicalHistory, ...restProfile } = updatedProfile;
             const payload = {
-                ...updatedProfile,
+                ...restProfile,
+                medical_cond: serializeNurseMedicalHistory(medicalHistory),
                 bloodtype: nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
             };
 
@@ -919,7 +923,7 @@ export function NurseAccountsPageClient({
 
                                 <AccountSection
                                     icon={HeartPulse}
-                                    title="Medical background"
+                                    title="Medical history"
                                     description="Supports emergency preparedness."
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -950,10 +954,13 @@ export function NurseAccountsPageClient({
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">Medical conditions</Label>
-                                        <Input
-                                            value={profile.medical_cond || ""}
-                                            onChange={(event) => setProfile({ ...profile, medical_cond: event.target.value })}
+                                        <Label className="text-sm font-medium text-emerald-900">
+                                            Medical conditions
+                                        </Label>
+                                        <MedicalHistoryField
+                                            value={profile.medicalHistory}
+                                            onChange={(value) => setProfile({ ...profile, medicalHistory: value })}
+                                            idPrefix="nurse-medical-history"
                                         />
                                     </div>
                                 </AccountSection>

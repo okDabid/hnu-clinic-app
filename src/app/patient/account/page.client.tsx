@@ -42,6 +42,7 @@ import {
 import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
+import { MedicalHistoryField } from "@/components/account/medical-history-field";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
@@ -57,6 +58,7 @@ import {
     patientReverseDepartmentEnumMap,
     patientReverseYearLevelEnumMap,
     patientYearLevelEnumMap,
+    serializePatientMedicalHistory,
     type PatientAccountProfile,
     type PatientAccountProfileApi,
 } from "./types";
@@ -229,7 +231,8 @@ export function PatientAccountPageClient({
               profile.address,
               profile.bloodtype,
               profile.allergies,
-              profile.medical_cond,
+              profile.medicalHistory.conditions.length > 0 ||
+                  (profile.medicalHistory.other?.trim() ?? ""),
               profile.emergencyco_name,
               profile.emergencyco_num,
               profile.emergencyco_relation,
@@ -324,8 +327,10 @@ export function PatientAccountPageClient({
 
         try {
             setProfileLoading(true);
+            const { medicalHistory, ...restProfile } = updatedProfile;
             const payload = {
-                ...updatedProfile,
+                ...restProfile,
+                medical_cond: serializePatientMedicalHistory(medicalHistory),
                 department:
                     profileType === "student"
                         ? patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null
@@ -814,7 +819,7 @@ export function PatientAccountPageClient({
 
                                 <AccountSection
                                     icon={HeartPulse}
-                                    title="Medical background"
+                                    title="Medical history"
                                     description="Supports faster care during clinic visits."
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -845,10 +850,15 @@ export function PatientAccountPageClient({
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">Medical conditions</Label>
-                                        <Input
-                                            value={profile.medical_cond || ""}
-                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
+                                        <Label className="text-sm font-medium text-emerald-900">
+                                            Medical conditions
+                                        </Label>
+                                        <MedicalHistoryField
+                                            value={profile.medicalHistory}
+                                            onChange={(value) =>
+                                                setProfile({ ...profile, medicalHistory: value })
+                                            }
+                                            idPrefix="patient-medical-history"
                                         />
                                     </div>
                                 </AccountSection>

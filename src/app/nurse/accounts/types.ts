@@ -1,5 +1,11 @@
 import orderBy from "lodash/orderBy";
 
+import {
+    parseMedicalHistory,
+    serializeMedicalHistory,
+    type MedicalHistoryValue,
+} from "@/lib/medical-history";
+
 export type NurseAccountsUserApi = {
     user_id?: string;
     accountId?: string;
@@ -61,7 +67,7 @@ export type NurseAccountProfile = {
     address?: string | null;
     bloodtype?: string | null;
     allergies?: string | null;
-    medical_cond?: string | null;
+    medicalHistory: MedicalHistoryValue;
     emergencyco_name?: string | null;
     emergencyco_num?: string | null;
     emergencyco_relation?: string | null;
@@ -154,9 +160,15 @@ export function normalizeNurseAccountProfile(
         address: response.profile?.address || "",
         bloodtype: bloodTypeValue,
         allergies: response.profile?.allergies || "",
-        medical_cond: response.profile?.medical_cond || "",
+        medicalHistory: parseMedicalHistory(response.profile?.medical_cond || ""),
         emergencyco_name: response.profile?.emergencyco_name || "",
         emergencyco_num: response.profile?.emergencyco_num || "",
         emergencyco_relation: response.profile?.emergencyco_relation || "",
     };
+}
+
+export function serializeNurseMedicalHistory(
+    value: MedicalHistoryValue
+): string | null {
+    return serializeMedicalHistory(value);
 }
