@@ -23,9 +23,15 @@ import { Card } from "@/components/ui/card";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
+import { MedicalHistoryField } from "@/components/account/medical-history-field";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
+import {
+    parseMedicalHistory,
+    serializeMedicalHistory,
+    type MedicalHistoryValue,
+} from "@/lib/medical-history";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
@@ -65,7 +71,7 @@ type Profile = {
     address?: string | null;
     bloodtype?: string | null;
     allergies?: string | null;
-    medical_cond?: string | null;
+    medicalHistory: MedicalHistoryValue;
     emergencyco_name?: string | null;
     emergencyco_num?: string | null;
     emergencyco_relation?: string | null;
@@ -141,7 +147,7 @@ export default function DoctorAccountPage() {
                 address: data.profile?.address || "",
                 bloodtype: bloodTypeValue,
                 allergies: data.profile?.allergies || "",
-                medical_cond: data.profile?.medical_cond || "",
+                medicalHistory: parseMedicalHistory(data.profile?.medical_cond || ""),
                 emergencyco_name: data.profile?.emergencyco_name || "",
                 emergencyco_num: data.profile?.emergencyco_num || "",
                 emergencyco_relation: data.profile?.emergencyco_relation || "",
@@ -190,8 +196,10 @@ export default function DoctorAccountPage() {
 
         try {
             setProfileLoading(true);
+            const { medicalHistory, ...restProfile } = updatedProfile;
             const payload = {
-                ...updatedProfile,
+                ...restProfile,
+                medical_cond: serializeMedicalHistory(medicalHistory),
                 bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
@@ -637,7 +645,7 @@ export default function DoctorAccountPage() {
 
                                 <AccountSection
                                     icon={HeartPulse}
-                                    title="Medical background"
+                                    title="Medical history"
                                     description="Supports faster care during clinical operations."
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -668,10 +676,13 @@ export default function DoctorAccountPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">Medical conditions</Label>
-                                        <Input
-                                            value={profile.medical_cond || ""}
-                                            onChange={(e) => setProfile({ ...profile, medical_cond: e.target.value })}
+                                        <Label className="text-sm font-medium text-emerald-900">
+                                            Medical conditions
+                                        </Label>
+                                        <MedicalHistoryField
+                                            value={profile.medicalHistory}
+                                            onChange={(value) => setProfile({ ...profile, medicalHistory: value })}
+                                            idPrefix="doctor-medical-history"
                                         />
                                     </div>
                                 </AccountSection>

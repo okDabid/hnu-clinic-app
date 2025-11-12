@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { formatManilaDateTime } from "@/lib/time";
 import { BLOOD_TYPES } from "@/lib/patient-records-update";
+import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
 
 import DoctorPatientsLoading from "./loading";
 
@@ -207,6 +208,10 @@ export default function DoctorPatientsPage() {
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<PatientRecord | null>(null);
     const [activeTab, setActiveTab] = useState<"details" | "update" | "notes">("details");
+
+    const selectedMedicalHistoryText = selectedRecord
+        ? formatMedicalHistory(parseMedicalHistory(selectedRecord.medical_cond))
+        : "";
 
     const loadRecords = useCallback(async () => {
         try {
@@ -643,7 +648,7 @@ export default function DoctorPatientsPage() {
                                                 <strong>Allergies:</strong> {selectedRecord.allergies || "—"}
                                             </p>
                                             <p>
-                                                <strong>Medical Conditions:</strong> {selectedRecord.medical_cond || "—"}
+                                                <strong>Medical Conditions:</strong> {selectedMedicalHistoryText || "—"}
                                             </p>
                                             <p>
                                                 <strong>Emergency:</strong> {selectedRecord.emergency?.name || "—"} (

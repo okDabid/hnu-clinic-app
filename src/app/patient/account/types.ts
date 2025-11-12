@@ -1,3 +1,9 @@
+import {
+    parseMedicalHistory,
+    serializeMedicalHistory,
+    type MedicalHistoryValue,
+} from "@/lib/medical-history";
+
 export type PatientAccountProfileApi = {
     accountId?: string;
     username?: string;
@@ -86,7 +92,7 @@ export type PatientAccountProfile = {
     address?: string | null;
     bloodtype?: string | null;
     allergies?: string | null;
-    medical_cond?: string | null;
+    medicalHistory: MedicalHistoryValue;
     gender?: string | null;
     department?: string | null;
     program?: string | null;
@@ -123,7 +129,7 @@ export function normalizePatientAccountProfile(
         address: raw.address || "",
         bloodtype: raw.bloodtype ? patientBloodTypeEnumMap[raw.bloodtype] || raw.bloodtype : "",
         allergies: raw.allergies || "",
-        medical_cond: raw.medical_cond || "",
+        medicalHistory: parseMedicalHistory(raw.medical_cond || ""),
         gender: raw.gender || "",
         department: raw.department ? patientDepartmentEnumMap[raw.department] || "" : "",
         program: raw.program || "",
@@ -137,4 +143,10 @@ export function normalizePatientAccountProfile(
         profile,
         type: response.patientType ?? response.type ?? null,
     };
+}
+
+export function serializePatientMedicalHistory(
+    value: MedicalHistoryValue
+): string | null {
+    return serializeMedicalHistory(value);
 }

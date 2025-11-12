@@ -20,6 +20,7 @@ import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
+import { MedicalHistoryField } from "@/components/account/medical-history-field";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    parseMedicalHistory,
+    serializeMedicalHistory,
+    type MedicalHistoryValue,
+} from "@/lib/medical-history";
 import { validateAndNormalizeContacts } from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
@@ -156,7 +162,7 @@ type Profile = {
     address?: string | null;
     bloodtype?: string | null;
     allergies?: string | null;
-    medical_cond?: string | null;
+    medicalHistory: MedicalHistoryValue;
     gender?: string | null;
     department?: string | null;
     program?: string | null;
@@ -186,7 +192,7 @@ function normalizeProfile(
             ? bloodTypeEnumMap[String(profile.bloodtype)] ?? String(profile.bloodtype)
             : "",
         allergies: (profile?.allergies as string | null) ?? "",
-        medical_cond: (profile?.medical_cond as string | null) ?? "",
+        medicalHistory: parseMedicalHistory(profile?.medical_cond as string | null),
         gender: (profile?.gender as string | null) ?? "",
         department: profile?.department
             ? departmentEnumMap[String(profile.department)] ?? String(profile.department)
@@ -214,7 +220,7 @@ function mapUpdatedProfile(profile: Record<string, unknown>): Partial<Profile> {
             ? bloodTypeEnumMap[String(profile.bloodtype)] ?? String(profile.bloodtype)
             : "",
         allergies: (profile?.allergies as string | null) ?? "",
-        medical_cond: (profile?.medical_cond as string | null) ?? "",
+        medicalHistory: parseMedicalHistory(profile?.medical_cond as string | null),
         department: profile?.department
             ? departmentEnumMap[String(profile.department)] ?? String(profile.department)
             : "",
@@ -229,15 +235,17 @@ function mapUpdatedProfile(profile: Record<string, unknown>): Partial<Profile> {
 }
 
 function formatRequestPayload(profile: Profile) {
+    const { medicalHistory, ...rest } = profile;
+
     return {
-        ...profile,
+        ...rest,
         mname: profile.mname?.trim() ? profile.mname : null,
         email: profile.email?.trim() ? profile.email : null,
         contactno: profile.contactno?.trim() ? profile.contactno : null,
         address: profile.address?.trim() ? profile.address : null,
         bloodtype: profile.bloodtype ? reverseBloodTypeEnumMap[profile.bloodtype] ?? null : null,
         allergies: profile.allergies?.trim() ? profile.allergies : null,
-        medical_cond: profile.medical_cond?.trim() ? profile.medical_cond : null,
+        medical_cond: serializeMedicalHistory(medicalHistory),
         department: profile.department ? reverseDepartmentEnumMap[profile.department] ?? null : null,
         program: profile.program?.trim() ? profile.program : null,
         year_level: profile.year_level ? reverseYearLevelEnumMap[profile.year_level] ?? null : null,
@@ -817,7 +825,7 @@ export default function ScholarAccountPage() {
 
                                 <AccountSection
                                     icon={HeartPulse}
-                                    title="Medical background"
+                                    title="Medical history"
                                     description="Helps the clinic respond quickly in emergencies."
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -856,14 +864,17 @@ export default function ScholarAccountPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">Medical conditions</Label>
-                                        <Input
-                                            value={profile.medical_cond ?? ""}
-                                            onChange={(event) =>
+                                        <Label className="text-sm font-medium text-emerald-900">
+                                            Medical conditions
+                                        </Label>
+                                        <MedicalHistoryField
+                                            value={profile.medicalHistory}
+                                            onChange={(next) =>
                                                 setProfile((prev) =>
-                                                    prev ? { ...prev, medical_cond: event.target.value } : prev
+                                                    prev ? { ...prev, medicalHistory: next } : prev
                                                 )
                                             }
+                                            idPrefix="scholar-medical-history"
                                         />
                                     </div>
                                 </AccountSection>

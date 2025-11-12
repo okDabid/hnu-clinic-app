@@ -12,6 +12,7 @@ import {
     formatStaffName,
     formatYearLevel,
 } from "@/lib/patient-format";
+import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -25,6 +26,8 @@ interface PatientDetailDialogProps {
 
 function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDialogProps) {
     if (!record) return null;
+
+    const medicalHistoryText = formatMedicalHistory(parseMedicalHistory(record.medical_cond));
 
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
@@ -94,7 +97,7 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
                                 </div>
                                 <div>
                                     <dt className="text-xs uppercase tracking-wide">Medical conditions</dt>
-                                    <dd>{record.medical_cond || "—"}</dd>
+                                    <dd>{medicalHistoryText || "—"}</dd>
                                 </div>
                             </dl>
                         </div>
