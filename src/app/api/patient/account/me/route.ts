@@ -112,6 +112,15 @@ function toDate(val: unknown): Date | undefined {
     return undefined;
 }
 
+function normalizeStringOrNull(value: unknown): string | null | undefined {
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : null;
+    }
+    if (value === null) return null;
+    return undefined;
+}
+
 // ---------------- UPDATE INPUT BUILDERS ----------------
 function buildStudentUpdateInput(
     raw: Record<string, unknown>
@@ -138,7 +147,8 @@ function buildStudentUpdateInput(
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
-    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
+    const medicalCond = normalizeStringOrNull(raw.medical_cond);
+    if (medicalCond !== undefined) data.medical_cond = medicalCond;
     if (typeof raw.emergencyco_name === "string")
         data.emergencyco_name = raw.emergencyco_name;
     if (typeof raw.emergencyco_num === "string")
@@ -186,7 +196,7 @@ function buildEmployeeUpdateInput(
     const allergies = stringField("allergies");
     if (allergies !== undefined) data.allergies = allergies;
 
-    const medicalCond = stringField("medical_cond");
+    const medicalCond = normalizeStringOrNull(raw.medical_cond);
     if (medicalCond !== undefined) data.medical_cond = medicalCond;
 
     const emergencyName = stringField("emergencyco_name");

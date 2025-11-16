@@ -43,6 +43,15 @@ function mapBloodType(val?: string | null): BloodType | undefined {
     return map[val];
 }
 
+function normalizeStringOrNull(value: unknown): string | null | undefined {
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : null;
+    }
+    if (value === null) return null;
+    return undefined;
+}
+
 function buildEmployeeUpdateInput(
     raw: Record<string, unknown>
 ): Prisma.EmployeeUpdateInput {
@@ -58,7 +67,7 @@ function buildEmployeeUpdateInput(
     data.contactno = stringField("contactno");
     data.address = stringField("address");
     data.allergies = stringField("allergies");
-    data.medical_cond = stringField("medical_cond");
+    data.medical_cond = normalizeStringOrNull(raw.medical_cond);
     data.emergencyco_name = stringField("emergencyco_name");
     data.emergencyco_num = stringField("emergencyco_num");
     data.emergencyco_relation = stringField("emergencyco_relation");
