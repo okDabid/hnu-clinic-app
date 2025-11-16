@@ -698,6 +698,7 @@ export default function DoctorAccountPage() {
                                             <Input
                                                 value={profile.emergencyco_name || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
+                                                placeholder="Full name of contact"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -705,6 +706,7 @@ export default function DoctorAccountPage() {
                                             <Input
                                                 value={profile.emergencyco_num || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
+                                                placeholder="09XXXXXXXXX"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -712,6 +714,7 @@ export default function DoctorAccountPage() {
                                             <Input
                                                 value={profile.emergencyco_relation || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
+                                                placeholder="Contact’s relationship"
                                             />
                                         </div>
                                     </div>

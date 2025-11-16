@@ -273,14 +273,14 @@ export default function ScholarAccountPage() {
 
     const completionFields = profile
         ? [
-              profile.email,
-              profile.contactno,
-              profile.address,
-              profile.bloodtype,
-              profile.emergencyco_name,
-              profile.emergencyco_num,
-              profile.emergencyco_relation,
-          ]
+            profile.email,
+            profile.contactno,
+            profile.address,
+            profile.bloodtype,
+            profile.emergencyco_name,
+            profile.emergencyco_num,
+            profile.emergencyco_relation,
+        ]
         : [];
 
     const completionCount = completionFields.filter((value) => {
@@ -296,8 +296,8 @@ export default function ScholarAccountPage() {
 
     const emergencyReady = Boolean(
         profile?.emergencyco_name?.trim() &&
-            profile?.emergencyco_num?.trim() &&
-            profile?.emergencyco_relation?.trim()
+        profile?.emergencyco_num?.trim() &&
+        profile?.emergencyco_relation?.trim()
     );
 
     const academicReady = Boolean(
@@ -312,42 +312,42 @@ export default function ScholarAccountPage() {
 
     const summaryItems: AccountSummaryItem[] = profile
         ? [
-              {
-                  icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
-                  label: "Account status",
-                  value: profile.status,
-                  helper:
-                      profile.status === "Active"
-                          ? "You have full access to clinic services."
-                          : "Contact the clinic team to reactivate your access.",
-                  accent: profile.status === "Active" ? "emerald" : "rose",
-              },
-              {
-                  icon: BarChart3,
-                  label: "Profile completeness",
-                  value: `${completionPercent}% complete`,
-                  helper:
-                      completionPercent >= 100
-                          ? emergencySummary || "All essential contact details are provided."
-                          : "Add missing contact or emergency information.",
-                  progress: completionPercent,
-                  accent:
-                      completionPercent >= 80
-                          ? "emerald"
-                          : completionPercent >= 50
+            {
+                icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
+                label: "Account status",
+                value: profile.status,
+                helper:
+                    profile.status === "Active"
+                        ? "You have full access to clinic services."
+                        : "Contact the clinic team to reactivate your access.",
+                accent: profile.status === "Active" ? "emerald" : "rose",
+            },
+            {
+                icon: BarChart3,
+                label: "Profile completeness",
+                value: `${completionPercent}% complete`,
+                helper:
+                    completionPercent >= 100
+                        ? emergencySummary || "All essential contact details are provided."
+                        : "Add missing contact or emergency information.",
+                progress: completionPercent,
+                accent:
+                    completionPercent >= 80
+                        ? "emerald"
+                        : completionPercent >= 50
                             ? "amber"
                             : "rose",
-              },
-              {
-                  icon: GraduationCap,
-                  label: "Academic placement",
-                  value: academicReady ? profile.program ?? "" : "Select program",
-                  helper: academicReady
-                      ? `${profile.department ?? ""}${profile.year_level ? ` • ${profile.year_level}` : ""}`
-                      : "Choose your department, program, and year level.",
-                  accent: academicReady ? "indigo" : "amber",
-              },
-          ]
+            },
+            {
+                icon: GraduationCap,
+                label: "Academic placement",
+                value: academicReady ? profile.program ?? "" : "Select program",
+                helper: academicReady
+                    ? `${profile.department ?? ""}${profile.year_level ? ` • ${profile.year_level}` : ""}`
+                    : "Choose your department, program, and year level.",
+                accent: academicReady ? "indigo" : "amber",
+            },
+        ]
         : [];
 
     const loadProfile = useCallback(async () => {
@@ -559,16 +559,14 @@ export default function ScholarAccountPage() {
             actions={
                 statusBadge ? (
                     <span
-                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${
-                            statusBadge === "Active"
-                                ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
-                                : "border-rose-200 bg-rose-50/80 text-rose-600"
-                        }`}
+                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
+                            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                            : "border-rose-200 bg-rose-50/80 text-rose-600"
+                            }`}
                     >
                         <span
-                            className={`h-2 w-2 rounded-full ${
-                                statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
-                            }`}
+                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                                }`}
                         />
                         Status: {statusBadge}
                     </span>
@@ -706,11 +704,11 @@ export default function ScholarAccountPage() {
                                                     setProfile((prev) =>
                                                         prev
                                                             ? {
-                                                                  ...prev,
-                                                                  department: value,
-                                                                  program: "",
-                                                                  year_level: "",
-                                                              }
+                                                                ...prev,
+                                                                department: value,
+                                                                program: "",
+                                                                year_level: "",
+                                                            }
                                                             : prev
                                                     )
                                                 }
@@ -894,6 +892,7 @@ export default function ScholarAccountPage() {
                                                         prev ? { ...prev, emergencyco_name: event.target.value } : prev
                                                     )
                                                 }
+                                                placeholder="Full name of contact"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -905,6 +904,7 @@ export default function ScholarAccountPage() {
                                                         prev ? { ...prev, emergencyco_num: event.target.value } : prev
                                                     )
                                                 }
+                                                placeholder="09XXXXXXXXX"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -916,6 +916,7 @@ export default function ScholarAccountPage() {
                                                         prev ? { ...prev, emergencyco_relation: event.target.value } : prev
                                                     )
                                                 }
+                                                placeholder="Contact’s relationship"
                                             />
                                         </div>
                                     </div>

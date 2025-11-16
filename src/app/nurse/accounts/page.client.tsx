@@ -976,6 +976,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.emergencyco_name || ""}
                                                 onChange={(event) => setProfile({ ...profile, emergencyco_name: event.target.value })}
+                                                placeholder="Full name of contact"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -983,6 +984,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.emergencyco_num || ""}
                                                 onChange={(event) => setProfile({ ...profile, emergencyco_num: event.target.value })}
+                                                placeholder="09XXXXXXXXX"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -990,6 +992,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.emergencyco_relation || ""}
                                                 onChange={(event) => setProfile({ ...profile, emergencyco_relation: event.target.value })}
+                                                placeholder="Contact’s relationship"
                                             />
                                         </div>
                                     </div>
