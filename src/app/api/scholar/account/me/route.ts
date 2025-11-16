@@ -197,6 +197,14 @@ export async function PUT(req: Request) {
         // Prevent changing DOB once set
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existingProfile.date_of_birth ?? null;
+        const incomingGender = isGender(profile.gender) ? profile.gender : null;
+
+        if (existingProfile.gender && incomingGender && existingProfile.gender !== incomingGender) {
+            return NextResponse.json(
+                { error: "Gender cannot be changed once set." },
+                { status: 400 }
+            );
+        }
 
         if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
             return NextResponse.json(
@@ -209,6 +217,9 @@ export async function PUT(req: Request) {
         const data = buildStudentUpdateInput(profile);
         if (existingDOB && "date_of_birth" in data) {
             delete data.date_of_birth;
+        }
+        if (existingProfile.gender && "gender" in data) {
+            delete data.gender;
         }
 
         let verificationEmail: string | null = null;
