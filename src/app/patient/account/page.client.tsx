@@ -843,6 +843,7 @@ export function PatientAccountPageClient({
                                             <Input
                                                 value={profile.allergies || ""}
                                                 onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
+                                                placeholder="Please specify"
                                             />
                                         </div>
                                     </div>
