@@ -2,14 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
-import {
-    Prisma,
-    Gender,
-    BloodType,
-    Department,
-    Role,
-    AccountStatus,
-} from "@prisma/client";
+import { Prisma, BloodType, Department, Role, AccountStatus } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // Generate random password (8 chars)
@@ -118,7 +111,6 @@ export async function POST(req: Request) {
             fname: payload.fname,
             mname: payload.mname,
             lname: payload.lname,
-            gender: payload.gender as Gender,
             bloodtype: bloodTypeMap[payload.bloodtype] || null,
             address: payload.address ?? null,
             allergies: payload.allergies ?? null,
@@ -128,7 +120,6 @@ export async function POST(req: Request) {
             emergencyco_relation: payload.emergencyco_relation ?? null,
             email: payload.email?.trim() || null,
             contactno: payload.phone?.trim() || null,
-            date_of_birth: payload.date_of_birth ? new Date(payload.date_of_birth) : null,
         };
 
         // Create profile based on role

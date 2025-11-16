@@ -88,6 +88,15 @@ function toDate(val: unknown): Date | undefined {
     return undefined;
 }
 
+function normalizeStringOrNull(value: unknown): string | null | undefined {
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : null;
+    }
+    if (value === null) return null;
+    return undefined;
+}
+
 /** ---------- BUILD UPDATE INPUT (Student) ---------- */
 function buildStudentUpdateInput(
     raw: Record<string, unknown>
@@ -115,7 +124,8 @@ function buildStudentUpdateInput(
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
-    if (typeof raw.medical_cond === "string") data.medical_cond = raw.medical_cond;
+    const medicalCond = normalizeStringOrNull(raw.medical_cond);
+    if (medicalCond !== undefined) data.medical_cond = medicalCond;
     if (typeof raw.emergencyco_name === "string")
         data.emergencyco_name = raw.emergencyco_name;
     if (typeof raw.emergencyco_num === "string")
@@ -187,6 +197,14 @@ export async function PUT(req: Request) {
         // Prevent changing DOB once set
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existingProfile.date_of_birth ?? null;
+        const incomingGender = isGender(profile.gender) ? profile.gender : null;
+
+        if (existingProfile.gender && incomingGender && existingProfile.gender !== incomingGender) {
+            return NextResponse.json(
+                { error: "Gender cannot be changed once set." },
+                { status: 400 }
+            );
+        }
 
         if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
             return NextResponse.json(
@@ -199,6 +217,9 @@ export async function PUT(req: Request) {
         const data = buildStudentUpdateInput(profile);
         if (existingDOB && "date_of_birth" in data) {
             delete data.date_of_birth;
+        }
+        if (existingProfile.gender && "gender" in data) {
+            delete data.gender;
         }
 
         let verificationEmail: string | null = null;

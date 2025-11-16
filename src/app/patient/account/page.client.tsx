@@ -140,6 +140,8 @@ export function PatientAccountPageClient({
 
     const [tempDOB, setTempDOB] = useState("");
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
+    const [tempGender, setTempGender] = useState<"Male" | "Female" | "">("");
+    const [showGenderConfirm, setShowGenderConfirm] = useState(false);
     const [refreshingProfile, setRefreshingProfile] = useState(false);
 
     useEffect(() => {
@@ -213,10 +215,10 @@ export function PatientAccountPageClient({
     const layoutTitle = hydratingProfile
         ? "Loading profile"
         : profileType === "employee"
-          ? "Employee profile"
-          : profileType === "student"
-            ? "Student profile"
-            : "Account overview";
+            ? "Employee profile"
+            : profileType === "student"
+                ? "Student profile"
+                : "Account overview";
 
     const layoutDescription = hydratingProfile
         ? "Please wait while we retrieve your account data."
@@ -226,17 +228,17 @@ export function PatientAccountPageClient({
 
     const completionFields = profile
         ? [
-              profile.email,
-              profile.contactno,
-              profile.address,
-              profile.bloodtype,
-              profile.allergies,
-              profile.medicalHistory.conditions.length > 0 ||
-                  (profile.medicalHistory.other?.trim() ?? ""),
-              profile.emergencyco_name,
-              profile.emergencyco_num,
-              profile.emergencyco_relation,
-          ]
+            profile.email,
+            profile.contactno,
+            profile.address,
+            profile.bloodtype,
+            profile.allergies,
+            profile.medicalHistory.conditions.length > 0 ||
+            (profile.medicalHistory.other?.trim() ?? ""),
+            profile.emergencyco_name,
+            profile.emergencyco_num,
+            profile.emergencyco_relation,
+        ]
         : [];
 
     const completionCount = completionFields.filter((value) => {
@@ -252,50 +254,49 @@ export function PatientAccountPageClient({
 
     const emergencyReady = Boolean(
         profile?.emergencyco_name?.trim() &&
-            profile?.emergencyco_num?.trim() &&
-            profile?.emergencyco_relation?.trim()
+        profile?.emergencyco_num?.trim() &&
+        profile?.emergencyco_relation?.trim()
     );
 
     const summaryItems: AccountSummaryItem[] = profile
         ? [
-              {
-                  icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
-                  label: "Account status",
-                  value: profile.status,
-                  helper:
-                      profile.status === "Active"
-                          ? "Your account can access clinic services."
-                          : "Contact the clinic team to reactivate access.",
-                  accent: profile.status === "Active" ? "emerald" : "rose",
-              },
-              {
-                  icon: BarChart3,
-                  label: "Profile completeness",
-                  value: `${completionPercent}% complete`,
-                  helper:
-                      completionPercent >= 100
-                          ? "All essential profile fields are complete."
-                          : "Add missing contact or medical information.",
-                  progress: completionPercent,
-                  accent:
-                      completionPercent >= 80
-                          ? "emerald"
-                          : completionPercent >= 50
+            {
+                icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
+                label: "Account status",
+                value: profile.status,
+                helper:
+                    profile.status === "Active"
+                        ? "Your account can access clinic services."
+                        : "Contact the clinic team to reactivate access.",
+                accent: profile.status === "Active" ? "emerald" : "rose",
+            },
+            {
+                icon: BarChart3,
+                label: "Profile completeness",
+                value: `${completionPercent}% complete`,
+                helper:
+                    completionPercent >= 100
+                        ? "All essential profile fields are complete."
+                        : "Add missing contact or medical information.",
+                progress: completionPercent,
+                accent:
+                    completionPercent >= 80
+                        ? "emerald"
+                        : completionPercent >= 50
                             ? "amber"
                             : "rose",
-              },
-              {
-                  icon: LifeBuoy,
-                  label: "Emergency readiness",
-                  value: emergencyReady ? "Ready" : "Action required",
-                  helper: emergencyReady
-                      ? `${profile.emergencyco_name || "Emergency contact"}${
-                            profile.emergencyco_relation ? ` (${profile.emergencyco_relation})` : ""
-                        } • ${profile.emergencyco_num || "—"}`
-                      : "Provide an emergency contact name, number, and relationship.",
-                  accent: emergencyReady ? "teal" : "amber",
-              },
-          ]
+            },
+            {
+                icon: LifeBuoy,
+                label: "Emergency readiness",
+                value: emergencyReady ? "Ready" : "Action required",
+                helper: emergencyReady
+                    ? `${profile.emergencyco_name || "Emergency contact"}${profile.emergencyco_relation ? ` (${profile.emergencyco_relation})` : ""
+                    } • ${profile.emergencyco_num || "—"}`
+                    : "Provide an emergency contact name, number, and relationship.",
+                accent: emergencyReady ? "teal" : "amber",
+            },
+        ]
         : [];
 
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -432,16 +433,14 @@ export function PatientAccountPageClient({
             actions={
                 statusBadge ? (
                     <span
-                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${
-                            statusBadge === "Active"
+                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
                                 ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
                                 : "border-rose-200 bg-rose-50/80 text-rose-600"
-                        }`}
+                            }`}
                     >
                         <span
-                            className={`h-2 w-2 rounded-full ${
-                                statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
-                            }`}
+                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
+                                }`}
                         />
                         Status: {statusBadge}
                     </span>
@@ -489,8 +488,8 @@ export function PatientAccountPageClient({
                                                 {profileType === "student"
                                                     ? "School ID"
                                                     : profileType === "employee"
-                                                      ? "Employee ID"
-                                                      : "ID"}
+                                                        ? "Employee ID"
+                                                        : "ID"}
                                             </Label>
                                             <Input value={profile.username} disabled />
                                         </div>
@@ -582,18 +581,18 @@ export function PatientAccountPageClient({
                                                                                     department:
                                                                                         profileType === "student"
                                                                                             ? patientReverseDepartmentEnumMap[
-                                                                                                  updatedProfile.department || ""
-                                                                                              ] || null
+                                                                                            updatedProfile.department || ""
+                                                                                            ] || null
                                                                                             : updatedProfile.department || null,
                                                                                     year_level:
                                                                                         profileType === "student"
                                                                                             ? patientReverseYearLevelEnumMap[
-                                                                                                  updatedProfile.year_level || ""
-                                                                                              ] || null
+                                                                                            updatedProfile.year_level || ""
+                                                                                            ] || null
                                                                                             : null,
                                                                                     bloodtype:
                                                                                         patientReverseBloodTypeEnumMap[
-                                                                                            updatedProfile?.bloodtype || ""
+                                                                                        updatedProfile?.bloodtype || ""
                                                                                         ] || null,
                                                                                 };
 
@@ -648,7 +647,141 @@ export function PatientAccountPageClient({
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Gender</Label>
-                                            <Input value={profile.gender || ""} disabled />
+                                            {profile.gender ? (
+                                                <Input value={profile.gender || ""} disabled />
+                                            ) : (
+                                                <>
+                                                    <Select
+                                                        value={tempGender}
+                                                        onValueChange={(value) => setTempGender(value as "Male" | "Female")}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select gender" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Male">Male</SelectItem>
+                                                            <SelectItem value="Female">Female</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    {tempGender ? (
+                                                        <Button
+                                                            type="button"
+                                                            className="mt-2 w-max rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                                            onClick={() => setShowGenderConfirm(true)}
+                                                        >
+                                                            Confirm gender
+                                                        </Button>
+                                                    ) : null}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        This can only be saved once. Double-check before confirming.
+                                                    </p>
+                                                    <AlertDialog open={showGenderConfirm} onOpenChange={setShowGenderConfirm}>
+                                                        <AlertDialogContent className="max-w-sm sm:max-w-md">
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Confirm Gender</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    You are about to set your gender to{" "}
+                                                                    <span className="font-semibold text-emerald-700">{tempGender}</span>.
+                                                                    <br />
+                                                                    This action can only be done once and cannot be changed later.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter className="mt-4">
+                                                                <AlertDialogCancel
+                                                                    onClick={() => {
+                                                                        setTempGender("");
+                                                                        setShowGenderConfirm(false);
+                                                                    }}
+                                                                >
+                                                                    Cancel
+                                                                </AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    className="bg-emerald-600 hover:bg-emerald-700"
+                                                                    onClick={async () => {
+                                                                        const contactValidation = validateAndNormalizeContacts({
+                                                                            email: profile.email,
+                                                                            contactNumber: profile.contactno,
+                                                                            emergencyNumber: profile.emergencyco_num,
+                                                                        });
+
+                                                                        if (!contactValidation.success) {
+                                                                            toast.error(contactValidation.error);
+                                                                            return;
+                                                                        }
+
+                                                                        const updatedProfile = {
+                                                                            ...profile,
+                                                                            email: contactValidation.email,
+                                                                            contactno: contactValidation.contactNumber,
+                                                                            emergencyco_num: contactValidation.emergencyNumber,
+                                                                            gender: tempGender,
+                                                                        };
+
+                                                                        setProfile(updatedProfile);
+                                                                        setShowGenderConfirm(false);
+
+                                                                        try {
+                                                                            setProfileLoading(true);
+                                                                            const payload = {
+                                                                                ...updatedProfile,
+                                                                                medical_cond: serializePatientMedicalHistory(updatedProfile.medicalHistory),
+                                                                                department:
+                                                                                    profileType === "student"
+                                                                                        ? patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null
+                                                                                        : updatedProfile.department || null,
+                                                                                year_level:
+                                                                                    profileType === "student"
+                                                                                        ? patientReverseYearLevelEnumMap[updatedProfile.year_level || ""] || null
+                                                                                        : null,
+                                                                                bloodtype: patientReverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
+                                                                            };
+
+                                                                            const res = await fetch("/api/patient/account/me", {
+                                                                                method: "PUT",
+                                                                                headers: { "Content-Type": "application/json" },
+                                                                                body: JSON.stringify({ profile: payload }),
+                                                                            });
+
+                                                                            const data = await res.json();
+                                                                            if (!res.ok) {
+                                                                                if (
+                                                                                    handleRateLimitError(
+                                                                                        res,
+                                                                                        data,
+                                                                                        "Too many profile updates. Please wait before trying again."
+                                                                                    )
+                                                                                ) {
+                                                                                    return;
+                                                                                }
+                                                                                toast.error(data.error ?? "Failed to save gender");
+                                                                            } else if (data.error) {
+                                                                                toast.error(data.error);
+                                                                            } else {
+                                                                                toast.success("Gender saved!");
+                                                                                if (data.verificationEmailSent) {
+                                                                                    const targetEmail = data.profile?.email?.trim();
+                                                                                    toast.success(
+                                                                                        targetEmail
+                                                                                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                                                                                            : "A verification email was sent. Please check your inbox to confirm the address."
+                                                                                    );
+                                                                                }
+                                                                                await loadProfile();
+                                                                            }
+                                                                        } catch {
+                                                                            toast.error("Failed to save gender");
+                                                                        } finally {
+                                                                            setProfileLoading(false);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Confirm
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </AccountSection>
@@ -846,6 +979,7 @@ export function PatientAccountPageClient({
                                             <Input
                                                 value={profile.allergies || ""}
                                                 onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
+                                                placeholder="Please specify"
                                             />
                                         </div>
                                     </div>
@@ -874,6 +1008,7 @@ export function PatientAccountPageClient({
                                             <Input
                                                 value={profile.emergencyco_name || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
+                                                placeholder="Full name of contact"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -881,6 +1016,7 @@ export function PatientAccountPageClient({
                                             <Input
                                                 value={profile.emergencyco_num || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
+                                                placeholder="09XXXXXXXXX"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -890,6 +1026,7 @@ export function PatientAccountPageClient({
                                                 onChange={(e) =>
                                                     setProfile({ ...profile, emergencyco_relation: e.target.value })
                                                 }
+                                                placeholder="Contact’s relationship"
                                             />
                                         </div>
                                     </div>

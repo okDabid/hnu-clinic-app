@@ -43,6 +43,15 @@ function mapBloodType(val?: string | null): BloodType | undefined {
     return map[val];
 }
 
+function normalizeStringOrNull(value: unknown): string | null | undefined {
+    if (typeof value === "string") {
+        const trimmed = value.trim();
+        return trimmed.length ? trimmed : null;
+    }
+    if (value === null) return null;
+    return undefined;
+}
+
 function buildEmployeeUpdateInput(
     raw: Record<string, unknown>
 ): Prisma.EmployeeUpdateInput {
@@ -58,7 +67,7 @@ function buildEmployeeUpdateInput(
     data.contactno = stringField("contactno");
     data.address = stringField("address");
     data.allergies = stringField("allergies");
-    data.medical_cond = stringField("medical_cond");
+    data.medical_cond = normalizeStringOrNull(raw.medical_cond);
     data.emergencyco_name = stringField("emergencyco_name");
     data.emergencyco_num = stringField("emergencyco_num");
     data.emergencyco_relation = stringField("emergencyco_relation");
@@ -131,6 +140,14 @@ export async function PUT(req: Request) {
         const existing = user.employee;
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existing.date_of_birth ?? null;
+        const incomingGender = isGender(profile.gender) ? profile.gender : null;
+
+        if (existing.gender && incomingGender && existing.gender !== incomingGender) {
+            return NextResponse.json(
+                { error: "Gender cannot be changed once set." },
+                { status: 400 }
+            );
+        }
 
         // Prevent DOB change once set
         if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
@@ -144,6 +161,7 @@ export async function PUT(req: Request) {
 
         // Remove unchanged / null / empty fields safely
         if (existingDOB) delete data.date_of_birth;
+        if (existing.gender) delete data.gender;
 
         let verificationEmail: string | null = null;
         let shouldClearVerification = false;

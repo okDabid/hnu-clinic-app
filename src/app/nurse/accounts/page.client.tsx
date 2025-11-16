@@ -91,8 +91,6 @@ type CreateUserPayload = {
     fname: string;
     mname?: string | null;
     lname: string;
-    date_of_birth: string;
-    gender: "Male" | "Female";
     employee_id?: string | null;
     student_id?: string | null;
     school_id?: string | null;
@@ -125,7 +123,6 @@ export function NurseAccountsPageClient({
     const [loading, setLoading] = useState(false);
 
     const [role, setRole] = useState("");
-    const [gender, setGender] = useState<"Male" | "Female" | "">("");
     const [patientType, setPatientType] = useState<"student" | "employee" | "">("");
     const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("ALL");
     const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
@@ -143,6 +140,8 @@ export function NurseAccountsPageClient({
 
     const [tempDOB, setTempDOB] = useState(""); // temporary holding value
     const [showDOBConfirm, setShowDOBConfirm] = useState(false);
+    const [tempGender, setTempGender] = useState<"Male" | "Female" | "">("");
+    const [showGenderConfirm, setShowGenderConfirm] = useState(false);
 
     const [specialization, setSpecialization] = useState<"Physician" | "Dentist" | null>(null);
     const [pendingPayload, setPendingPayload] = useState<CreateUserPayload | null>(null);
@@ -336,6 +335,12 @@ export function NurseAccountsPageClient({
         setCurrentPage(1);
     }, [roleFilter, statusFilter]);
 
+    useEffect(() => {
+        if (profile?.gender) {
+            setTempGender("");
+        }
+    }, [profile?.gender]);
+
     const filteredUsers = useMemo(() => {
         if (roleFilter === "ALL" && statusFilter === "ALL" && !deferredSearch) {
             return users;
@@ -364,11 +369,6 @@ export function NurseAccountsPageClient({
             return;
         }
 
-        if (!gender) {
-            toast.error("Please choose a gender for the new account.", { position: "top-center" });
-            return;
-        }
-
         if (role === "PATIENT" && !patientType) {
             toast.error("Please specify whether the patient is a student or employee.", {
                 position: "top-center",
@@ -393,7 +393,6 @@ export function NurseAccountsPageClient({
         const fname = getTrimmedValue("fname");
         const mnameRaw = getTrimmedValue("mname");
         const lname = getTrimmedValue("lname");
-        const date_of_birth = getTrimmedValue("date_of_birth");
         const employeeId = getTrimmedValue("employee_id");
         const studentId = getTrimmedValue("student_id");
         const schoolId = getTrimmedValue("school_id");
@@ -403,8 +402,6 @@ export function NurseAccountsPageClient({
             fname,
             mname: mnameRaw || null,
             lname,
-            date_of_birth,
-            gender: gender as "Male" | "Female",
             employee_id:
                 role === "NURSE" ||
                     role === "DOCTOR" ||
@@ -469,7 +466,6 @@ export function NurseAccountsPageClient({
 
             formRef.current?.reset();
             setRole("");
-            setGender("");
             setPatientType("");
             setSpecialization(null);
             setPendingPayload(null);
@@ -519,6 +515,12 @@ export function NurseAccountsPageClient({
             return;
         }
 
+        // If user is trying to set gender for the first time but hasn't confirmed yet
+        if (!updatedProfile.gender && tempGender) {
+            setShowGenderConfirm(true);
+            return;
+        }
+
         try {
             setProfileLoading(true);
 
@@ -532,6 +534,11 @@ export function NurseAccountsPageClient({
             // Prevent DOB modification if it was already set
             if (originalProfile?.date_of_birth) {
                 payload.date_of_birth = originalProfile.date_of_birth;
+            }
+
+            // Prevent gender modification if it was already set
+            if (originalProfile?.gender) {
+                payload.gender = originalProfile.gender;
             }
 
             const res = await fetch("/api/nurse/accounts/me", {
@@ -657,16 +664,6 @@ export function NurseAccountsPageClient({
             return null;
         })()
         : null;
-
-    const pendingDOBLabel = pendingPayload?.date_of_birth
-        ? (() => {
-            const parsed = new Date(pendingPayload.date_of_birth);
-            if (Number.isNaN(parsed.getTime())) {
-                return pendingPayload.date_of_birth;
-            }
-            return new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(parsed);
-        })()
-        : "—";
 
     const pendingPatientTypeLabel = pendingPayload?.patientType
         ? pendingPayload.patientType === "student"
@@ -858,7 +855,133 @@ export function NurseAccountsPageClient({
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Gender</Label>
-                                            <Input value={profile.gender || ""} disabled />
+                                            {profile.gender ? (
+                                                <Input value={profile.gender || ""} disabled />
+                                            ) : (
+                                                <>
+                                                    <Select
+                                                        value={tempGender}
+                                                        onValueChange={(value) => setTempGender(value as "Male" | "Female")}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select gender" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Male">Male</SelectItem>
+                                                            <SelectItem value="Female">Female</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    {tempGender ? (
+                                                        <Button
+                                                            type="button"
+                                                            className="mt-2 w-max rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                                            onClick={() => setShowGenderConfirm(true)}
+                                                        >
+                                                            Confirm gender
+                                                        </Button>
+                                                    ) : null}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        This can only be saved once. Double-check before confirming.
+                                                    </p>
+                                                    <AlertDialog open={showGenderConfirm} onOpenChange={setShowGenderConfirm}>
+                                                        <AlertDialogContent className="max-w-sm sm:max-w-md rounded-3xl border border-emerald-100/80 bg-white/95">
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Confirm Gender</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    You are about to set your gender to {" "}
+                                                                    <span className="font-semibold text-emerald-700">{tempGender}</span>.
+                                                                    <br />
+                                                                    This action can only be done once and cannot be changed later.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter className="mt-4">
+                                                                <AlertDialogCancel
+                                                                    onClick={() => {
+                                                                        setTempGender("");
+                                                                        setShowGenderConfirm(false);
+                                                                    }}
+                                                                >
+                                                                    Cancel
+                                                                </AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                    className="bg-emerald-600 hover:bg-emerald-700"
+                                                                    onClick={async () => {
+                                                                        const contactValidation = validateAndNormalizeContacts({
+                                                                            email: profile.email,
+                                                                            contactNumber: profile.contactno,
+                                                                            emergencyNumber: profile.emergencyco_num,
+                                                                        });
+
+                                                                        if (!contactValidation.success) {
+                                                                            toast.error(contactValidation.error);
+                                                                            return;
+                                                                        }
+
+                                                                        const updatedProfile = {
+                                                                            ...profile,
+                                                                            email: contactValidation.email,
+                                                                            contactno: contactValidation.contactNumber,
+                                                                            emergencyco_num: contactValidation.emergencyNumber,
+                                                                            gender: tempGender,
+                                                                        };
+
+                                                                        setProfile(updatedProfile);
+                                                                        setShowGenderConfirm(false);
+
+                                                                        try {
+                                                                            setProfileLoading(true);
+                                                                            const payload = {
+                                                                                ...updatedProfile,
+                                                                                bloodtype:
+                                                                                    nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
+                                                                            };
+
+                                                                            const res = await fetch("/api/nurse/accounts/me", {
+                                                                                method: "PUT",
+                                                                                headers: { "Content-Type": "application/json" },
+                                                                                body: JSON.stringify({ profile: payload }),
+                                                                            });
+
+                                                                            const data = await res.json();
+                                                                            if (!res.ok) {
+                                                                                if (
+                                                                                    handleRateLimitError(
+                                                                                        res,
+                                                                                        data,
+                                                                                        "Too many profile updates. Please wait before trying again."
+                                                                                    )
+                                                                                ) {
+                                                                                    return;
+                                                                                }
+                                                                                toast.error(data.error ?? "Failed to save gender");
+                                                                            } else if (data.error) {
+                                                                                toast.error(data.error);
+                                                                            } else {
+                                                                                toast.success("Gender saved!");
+                                                                                if (data.verificationEmailSent) {
+                                                                                    const targetEmail = data.profile?.email?.trim();
+                                                                                    toast.success(
+                                                                                        targetEmail
+                                                                                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                                                                                            : "A verification email was sent. Please check your inbox to confirm the address."
+                                                                                    );
+                                                                                }
+                                                                                await loadProfile();
+                                                                            }
+                                                                        } catch {
+                                                                            toast.error("Failed to save gender");
+                                                                        } finally {
+                                                                            setProfileLoading(false);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    Confirm
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </AccountSection>
@@ -950,6 +1073,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.allergies || ""}
                                                 onChange={(event) => setProfile({ ...profile, allergies: event.target.value })}
+                                                placeholder="Please specify"
                                             />
                                         </div>
                                     </div>
@@ -976,6 +1100,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.emergencyco_name || ""}
                                                 onChange={(event) => setProfile({ ...profile, emergencyco_name: event.target.value })}
+                                                placeholder="Full name of contact"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -983,6 +1108,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.emergencyco_num || ""}
                                                 onChange={(event) => setProfile({ ...profile, emergencyco_num: event.target.value })}
+                                                placeholder="09XXXXXXXXX"
                                             />
                                         </div>
                                         <div className="space-y-2">
@@ -990,6 +1116,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.emergencyco_relation || ""}
                                                 onChange={(event) => setProfile({ ...profile, emergencyco_relation: event.target.value })}
+                                                placeholder="Contact’s relationship"
                                             />
                                         </div>
                                     </div>
@@ -1131,27 +1258,6 @@ export function NurseAccountsPageClient({
                                 </div>
                             </div>
 
-                            {/* DOB + Gender */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="block mb-1 font-medium">Date of Birth</Label>
-                                    <Input type="date" name="date_of_birth" />
-                                </div>
-                                <div>
-                                    <Label className="block mb-1 font-medium">Gender</Label>
-                                    <Select
-                                        value={gender}
-                                        onValueChange={(val) => setGender(val as "Male" | "Female")}
-                                    >
-                                        <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="Male">Male</SelectItem>
-                                            <SelectItem value="Female">Female</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
                             {/* Submit */}
                             <Button
                                 type="submit"
@@ -1184,14 +1290,6 @@ export function NurseAccountsPageClient({
                                                 <dd className="text-right font-medium text-gray-900">
                                                     {pendingFullName || "—"}
                                                 </dd>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-4">
-                                                <dt className="text-gray-500">Gender</dt>
-                                                <dd className="font-medium text-gray-900">{pendingPayload.gender}</dd>
-                                            </div>
-                                            <div className="flex items-center justify-between gap-4">
-                                                <dt className="text-gray-500">Date of Birth</dt>
-                                                <dd className="font-medium text-gray-900">{pendingDOBLabel}</dd>
                                             </div>
                                             {pendingPatientTypeLabel && (
                                                 <div className="flex items-center justify-between gap-4">
