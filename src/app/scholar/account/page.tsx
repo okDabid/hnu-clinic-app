@@ -263,6 +263,9 @@ export default function ScholarAccountPage() {
     const [dobConfirmOpen, setDobConfirmOpen] = useState(false);
     const [dobSaving, setDobSaving] = useState(false);
     const [tempDOB, setTempDOB] = useState("");
+    const [tempGender, setTempGender] = useState<"Male" | "Female" | "">("");
+    const [genderConfirmOpen, setGenderConfirmOpen] = useState(false);
+    const [genderSaving, setGenderSaving] = useState(false);
 
     const availablePrograms = useMemo(
         () => (profile?.department ? programOptions[profile.department] ?? [] : []),
@@ -548,6 +551,70 @@ export default function ScholarAccountPage() {
         }
     }, [loadProfile, profile, tempDOB]);
 
+    const confirmGender = useCallback(async () => {
+        if (!profile || !tempGender) return;
+
+        const contactValidation = validateAndNormalizeContacts({
+            email: profile.email,
+            contactNumber: profile.contactno,
+            emergencyNumber: profile.emergencyco_num,
+        });
+
+        if (!contactValidation.success) {
+            toast.error(contactValidation.error);
+            return;
+        }
+
+        const updatedProfile = {
+            ...profile,
+            email: contactValidation.email,
+            contactno: contactValidation.contactNumber,
+            emergencyco_num: contactValidation.emergencyNumber,
+            gender: tempGender,
+        };
+
+        setProfile(updatedProfile);
+
+        try {
+            setGenderSaving(true);
+            const payload = formatRequestPayload(updatedProfile);
+            const res = await fetch("/api/scholar/account/me", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ profile: payload }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (handleRateLimitError(res, data, "Too many profile updates. Please wait before trying again.")) {
+                    return;
+                }
+                throw new Error(data.error ?? "Failed to save gender");
+            }
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            toast.success("Gender saved!");
+            if (data.verificationEmailSent) {
+                const targetEmail = data.profile?.email?.trim();
+                toast.success(
+                    targetEmail
+                        ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
+                        : "A verification email was sent. Please check your inbox to confirm the address."
+                );
+            }
+            await loadProfile();
+        } catch (error) {
+            console.error(error);
+            toast.error(error instanceof Error ? error.message : "Failed to save gender");
+        } finally {
+            setGenderSaving(false);
+            setGenderConfirmOpen(false);
+        }
+    }, [loadProfile, profile, tempGender]);
+
     if (initializing) {
         return <ScholarAccountLoading />;
     }
@@ -643,7 +710,36 @@ export default function ScholarAccountPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Gender</Label>
-                                            <Input value={profile.gender ?? ""} disabled />
+                                            {profile.gender ? (
+                                                <Input value={profile.gender ?? ""} disabled />
+                                            ) : (
+                                                <>
+                                                    <Select
+                                                        value={tempGender}
+                                                        onValueChange={(value) => setTempGender(value as "Male" | "Female")}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select gender" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Male">Male</SelectItem>
+                                                            <SelectItem value="Female">Female</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                    {tempGender ? (
+                                                        <Button
+                                                            type="button"
+                                                            className="mt-2 w-max rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                                                            onClick={() => setGenderConfirmOpen(true)}
+                                                        >
+                                                            Confirm gender
+                                                        </Button>
+                                                    ) : null}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        This can only be saved once. Double-check before confirming.
+                                                    </p>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </AccountSection>
@@ -926,15 +1022,15 @@ export default function ScholarAccountPage() {
                                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                                     <AccountRefreshButton
                                         onClick={() => void loadProfile()}
-                                        disabled={profileLoading || updating || dobSaving}
+                                        disabled={profileLoading || updating || dobSaving || genderSaving}
                                         isRefreshing={profileLoading}
                                     />
                                     <Button
                                         type="submit"
                                         className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
-                                        disabled={updating || dobSaving}
+                                        disabled={updating || dobSaving || genderSaving}
                                     >
-                                        {updating || dobSaving ? (
+                                        {updating || dobSaving || genderSaving ? (
                                             <>
                                                 <Loader2 className="h-4 w-4 animate-spin" /> Saving…
                                             </>
@@ -988,6 +1084,41 @@ export default function ScholarAccountPage() {
                             disabled={dobSaving}
                         >
                             {dobSaving ? (
+                                <span className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" /> Saving…
+                                </span>
+                            ) : (
+                                "Confirm"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={genderConfirmOpen} onOpenChange={setGenderConfirmOpen}>
+                <AlertDialogContent className="max-w-sm rounded-3xl border border-emerald-100/80 bg-white/95">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm gender</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You are about to set your gender to{' '}
+                            <span className="font-semibold text-emerald-700">{tempGender}</span>. This action can only be done once
+                            and cannot be changed later.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setTempGender("");
+                                setGenderConfirmOpen(false);
+                            }}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-emerald-600 hover:bg-emerald-700"
+                            onClick={() => void confirmGender()}
+                            disabled={genderSaving}
+                        >
+                            {genderSaving ? (
                                 <span className="flex items-center gap-2">
                                     <Loader2 className="h-4 w-4 animate-spin" /> Saving…
                                 </span>

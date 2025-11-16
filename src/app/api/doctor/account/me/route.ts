@@ -140,6 +140,14 @@ export async function PUT(req: Request) {
         const existing = user.employee;
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existing.date_of_birth ?? null;
+        const incomingGender = isGender(profile.gender) ? profile.gender : null;
+
+        if (existing.gender && incomingGender && existing.gender !== incomingGender) {
+            return NextResponse.json(
+                { error: "Gender cannot be changed once set." },
+                { status: 400 }
+            );
+        }
 
         // Prevent DOB change once set
         if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
@@ -153,6 +161,7 @@ export async function PUT(req: Request) {
 
         // Remove unchanged / null / empty fields safely
         if (existingDOB) delete data.date_of_birth;
+        if (existing.gender) delete data.gender;
 
         let verificationEmail: string | null = null;
         let shouldClearVerification = false;

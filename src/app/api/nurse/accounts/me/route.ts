@@ -164,6 +164,11 @@ export async function PUT(req: Request) {
             delete data.date_of_birth;
         }
 
+        // Prevent modifying gender if already set
+        if (user.employee.gender && data.gender) {
+            delete data.gender;
+        }
+
         const current = user.employee;
 
         let verificationEmail: string | null = null;

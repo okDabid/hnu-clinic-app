@@ -273,6 +273,14 @@ export async function PUT(req: Request) {
 
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existingProfile?.date_of_birth ?? null;
+        const incomingGender = isGender(profile.gender) ? profile.gender : null;
+
+        if (existingProfile?.gender && incomingGender && existingProfile.gender !== incomingGender) {
+            return NextResponse.json(
+                { error: "Gender cannot be changed once set." },
+                { status: 400 }
+            );
+        }
 
         if (existingDOB && incomingDOB && existingDOB.getTime() !== incomingDOB.getTime()) {
             return NextResponse.json(
@@ -288,6 +296,7 @@ export async function PUT(req: Request) {
 
             // Ensure we don't override DOB if already set
             if (existingDOB) delete data.date_of_birth;
+            if (studentProfile.gender) delete data.gender;
 
             let verificationEmail: string | null = null;
             let shouldClearVerification = false;
@@ -375,6 +384,7 @@ export async function PUT(req: Request) {
 
             // Ensure we don't override DOB if already set
             if (existingDOB) delete data.date_of_birth;
+            if (employeeProfile.gender) delete data.gender;
 
             let verificationEmail: string | null = null;
             let shouldClearVerification = false;
