@@ -35,11 +35,15 @@ function createRedirect(req: NextRequest, path: string) {
 }
 
 function clearAuthCookies(response: NextResponse) {
-    const cookieOptions = { maxAge: 0, path: "/" } as const;
+    const baseOptions = { maxAge: 0, path: "/", sameSite: "lax" as const };
 
-    response.cookies.set("next-auth.session-token", "", cookieOptions);
-    response.cookies.set("__Secure-next-auth.session-token", "", cookieOptions);
-    response.cookies.set("next-auth.csrf-token", "", cookieOptions);
+    response.cookies.set("next-auth.session-token", "", { ...baseOptions, httpOnly: true });
+    response.cookies.set("__Secure-next-auth.session-token", "", {
+        ...baseOptions,
+        httpOnly: true,
+        secure: true,
+    });
+    response.cookies.set("next-auth.csrf-token", "", baseOptions);
 
     return response;
 }
