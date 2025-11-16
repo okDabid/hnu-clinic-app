@@ -34,11 +34,28 @@ function createRedirect(req: NextRequest, path: string) {
     return NextResponse.redirect(new URL(path, req.url));
 }
 
-function guardResponse(req: NextRequest, status: number, message: string, redirectPath: string) {
-    if (req.nextUrl.pathname.startsWith("/api")) {
-        return NextResponse.json({ error: message }, { status });
-    }
-    return createRedirect(req, redirectPath);
+function clearAuthCookies(response: NextResponse) {
+    const cookieOptions = { maxAge: 0, path: "/" } as const;
+
+    response.cookies.set("next-auth.session-token", "", cookieOptions);
+    response.cookies.set("__Secure-next-auth.session-token", "", cookieOptions);
+    response.cookies.set("next-auth.csrf-token", "", cookieOptions);
+
+    return response;
+}
+
+function guardResponse(
+    req: NextRequest,
+    status: number,
+    message: string,
+    redirectPath: string
+) {
+    const response = req.nextUrl.pathname.startsWith("/api")
+        ? NextResponse.json({ error: message }, { status })
+        : createRedirect(req, redirectPath);
+
+    clearAuthCookies(response);
+    return response;
 }
 
 function allowRequest() {
@@ -69,12 +86,18 @@ export async function middleware(req: NextRequest) {
         return guardResponse(req, 401, "Unauthorized: no session token", "/login");
     }
 
+    const sessionUserId = typeof token.sub === "string" ? token.sub : token.id;
+    const role = typeof token.role === "string" ? (token.role.toUpperCase() as GuardRole) : undefined;
     const status = typeof token.status === "string" ? token.status : undefined;
+
+    if (!sessionUserId || !role) {
+        return guardResponse(req, 401, "Unauthorized: incomplete session", "/login");
+    }
+
     if (status === "Inactive") {
         return guardResponse(req, 403, "Account inactive. Contact admin.", "/login?error=inactive");
     }
 
-    const role = typeof token.role === "string" ? (token.role.toUpperCase() as GuardRole) : undefined;
     for (const { prefix, role: requiredRole } of ROLE_GUARDS) {
         if (pathname.startsWith(prefix) && role !== requiredRole) {
             return guardResponse(req, 403, "Unauthorized: insufficient role", "/login?error=unauthorized");
