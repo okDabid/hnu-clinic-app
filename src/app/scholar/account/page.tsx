@@ -860,6 +860,7 @@ export default function ScholarAccountPage() {
                                                         prev ? { ...prev, allergies: event.target.value } : prev
                                                     )
                                                 }
+                                                placeholder="Please specify"
                                             />
                                         </div>
                                     </div>

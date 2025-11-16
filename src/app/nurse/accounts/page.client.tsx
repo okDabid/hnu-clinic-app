@@ -950,6 +950,7 @@ export function NurseAccountsPageClient({
                                             <Input
                                                 value={profile.allergies || ""}
                                                 onChange={(event) => setProfile({ ...profile, allergies: event.target.value })}
+                                                placeholder="Please specify"
                                             />
                                         </div>
                                     </div>
