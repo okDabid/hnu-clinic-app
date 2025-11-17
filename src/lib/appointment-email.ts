@@ -18,7 +18,7 @@ export interface AppointmentEmailPatient {
     username: string;
     student: { fname: string | null; lname: string | null; email?: string | null } | null;
     employee: { fname: string | null; lname: string | null; email?: string | null } | null;
-    passwordResetTokens: { contact: string }[];
+    passwordResetTokens?: { contact: string }[];
 }
 
 export interface AppointmentEmailDoctor {
@@ -49,7 +49,7 @@ export function formatDoctorName(doctor: AppointmentEmailDoctor) {
 
 export function getPatientEmail(patient: AppointmentEmailPatient) {
     const verifiedContacts = new Set(
-        patient.passwordResetTokens.map((token) => token.contact.toLowerCase()),
+        (patient.passwordResetTokens ?? []).map((token) => token.contact.toLowerCase()),
     );
 
     const studentEmail = patient.student?.email?.trim() ?? "";
@@ -103,10 +103,10 @@ export function buildMoveEmail({
     <div style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: ${EMAIL_BACKGROUND_COLOR}; padding: 24px; border-radius: 16px; border: 1px solid ${EMAIL_BORDER_COLOR}; color: ${EMAIL_TEXT_COLOR};">
       <h2 style="margin-top: 0; color: ${EMAIL_ACCENT_COLOR};">Appointment Update</h2>
       <p style="color: ${EMAIL_ACCENT_COLOR}; font-weight: 600;">Hello <strong style="color: inherit;">${escapeHtml(
-          patientName,
-      )}</strong>, <strong style="color: inherit;">${escapeHtml(
-          doctorName,
-      )}</strong> has updated your appointment.</p>
+        patientName,
+    )}</strong>, <strong style="color: inherit;">${escapeHtml(
+        doctorName,
+    )}</strong> has updated your appointment.</p>
       <p>Your visit at <strong>${escapeHtml(clinicName)}</strong> has been moved.</p>
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
         <tbody>${buildTableRows(rows)}</tbody>
