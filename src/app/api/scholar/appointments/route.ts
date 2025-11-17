@@ -8,6 +8,7 @@ import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import {
     buildManilaDate,
     endOfManilaDay,
+    formatManilaDateTime,
     formatManilaISODate,
     manilaNow,
     startOfManilaDay,
@@ -22,6 +23,14 @@ import {
     type RateLimitResult,
     withRateLimit,
 } from "@/lib/rate-limit";
+import { sendEmail } from "@/lib/email";
+import { EMAIL_VERIFICATION_TOKEN_TYPE } from "@/lib/email-verification";
+import {
+    buildStatusEmail,
+    formatDoctorName,
+    formatPatientName,
+    getPatientEmail,
+} from "@/lib/appointment-email";
 
 function rateLimitResponse(message: string, result: RateLimitResult) {
     const response = NextResponse.json({ error: message }, { status: 429 });
@@ -439,7 +448,8 @@ export async function PATCH(req: Request) {
         const payload = await req.json();
         const appointmentId = payload?.appointment_id as string | undefined;
         const newStatus = payload?.status as AppointmentStatus | undefined;
-        const remarks = typeof payload?.remarks === "string" ? payload.remarks : undefined;
+        const remarks =
+            typeof payload?.remarks === "string" ? payload.remarks.trim() : undefined;
 
         if (!appointmentId) {
             return NextResponse.json({ error: "Appointment ID is required" }, { status: 400 });
@@ -458,9 +468,21 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
         }
 
+        if (
+            newStatus === AppointmentStatus.Cancelled &&
+            !(remarks && remarks.length > 0)
+        ) {
+            return NextResponse.json(
+                { error: "Cancellation reason is required" },
+                { status: 400 }
+            );
+        }
+
         const data: Prisma.AppointmentUpdateInput = {};
         if (newStatus) data.status = newStatus;
-        if (typeof remarks === "string") data.remarks = remarks;
+        if (typeof remarks === "string") {
+            data.remarks = remarks.length > 0 ? remarks : null;
+        }
 
         if (Object.keys(data).length === 0) {
             return NextResponse.json({ error: "No updates provided" }, { status: 400 });
@@ -474,8 +496,62 @@ export async function PATCH(req: Request) {
                 status: true,
                 remarks: true,
                 updatedAt: true,
+                appointment_timestart: true,
+                clinic: { select: { clinic_name: true } },
+                doctor: {
+                    select: {
+                        username: true,
+                        employee: { select: { fname: true, lname: true } },
+                    },
+                },
+                patient: {
+                    select: {
+                        username: true,
+                        student: { select: { fname: true, lname: true, email: true } },
+                        employee: { select: { fname: true, lname: true, email: true } },
+                        passwordResetTokens: {
+                            where: {
+                                type: EMAIL_VERIFICATION_TOKEN_TYPE,
+                                verified: true,
+                            },
+                            select: { contact: true },
+                        },
+                    },
+                },
             },
         });
+
+        if (newStatus && updated.patient && updated.doctor) {
+            const patientEmail = getPatientEmail(updated.patient);
+            if (patientEmail) {
+                const emailPayload = buildStatusEmail({
+                    status: newStatus,
+                    patientName: formatPatientName(updated.patient),
+                    clinicName: updated.clinic.clinic_name,
+                    schedule: formatManilaDateTime(updated.appointment_timestart),
+                    doctorName: formatDoctorName(updated.doctor),
+                    cancelReason:
+                        newStatus === AppointmentStatus.Cancelled
+                            ? remarks && remarks.length > 0
+                                ? remarks
+                                : updated.remarks ?? undefined
+                            : undefined,
+                });
+
+                if (emailPayload) {
+                    try {
+                        await sendEmail({
+                            to: patientEmail,
+                            subject: emailPayload.subject,
+                            html: emailPayload.html,
+                            text: emailPayload.text,
+                        });
+                    } catch (emailErr) {
+                        console.error("[PATCH /api/scholar/appointments] email error", emailErr);
+                    }
+                }
+            }
+        }
 
         return NextResponse.json({
             appointment_id: updated.appointment_id,
