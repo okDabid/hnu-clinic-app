@@ -173,6 +173,7 @@ export async function PUT(req: Request) {
 
         let verificationEmail: string | null = null;
         let shouldClearVerification = false;
+        let normalizedContact: string | null = null;
         if (typeof profile.email === "string") {
             const trimmedEmail = profile.email.trim();
             const existingEmail = current.email ?? "";
@@ -211,16 +212,22 @@ export async function PUT(req: Request) {
             }
         }
 
-        // Prevent duplicate or blank contact updates
-        if (
-            typeof data.contactno === "string" &&
-            (data.contactno.trim() === "" || data.contactno === current.contactno)
-        ) {
-            delete data.contactno;
-        }
+        if (typeof data.contactno === "string") {
+            const trimmedContact = data.contactno.trim();
 
-        // Debug log
-        console.log("[Employee Update Data]", data);
+            if (!trimmedContact) {
+                if (current.contactno) {
+                    data.contactno = null;
+                } else {
+                    delete data.contactno;
+                }
+            } else if (trimmedContact === current.contactno) {
+                delete data.contactno;
+            } else {
+                data.contactno = trimmedContact;
+                normalizedContact = trimmedContact;
+            }
+        }
 
         // No actual changes?
         if (Object.keys(data).length === 0) {
@@ -228,6 +235,21 @@ export async function PUT(req: Request) {
                 success: true,
                 message: "No changes detected.",
             });
+        }
+
+        if (normalizedContact) {
+            const duplicateContact = await prisma.employee.findFirst({
+                where: {
+                    contactno: normalizedContact,
+                    NOT: { user_id: session.user.id },
+                },
+            });
+            if (duplicateContact) {
+                return NextResponse.json(
+                    { error: "Contact number already exists." },
+                    { status: 400 }
+                );
+            }
         }
 
         const updated = await prisma.employee.update({
