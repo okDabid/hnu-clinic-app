@@ -18,7 +18,7 @@ export interface AppointmentEmailPatient {
     username: string;
     student: { fname: string | null; lname: string | null; email?: string | null } | null;
     employee: { fname: string | null; lname: string | null; email?: string | null } | null;
-    passwordResetTokens: { contact: string }[];
+    passwordResetTokens?: { contact: string }[];
 }
 
 export interface AppointmentEmailDoctor {
@@ -49,7 +49,7 @@ export function formatDoctorName(doctor: AppointmentEmailDoctor) {
 
 export function getPatientEmail(patient: AppointmentEmailPatient) {
     const verifiedContacts = new Set(
-        patient.passwordResetTokens.map((token) => token.contact.toLowerCase()),
+        (patient.passwordResetTokens ?? []).map((token) => token.contact.toLowerCase()),
     );
 
     const studentEmail = patient.student?.email?.trim() ?? "";
