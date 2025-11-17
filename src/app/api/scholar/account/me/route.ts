@@ -262,6 +262,34 @@ export async function PUT(req: Request) {
             }
         }
 
+        if (typeof data.contactno === "string") {
+            const trimmedContact = data.contactno.trim();
+
+            if (!trimmedContact) {
+                if (existingProfile.contactno) {
+                    data.contactno = null;
+                } else {
+                    delete data.contactno;
+                }
+            } else if (trimmedContact === existingProfile.contactno) {
+                delete data.contactno;
+            } else {
+                data.contactno = trimmedContact;
+                const duplicateContact = await prisma.student.findFirst({
+                    where: {
+                        contactno: trimmedContact,
+                        NOT: { user_id: session.user.id },
+                    },
+                });
+                if (duplicateContact) {
+                    return NextResponse.json(
+                        { error: "Contact number already exists." },
+                        { status: 400 }
+                    );
+                }
+            }
+        }
+
         const updated = await prisma.student.update({
             where: { user_id: session.user.id },
             data,
