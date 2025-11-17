@@ -26,7 +26,12 @@ export interface AppointmentEmailDoctor {
     employee: { fname: string | null; lname: string | null } | null;
 }
 
-export function formatPatientName(patient: AppointmentEmailPatient) {
+export type AppointmentNameSource = Pick<
+    AppointmentEmailPatient,
+    "username" | "student" | "employee"
+>;
+
+export function formatPatientName(patient: AppointmentNameSource) {
     if (patient.student?.fname && patient.student?.lname)
         return `${patient.student.fname} ${patient.student.lname}`;
     if (patient.employee?.fname && patient.employee?.lname)
