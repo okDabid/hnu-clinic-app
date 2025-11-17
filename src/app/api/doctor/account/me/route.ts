@@ -165,6 +165,7 @@ export async function PUT(req: Request) {
 
         let verificationEmail: string | null = null;
         let shouldClearVerification = false;
+        let normalizedContact: string | null = null;
         if (typeof profile.email === "string") {
             const trimmedEmail = profile.email.trim();
             const existingEmail = existing.email ?? "";
@@ -203,8 +204,25 @@ export async function PUT(req: Request) {
             }
         }
 
+        if (typeof data.contactno === "string") {
+            const trimmedContact = data.contactno.trim();
+
+            if (!trimmedContact) {
+                if (existing.contactno) {
+                    data.contactno = null;
+                } else {
+                    delete data.contactno;
+                }
+            } else if (trimmedContact === existing.contactno) {
+                delete data.contactno;
+            } else {
+                data.contactno = trimmedContact;
+                normalizedContact = trimmedContact;
+            }
+        }
+
         (Object.keys(data) as (keyof Prisma.EmployeeUpdateInput)[]).forEach((key) => {
-            if (key === "email") {
+            if (key === "email" || key === "contactno") {
                 return;
             }
 
@@ -230,10 +248,10 @@ export async function PUT(req: Request) {
         }
 
         // Duplicate checks
-        if (data.contactno) {
+        if (normalizedContact) {
             const duplicateContact = await prisma.employee.findFirst({
                 where: {
-                    contactno: data.contactno as string,
+                    contactno: normalizedContact,
                     NOT: { user_id: session.user.id },
                 },
             });
