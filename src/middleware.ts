@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+import { isNurseBootstrapEnabled } from "@/lib/bootstrap-flag";
+
 const PUBLIC_PATH_PREFIXES = new Set([
     "/login",
     "/forgot-password",
@@ -14,7 +16,7 @@ const PUBLIC_PATH_PREFIXES = new Set([
 
 const TEMPORARY_PUBLIC_PATH_PREFIXES = new Set<string>();
 
-if (process.env.BOOTSTRAP_NURSE === "true") {
+if (isNurseBootstrapEnabled()) {
     TEMPORARY_PUBLIC_PATH_PREFIXES.add("/bootstrap/nurse");
     TEMPORARY_PUBLIC_PATH_PREFIXES.add("/api/bootstrap/nurse");
 }

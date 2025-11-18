@@ -77,7 +77,7 @@ prisma/
 | `GMAIL_REFRESH_TOKEN` | Long-lived refresh token used to mint Gmail access tokens (`src/lib/email.ts`). |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
-| `BOOTSTRAP_NURSE` | (Optional) Set to `true` to expose the temporary `/bootstrap/nurse` UI + API used to recreate a nurse account. Disable immediately after use. |
+| `BOOTSTRAP_NURSE` | (Optional) Set to `true` to expose the temporary `/bootstrap/nurse` UI + API used to recreate a nurse account. Disable immediately after use. The flag automatically mirrors to `NEXT_PUBLIC_BOOTSTRAP_NURSE` so middleware can read it—no extra variables are required. |
 
 Create a `.env` file with the variables above before running the app.
 

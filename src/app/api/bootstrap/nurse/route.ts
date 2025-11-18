@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { customAlphabet } from "nanoid";
 import { AccountStatus, Role } from "@prisma/client";
 
+import { isNurseBootstrapEnabled } from "@/lib/bootstrap-flag";
 import { prisma } from "@/lib/prisma";
 
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -31,7 +32,7 @@ async function ensureUniqueEmployeeId(value: string) {
 }
 
 export async function POST(req: Request) {
-    if (process.env.BOOTSTRAP_NURSE !== "true") {
+    if (!isNurseBootstrapEnabled()) {
         return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 

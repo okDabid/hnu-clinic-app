@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   ],
   env: {
     TZ: "Asia/Manila",
+    NEXT_PUBLIC_BOOTSTRAP_NURSE: process.env.BOOTSTRAP_NURSE,
   },
 };
 
