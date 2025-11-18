@@ -1,42 +1,71 @@
 {
-    "name": "HNU Clinic Health Record & Appointment System",
-    "short_name": "HNU Clinic",
-    "description": "Manage appointments, health records, and clinic operations for Holy Name University Clinic.",
-    "start_url": "/",
-    "scope": "/",
-    "display": "standalone",
-    "orientation": "portrait",
-    "theme_color": "#15803D",
-    "background_color": "#f8fafc",
-    "icons": [
+  "id": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "name": "HNU Clinic Health Record & Appointment System",
+  "short_name": "HNU Clinic",
+  "description": "Manage appointments, health records, and clinic operations for Holy Name University Clinic.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "theme_color": "#15803D",
+  "background_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Sign in",
+      "short_name": "Login",
+      "url": "/login",
+      "description": "Go directly to the HNU Clinic login page.",
+      "icons": [
         {
-            "src": "/android-chrome-192x192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "/android-chrome-512x512.png",
-            "sizes": "512x512",
-            "type": "image/png"
+          "src": "/favicon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
-    ],
-    "shortcuts": [
+      ]
+    },
+    {
+      "name": "Learn more",
+      "short_name": "Learn",
+      "url": "/learn-more",
+      "description": "Read about features and how the portal works.",
+      "icons": [
         {
-            "name": "Sign in",
-            "short_name": "Login",
-            "url": "/login",
-            "description": "Go directly to the HNU Clinic login page."
-        },
-        {
-            "name": "Learn more",
-            "short_name": "Learn",
-            "url": "/learn-more",
-            "description": "Read about features and how the portal works."
+          "src": "/favicon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
-    ],
-    "categories": [
-        "health",
-        "medical",
-        "productivity"
-    ]
+      ]
+    },
+    {
+      "name": "About HNU Clinic",
+      "short_name": "About",
+      "url": "/about",
+      "description": "Meet the Holy Name University Clinic care team.",
+      "icons": [
+        {
+          "src": "/favicon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "categories": ["health", "medical", "productivity"]
 }
