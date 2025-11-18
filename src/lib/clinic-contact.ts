@@ -1,9 +1,12 @@
 export const CLINIC_CONTACT_NUMBER_LENGTH = 11;
+export const PH_MOBILE_PREFIX = "09";
 
-const DIGITS_ONLY_PATTERN = new RegExp(`^\\d{${CLINIC_CONTACT_NUMBER_LENGTH}}$`);
+const PH_MOBILE_PATTERN = new RegExp(
+    `^${PH_MOBILE_PREFIX}\\d{${CLINIC_CONTACT_NUMBER_LENGTH - PH_MOBILE_PREFIX.length}}$`
+);
 
 export function isValidClinicContactNumber(value: unknown): value is string {
-    return typeof value === "string" && DIGITS_ONLY_PATTERN.test(value.trim());
+    return typeof value === "string" && PH_MOBILE_PATTERN.test(value.trim());
 }
 
 export function sanitizeClinicContactInput(value: string): string {

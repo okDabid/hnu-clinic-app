@@ -36,6 +36,7 @@ import { formatManilaISODate, formatTimeRange, PH_TIME_ZONE } from "@/lib/time";
 import { toast } from "sonner";
 import {
     CLINIC_CONTACT_NUMBER_LENGTH,
+    PH_MOBILE_PREFIX,
     isValidClinicContactNumber,
     sanitizeClinicContactInput,
 } from "@/lib/clinic-contact";
@@ -84,7 +85,9 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
 
 const ACTIVE_STATUSES = new Set(["Pending", "Approved", "Moved"]);
 
-const CONTACT_NUMBER_ERROR_MESSAGE = `Clinic contact number must be exactly ${CLINIC_CONTACT_NUMBER_LENGTH} digits.`;
+const CONTACT_NUMBER_ERROR_MESSAGE =
+    `Clinic contact number must be a valid Philippine mobile number (${CLINIC_CONTACT_NUMBER_LENGTH} digits starting with ${PH_MOBILE_PREFIX}).`;
+const CONTACT_INPUT_PATTERN = `${PH_MOBILE_PREFIX}[0-9]{${CLINIC_CONTACT_NUMBER_LENGTH - PH_MOBILE_PREFIX.length}}`;
 
 export default function NurseClinicPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -377,7 +380,7 @@ export default function NurseClinicPage() {
                                                 type="tel"
                                                 inputMode="numeric"
                                                 maxLength={CLINIC_CONTACT_NUMBER_LENGTH}
-                                                pattern="[0-9]{11}"
+                                                pattern={CONTACT_INPUT_PATTERN}
                                                 onInput={(event) => {
                                                     event.currentTarget.value = sanitizeClinicContactInput(
                                                         event.currentTarget.value
@@ -460,7 +463,7 @@ export default function NurseClinicPage() {
                                                                 type="tel"
                                                                 inputMode="numeric"
                                                                 maxLength={CLINIC_CONTACT_NUMBER_LENGTH}
-                                                                pattern="[0-9]{11}"
+                                                                pattern={CONTACT_INPUT_PATTERN}
                                                                 onInput={(event) => {
                                                                     event.currentTarget.value = sanitizeClinicContactInput(
                                                                         event.currentTarget.value

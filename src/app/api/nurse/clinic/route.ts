@@ -4,6 +4,7 @@ import { Role } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import {
     CLINIC_CONTACT_NUMBER_LENGTH,
+    PH_MOBILE_PREFIX,
     isValidClinicContactNumber,
 } from "@/lib/clinic-contact";
 
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
         if (!isValidClinicContactNumber(trimmedContactNo)) {
             return NextResponse.json(
                 {
-                    error: `Clinic contact number must be exactly ${CLINIC_CONTACT_NUMBER_LENGTH} digits`,
+                    error: `Clinic contact number must be a valid Philippine mobile number (${CLINIC_CONTACT_NUMBER_LENGTH} digits starting with ${PH_MOBILE_PREFIX}).`,
                 },
                 { status: 400 }
             );
