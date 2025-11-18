@@ -14,7 +14,11 @@ interface BootstrapResponse {
     password: string;
 }
 
-export function NurseBootstrapPageClient() {
+interface NurseBootstrapPageClientProps {
+    enabled: boolean;
+}
+
+export function NurseBootstrapPageClient({ enabled }: NurseBootstrapPageClientProps) {
     const [formValues, setFormValues] = useState({
         employeeId: "",
         firstName: "",
@@ -29,6 +33,7 @@ export function NurseBootstrapPageClient() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const canSubmit =
+        enabled &&
         Boolean(formValues.employeeId.trim()) &&
         Boolean(formValues.firstName.trim()) &&
         Boolean(formValues.lastName.trim());
@@ -42,7 +47,7 @@ export function NurseBootstrapPageClient() {
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        if (!canSubmit || isSubmitting) return;
+        if (!enabled || !canSubmit || isSubmitting) return;
 
         setError(null);
         setResult(null);
@@ -94,8 +99,17 @@ export function NurseBootstrapPageClient() {
                 <CardHeader>
                     <CardTitle>Bootstrap a replacement nurse</CardTitle>
                     <CardDescription>
-                        Use this page only while <code>BOOTSTRAP_NURSE</code> is set to <code>true</code>. Remove the flag and
-                        redeploy immediately after creating an account.
+                        {enabled ? (
+                            <>
+                                Use this page only while <code>BOOTSTRAP_NURSE</code> is set to <code>true</code>. Remove the flag
+                                and redeploy immediately after creating an account.
+                            </>
+                        ) : (
+                            <>
+                                Set <code>BOOTSTRAP_NURSE=true</code> in your environment variables and redeploy to enable this
+                                emergency workflow. The form stays disabled while the flag is off.
+                            </>
+                        )}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -159,15 +173,25 @@ export function NurseBootstrapPageClient() {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50/80 p-4 text-amber-900">
-                            <div>
-                                <p className="font-semibold">Security reminder</p>
-                                <p className="text-sm text-amber-800">
-                                    This page skips the nurse role guard. Disable the flag as soon as the credentials are saved.
-                                </p>
+                        {enabled ? (
+                            <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50/80 p-4 text-amber-900">
+                                <div>
+                                    <p className="font-semibold">Security reminder</p>
+                                    <p className="text-sm text-amber-800">
+                                        This page skips the nurse role guard. Disable the flag as soon as the credentials are saved.
+                                    </p>
+                                </div>
+                                <ShieldAlert className="h-8 w-8 shrink-0" />
                             </div>
-                            <ShieldAlert className="h-8 w-8 shrink-0" />
-                        </div>
+                        ) : (
+                            <Alert>
+                                <AlertTitle>Bootstrap disabled</AlertTitle>
+                                <AlertDescription>
+                                    Turn on the <code>BOOTSTRAP_NURSE</code> flag and redeploy to activate the emergency bootstrap
+                                    workflow.
+                                </AlertDescription>
+                            </Alert>
+                        )}
 
                         <Button className="w-full" type="submit" disabled={!canSubmit || isSubmitting}>
                             {isSubmitting ? (

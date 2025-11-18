@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { NurseBootstrapPageClient } from "./page.client";
 
@@ -8,10 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default function NurseBootstrapPage() {
-    if (process.env.BOOTSTRAP_NURSE !== "true") {
-        notFound();
-    }
-
+    const bootstrapEnabled = process.env.BOOTSTRAP_NURSE === "true";
     return (
         <main className="min-h-screen bg-slate-50 py-10">
             <div className="mx-auto max-w-5xl px-4">
@@ -24,7 +20,7 @@ export default function NurseBootstrapPage() {
                         flag.
                     </p>
                 </div>
-                <NurseBootstrapPageClient />
+                <NurseBootstrapPageClient enabled={bootstrapEnabled} />
             </div>
         </main>
     );
