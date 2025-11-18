@@ -12,6 +12,13 @@ const PUBLIC_PATH_PREFIXES = new Set([
     "/api/account/email/verify",
 ]);
 
+const TEMPORARY_PUBLIC_PATH_PREFIXES = new Set<string>();
+
+if (process.env.BOOTSTRAP_NURSE === "true") {
+    TEMPORARY_PUBLIC_PATH_PREFIXES.add("/bootstrap/nurse");
+    TEMPORARY_PUBLIC_PATH_PREFIXES.add("/api/bootstrap/nurse");
+}
+
 const ROLE_GUARDS = [
     { prefix: "/nurse", role: "NURSE" },
     { prefix: "/doctor", role: "DOCTOR" },
@@ -27,6 +34,13 @@ function isPublicPath(pathname: string) {
             return true;
         }
     }
+
+    for (const prefix of TEMPORARY_PUBLIC_PATH_PREFIXES) {
+        if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+            return true;
+        }
+    }
+
     return false;
 }
 

@@ -77,8 +77,21 @@ prisma/
 | `GMAIL_REFRESH_TOKEN` | Long-lived refresh token used to mint Gmail access tokens (`src/lib/email.ts`). |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
+| `BOOTSTRAP_NURSE` | (Optional) Set to `true` to expose the temporary `/bootstrap/nurse` UI + API used to recreate a nurse account. Disable immediately after use. |
 
 Create a `.env` file with the variables above before running the app.
+
+## 🛟 Emergency nurse bootstrap
+
+If the last nurse account is deleted, you can temporarily expose a narrow maintenance surface to create a replacement:
+
+1. Set `BOOTSTRAP_NURSE=true` in your environment and restart the app (or redeploy).
+2. Visit `/bootstrap/nurse` to open the protected maintenance page. The form only asks for the employee ID, legal name, and optional contact details.
+3. Submit the form to call `POST /api/bootstrap/nurse`, which provisions a nurse user + employee profile and returns the generated credentials.
+4. Share the credentials securely, have the nurse sign in, and force a password change via the standard nurse dashboard.
+5. Remove `BOOTSTRAP_NURSE` from the environment (or set it to `false`) and redeploy so the bootstrap surface disappears.
+
+Only the `/bootstrap/nurse` routes are exposed while the flag is enabled; the rest of the nurse dashboard stays guarded by the middleware and role checks.
 
 ## 📦 NPM Scripts
 | Script | Description 
