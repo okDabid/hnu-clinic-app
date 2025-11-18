@@ -34,6 +34,11 @@ import {
 } from "@/components/ui/select";
 import { formatManilaISODate, formatTimeRange, PH_TIME_ZONE } from "@/lib/time";
 import { toast } from "sonner";
+import {
+    CLINIC_CONTACT_NUMBER_LENGTH,
+    isValidClinicContactNumber,
+    sanitizeClinicContactInput,
+} from "@/lib/clinic-contact";
 
 import NurseClinicLoading from "./loading";
 
@@ -78,6 +83,8 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
 };
 
 const ACTIVE_STATUSES = new Set(["Pending", "Approved", "Moved"]);
+
+const CONTACT_NUMBER_ERROR_MESSAGE = `Clinic contact number must be exactly ${CLINIC_CONTACT_NUMBER_LENGTH} digits.`;
 
 export default function NurseClinicPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -251,12 +258,23 @@ export default function NurseClinicPage() {
 
     async function handleAddClinic(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        setLoading(true);
         const formData = new FormData(e.currentTarget);
+        const clinic_name = String(formData.get("clinic_name") ?? "").trim();
+        const clinic_location = String(formData.get("clinic_location") ?? "").trim();
+        const clinic_contactno = sanitizeClinicContactInput(
+            String(formData.get("clinic_contactno") ?? "")
+        );
+
+        if (!isValidClinicContactNumber(clinic_contactno)) {
+            toast.error(CONTACT_NUMBER_ERROR_MESSAGE);
+            return;
+        }
+
+        setLoading(true);
         const payload = {
-            clinic_name: formData.get("clinic_name"),
-            clinic_location: formData.get("clinic_location"),
-            clinic_contactno: formData.get("clinic_contactno"),
+            clinic_name,
+            clinic_location,
+            clinic_contactno,
         };
 
         const res = await fetch("/api/nurse/clinic", {
@@ -280,12 +298,22 @@ export default function NurseClinicPage() {
         e.preventDefault();
         if (!selectedClinic) return;
 
-        setLoading(true);
         const formData = new FormData(e.currentTarget);
+        const clinic_location = String(formData.get("clinic_location") ?? "").trim();
+        const clinic_contactno = sanitizeClinicContactInput(
+            String(formData.get("clinic_contactno") ?? "")
+        );
+
+        if (!isValidClinicContactNumber(clinic_contactno)) {
+            toast.error(CONTACT_NUMBER_ERROR_MESSAGE);
+            return;
+        }
+
+        setLoading(true);
         const payload = {
             clinic_name: selectedClinic.clinic_name,
-            clinic_location: formData.get("clinic_location"),
-            clinic_contactno: formData.get("clinic_contactno"),
+            clinic_location,
+            clinic_contactno,
         };
 
         const res = await fetch(`/api/nurse/clinic/${selectedClinic.clinic_id}`, {
@@ -343,7 +371,19 @@ export default function NurseClinicPage() {
                                         </div>
                                         <div>
                                             <Label className="block mb-1">Contact No</Label>
-                                            <Input name="clinic_contactno" required />
+                                            <Input
+                                                name="clinic_contactno"
+                                                required
+                                                type="tel"
+                                                inputMode="numeric"
+                                                maxLength={CLINIC_CONTACT_NUMBER_LENGTH}
+                                                pattern="[0-9]{11}"
+                                                onInput={(event) => {
+                                                    event.currentTarget.value = sanitizeClinicContactInput(
+                                                        event.currentTarget.value
+                                                    );
+                                                }}
+                                            />
                                         </div>
                                         <DialogFooter>
                                             <Button
@@ -417,6 +457,15 @@ export default function NurseClinicPage() {
                                                                 name="clinic_contactno"
                                                                 defaultValue={clinic.clinic_contactno}
                                                                 required
+                                                                type="tel"
+                                                                inputMode="numeric"
+                                                                maxLength={CLINIC_CONTACT_NUMBER_LENGTH}
+                                                                pattern="[0-9]{11}"
+                                                                onInput={(event) => {
+                                                                    event.currentTarget.value = sanitizeClinicContactInput(
+                                                                        event.currentTarget.value
+                                                                    );
+                                                                }}
                                                             />
                                                         </div>
                                                         <DialogFooter>

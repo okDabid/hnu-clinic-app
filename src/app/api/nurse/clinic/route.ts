@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
+import {
+    CLINIC_CONTACT_NUMBER_LENGTH,
+    isValidClinicContactNumber,
+} from "@/lib/clinic-contact";
 
 // GET /api/nurse/clinic
 export async function GET() {
@@ -29,11 +33,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "All fields are required" }, { status: 400 });
         }
 
+        if (typeof clinic_contactno !== "string") {
+            return NextResponse.json(
+                { error: "Clinic contact number must be provided as a string" },
+                { status: 400 }
+            );
+        }
+
+        const trimmedContactNo = clinic_contactno.trim();
+
+        if (!isValidClinicContactNumber(trimmedContactNo)) {
+            return NextResponse.json(
+                {
+                    error: `Clinic contact number must be exactly ${CLINIC_CONTACT_NUMBER_LENGTH} digits`,
+                },
+                { status: 400 }
+            );
+        }
+
         const newClinic = await prisma.clinic.create({
             data: {
                 clinic_name,
                 clinic_location,
-                clinic_contactno
+                clinic_contactno: trimmedContactNo,
             },
         });
 

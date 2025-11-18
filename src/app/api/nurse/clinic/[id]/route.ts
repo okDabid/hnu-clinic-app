@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
+import {
+    CLINIC_CONTACT_NUMBER_LENGTH,
+    isValidClinicContactNumber,
+} from "@/lib/clinic-contact";
 
 // GET /api/nurse/clinic/[id]
 type ClinicRouteContext = {
@@ -59,6 +63,28 @@ export async function PUT(
             return NextResponse.json({ error: "No fields provided to update" }, { status: 400 });
         }
 
+        let normalizedContactNumber: string | undefined;
+        if (clinic_contactno !== undefined) {
+            if (typeof clinic_contactno !== "string") {
+                return NextResponse.json(
+                    { error: "Clinic contact number must be provided as a string" },
+                    { status: 400 }
+                );
+            }
+
+            const trimmedContactNo = clinic_contactno.trim();
+            if (!isValidClinicContactNumber(trimmedContactNo)) {
+                return NextResponse.json(
+                    {
+                        error: `Clinic contact number must be exactly ${CLINIC_CONTACT_NUMBER_LENGTH} digits`,
+                    },
+                    { status: 400 }
+                );
+            }
+
+            normalizedContactNumber = trimmedContactNo;
+        }
+
         // Prevent renaming to an existing clinic
         if (clinic_name) {
             const duplicate = await prisma.clinic.findFirst({
@@ -77,7 +103,7 @@ export async function PUT(
             data: {
                 ...(clinic_name && { clinic_name }),
                 ...(clinic_location && { clinic_location }),
-                ...(clinic_contactno && { clinic_contactno }),
+                ...(normalizedContactNumber && { clinic_contactno: normalizedContactNumber }),
             },
         });
 
