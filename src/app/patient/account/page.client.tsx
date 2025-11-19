@@ -111,6 +111,9 @@ const programOptions: Record<string, string[]> = {
     ],
 };
 
+const BASIC_EDUCATION_LABEL = patientDepartmentEnumMap.BASIC_EDUCATION;
+const isBasicEducationDepartment = (dept?: string | null) => dept === BASIC_EDUCATION_LABEL;
+
 const departmentOptions = Object.values(patientDepartmentEnumMap);
 const bloodTypeOptions = Object.values(patientBloodTypeEnumMap);
 
@@ -144,29 +147,24 @@ export function PatientAccountPageClient({
     const [showGenderConfirm, setShowGenderConfirm] = useState(false);
     const [refreshingProfile, setRefreshingProfile] = useState(false);
 
+    const buildYearLevelPayload = (target: PatientAccountProfile) => {
+        if (profileType !== "student" || isBasicEducationDepartment(target.department)) {
+            return null;
+        }
+        return patientReverseYearLevelEnumMap[target.year_level || ""] || null;
+    };
+
     useEffect(() => {
         if (initialProfileLoaded) {
             setInitializing(false);
         }
     }, [initialProfileLoaded]);
 
-    const getYearLevelOptions = (dept: string, program?: string) => {
-        if (dept === "Basic Education Department") {
-            switch (program) {
-                case "Kindergarten":
-                    return ["Kindergarten 1", "Kindergarten 2"];
-                case "Elementary":
-                    return ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"];
-                case "Junior High School":
-                    return ["Grade 7", "Grade 8", "Grade 9", "Grade 10"];
-                case "Senior High School":
-                    return ["Grade 11", "Grade 12"];
-                default:
-                    return [];
-            }
-        } else {
-            return ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
+    const getYearLevelOptions = (dept: string) => {
+        if (isBasicEducationDepartment(dept)) {
+            return [];
         }
+        return ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
     };
 
     const loadProfile = useCallback(async ({ fromRefresh = false } = {}) => {
@@ -336,10 +334,7 @@ export function PatientAccountPageClient({
                     profileType === "student"
                         ? patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null
                         : updatedProfile.department || null,
-                year_level:
-                    profileType === "student"
-                        ? patientReverseYearLevelEnumMap[updatedProfile.year_level || ""] || null
-                        : null,
+                year_level: buildYearLevelPayload(updatedProfile),
                 bloodtype: patientReverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
@@ -375,19 +370,27 @@ export function PatientAccountPageClient({
                             : "A verification email was sent. Please check your inbox to confirm the address."
                     );
                 }
-                setProfile((prev) => ({
-                    ...prev!,
-                    ...data.profile,
-                    department: data.profile.department
+                setProfile((prev) => {
+                    const departmentLabel = data.profile.department
                         ? patientDepartmentEnumMap[data.profile.department]
-                        : prev?.department,
-                    year_level: data.profile.year_level
-                        ? patientYearLevelEnumMap[data.profile.year_level]
-                        : prev?.year_level,
-                    bloodtype: data.profile.bloodtype
-                        ? patientBloodTypeEnumMap[data.profile.bloodtype]
-                        : prev?.bloodtype,
-                }));
+                        : prev?.department;
+                    const isBasicDept = isBasicEducationDepartment(departmentLabel);
+                    const nextYearLevel = !isBasicDept
+                        ? data.profile.year_level
+                            ? patientYearLevelEnumMap[data.profile.year_level]
+                            : prev?.year_level
+                        : "";
+
+                    return {
+                        ...prev!,
+                        ...data.profile,
+                        department: departmentLabel,
+                        year_level: nextYearLevel,
+                        bloodtype: data.profile.bloodtype
+                            ? patientBloodTypeEnumMap[data.profile.bloodtype]
+                            : prev?.bloodtype,
+                    };
+                });
             }
         } catch (err) {
             console.error("Profile update failed:", err);
@@ -585,11 +588,9 @@ export function PatientAccountPageClient({
                                                                                             ] || null
                                                                                             : updatedProfile.department || null,
                                                                                     year_level:
-                                                                                        profileType === "student"
-                                                                                            ? patientReverseYearLevelEnumMap[
-                                                                                            updatedProfile.year_level || ""
-                                                                                            ] || null
-                                                                                            : null,
+                                                                                        buildYearLevelPayload(
+                                                                                            updatedProfile
+                                                                                        ),
                                                                                     bloodtype:
                                                                                         patientReverseBloodTypeEnumMap[
                                                                                         updatedProfile?.bloodtype || ""
@@ -730,9 +731,7 @@ export function PatientAccountPageClient({
                                                                                         ? patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null
                                                                                         : updatedProfile.department || null,
                                                                                 year_level:
-                                                                                    profileType === "student"
-                                                                                        ? patientReverseYearLevelEnumMap[updatedProfile.year_level || ""] || null
-                                                                                        : null,
+                                                                                    buildYearLevelPayload(updatedProfile),
                                                                                 bloodtype: patientReverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
                                                                             };
 
@@ -906,27 +905,30 @@ export function PatientAccountPageClient({
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-emerald-900">Year level</Label>
-                                                <Select
-                                                    value={profile.year_level || ""}
-                                                    onValueChange={(val) => setProfile({ ...profile, year_level: val })}
-                                                >
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select year level" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {getYearLevelOptions(
-                                                            profile.department || "",
-                                                            profile.program ?? undefined
-                                                        ).map((lvl) => (
-                                                            <SelectItem key={lvl} value={lvl}>
-                                                                {lvl}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                            {!isBasicEducationDepartment(profile.department) ? (
+                                                <div className="space-y-2">
+                                                    <Label className="text-sm font-medium text-emerald-900">
+                                                        Year level
+                                                    </Label>
+                                                    <Select
+                                                        value={profile.year_level || ""}
+                                                        onValueChange={(val) =>
+                                                            setProfile({ ...profile, year_level: val })
+                                                        }
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select year level" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {getYearLevelOptions(profile.department || "").map((lvl) => (
+                                                                <SelectItem key={lvl} value={lvl}>
+                                                                    {lvl}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            ) : null}
                                         </div>
                                     </AccountSection>
                                 ) : null}

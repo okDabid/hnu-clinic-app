@@ -125,16 +125,18 @@ export async function POST(req: Request) {
         // Create profile based on role
         if (roleEnum === Role.PATIENT && payload.patientType === "student") {
             const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
+            const department =
+                payload.department && Object.values(Department).includes(payload.department)
+                    ? (payload.department as Department)
+                    : null;
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
                     student_id: uniqueStudentId,
-                    department:
-                        payload.department && Object.values(Department).includes(payload.department)
-                            ? (payload.department as Department)
-                            : null,
+                    department,
                     program: payload.program ?? null,
-                    year_level: payload.year_level ?? null,
+                    year_level:
+                        department === Department.BASIC_EDUCATION ? null : payload.year_level ?? null,
                     ...sharedProfileData,
                 },
             });
@@ -164,16 +166,18 @@ export async function POST(req: Request) {
 
         if (roleEnum === Role.SCHOLAR) {
             const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
+            const department =
+                payload.department && Object.values(Department).includes(payload.department)
+                    ? (payload.department as Department)
+                    : null;
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
                     student_id: uniqueStudentId,
-                    department:
-                        payload.department && Object.values(Department).includes(payload.department)
-                            ? (payload.department as Department)
-                            : null,
+                    department,
                     program: payload.program ?? null,
-                    year_level: payload.year_level ?? null,
+                    year_level:
+                        department === Department.BASIC_EDUCATION ? null : payload.year_level ?? null,
                     ...sharedProfileData,
                 },
             });

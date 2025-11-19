@@ -115,6 +115,12 @@ export function normalizePatientAccountProfile(
     }
 
     const raw = response.profile ?? {};
+    const normalizedDepartment = raw.department ? patientDepartmentEnumMap[raw.department] || "" : "";
+    const shouldIncludeYearLevel =
+        normalizedDepartment && normalizedDepartment === patientDepartmentEnumMap.BASIC_EDUCATION
+            ? false
+            : true;
+
     const profile: PatientAccountProfile = {
         user_id: response.accountId || "",
         username: response.username || "",
@@ -131,9 +137,12 @@ export function normalizePatientAccountProfile(
         allergies: raw.allergies || "",
         medicalHistory: parseMedicalHistory(raw.medical_cond || ""),
         gender: raw.gender || "",
-        department: raw.department ? patientDepartmentEnumMap[raw.department] || "" : "",
+        department: normalizedDepartment,
         program: raw.program || "",
-        year_level: raw.year_level ? patientYearLevelEnumMap[raw.year_level] || "" : "",
+        year_level:
+            shouldIncludeYearLevel && raw.year_level
+                ? patientYearLevelEnumMap[raw.year_level] || ""
+                : "",
         emergencyco_name: raw.emergencyco_name || "",
         emergencyco_num: raw.emergencyco_num || "",
         emergencyco_relation: raw.emergencyco_relation || "",
