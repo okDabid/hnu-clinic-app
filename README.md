@@ -69,7 +69,7 @@ prisma/
 ## 🔧 Environment Variables
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string used by Prisma (`prisma/schema.prisma`). |
+| `DATABASE_URL` | PostgreSQL connection string wired through `prisma.config.ts` and `src/lib/prisma.ts`. |
 | `NEXTAUTH_SECRET` | Signing secret for NextAuth JWT/session cookies (`src/lib/auth.ts`, `src/middleware.ts`). |
 | `GMAIL_USER` | Gmail address used as the sender in notifications (`src/lib/email.ts`). |
 | `GMAIL_CLIENT_ID` | OAuth client ID for Gmail API access (`src/lib/email.ts`). |
