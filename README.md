@@ -78,7 +78,7 @@ prisma/
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 
-Create a `.env` file with the variables above before running the app.
+Create a `.env` file with the variables above before running the app. The Prisma config automatically loads `.env` (and overrides with `.env.local` when present), so CLI commands such as `npx prisma validate` work without manually exporting `DATABASE_URL`.
 
 ## 📦 NPM Scripts
 | Script | Description 
