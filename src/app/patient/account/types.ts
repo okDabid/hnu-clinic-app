@@ -59,9 +59,25 @@ export const patientYearLevelEnumMap: Record<string, string> = {
     SENIOR_HIGH: "Senior High School",
 };
 
-export const patientReverseYearLevelEnumMap = Object.fromEntries(
-    Object.entries(patientYearLevelEnumMap).map(([key, val]) => [val, key])
-);
+export const patientReverseYearLevelEnumMap: Record<string, string> = {
+    ...Object.fromEntries(
+        Object.entries(patientYearLevelEnumMap).map(([key, val]) => [val, key])
+    ),
+    "Kindergarten 1": "KINDERGARTEN",
+    "Kindergarten 2": "KINDERGARTEN",
+    "Grade 1": "ELEMENTARY",
+    "Grade 2": "ELEMENTARY",
+    "Grade 3": "ELEMENTARY",
+    "Grade 4": "ELEMENTARY",
+    "Grade 5": "ELEMENTARY",
+    "Grade 6": "ELEMENTARY",
+    "Grade 7": "JUNIOR_HIGH",
+    "Grade 8": "JUNIOR_HIGH",
+    "Grade 9": "JUNIOR_HIGH",
+    "Grade 10": "JUNIOR_HIGH",
+    "Grade 11": "SENIOR_HIGH",
+    "Grade 12": "SENIOR_HIGH",
+};
 
 export const patientBloodTypeEnumMap: Record<string, string> = {
     A_POS: "A+",
