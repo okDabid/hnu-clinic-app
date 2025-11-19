@@ -127,9 +127,8 @@ const BASIC_EDUCATION_DEFAULT_YEAR_LEVEL_OPTIONS = [
 ];
 
 const BASIC_EDUCATION_PROGRAM_YEAR_LEVELS: Record<string, string[]> = {
-    Kindergarten: ["Kindergarten", "Kindergarten 1", "Kindergarten 2"],
+    Kindergarten: ["Kindergarten 1", "Kindergarten 2"],
     Elementary: [
-        "Elementary",
         "Grade 1",
         "Grade 2",
         "Grade 3",
@@ -138,13 +137,12 @@ const BASIC_EDUCATION_PROGRAM_YEAR_LEVELS: Record<string, string[]> = {
         "Grade 6",
     ],
     "Junior High School": [
-        "Junior High School",
         "Grade 7",
         "Grade 8",
         "Grade 9",
         "Grade 10",
     ],
-    "Senior High School": ["Senior High School", "Grade 11", "Grade 12"],
+    "Senior High School": ["Grade 11", "Grade 12"],
 };
 
 const BASIC_EDUCATION_LABEL = patientDepartmentEnumMap.BASIC_EDUCATION;
@@ -207,7 +205,7 @@ export function PatientAccountPageClient({
         if (isBasicEducationDepartment(dept)) {
             const programOptions = program
                 ? BASIC_EDUCATION_PROGRAM_YEAR_LEVELS[program] ||
-                    BASIC_EDUCATION_DEFAULT_YEAR_LEVEL_OPTIONS
+                BASIC_EDUCATION_DEFAULT_YEAR_LEVEL_OPTIONS
                 : BASIC_EDUCATION_DEFAULT_YEAR_LEVEL_OPTIONS;
             if (currentValue && !programOptions.includes(currentValue)) {
                 return Array.from(new Set([currentValue, ...programOptions]));
@@ -490,8 +488,8 @@ export function PatientAccountPageClient({
                 statusBadge ? (
                     <span
                         className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
-                                ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
-                                : "border-rose-200 bg-rose-50/80 text-rose-600"
+                            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                            : "border-rose-200 bg-rose-50/80 text-rose-600"
                             }`}
                     >
                         <span
