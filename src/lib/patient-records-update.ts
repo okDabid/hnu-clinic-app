@@ -18,7 +18,7 @@ export const patientRecordPatchSchema = z.object({
     address: z.string().optional(),
     bloodtype: z.enum(BLOOD_TYPES).nullable().optional(),
     allergies: z.string().optional(),
-    medical_cond: z.string().optional(),
+    medical_cond: z.string().optional().nullable(),
     emergency: z
         .object({
             name: z.string().optional(),
@@ -38,7 +38,7 @@ export async function updatePatientRecordEntry(id: string, input: PatientRecordP
         address: data.address ?? undefined,
         bloodtype: data.bloodtype !== undefined ? { set: data.bloodtype } : undefined,
         allergies: data.allergies ?? undefined,
-        medical_cond: data.medical_cond ?? undefined,
+        medical_cond: data.medical_cond === undefined ? undefined : data.medical_cond,
         emergencyco_name: data.emergency?.name ?? undefined,
         emergencyco_num: data.emergency?.num ?? undefined,
         emergencyco_relation: data.emergency?.relation ?? undefined,

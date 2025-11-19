@@ -23,6 +23,7 @@ import NurseRecordsLoading from "./loading";
 import { PatientDirectoryTable } from "./patient-directory-table";
 import type { RecordDetailsDialogTab } from "./patient-record-dialog";
 import type { PatientRecord } from "./types";
+import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
 
 const RecordDetailsDialog = dynamic(
     () => import("./patient-record-dialog").then((mod) => mod.RecordDetailsDialog),
@@ -137,9 +138,11 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
 
         setUpdatingPatientId(selectedRecord.id);
         const form = event.currentTarget;
+        const rawMedicalCond = (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value ?? "";
+        const sanitizedMedicalCond = formatMedicalHistory(parseMedicalHistory(rawMedicalCond));
         const body = {
             type: selectedRecord.patientType,
-            medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value,
+            medical_cond: sanitizedMedicalCond || null,
             allergies: (form.elements.namedItem("allergies") as HTMLInputElement)?.value,
         };
 

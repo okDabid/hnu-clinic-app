@@ -296,9 +296,11 @@ export default function DoctorPatientsPage() {
 
         setUpdatingPatientId(selectedRecord.id);
         const form = event.currentTarget;
+        const rawMedicalCond = (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value ?? "";
+        const sanitizedMedicalCond = formatMedicalHistory(parseMedicalHistory(rawMedicalCond));
         const payload = {
             type: selectedRecord.patientType,
-            medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value,
+            medical_cond: sanitizedMedicalCond || null,
             allergies: (form.elements.namedItem("allergies") as HTMLInputElement)?.value,
         };
 
@@ -725,7 +727,7 @@ export default function DoctorPatientsPage() {
                                                 <Input
                                                     id="medical_cond"
                                                     name="medical_cond"
-                                                    defaultValue={selectedRecord.medical_cond || ""}
+                                                    defaultValue={selectedMedicalHistoryText || ""}
                                                 />
                                             </div>
                                             <div>
