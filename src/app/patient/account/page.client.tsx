@@ -103,7 +103,7 @@ const programOptions: Record<string, string[]> = {
         "BS Radiologic Technology",
     ],
     "College of Law": ["JD Juris Doctor"],
-    "Basic Education Department": [
+    "Integrated Basic Education Department": [
         "Kindergarten",
         "Elementary",
         "Junior High School",

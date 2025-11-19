@@ -134,7 +134,7 @@ const departmentTypeLabels: Record<string, string> = {
     ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
     HEALTH_SCIENCES: "College of Health Sciences",
     LAW: "College of Law",
-    BASIC_EDUCATION: "Basic Education Department",
+    BASIC_EDUCATION: "Integrated Basic Education Department",
 };
 
 const yearTypeLabels: Record<string, string> = {

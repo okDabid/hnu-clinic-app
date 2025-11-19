@@ -20,7 +20,7 @@ const DEPARTMENT_LABELS: Record<string, string> = {
     ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
     HEALTH_SCIENCES: "College of Health Sciences",
     LAW: "College of Law",
-    BASIC_EDUCATION: "Basic Education Department",
+    BASIC_EDUCATION: "Integrated Basic Education Department",
 };
 
 const YEAR_LEVEL_LABELS: Record<string, string> = {
@@ -113,10 +113,10 @@ export function formatAppointmentWindow(appointment: AppointmentLike | null | un
     const start = formatManilaDateTime(appointment.timestart);
     const end = appointment.timeend
         ? formatManilaDateTime(appointment.timeend, {
-              year: undefined,
-              month: undefined,
-              day: undefined,
-          })
+            year: undefined,
+            month: undefined,
+            day: undefined,
+        })
         : null;
 
     if (start && end) {
