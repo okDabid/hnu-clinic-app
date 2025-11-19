@@ -122,10 +122,7 @@ function normalizeStringOrNull(value: unknown): string | null | undefined {
 }
 
 // ---------------- UPDATE INPUT BUILDERS ----------------
-function buildStudentUpdateInput(
-    raw: Record<string, unknown>,
-    options: { currentDepartment?: Department | null } = {}
-): Prisma.StudentUpdateInput {
+function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUpdateInput {
     const data: Prisma.StudentUpdateInput = {};
 
     if (typeof raw.fname === "string") data.fname = raw.fname;
@@ -141,11 +138,8 @@ function buildStudentUpdateInput(
     const bloodtype = mapBloodType(raw.bloodtype as string);
 
     if (department) data.department = department;
-    const effectiveDepartment = department ?? options.currentDepartment ?? null;
     const yearLevelProvided = Object.prototype.hasOwnProperty.call(raw, "year_level");
-    if (effectiveDepartment === Department.BASIC_EDUCATION) {
-        data.year_level = null;
-    } else if (year_level) {
+    if (year_level) {
         data.year_level = year_level;
     } else if (yearLevelProvided && raw.year_level === null) {
         data.year_level = null;
@@ -301,9 +295,7 @@ export async function PUT(req: Request) {
         // 2. Build proper update input (like before)
         if (isStudent) {
             const studentProfile = user.student!;
-            const data = buildStudentUpdateInput(profile, {
-                currentDepartment: user.student?.department ?? null,
-            });
+            const data = buildStudentUpdateInput(profile);
 
             // Ensure we don't override DOB if already set
             if (existingDOB) delete data.date_of_birth;

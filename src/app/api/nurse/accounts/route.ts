@@ -135,8 +135,7 @@ export async function POST(req: Request) {
                     student_id: uniqueStudentId,
                     department,
                     program: payload.program ?? null,
-                    year_level:
-                        department === Department.BASIC_EDUCATION ? null : payload.year_level ?? null,
+                    year_level: payload.year_level ?? null,
                     ...sharedProfileData,
                 },
             });
@@ -176,8 +175,7 @@ export async function POST(req: Request) {
                     student_id: uniqueStudentId,
                     department,
                     program: payload.program ?? null,
-                    year_level:
-                        department === Department.BASIC_EDUCATION ? null : payload.year_level ?? null,
+                    year_level: payload.year_level ?? null,
                     ...sharedProfileData,
                 },
             });

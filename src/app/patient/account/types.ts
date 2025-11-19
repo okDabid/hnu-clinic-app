@@ -116,10 +116,6 @@ export function normalizePatientAccountProfile(
 
     const raw = response.profile ?? {};
     const normalizedDepartment = raw.department ? patientDepartmentEnumMap[raw.department] || "" : "";
-    const shouldIncludeYearLevel =
-        normalizedDepartment && normalizedDepartment === patientDepartmentEnumMap.BASIC_EDUCATION
-            ? false
-            : true;
 
     const profile: PatientAccountProfile = {
         user_id: response.accountId || "",
@@ -139,10 +135,7 @@ export function normalizePatientAccountProfile(
         gender: raw.gender || "",
         department: normalizedDepartment,
         program: raw.program || "",
-        year_level:
-            shouldIncludeYearLevel && raw.year_level
-                ? patientYearLevelEnumMap[raw.year_level] || ""
-                : "",
+        year_level: raw.year_level ? patientYearLevelEnumMap[raw.year_level] || "" : "",
         emergencyco_name: raw.emergencyco_name || "",
         emergencyco_num: raw.emergencyco_num || "",
         emergencyco_relation: raw.emergencyco_relation || "",

@@ -111,6 +111,21 @@ const programOptions: Record<string, string[]> = {
     ],
 };
 
+const COLLEGE_YEAR_LEVEL_OPTIONS = [
+    "1st Year",
+    "2nd Year",
+    "3rd Year",
+    "4th Year",
+    "5th Year",
+];
+
+const BASIC_EDUCATION_YEAR_LEVEL_OPTIONS = [
+    "Kindergarten",
+    "Elementary",
+    "Junior High School",
+    "Senior High School",
+];
+
 const BASIC_EDUCATION_LABEL = patientDepartmentEnumMap.BASIC_EDUCATION;
 const isBasicEducationDepartment = (dept?: string | null) => dept === BASIC_EDUCATION_LABEL;
 
@@ -148,7 +163,7 @@ export function PatientAccountPageClient({
     const [refreshingProfile, setRefreshingProfile] = useState(false);
 
     const buildYearLevelPayload = (target: PatientAccountProfile) => {
-        if (profileType !== "student" || isBasicEducationDepartment(target.department)) {
+        if (profileType !== "student") {
             return null;
         }
         return patientReverseYearLevelEnumMap[target.year_level || ""] || null;
@@ -160,11 +175,14 @@ export function PatientAccountPageClient({
         }
     }, [initialProfileLoaded]);
 
-    const getYearLevelOptions = (dept: string) => {
-        if (isBasicEducationDepartment(dept)) {
+    const getYearLevelOptions = (dept?: string | null) => {
+        if (!dept) {
             return [];
         }
-        return ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
+        if (isBasicEducationDepartment(dept)) {
+            return BASIC_EDUCATION_YEAR_LEVEL_OPTIONS;
+        }
+        return COLLEGE_YEAR_LEVEL_OPTIONS;
     };
 
     const loadProfile = useCallback(async ({ fromRefresh = false } = {}) => {
@@ -297,6 +315,8 @@ export function PatientAccountPageClient({
         ]
         : [];
 
+    const currentYearLevelOptions = getYearLevelOptions(profile?.department);
+
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!profile) return;
@@ -374,12 +394,9 @@ export function PatientAccountPageClient({
                     const departmentLabel = data.profile.department
                         ? patientDepartmentEnumMap[data.profile.department]
                         : prev?.department;
-                    const isBasicDept = isBasicEducationDepartment(departmentLabel);
-                    const nextYearLevel = !isBasicDept
-                        ? data.profile.year_level
-                            ? patientYearLevelEnumMap[data.profile.year_level]
-                            : prev?.year_level
-                        : "";
+                    const nextYearLevel = data.profile.year_level
+                        ? patientYearLevelEnumMap[data.profile.year_level]
+                        : prev?.year_level;
 
                     return {
                         ...prev!,
@@ -905,30 +922,29 @@ export function PatientAccountPageClient({
                                                     </SelectContent>
                                                 </Select>
                                             </div>
-                                            {!isBasicEducationDepartment(profile.department) ? (
-                                                <div className="space-y-2">
-                                                    <Label className="text-sm font-medium text-emerald-900">
-                                                        Year level
-                                                    </Label>
-                                                    <Select
-                                                        value={profile.year_level || ""}
-                                                        onValueChange={(val) =>
-                                                            setProfile({ ...profile, year_level: val })
-                                                        }
-                                                    >
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select year level" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {getYearLevelOptions(profile.department || "").map((lvl) => (
-                                                                <SelectItem key={lvl} value={lvl}>
-                                                                    {lvl}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            ) : null}
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-medium text-emerald-900">
+                                                    Year level
+                                                </Label>
+                                                <Select
+                                                    value={profile.year_level || ""}
+                                                    onValueChange={(val) =>
+                                                        setProfile({ ...profile, year_level: val })
+                                                    }
+                                                    disabled={!currentYearLevelOptions.length}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select year level" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {currentYearLevelOptions.map((lvl) => (
+                                                            <SelectItem key={lvl} value={lvl}>
+                                                                {lvl}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
                                     </AccountSection>
                                 ) : null}
