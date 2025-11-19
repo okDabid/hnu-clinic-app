@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { ipKey, withRateLimit } from "@/lib/rate-limit";
 
@@ -60,8 +61,8 @@ async function handler(req: Request) {
                     { status: 400 }
                 );
             }
-            userRecord = await prisma.student.findUnique({
-                where: { student_id: school_id },
+            userRecord = await prisma.student.findFirst({
+                where: { student_id: school_id, user: { role: Role.SCHOLAR } },
                 select: baseSelect,
             });
         } else if (normalizedRole === "PATIENT") {
@@ -73,8 +74,8 @@ async function handler(req: Request) {
             }
 
             const [studentRecord, employeeRecord] = await Promise.all([
-                prisma.student.findUnique({
-                    where: { student_id: patient_id },
+                prisma.student.findFirst({
+                    where: { student_id: patient_id, user: { role: Role.PATIENT } },
                     select: baseSelect,
                 }),
                 prisma.employee.findUnique({
