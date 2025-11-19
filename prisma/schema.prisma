@@ -4,7 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Connection URLs were removed from schema files in Prisma 7+.
+  // Move your DATABASE_URL to prisma.config.ts for Migrate and pass an `adapter` or `accelerateUrl`
+  // to the PrismaClient constructor as documented: https://pris.ly/d/config-datasource
 }
 
 model Clinic {
@@ -178,20 +180,20 @@ model Consultation {
 }
 
 model MedDispense {
-  dispense_id     String          @id @default(dbgenerated("concat('DESP_', (floor((random() * (1000000)::double precision)))::integer)"))
-  med_id          String
-  consultation_id String?
-  scholar_user_id String?
+  dispense_id       String          @id @default(dbgenerated("concat('DESP_', (floor((random() * (1000000)::double precision)))::integer)"))
+  med_id            String
+  consultation_id   String?
+  scholar_user_id   String?
   walk_in_id_number String?
-  walk_in_contact String?
-  walk_in_notes   String?
-  quantity        Int
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @default(now()) @updatedAt
-  dispenseBatches DispenseBatch[]
-  consultation    Consultation?   @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
-  med             MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
-  scholar         Users?          @relation("ScholarDispenses", fields: [scholar_user_id], references: [user_id])
+  walk_in_contact   String?
+  walk_in_notes     String?
+  quantity          Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @default(now()) @updatedAt
+  dispenseBatches   DispenseBatch[]
+  consultation      Consultation?   @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
+  med               MedInventory    @relation(fields: [med_id], references: [med_id], onDelete: Cascade)
+  scholar           Users?          @relation("ScholarDispenses", fields: [scholar_user_id], references: [user_id])
 
   @@index([consultation_id])
   @@index([scholar_user_id])
