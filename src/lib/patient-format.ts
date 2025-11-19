@@ -20,7 +20,7 @@ const DEPARTMENT_LABELS: Record<string, string> = {
     ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
     HEALTH_SCIENCES: "College of Health Sciences",
     LAW: "College of Law",
-    BASIC_EDUCATION: "Basic Education Department",
+    BASIC_EDUCATION: "Integrated Basic Education Department",
 };
 
 const YEAR_LEVEL_LABELS: Record<string, string> = {
@@ -29,10 +29,20 @@ const YEAR_LEVEL_LABELS: Record<string, string> = {
     THIRD_YEAR: "3rd Year",
     FOURTH_YEAR: "4th Year",
     FIFTH_YEAR: "5th Year",
-    KINDERGARTEN: "Kindergarten",
-    ELEMENTARY: "Elementary",
-    JUNIOR_HIGH: "Junior High School",
-    SENIOR_HIGH: "Senior High School",
+    KINDERGARTEN_1: "Kindergarten 1",
+    KINDERGARTEN_2: "Kindergarten 2",
+    GRADE_1: "Grade 1",
+    GRADE_2: "Grade 2",
+    GRADE_3: "Grade 3",
+    GRADE_4: "Grade 4",
+    GRADE_5: "Grade 5",
+    GRADE_6: "Grade 6",
+    GRADE_7: "Grade 7",
+    GRADE_8: "Grade 8",
+    GRADE_9: "Grade 9",
+    GRADE_10: "Grade 10",
+    GRADE_11: "Grade 11",
+    GRADE_12: "Grade 12",
 };
 
 const HUMANIZE_PATTERN = /^[A-Z0-9_]+$/;
@@ -103,10 +113,10 @@ export function formatAppointmentWindow(appointment: AppointmentLike | null | un
     const start = formatManilaDateTime(appointment.timestart);
     const end = appointment.timeend
         ? formatManilaDateTime(appointment.timeend, {
-              year: undefined,
-              month: undefined,
-              day: undefined,
-          })
+            year: undefined,
+            month: undefined,
+            day: undefined,
+        })
         : null;
 
     if (start && end) {

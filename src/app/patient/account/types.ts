@@ -40,7 +40,7 @@ export const patientDepartmentEnumMap: Record<string, string> = {
     ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
     HEALTH_SCIENCES: "College of Health Sciences",
     LAW: "College of Law",
-    BASIC_EDUCATION: "Basic Education Department",
+    BASIC_EDUCATION: "Integrated Basic Education Department",
 };
 
 export const patientReverseDepartmentEnumMap = Object.fromEntries(
@@ -53,10 +53,20 @@ export const patientYearLevelEnumMap: Record<string, string> = {
     THIRD_YEAR: "3rd Year",
     FOURTH_YEAR: "4th Year",
     FIFTH_YEAR: "5th Year",
-    KINDERGARTEN: "Kindergarten",
-    ELEMENTARY: "Elementary",
-    JUNIOR_HIGH: "Junior High School",
-    SENIOR_HIGH: "Senior High School",
+    KINDERGARTEN_1: "Kindergarten 1",
+    KINDERGARTEN_2: "Kindergarten 2",
+    GRADE_1: "Grade 1",
+    GRADE_2: "Grade 2",
+    GRADE_3: "Grade 3",
+    GRADE_4: "Grade 4",
+    GRADE_5: "Grade 5",
+    GRADE_6: "Grade 6",
+    GRADE_7: "Grade 7",
+    GRADE_8: "Grade 8",
+    GRADE_9: "Grade 9",
+    GRADE_10: "Grade 10",
+    GRADE_11: "Grade 11",
+    GRADE_12: "Grade 12",
 };
 
 const baseYearLevelReverseMap = Object.fromEntries(
@@ -65,20 +75,6 @@ const baseYearLevelReverseMap = Object.fromEntries(
 
 export const patientReverseYearLevelEnumMap: Record<string, string> = {
     ...baseYearLevelReverseMap,
-    "Kindergarten 1": "KINDERGARTEN",
-    "Kindergarten 2": "KINDERGARTEN",
-    "Grade 1": "ELEMENTARY",
-    "Grade 2": "ELEMENTARY",
-    "Grade 3": "ELEMENTARY",
-    "Grade 4": "ELEMENTARY",
-    "Grade 5": "ELEMENTARY",
-    "Grade 6": "ELEMENTARY",
-    "Grade 7": "JUNIOR_HIGH",
-    "Grade 8": "JUNIOR_HIGH",
-    "Grade 9": "JUNIOR_HIGH",
-    "Grade 10": "JUNIOR_HIGH",
-    "Grade 11": "SENIOR_HIGH",
-    "Grade 12": "SENIOR_HIGH",
 };
 
 export const patientBloodTypeEnumMap: Record<string, string> = {
