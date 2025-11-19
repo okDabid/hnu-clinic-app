@@ -119,12 +119,33 @@ const COLLEGE_YEAR_LEVEL_OPTIONS = [
     "5th Year",
 ];
 
-const BASIC_EDUCATION_YEAR_LEVEL_OPTIONS = [
+const BASIC_EDUCATION_DEFAULT_YEAR_LEVEL_OPTIONS = [
     "Kindergarten",
     "Elementary",
     "Junior High School",
     "Senior High School",
 ];
+
+const BASIC_EDUCATION_PROGRAM_YEAR_LEVELS: Record<string, string[]> = {
+    Kindergarten: ["Kindergarten", "Kindergarten 1", "Kindergarten 2"],
+    Elementary: [
+        "Elementary",
+        "Grade 1",
+        "Grade 2",
+        "Grade 3",
+        "Grade 4",
+        "Grade 5",
+        "Grade 6",
+    ],
+    "Junior High School": [
+        "Junior High School",
+        "Grade 7",
+        "Grade 8",
+        "Grade 9",
+        "Grade 10",
+    ],
+    "Senior High School": ["Senior High School", "Grade 11", "Grade 12"],
+};
 
 const BASIC_EDUCATION_LABEL = patientDepartmentEnumMap.BASIC_EDUCATION;
 const isBasicEducationDepartment = (dept?: string | null) => dept === BASIC_EDUCATION_LABEL;
@@ -175,12 +196,23 @@ export function PatientAccountPageClient({
         }
     }, [initialProfileLoaded]);
 
-    const getYearLevelOptions = (dept?: string | null) => {
+    const getYearLevelOptions = (
+        dept?: string | null,
+        program?: string | null,
+        currentValue?: string | null
+    ) => {
         if (!dept) {
             return [];
         }
         if (isBasicEducationDepartment(dept)) {
-            return BASIC_EDUCATION_YEAR_LEVEL_OPTIONS;
+            const programOptions = program
+                ? BASIC_EDUCATION_PROGRAM_YEAR_LEVELS[program] ||
+                    BASIC_EDUCATION_DEFAULT_YEAR_LEVEL_OPTIONS
+                : BASIC_EDUCATION_DEFAULT_YEAR_LEVEL_OPTIONS;
+            if (currentValue && !programOptions.includes(currentValue)) {
+                return Array.from(new Set([currentValue, ...programOptions]));
+            }
+            return programOptions;
         }
         return COLLEGE_YEAR_LEVEL_OPTIONS;
     };
@@ -315,7 +347,11 @@ export function PatientAccountPageClient({
         ]
         : [];
 
-    const currentYearLevelOptions = getYearLevelOptions(profile?.department);
+    const currentYearLevelOptions = getYearLevelOptions(
+        profile?.department,
+        profile?.program,
+        profile?.year_level
+    );
 
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -908,7 +944,18 @@ export function PatientAccountPageClient({
                                                 <Label className="text-sm font-medium text-emerald-900">Program</Label>
                                                 <Select
                                                     value={profile.program || ""}
-                                                    onValueChange={(val) => setProfile({ ...profile, program: val })}
+                                                    onValueChange={(val) =>
+                                                        setProfile({
+                                                            ...profile,
+                                                            program: val,
+                                                            year_level:
+                                                                isBasicEducationDepartment(
+                                                                    profile.department
+                                                                ) && profile.program !== val
+                                                                    ? ""
+                                                                    : profile.year_level,
+                                                        })
+                                                    }
                                                 >
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select program" />
