@@ -114,6 +114,22 @@ const programOptions: Record<string, string[]> = {
 const departmentOptions = Object.values(patientDepartmentEnumMap);
 const bloodTypeOptions = Object.values(patientBloodTypeEnumMap);
 
+const collegeYearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"] as const;
+
+const basicEducationYearLevels: Record<string, string[]> = {
+    Kindergarten: ["Kindergarten 1", "Kindergarten 2"],
+    Elementary: ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"],
+    "Junior High School": ["Grade 7", "Grade 8", "Grade 9", "Grade 10"],
+    "Senior High School": ["Grade 11", "Grade 12"],
+};
+
+function mergeYearLevelOptions(options: string[], current?: string | null) {
+    if (current && current.trim().length > 0 && !options.includes(current)) {
+        return [current, ...options];
+    }
+    return options;
+}
+
 export type PatientAccountPageClientProps = {
     initialProfile: PatientAccountProfile | null;
     initialPatientType: string | null;
@@ -150,23 +166,12 @@ export function PatientAccountPageClient({
         }
     }, [initialProfileLoaded]);
 
-    const getYearLevelOptions = (dept: string, program?: string) => {
+    const getYearLevelOptions = (dept: string, program?: string, current?: string | null) => {
         if (dept === "Basic Education Department") {
-            switch (program) {
-                case "Kindergarten":
-                    return ["Kindergarten 1", "Kindergarten 2"];
-                case "Elementary":
-                    return ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"];
-                case "Junior High School":
-                    return ["Grade 7", "Grade 8", "Grade 9", "Grade 10"];
-                case "Senior High School":
-                    return ["Grade 11", "Grade 12"];
-                default:
-                    return [];
-            }
-        } else {
-            return ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
+            const options = basicEducationYearLevels[program ?? ""] ?? [];
+            return mergeYearLevelOptions(options, current);
         }
+        return mergeYearLevelOptions([...collegeYearLevels], current);
     };
 
     const loadProfile = useCallback(async ({ fromRefresh = false } = {}) => {
@@ -911,14 +916,26 @@ export function PatientAccountPageClient({
                                                 <Select
                                                     value={profile.year_level || ""}
                                                     onValueChange={(val) => setProfile({ ...profile, year_level: val })}
+                                                    disabled={
+                                                        profile.department === "Basic Education Department" &&
+                                                        !profile.program
+                                                    }
                                                 >
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select year level" />
+                                                        <SelectValue
+                                                            placeholder={
+                                                                profile.department === "Basic Education Department" &&
+                                                                !profile.program
+                                                                    ? "Select program first"
+                                                                    : "Select year level"
+                                                            }
+                                                        />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {getYearLevelOptions(
                                                             profile.department || "",
-                                                            profile.program ?? undefined
+                                                            profile.program ?? undefined,
+                                                            profile.year_level ?? null
                                                         ).map((lvl) => (
                                                             <SelectItem key={lvl} value={lvl}>
                                                                 {lvl}
