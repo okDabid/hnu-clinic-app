@@ -4,6 +4,7 @@ import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
 import { Prisma, BloodType, Department, Role, AccountStatus } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
+import { z } from "zod";
 
 // Generate random password (8 chars)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -60,26 +61,123 @@ async function ensureUniqueEmployeeId(value: string): Promise<string> {
     return id;
 }
 
+const createUserSchema = z
+    .object({
+        role: z.nativeEnum(Role),
+        fname: z.string().trim().min(1, "First name is required."),
+        mname: z.string().trim().optional(),
+        lname: z.string().trim().min(1, "Last name is required."),
+        employee_id: z
+            .string()
+            .trim()
+            .optional()
+            .transform((value) => (value?.length ? value : undefined)),
+        student_id: z
+            .string()
+            .trim()
+            .optional()
+            .transform((value) => (value?.length ? value : undefined)),
+        school_id: z
+            .string()
+            .trim()
+            .optional()
+            .transform((value) => (value?.length ? value : undefined)),
+        patientType: z.enum(["student", "employee"]).optional(),
+        specialization: z.enum(["Physician", "Dentist"]).optional(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.role === Role.PATIENT) {
+            if (!data.patientType) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Please specify if the patient is a student or an employee.",
+                    path: ["patientType"],
+                });
+            }
+
+            if (data.patientType === "student" && !data.student_id) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Student ID is required for student patients.",
+                    path: ["student_id"],
+                });
+            }
+
+            if (data.patientType === "employee" && !data.employee_id) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Employee ID is required for employee patients.",
+                    path: ["employee_id"],
+                });
+            }
+        } else if (data.patientType) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Patient type is only applicable when creating patient accounts.",
+                path: ["patientType"],
+            });
+        }
+
+        if ((data.role === Role.NURSE || data.role === Role.DOCTOR) && !data.employee_id) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Employee ID is required for nurse and doctor accounts.",
+                path: ["employee_id"],
+            });
+        }
+
+        if (data.role === Role.DOCTOR && !data.specialization) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Please select a specialization for the doctor.",
+                path: ["specialization"],
+            });
+        }
+
+        if (data.role === Role.SCHOLAR && !data.school_id) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "School ID is required for working scholar accounts.",
+                path: ["school_id"],
+            });
+        }
+    })
+    .transform((data) => ({
+        ...data,
+        mname: data.mname?.trim() || null,
+        employee_id: data.employee_id ?? null,
+        student_id: data.student_id ?? null,
+        school_id: data.school_id ?? null,
+        specialization: data.specialization ?? null,
+    }));
+
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
         await requireRole([Role.NURSE]);
 
         const payload = await req.json();
-        const roleEnum = payload.role as Role;
+        const parsed = createUserSchema.safeParse(payload);
+
+        if (!parsed.success) {
+            const message = parsed.error.issues[0]?.message ?? "Invalid request body.";
+            return NextResponse.json({ error: message }, { status: 400 });
+        }
+
+        const roleEnum = parsed.data.role;
 
         // Determine username
         let username: string;
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            username = payload.employee_id;
-        } else if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            username = payload.student_id;
-        } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            username = payload.employee_id;
+            username = parsed.data.employee_id as string;
+        } else if (roleEnum === Role.PATIENT && parsed.data.patientType === "student") {
+            username = parsed.data.student_id as string;
+        } else if (roleEnum === Role.PATIENT && parsed.data.patientType === "employee") {
+            username = parsed.data.employee_id as string;
         } else if (roleEnum === Role.SCHOLAR) {
-            username = payload.school_id;
+            username = parsed.data.school_id as string;
         } else {
-            username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
+            username = `${parsed.data.fname.toLowerCase()}.${parsed.data.lname.toLowerCase()}`;
         }
 
         const finalUsername = await ensureUniqueUsername(username);
@@ -97,9 +195,9 @@ export async function POST(req: Request) {
                 status: AccountStatus.Active,
                 specialization:
                     roleEnum === Role.DOCTOR
-                        ? payload.specialization === "Physician"
+                        ? parsed.data.specialization === "Physician"
                             ? "Physician"
-                            : payload.specialization === "Dentist"
+                            : parsed.data.specialization === "Dentist"
                                 ? "Dentist"
                                 : null
                         : null,
@@ -108,9 +206,9 @@ export async function POST(req: Request) {
 
         // Shared fields
         const sharedProfileData = {
-            fname: payload.fname,
-            mname: payload.mname,
-            lname: payload.lname,
+            fname: parsed.data.fname,
+            mname: parsed.data.mname,
+            lname: parsed.data.lname,
             bloodtype: bloodTypeMap[payload.bloodtype] || null,
             address: payload.address ?? null,
             allergies: payload.allergies ?? null,
@@ -123,8 +221,8 @@ export async function POST(req: Request) {
         };
 
         // Create profile based on role
-        if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
+        if (roleEnum === Role.PATIENT && parsed.data.patientType === "student") {
+            const uniqueStudentId = await ensureUniqueStudentId(parsed.data.student_id as string);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -141,8 +239,8 @@ export async function POST(req: Request) {
             });
         }
 
-        if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
+        if (roleEnum === Role.PATIENT && parsed.data.patientType === "employee") {
+            const uniqueEmployeeId = await ensureUniqueEmployeeId(parsed.data.employee_id as string);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
@@ -153,7 +251,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
+            const uniqueEmployeeId = await ensureUniqueEmployeeId(parsed.data.employee_id as string);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
@@ -164,7 +262,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.SCHOLAR) {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
+            const uniqueStudentId = await ensureUniqueStudentId(parsed.data.school_id as string);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)

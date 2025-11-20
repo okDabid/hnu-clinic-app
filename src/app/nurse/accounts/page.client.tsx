@@ -397,6 +397,36 @@ export function NurseAccountsPageClient({
         const studentId = getTrimmedValue("student_id");
         const schoolId = getTrimmedValue("school_id");
 
+        if (!fname) {
+            toast.error("First name cannot be empty.", { position: "top-center" });
+            return;
+        }
+
+        if (!lname) {
+            toast.error("Last name cannot be empty.", { position: "top-center" });
+            return;
+        }
+
+        if (role === "SCHOLAR" && !schoolId) {
+            toast.error("Please enter a school ID for the working scholar.", { position: "top-center" });
+            return;
+        }
+
+        if ((role === "NURSE" || role === "DOCTOR") && !employeeId) {
+            toast.error("Please enter an employee ID for the staff account.", { position: "top-center" });
+            return;
+        }
+
+        if (role === "PATIENT" && patientType === "student" && !studentId) {
+            toast.error("Please enter a student ID for the patient account.", { position: "top-center" });
+            return;
+        }
+
+        if (role === "PATIENT" && patientType === "employee" && !employeeId) {
+            toast.error("Please enter an employee ID for the patient account.", { position: "top-center" });
+            return;
+        }
+
         const payload: CreateUserPayload = {
             role,
             fname,
@@ -447,6 +477,11 @@ export function NurseAccountsPageClient({
                 headers: { "Content-Type": "application/json" },
             });
             const data: CreateUserResponse = await res.json();
+
+            if (!res.ok) {
+                toast.error(data.error || "Failed to create account.", { position: "top-center" });
+                return;
+            }
 
             if (data.error) {
                 toast.error(data.error, { position: "top-center" });
