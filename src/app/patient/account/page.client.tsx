@@ -499,12 +499,12 @@ export function PatientAccountPageClient({
                 statusBadge ? (
                     <span
                         className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
-                            ? "border-emerald/30 bg-emerald/10/80 text-emerald-700"
+                            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
                             : "border-rose-200 bg-rose-50/80 text-rose-600"
                             }`}
                     >
                         <span
-                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald" : "bg-rose-500"
+                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
                                 }`}
                         />
                         Status: {statusBadge}
@@ -1114,7 +1114,7 @@ export function PatientAccountPageClient({
                                     />
                                     <Button
                                         type="submit"
-                                        className="flex items-center justify-center gap-2 rounded-2xl bg-emerald px-6 py-2 text-sm font-semibold text-emerald-foreground shadow-sm transition hover:bg-emerald/90 disabled:opacity-60"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading ? (

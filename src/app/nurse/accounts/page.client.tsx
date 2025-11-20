@@ -1665,7 +1665,7 @@ export function NurseAccountsPageClient({
                                                                             "gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors",
                                                                             user.status === "Active"
                                                                                 ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-                                                                                : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 text-primary"
+                                                                                : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
                                                                         )}
                                                                         disabled={isStatusUpdating}
                                                                     >
