@@ -314,8 +314,8 @@ export function PatientAccountPageClient({
         profile?.emergencyco_relation?.trim()
     );
 
-    const summaryItems = profile
-        ? ([
+    const summaryItems: AccountSummaryItem[] = profile
+        ? [
             {
                 icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
                 label: "Account status",
@@ -324,7 +324,7 @@ export function PatientAccountPageClient({
                     profile.status === "Active"
                         ? "Your account can access clinic services."
                         : "Contact the clinic team to reactivate access.",
-                accent: profile.status === "Active" ? "primary" : "rose",
+                accent: profile.status === "Active" ? "emerald" : "rose",
             },
             {
                 icon: BarChart3,
@@ -337,7 +337,7 @@ export function PatientAccountPageClient({
                 progress: completionPercent,
                 accent:
                     completionPercent >= 80
-                        ? "primary"
+                        ? "emerald"
                         : completionPercent >= 50
                             ? "amber"
                             : "rose",
@@ -347,12 +347,13 @@ export function PatientAccountPageClient({
                 label: "Emergency readiness",
                 value: emergencyReady ? "Ready" : "Action required",
                 helper: emergencyReady
-                    ? `${profile.emergencyco_name || "Emergency contact"}${profile.emergencyco_relation ? ` (${profile.emergencyco_relation})` : ""
-                    } • ${profile.emergencyco_num || "—"}`
+                    ? `${profile.emergencyco_name || "Emergency contact"
+                    }${profile.emergencyco_relation ? ` (${profile.emergencyco_relation})` : ""} • ${profile.emergencyco_num || "—"
+                    }`
                     : "Provide an emergency contact name, number, and relationship.",
                 accent: emergencyReady ? "teal" : "amber",
             },
-        ] as unknown as AccountSummaryItem[])
+        ]
         : [];
 
     const currentYearLevelOptions = getYearLevelOptions(
@@ -498,12 +499,12 @@ export function PatientAccountPageClient({
                 statusBadge ? (
                     <span
                         className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
-                            ? "border-primary/30 bg-primary/10/80 text-primary-700"
+                            ? "border-emerald/30 bg-emerald/10/80 text-emerald-700"
                             : "border-rose-200 bg-rose-50/80 text-rose-600"
                             }`}
                     >
                         <span
-                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-primary" : "bg-rose-500"
+                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald" : "bg-rose-500"
                                 }`}
                         />
                         Status: {statusBadge}
@@ -513,8 +514,8 @@ export function PatientAccountPageClient({
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
                 {hydratingProfile ? (
-                    <Card className="rounded-[28px] border border-primary-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
-                        <div className="flex flex-col items-center gap-3 text-primary-700">
+                    <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
+                        <div className="flex flex-col items-center gap-3 text-emerald-700">
                             <Loader2 className="h-6 w-6 animate-spin" />
                             <p className="text-sm font-medium">Refreshing your profile information…</p>
                         </div>
@@ -522,7 +523,7 @@ export function PatientAccountPageClient({
                 ) : null}
 
                 {!hydratingProfile && !profile ? (
-                    <Card className="rounded-[28px] border border-primary-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
+                    <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 text-center shadow-sm backdrop-blur">
                         <p className="text-sm text-muted-foreground">
                             We couldn&apos;t load your account information right now. Please refresh or contact the clinic team.
                         </p>
@@ -544,11 +545,11 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">User ID</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">User ID</Label>
                                             <Input value={profile.user_id} disabled />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">
+                                            <Label className="text-sm font-medium text-emerald-900">
                                                 {profileType === "student"
                                                     ? "School ID"
                                                     : profileType === "employee"
@@ -558,15 +559,15 @@ export function PatientAccountPageClient({
                                             <Input value={profile.username} disabled />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Role</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Role</Label>
                                             <Input value={profile.role} disabled />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Status</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Status</Label>
                                             <Input value={profile.status} disabled />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Date of birth</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Date of birth</Label>
                                             {profile.date_of_birth ? (
                                                 <Input
                                                     type="date"
@@ -583,7 +584,7 @@ export function PatientAccountPageClient({
                                                     {tempDOB ? (
                                                         <Button
                                                             type="button"
-                                                            className="mt-2 w-max rounded-2xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-700"
+                                                            className="mt-2 w-max rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                                                             onClick={() => setShowDOBConfirm(true)}
                                                         >
                                                             Confirm date
@@ -599,7 +600,7 @@ export function PatientAccountPageClient({
                                                                     <AlertDialogTitle>Confirm Date of Birth</AlertDialogTitle>
                                                                     <AlertDialogDescription>
                                                                         You are about to set your Date of Birth to{" "}
-                                                                        <span className="font-semibold text-primary-700">{tempDOB}</span>.
+                                                                        <span className="font-semibold text-emerald-700">{tempDOB}</span>.
                                                                         <br />
                                                                         This action can only be done once and cannot be changed later.
                                                                     </AlertDialogDescription>
@@ -614,7 +615,7 @@ export function PatientAccountPageClient({
                                                                         Cancel
                                                                     </AlertDialogCancel>
                                                                     <AlertDialogAction
-                                                                        className="bg-primary-600 hover:bg-primary-700"
+                                                                        className="bg-emerald-600 hover:bg-emerald-700"
                                                                         onClick={async () => {
                                                                             const contactValidation = validateAndNormalizeContacts({
                                                                                 email: profile.email,
@@ -708,7 +709,7 @@ export function PatientAccountPageClient({
                                             )}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Gender</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Gender</Label>
                                             {profile.gender ? (
                                                 <Input value={profile.gender || ""} disabled />
                                             ) : (
@@ -728,7 +729,7 @@ export function PatientAccountPageClient({
                                                     {tempGender ? (
                                                         <Button
                                                             type="button"
-                                                            className="mt-2 w-max rounded-2xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-primary-700"
+                                                            className="mt-2 w-max rounded-2xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                                                             onClick={() => setShowGenderConfirm(true)}
                                                         >
                                                             Confirm gender
@@ -743,7 +744,7 @@ export function PatientAccountPageClient({
                                                                 <AlertDialogTitle>Confirm Gender</AlertDialogTitle>
                                                                 <AlertDialogDescription>
                                                                     You are about to set your gender to{" "}
-                                                                    <span className="font-semibold text-primary-700">{tempGender}</span>.
+                                                                    <span className="font-semibold text-emerald-700">{tempGender}</span>.
                                                                     <br />
                                                                     This action can only be done once and cannot be changed later.
                                                                 </AlertDialogDescription>
@@ -758,7 +759,7 @@ export function PatientAccountPageClient({
                                                                     Cancel
                                                                 </AlertDialogCancel>
                                                                 <AlertDialogAction
-                                                                    className="bg-primary-600 hover:bg-primary-700"
+                                                                    className="bg-emerald-600 hover:bg-emerald-700"
                                                                     onClick={async () => {
                                                                         const contactValidation = validateAndNormalizeContacts({
                                                                             email: profile.email,
@@ -853,21 +854,21 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-3">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">First name</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">First name</Label>
                                             <Input
                                                 value={profile.fname}
                                                 onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Middle name</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Middle name</Label>
                                             <Input
                                                 value={profile.mname || ""}
                                                 onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Last name</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Last name</Label>
                                             <Input
                                                 value={profile.lname}
                                                 onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
@@ -883,19 +884,19 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Email</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Email</Label>
                                             <Input
                                                 type="email"
                                                 placeholder="example@hnu.edu.ph"
                                                 value={profile.email || ""}
                                                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                                             />
-                                            <p className="text-xs text-primary-700">
+                                            <p className="text-xs text-emerald-700">
                                                 Adding a new email will trigger a verification link before the clinic sends notifications there.
                                             </p>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Contact number</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
                                             <Input
                                                 type="tel"
                                                 placeholder="09XXXXXXXXX"
@@ -905,7 +906,7 @@ export function PatientAccountPageClient({
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-primary-900">Address</Label>
+                                        <Label className="text-sm font-medium text-emerald-900">Address</Label>
                                         <Input
                                             value={profile.address || ""}
                                             onChange={(e) => setProfile({ ...profile, address: e.target.value })}
@@ -921,7 +922,7 @@ export function PatientAccountPageClient({
                                     >
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-primary-900">Department</Label>
+                                                <Label className="text-sm font-medium text-emerald-900">Department</Label>
                                                 <Select
                                                     value={profile.department || ""}
                                                     onValueChange={(val) =>
@@ -949,7 +950,7 @@ export function PatientAccountPageClient({
                                                 </Select>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-primary-900">Program</Label>
+                                                <Label className="text-sm font-medium text-emerald-900">Program</Label>
                                                 <Select
                                                     value={profile.program || ""}
                                                     onValueChange={(val) =>
@@ -978,7 +979,7 @@ export function PatientAccountPageClient({
                                                 </Select>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-primary-900">
+                                                <Label className="text-sm font-medium text-emerald-900">
                                                     Year level
                                                 </Label>
                                                 <Select
@@ -1012,7 +1013,7 @@ export function PatientAccountPageClient({
                                     >
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-primary-900">Department / Office</Label>
+                                                <Label className="text-sm font-medium text-emerald-900">Department / Office</Label>
                                                 <Input
                                                     value={profile.department || ""}
                                                     onChange={(e) => setProfile({ ...profile, department: e.target.value })}
@@ -1030,7 +1031,7 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Blood type</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Blood type</Label>
                                             <Select
                                                 value={profile.bloodtype || ""}
                                                 onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
@@ -1048,7 +1049,7 @@ export function PatientAccountPageClient({
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Allergies</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Allergies</Label>
                                             <Input
                                                 value={profile.allergies || ""}
                                                 onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
@@ -1057,7 +1058,7 @@ export function PatientAccountPageClient({
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-primary-900">
+                                        <Label className="text-sm font-medium text-emerald-900">
                                             Medical conditions
                                         </Label>
                                         <MedicalHistoryField
@@ -1077,7 +1078,7 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-3">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Contact name</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Contact name</Label>
                                             <Input
                                                 value={profile.emergencyco_name || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
@@ -1085,7 +1086,7 @@ export function PatientAccountPageClient({
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Contact number</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
                                             <Input
                                                 value={profile.emergencyco_num || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
@@ -1093,7 +1094,7 @@ export function PatientAccountPageClient({
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-primary-900">Relationship</Label>
+                                            <Label className="text-sm font-medium text-emerald-900">Relationship</Label>
                                             <Input
                                                 value={profile.emergencyco_relation || ""}
                                                 onChange={(e) =>
@@ -1113,7 +1114,7 @@ export function PatientAccountPageClient({
                                     />
                                     <Button
                                         type="submit"
-                                        className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-emerald px-6 py-2 text-sm font-semibold text-emerald-foreground shadow-sm transition hover:bg-emerald/90 disabled:opacity-60"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading ? (
