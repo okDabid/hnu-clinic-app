@@ -94,7 +94,6 @@ type CreateUserPayload = {
     lname: string;
     employee_id?: string | null;
     student_id?: string | null;
-    school_id?: string | null;
     patientType?: "student" | "employee" | null;
     workingScholar?: boolean;
     specialization?: "Physician" | "Dentist" | null;
@@ -415,7 +414,18 @@ export function NurseAccountsPageClient({
         const lname = getTrimmedValue("lname");
         const employeeId = getTrimmedValue("employee_id");
         const studentId = getTrimmedValue("student_id");
-        const schoolId = getTrimmedValue("school_id");
+
+        const isNumeric = (value: string) => /^\d+$/.test(value);
+
+        if (employeeId && !isNumeric(employeeId)) {
+            toast.error("Employee ID must contain numbers only.", { position: "top-center" });
+            return;
+        }
+
+        if (studentId && !isNumeric(studentId)) {
+            toast.error("Student ID must contain numbers only.", { position: "top-center" });
+            return;
+        }
 
         const payload: CreateUserPayload = {
             role,
@@ -430,7 +440,6 @@ export function NurseAccountsPageClient({
                     : null,
             student_id:
                 role === "PATIENT" && patientType === "student" ? (studentId || null) : null,
-            school_id: role === "SCHOLAR" ? (schoolId || null) : null,
             patientType: patientType || null,
             workingScholar: role === "PATIENT" && patientType === "student" ? workingScholar : false,
             specialization: role === "DOCTOR" ? specialization : null,
@@ -696,7 +705,6 @@ export function NurseAccountsPageClient({
 
     const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
     const roleLabelMap: Record<string, string> = {
-        SCHOLAR: "Working Scholar",
         NURSE: "Nurse",
         DOCTOR: "Doctor",
         PATIENT: "Patient",
@@ -708,9 +716,6 @@ export function NurseAccountsPageClient({
 
     const pendingIdentifier = pendingPayload
         ? (() => {
-            if (pendingPayload.role === "SCHOLAR") {
-                return { label: "School ID", value: pendingPayload.school_id ?? "—" };
-            }
             if (pendingPayload.role === "NURSE" || pendingPayload.role === "DOCTOR") {
                 return { label: "Employee ID", value: pendingPayload.employee_id ?? "—" };
             }
@@ -1228,13 +1233,9 @@ export function NurseAccountsPageClient({
                             {/* Role Selection */}
                             <div className="space-y-2">
                                 <Label className="block mb-1 font-medium">Role</Label>
-                                <Select
-                                    value={role}
-                                    onValueChange={(val) => setRole(val)}
-                                >
+                                <Select value={role} onValueChange={(val) => setRole(val)}>
                                     <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
                                         <SelectItem value="NURSE">Nurse</SelectItem>
                                         <SelectItem value="DOCTOR">Doctor</SelectItem>
                                         <SelectItem value="PATIENT">Patient</SelectItem>
@@ -1261,18 +1262,10 @@ export function NurseAccountsPageClient({
                                 </div>
                             )}
 
-                            {/* School / Employee IDs */}
-                            {role === "SCHOLAR" && (
-                                <div className="space-y-2">
-                                    <Label>School ID</Label>
-                                    <Input name="school_id" required />
-                                </div>
-                            )}
-
                             {(role === "NURSE" || role === "DOCTOR") && (
                                 <div className="space-y-2">
                                     <Label>Employee ID</Label>
-                                    <Input name="employee_id" required />
+                                    <Input name="employee_id" required inputMode="numeric" pattern="\\d*" />
                                 </div>
                             )}
 
@@ -1316,13 +1309,13 @@ export function NurseAccountsPageClient({
                             {role === "PATIENT" && patientType === "student" && (
                                 <div className="space-y-2">
                                     <Label>Student ID</Label>
-                                    <Input name="student_id" required />
+                                    <Input name="student_id" required inputMode="numeric" pattern="\\d*" />
                                 </div>
                             )}
                             {role === "PATIENT" && patientType === "employee" && (
                                 <div className="space-y-2">
                                     <Label>Employee ID</Label>
-                                    <Input name="employee_id" required />
+                                    <Input name="employee_id" required inputMode="numeric" pattern="\\d*" />
                                 </div>
                             )}
 
