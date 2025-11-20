@@ -10,7 +10,7 @@ export default function PatientNotificationLoading() {
             actions={<Skeleton className="hidden h-8 w-40 rounded-xl md:flex" />}
         >
             <div className="space-y-8">
-                <Card className="rounded-3xl border-green-100/80 bg-gradient-to-r from-green-100/80 via-white to-green-50/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-gradient-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                     <CardHeader className="space-y-2 text-center">
                         <Skeleton className="mx-auto h-8 w-64" />
                         <Skeleton className="mx-auto h-4 w-72" />
@@ -26,7 +26,7 @@ export default function PatientNotificationLoading() {
                     {Array.from({ length: 3 }).map((_, index) => (
                         <Card
                             key={index}
-                            className="h-full rounded-3xl border-green-100/70 bg-white/90 shadow-sm"
+                            className="h-full rounded-3xl border-primary/20 bg-white/90 shadow-sm"
                         >
                             <CardHeader className="flex flex-col items-start gap-3">
                                 <Skeleton className="h-10 w-10 rounded-2xl" />
@@ -41,14 +41,14 @@ export default function PatientNotificationLoading() {
                     ))}
                 </div>
 
-                <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                     <CardHeader className="space-y-2">
                         <Skeleton className="h-5 w-1/3" />
                         <Skeleton className="h-4 w-1/2" />
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {Array.from({ length: 4 }).map((_, index) => (
-                            <div key={index} className="rounded-2xl border border-green-50 bg-white/80 p-4">
+                            <div key={index} className="rounded-2xl border border-primary/15 bg-white/80 p-4">
                                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                                     <div className="space-y-2">
                                         <Skeleton className="h-5 w-40" />

@@ -82,7 +82,7 @@ export function PanelLayout({
 
     if (status === "loading") {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-green-50 via-white to-green-100 p-6" aria-busy>
+            <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-primary/10 via-white to-primary/5 p-6" aria-busy>
                 <p className="text-sm font-medium text-muted-foreground">Verifying your session…</p>
             </div>
         );
@@ -116,15 +116,15 @@ export function PanelLayout({
                         key={item.href}
                         href={item.href}
                         className={cn(
-                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                            "hover:bg-green-100/70 hover:text-green-700",
-                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-green-50",
-                            isActive && "bg-white text-green-700 shadow-sm"
+                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors",
+                            "hover:bg-primary/10 hover:text-primary",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-primary/10",
+                            isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground"
                         )}
                         onClick={() => setMobileOpen(false)}
                     >
-                        <Icon className={cn("h-4 w-4", isActive ? "text-green-700" : "text-gray-600")} />
-                        {item.label}
+                        <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-primary")} />
+                        <span>{item.label}</span>
                     </Link>
                 );
             })}
@@ -132,9 +132,10 @@ export function PanelLayout({
     );
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-green-50 via-white to-green-100">
-            <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
-                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-green-100/80 bg-white/85 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
+        <div className="relative min-h-screen bg-linear-to-br from-primary/10 via-white to-primary/5">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(34,197,94,0.12),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(34,197,94,0.1),transparent_25%)]" aria-hidden />
+            <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
+                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-primary/15 bg-white/90 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
                     <div className="flex h-full flex-col overflow-hidden">
                         <div className="flex items-center gap-3 pb-6">
                             <span className="relative inline-flex h-11 w-11 items-center justify-center">
@@ -147,20 +148,20 @@ export function PanelLayout({
                                 />
                             </span>
                             <div className="flex flex-col leading-tight text-left">
-                                <span className="text-sm font-semibold text-green-700">HNU Clinic</span>
-                                <span className="text-xs font-medium text-green-900">
+                                <span className="text-sm font-semibold text-primary">HNU Clinic</span>
+                                <span className="text-xs font-medium text-foreground">
                                     Health Record &amp; Appointment System
                                 </span>
                             </div>
                         </div>
-                        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
-                            <Avatar className="h-12 w-12 border border-green-100">
+                        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                            <Avatar className="h-12 w-12 border border-primary/15">
                                 <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                                <AvatarFallback className="bg-green-200 text-green-800">{avatarFallback}</AvatarFallback>
+                                <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <p className="text-xs text-green-500">Signed in as</p>
-                                <p className="text-sm font-semibold text-green-700">{fullName}</p>
+                                <p className="text-xs text-primary/80">Signed in as</p>
+                                <p className="text-sm font-semibold text-primary">{fullName}</p>
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto pr-2">
@@ -169,7 +170,7 @@ export function PanelLayout({
                         <Separator className="my-6" />
                         <Button
                             variant="default"
-                            className="mt-auto w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-green-700"
+                            className="mt-auto w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-primary/90"
                             onClick={handleLogout}
                             disabled={isLoggingOut}
                         >
@@ -186,12 +187,12 @@ export function PanelLayout({
                 </aside>
 
                 <div className="flex flex-1 flex-col">
-                    <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-green-100/70 bg-white/85 px-4 py-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/65 md:px-6">
+                    <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white/85 px-4 py-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/65 md:px-6">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div className="space-y-3">
                                 <Link
                                     href={homeHref}
-                                    className="group flex items-center gap-3 rounded-2xl border border-green-100 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-px hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
+                                    className="group flex items-center gap-3 rounded-2xl border border-primary/15 bg-white/90 px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:-translate-y-px hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
                                 >
                                     <span className="relative inline-flex h-9 w-9 items-center justify-center">
                                         <Image
@@ -202,12 +203,12 @@ export function PanelLayout({
                                             className="h-7 w-7 object-contain"
                                         />
                                     </span>
-                                    <span className="text-left text-sm font-semibold leading-tight text-green-700 text-balance">
+                                    <span className="text-left text-sm font-semibold leading-tight text-primary text-balance">
                                         HNU Clinic Health Record &amp; Appointment System
                                     </span>
                                 </Link>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-green-500">{panelLabel}</p>
-                                <h2 className="text-2xl font-semibold text-green-700 md:text-3xl">{title}</h2>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
+                                <h2 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h2>
                                 {description ? (
                                     <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
                                 ) : null}
@@ -219,34 +220,34 @@ export function PanelLayout({
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/80 focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
+                                            className="rounded-xl border-primary/20 text-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
                                             aria-label={sheetAriaLabel}
                                         >
                                             <Menu className="h-5 w-5" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-green-100 bg-linear-to-b from-white to-green-50/60 p-0">
-                                        <SheetHeader className="border-b border-green-100 bg-white/80 p-6">
-                                            <SheetTitle className="flex items-center gap-3 text-lg text-green-700">
+                                    <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-primary/15 bg-linear-to-b from-white to-primary/5 p-0">
+                                        <SheetHeader className="border-b border-primary/15 bg-white/80 p-6">
+                                            <SheetTitle className="flex items-center gap-3 text-lg text-primary">
                                                 <Menu className="h-5 w-5" />
                                                 {sheetTitle}
                                             </SheetTitle>
                                         </SheetHeader>
                                         <div className="flex h-full flex-col gap-6 overflow-y-auto px-6 py-6">
-                                            <div className="flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50/70 p-4">
-                                                <Avatar className="h-11 w-11 border border-green-100">
+                                            <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                                                <Avatar className="h-11 w-11 border border-primary/15">
                                                     <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                                                    <AvatarFallback className="bg-green-200 text-green-800">{avatarFallback}</AvatarFallback>
+                                                    <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
                                                 </Avatar>
                                                 <div>
-                                                    <p className="text-xs text-green-500">Signed in as</p>
-                                                    <p className="text-sm font-semibold text-green-700">{fullName}</p>
+                                                    <p className="text-xs text-primary/80">Signed in as</p>
+                                                    <p className="text-sm font-semibold text-primary">{fullName}</p>
                                                 </div>
                                             </div>
                                             {navLinks}
                                             <Button
                                                 variant="default"
-                                                className="w-full gap-2 rounded-xl bg-green-600 font-semibold text-white shadow-sm hover:bg-green-700"
+                                                className="w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                                                 onClick={handleLogout}
                                                 disabled={isLoggingOut}
                                             >
@@ -268,7 +269,7 @@ export function PanelLayout({
 
                     <main className="flex-1 space-y-6">{children}</main>
 
-                    <footer className="mt-10 rounded-3xl border border-green-100/70 bg-white/80 px-6 py-4 text-center text-sm text-muted-foreground shadow-sm backdrop-blur">
+                    <footer className="mt-10 rounded-3xl border border-primary/15 bg-white/80 px-6 py-4 text-center text-sm text-muted-foreground shadow-sm backdrop-blur">
                         {footerNote ?? <>
                             © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System – {panelLabel}
                         </>}

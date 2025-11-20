@@ -9,7 +9,7 @@ export default function NurseAccountsLoading() {
             description="Create and manage user accounts, update your profile, and control access from one workspace."
         >
             <section className="mx-auto w-full max-w-6xl space-y-10 px-4 py-6 sm:px-6 sm:py-8">
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="space-y-3">
                         <Skeleton className="h-5 w-1/3" />
                         <Skeleton className="h-4 w-2/3" />
@@ -42,7 +42,7 @@ export default function NurseAccountsLoading() {
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="space-y-3">
                         <Skeleton className="h-5 w-1/3" />
                         <Skeleton className="h-4 w-1/2" />

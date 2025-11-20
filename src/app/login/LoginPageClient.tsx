@@ -257,7 +257,7 @@ export default function LoginPageClient() {
                 placeholder={placeholder}
                 required
                 disabled={!!loadingRole}
-                className="h-11 rounded-xl border-green-100 bg-white/90 text-slate-700 placeholder:text-slate-400 focus-visible:ring-green-500/50"
+                className="h-11 rounded-xl border-primary/20 bg-white/90 text-foreground placeholder:text-slate-400 focus-visible:ring-primary/50"
             />
 
             <div className="relative">
@@ -266,7 +266,7 @@ export default function LoginPageClient() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     required
-                    className="h-11 rounded-xl border-green-100 bg-white/90 pr-12 text-slate-700 placeholder:text-slate-400 focus-visible:ring-green-500/50"
+                    className="h-11 rounded-xl border-primary/20 bg-white/90 pr-12 text-foreground placeholder:text-slate-400 focus-visible:ring-primary/50"
                     disabled={!!loadingRole}
                 />
                 <Button
@@ -288,7 +288,7 @@ export default function LoginPageClient() {
             <Button
                 type="submit"
                 disabled={loadingRole === role}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-green-600 font-medium text-white shadow-md shadow-green-200 transition hover:bg-green-700"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary font-medium text-primary-foreground shadow-md shadow-primary/20 transition hover:bg-primary/90"
             >
                 {loadingRole === role ? (
                     <>
@@ -304,7 +304,7 @@ export default function LoginPageClient() {
                 <button
                     type="button"
                     onClick={() => setForgotOpen(true)}
-                    className="font-medium text-green-800 underline-offset-4 transition hover:underline"
+                    className="font-medium text-primary underline-offset-4 transition hover:underline"
                 >
                     Forgot password?
                 </button>
@@ -314,19 +314,19 @@ export default function LoginPageClient() {
 
     // ---------- RENDER ----------
     return (
-        <div className="relative min-h-screen bg-linear-to-br from-green-100 via-white to-green-200">
+        <div className="relative min-h-screen bg-linear-to-br from-primary/10 via-white to-primary/5">
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-green-300/40 blur-3xl" />
-                <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-green-300/40 blur-3xl" />
+                <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
+                <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
             </div>
 
             <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-between gap-10 px-4 py-10 sm:px-6 sm:py-12 lg:flex-row lg:items-center lg:gap-12 lg:py-24">
                 <div className="mx-auto max-w-2xl text-center sm:text-left lg:mx-0 lg:max-w-lg">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1 text-sm font-medium text-green-700 shadow-sm">
-                        <span className="h-2 w-2 rounded-full bg-green-500" />
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1 text-sm font-medium text-primary shadow-sm">
+                        <span className="h-2 w-2 rounded-full bg-primary" />
                         Secure Access Portal
                     </span>
-                    <h1 className="mt-6 text-2xl font-bold text-green-600 sm:text-4xl md:text-5xl">
+                    <h1 className="mt-6 text-2xl font-bold text-primary sm:text-4xl md:text-5xl">
                         Welcome back to HNU Clinic Health Record &amp; Appointment System
                     </h1>
                     <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
@@ -336,13 +336,13 @@ export default function LoginPageClient() {
 
                     <dl className="mt-8 grid gap-4 text-left sm:grid-cols-2">
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
-                            <dt className="text-sm font-medium text-green-700">Multi-role support</dt>
+                            <dt className="text-sm font-medium text-primary">Multi-role support</dt>
                             <dd className="mt-1 text-sm text-slate-600">
                                 Access tailored dashboards for doctors, nurses, scholars, and patients.
                             </dd>
                         </div>
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
-                            <dt className="text-sm font-medium text-green-700">Privacy first</dt>
+                            <dt className="text-sm font-medium text-primary">Privacy first</dt>
                             <dd className="mt-1 text-sm text-slate-600">
                                 Your information is protected with secure authentication measures.
                             </dd>
@@ -354,11 +354,11 @@ export default function LoginPageClient() {
                     <Card
                         className={`relative z-10 overflow-hidden border-0 bg-white/90 shadow-xl backdrop-blur-xl transition-opacity ${loadingRole ? "opacity-60" : ""}`}
                     >
-                        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-green-400 via-lime-400 to-green-500" />
+                        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-emerald-400 to-primary" />
                         <CardContent className="p-8">
                             <div className="mb-6 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-green-900">Sign in</h2>
+                                    <h2 className="text-xl font-semibold text-primary">Sign in</h2>
                                     <p className="text-sm text-slate-500">
                                         Use your assigned credentials to access the clinic portal.
                                     </p>
@@ -369,27 +369,27 @@ export default function LoginPageClient() {
                             </div>
 
                             <Tabs defaultValue="doctor" className="w-full">
-                                <TabsList className="grid w-full grid-cols-4 gap-2 rounded-xl bg-green-100/60 p-1 text-sm">
+                                <TabsList className="grid w-full grid-cols-4 gap-2 rounded-xl bg-primary/10 p-1 text-sm">
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary"
                                         value="doctor"
                                     >
                                         Doctor
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary"
                                         value="nurse"
                                     >
                                         Nurse
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary"
                                         value="scholar"
                                     >
                                         Scholar
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-700"
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary"
                                         value="patient"
                                     >
                                         Patient
@@ -426,7 +426,7 @@ export default function LoginPageClient() {
             <Dialog open={forgotOpen} onOpenChange={handleForgotToggle}>
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className="text-green-700">Reset Password</DialogTitle>
+                        <DialogTitle className="text-primary">Reset Password</DialogTitle>
                         <DialogDescription className="text-gray-600">
                             {tokenSent
                                 ? "Enter the 6 digit code sent to your email and set your new password."
@@ -458,7 +458,7 @@ export default function LoginPageClient() {
                                 <Button
                                     type="submit"
                                     disabled={verifying}
-                                    className="w-full bg-green-600 text-white hover:bg-green-700"
+                                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                                 >
                                     {verifying ? (
                                         <>
@@ -472,8 +472,8 @@ export default function LoginPageClient() {
                         </form>
                     ) : (
                         <>
-                            <div className="space-y-2 rounded-lg border border-dashed border-green-200 bg-green-50/60 px-3 py-2 text-xs text-slate-600">
-                                <span className="font-medium text-green-700">Code sent to {maskedContact}</span>
+                            <div className="space-y-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 px-3 py-2 text-xs text-slate-600">
+                                <span className="font-medium text-primary">Code sent to {maskedContact}</span>
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <button
                                         type="button"
@@ -488,7 +488,7 @@ export default function LoginPageClient() {
                                             setShowResetPassword(false);
                                             setShowResetConfirmPassword(false);
                                         }}
-                                        className="text-xs font-medium text-green-700 underline-offset-2 hover:underline"
+                                        className="text-xs font-medium text-primary underline-offset-2 hover:underline"
                                     >
                                         Use a different contact
                                     </button>
@@ -613,7 +613,7 @@ export default function LoginPageClient() {
                                     <Button
                                         type="submit"
                                         disabled={resetting || !canReset}
-                                        className="w-full bg-green-600 text-white hover:bg-green-700"
+                                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                                     >
                                         {resetting ? (
                                             <>

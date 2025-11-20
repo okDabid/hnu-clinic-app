@@ -9,8 +9,8 @@ export default function NurseDispenseLoading() {
             description="Monitor dispensed medicines and review batch usage for accurate stock tracking."
         >
             <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-8 px-4 py-6 sm:px-6 sm:py-8">
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm">
-                    <CardHeader className="border-b border-green-100/60">
+                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm">
+                    <CardHeader className="border-b border-primary/20">
                         <Skeleton className="h-6 w-48" />
                     </CardHeader>
                     <CardContent className="flex flex-1 flex-col pt-4">
@@ -24,7 +24,7 @@ export default function NurseDispenseLoading() {
                                 {Array.from({ length: 6 }).map((_, rowIndex) => (
                                     <div
                                         key={rowIndex}
-                                        className="grid grid-cols-8 gap-3 rounded-2xl border border-green-50 bg-white/80 p-3 text-sm"
+                                        className="grid grid-cols-8 gap-3 rounded-2xl border border-primary/15 bg-white/80 p-3 text-sm"
                                     >
                                         {Array.from({ length: 8 }).map((_, colIndex) => (
                                             <Skeleton key={colIndex} className="h-4 w-full" />

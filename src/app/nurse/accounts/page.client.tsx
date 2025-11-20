@@ -1646,7 +1646,7 @@ export function NurseAccountsPageClient({
                                                                 <div className="flex justify-center">
                                                                     <Badge
                                                                         variant="secondary"
-                                                                        className="rounded-full bg-blue-50 text-blue-700"
+                                                                        className="rounded-full bg-primary/10 text-primary"
                                                                     >
                                                                         Scholar
                                                                     </Badge>

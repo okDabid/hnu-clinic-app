@@ -78,17 +78,17 @@ export default function ScholarDashboardPage() {
             actions={
                 <Button
                     asChild
-                    className="hidden rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-green-700 md:flex"
+                    className="hidden rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 md:flex"
                 >
                     <Link href="/scholar/appointments">Review appointments</Link>
                 </Button>
             }
         >
-            <section className="rounded-3xl border border-green-100/70 bg-linear-to-r from-green-100/70 via-white to-green-50/80 p-6 shadow-sm">
+            <section className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 p-6 shadow-sm">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-3">
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-green-500">Welcome back</p>
-                        <h3 className="text-3xl font-semibold text-green-700 md:text-4xl">Good day, Scholar {firstName}</h3>
+                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">Welcome back</p>
+                        <h3 className="text-3xl font-semibold text-primary md:text-4xl">Good day, Scholar {firstName}</h3>
                         <p className="max-w-2xl text-sm text-muted-foreground">
                             Keep the clinic desk synchronized—double-check booking requests, guide students through intake, and
                             flag any priority concerns early so the team can respond quickly.
@@ -101,12 +101,12 @@ export default function ScholarDashboardPage() {
                 {workflowHighlights.map(({ title, description, href, icon: Icon, cta }) => (
                     <Card
                         key={title}
-                        className="h-full rounded-3xl border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                        className="h-full rounded-3xl border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                     >
                         <CardHeader className="flex flex-row items-start justify-between gap-3">
                             <div className="space-y-1">
-                                <CardTitle className="flex items-center gap-3 text-lg text-green-700">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-600/10 text-green-700">
+                                <CardTitle className="flex items-center gap-3 text-lg text-primary">
+                                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                         <Icon className="h-5 w-5" />
                                     </span>
                                     {title}
@@ -118,14 +118,14 @@ export default function ScholarDashboardPage() {
                             <Button
                                 asChild
                                 variant="ghost"
-                                className="rounded-xl bg-green-600/10 px-3 text-sm font-semibold text-green-700 hover:bg-green-600/20"
+                                className="rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary hover:bg-primary/20"
                             >
                                 <Link href={href}>{cta}</Link>
                             </Button>
                         </CardContent>
                     </Card>
                 ))}
-                <Card className="h-full rounded-3xl border-green-100/70 bg-linear-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
+                <Card className="h-full rounded-3xl border-primary/20 bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-lg">
                             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
@@ -146,29 +146,29 @@ export default function ScholarDashboardPage() {
             </section>
 
             <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-lg text-green-700">Checklist for smooth clinic flow</CardTitle>
+                        <CardTitle className="text-lg text-primary">Checklist for smooth clinic flow</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
                         {supportChecklist.map((item) => (
                             <div key={item} className="flex gap-3">
-                                <FileSpreadsheet className="mt-1 h-4 w-4 text-green-500" />
+                                <FileSpreadsheet className="mt-1 h-4 w-4 text-primary" />
                                 <p>{item}</p>
                             </div>
                         ))}
                     </CardContent>
                 </Card>
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-lg text-green-700">Documentation shortcuts</CardTitle>
+                        <CardTitle className="text-lg text-primary">Documentation shortcuts</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 text-sm text-muted-foreground">
                         {documentationTips.map(({ label, description, href }) => (
-                            <div key={label} className="space-y-2 rounded-2xl border border-green-100 bg-green-50/60 p-4">
+                            <div key={label} className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-4">
                                 <div className="flex items-center justify-between">
-                                    <p className="font-semibold text-green-700">{label}</p>
-                                    <Button asChild variant="link" className="h-auto p-0 text-sm font-semibold text-green-600">
+                                    <p className="font-semibold text-primary">{label}</p>
+                                    <Button asChild variant="link" className="h-auto p-0 text-sm font-semibold text-primary">
                                         <Link href={href}>Open</Link>
                                     </Button>
                                 </div>

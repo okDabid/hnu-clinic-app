@@ -15,7 +15,7 @@ export default function DoctorPatientsLoading() {
                         {Array.from({ length: 3 }).map((_, index) => (
                             <Card
                                 key={index}
-                                className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm"
+                                className="rounded-3xl border-primary/20 bg-white/90 shadow-sm"
                             >
                                 <CardHeader className="space-y-2">
                                     <Skeleton className="h-4 w-2/3" />
@@ -28,7 +28,7 @@ export default function DoctorPatientsLoading() {
                         ))}
                     </div>
 
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                             <div className="space-y-2">
                                 <Skeleton className="h-5 w-40" />
@@ -52,7 +52,7 @@ export default function DoctorPatientsLoading() {
                                 {Array.from({ length: 6 }).map((_, index) => (
                                     <div
                                         key={index}
-                                        className="rounded-2xl border border-green-50 bg-white/80 p-4"
+                                        className="rounded-2xl border border-primary/15 bg-white/80 p-4"
                                     >
                                         <div className="grid gap-3 md:grid-cols-[1.2fr_1fr_1fr]">
                                             <div className="space-y-2">
