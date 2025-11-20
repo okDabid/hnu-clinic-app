@@ -121,6 +121,7 @@ export function NurseAccountsPageClient({
 }: NurseAccountsPageClientProps) {
     const [users, setUsers] = useState<NurseAccountUser[]>(() => [...initialUsers]);
     const [pendingStatusIds, setPendingStatusIds] = useState<string[]>([]);
+    const [pendingScholarIds, setPendingScholarIds] = useState<string[]>([]);
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -356,11 +357,14 @@ export function NurseAccountsPageClient({
         }
 
         return users.filter((u) => {
+            const lowerQuery = deferredSearch;
             const matchesQuery =
-                !deferredSearch ||
-                u.user_id.toLowerCase().includes(deferredSearch) ||
-                u.role.toLowerCase().includes(deferredSearch) ||
-                u.fullName.toLowerCase().includes(deferredSearch);
+                !lowerQuery ||
+                u.user_id.toLowerCase().includes(lowerQuery) ||
+                u.role.toLowerCase().includes(lowerQuery) ||
+                u.fullName.toLowerCase().includes(lowerQuery) ||
+                (u.patientType ? u.patientType.includes(lowerQuery) : false) ||
+                (lowerQuery.includes("scholar") && u.isWorkingScholar);
 
             const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
             const matchesStatus = statusFilter === "ALL" || u.status === statusFilter;
@@ -639,6 +643,43 @@ export function NurseAccountsPageClient({
             toast.error(message, { position: "top-center" });
         } finally {
             setPendingStatusIds((prev) => prev.filter((id) => id !== user_id));
+        }
+    }
+
+    async function handleWorkingScholarToggle(user: NurseAccountUser) {
+        if (user.role !== "PATIENT" || user.patientType !== "student") return;
+
+        const user_id = user.accountId;
+        const nextValue = !user.isWorkingScholar;
+
+        setPendingScholarIds((prev) => (prev.includes(user_id) ? prev : [...prev, user_id]));
+        try {
+            const res = await fetch("/api/nurse/accounts", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id, workingScholar: nextValue }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error((data && data.error) || "Failed to update working scholar access");
+            }
+
+            toast.success(data.message || "Working scholar access updated.", { position: "top-center" });
+            setUsers((prev) =>
+                prev.map((u) =>
+                    u.accountId === user_id
+                        ? { ...u, isWorkingScholar: Boolean(data.isWorkingScholar ?? nextValue) }
+                        : u
+                )
+            );
+        } catch (err) {
+            console.error("Error updating working scholar access", err);
+            const message = err instanceof Error ? err.message : "Failed to update working scholar access";
+            toast.error(message, { position: "top-center" });
+        } finally {
+            setPendingScholarIds((prev) => prev.filter((id) => id !== user_id));
         }
     }
 
@@ -1499,6 +1540,7 @@ export function NurseAccountsPageClient({
                                         <TableHead>Role</TableHead>
                                         <TableHead>Full Name</TableHead>
                                         <TableHead>Status</TableHead>
+                                        <TableHead className="text-center">Scholar Access</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -1546,6 +1588,40 @@ export function NurseAccountsPageClient({
                                                             >
                                                                 {user.status}
                                                             </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {user.role === "PATIENT" && user.patientType === "student" ? (
+                                                                <div className="flex items-center justify-center gap-3">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="rounded-full bg-emerald-50 text-emerald-700"
+                                                                    >
+                                                                        Student patient
+                                                                    </Badge>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Switch
+                                                                            checked={user.isWorkingScholar}
+                                                                            onCheckedChange={() => handleWorkingScholarToggle(user)}
+                                                                            disabled={pendingScholarIds.includes(user.accountId)}
+                                                                            aria-label="Toggle working scholar access"
+                                                                        />
+                                                                        <span className="text-xs font-semibold text-gray-700">
+                                                                            Working scholar
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ) : user.role === "SCHOLAR" ? (
+                                                                <div className="flex justify-center">
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="rounded-full bg-blue-50 text-blue-700"
+                                                                    >
+                                                                        Scholar
+                                                                    </Badge>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-center text-xs text-gray-500">—</div>
+                                                            )}
                                                         </TableCell>
                                                         <TableCell className="text-right">
                                                             <AlertDialog>

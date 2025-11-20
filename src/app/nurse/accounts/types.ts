@@ -17,6 +17,8 @@ export type NurseAccountsUserApi = {
     mname?: string | null;
     lname?: string;
     specialization?: "Physician" | "Dentist" | null;
+    patientType?: "student" | "employee" | null;
+    isWorkingScholar?: boolean;
 };
 
 export type NurseAccountProfileApi = {
@@ -50,6 +52,8 @@ export type NurseAccountUser = {
     status: "Active" | "Inactive";
     fullName: string;
     specialization: "Physician" | "Dentist" | null;
+    patientType: "student" | "employee" | null;
+    isWorkingScholar: boolean;
 };
 
 export type NurseAccountProfile = {
@@ -118,6 +122,8 @@ export function normalizeNurseAccountUsers(
                 [user.fname, user.mname, user.lname].filter(Boolean).join(" ") ||
                 "Unnamed",
             specialization: user.specialization ?? null,
+            patientType: (user.patientType as NurseAccountUser["patientType"]) ?? null,
+            isWorkingScholar: Boolean(user.isWorkingScholar),
         });
     }
 

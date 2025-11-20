@@ -273,6 +273,8 @@ export async function GET() {
                 contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,
                 specialization: u.specialization,
+                patientType: u.role === Role.PATIENT ? (u.student ? "student" : "employee") : null,
+                isWorkingScholar: u.student?.is_working_scholar ?? false,
             };
         });
 
@@ -290,33 +292,62 @@ export async function PUT(req: Request) {
     try {
         const session = await requireRole([Role.NURSE]);
 
-        const { user_id, newStatus } = await req.json();
+        const { user_id, newStatus, workingScholar } = await req.json();
 
-        if (!user_id || (newStatus !== "Active" && newStatus !== "Inactive")) {
+        if (!user_id) {
             return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
         }
 
-        // Prevent self-deactivation
+        // Prevent self-targeting on status changes
         const currentUser = await prisma.users.findUnique({
             where: { user_id: session.user.id },
             select: { user_id: true },
         });
 
-        if (currentUser && currentUser.user_id === user_id) {
+        if (currentUser && currentUser.user_id === user_id && (newStatus === "Inactive" || newStatus === "Active")) {
             return NextResponse.json(
                 { error: "You cannot deactivate your own account." },
                 { status: 403 }
             );
         }
 
-        // Check if target exists
+        // Check target existence with student profile when needed
         const target = await prisma.users.findUnique({
             where: { user_id },
-            select: { status: true },
+            include: { student: true },
         });
 
         if (!target) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        if (typeof workingScholar === "boolean") {
+            if (target.role !== Role.PATIENT || !target.student) {
+                return NextResponse.json(
+                    { error: "Working scholar access can only be set for student patients." },
+                    { status: 400 }
+                );
+            }
+
+            if (target.student.is_working_scholar === workingScholar) {
+                return NextResponse.json({ message: "No changes made." });
+            }
+
+            await prisma.student.update({
+                where: { user_id },
+                data: { is_working_scholar: workingScholar },
+            });
+
+            return NextResponse.json({
+                message: workingScholar
+                    ? "Working scholar access enabled for this student."
+                    : "Working scholar access removed for this student.",
+                isWorkingScholar: workingScholar,
+            });
+        }
+
+        if (newStatus !== "Active" && newStatus !== "Inactive") {
+            return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
         }
 
         if (target.status === newStatus) {

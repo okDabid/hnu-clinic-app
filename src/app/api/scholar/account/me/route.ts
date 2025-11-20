@@ -149,15 +149,20 @@ export async function GET() {
         });
 
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-        if (user.role !== Role.SCHOLAR)
+
+        const workingScholar = user.student?.is_working_scholar ?? false;
+        const hasScholarAccess = user.role === Role.SCHOLAR || (user.role === Role.PATIENT && workingScholar);
+
+        if (!hasScholarAccess) {
             return NextResponse.json({ error: "Not a scholar" }, { status: 403 });
+        }
 
         return NextResponse.json({
             accountId: user.user_id,
             username: user.username,
-            role: user.role,
+            role: user.role === Role.SCHOLAR ? user.role : Role.SCHOLAR,
             status: user.status,
-            isWorkingScholar: user.student?.is_working_scholar ?? false,
+            isWorkingScholar: workingScholar,
             profile: user.student ?? null,
         });
     } catch (err) {
@@ -185,17 +190,21 @@ export async function PUT(req: Request) {
         });
 
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
-        if (user.role !== Role.SCHOLAR)
-            return NextResponse.json({ error: "Not a scholar" }, { status: 403 });
 
         const existingProfile = user.student;
+        const isWorkingScholar = existingProfile?.is_working_scholar ?? false;
+        const hasScholarAccess = user.role === Role.SCHOLAR || (user.role === Role.PATIENT && isWorkingScholar);
+
+        if (!hasScholarAccess)
+            return NextResponse.json({ error: "Not a scholar" }, { status: 403 });
+
         if (!existingProfile)
             return NextResponse.json(
                 { error: "Student profile not found for this scholar" },
                 { status: 404 }
             );
 
-        if (existingProfile.is_working_scholar) {
+        if (isWorkingScholar) {
             return NextResponse.json(
                 {
                     error:
