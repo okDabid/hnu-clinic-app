@@ -701,27 +701,27 @@ export default function ScholarAccountPage() {
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Full name</dt>
-                                <dd className="text-sm font-semibold text-gray-900">
+                                <dd className="text-sm font-semibold text-green-900">
                                     {[profile.fname, profile.mname, profile.lname].filter(Boolean).join(" ") || "—"}
                                 </dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Department</dt>
-                                <dd className="text-sm font-semibold text-gray-900">{profile.department || "—"}</dd>
+                                <dd className="text-sm font-semibold text-green-900">{profile.department || "—"}</dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Program & Year</dt>
-                                <dd className="text-sm font-semibold text-gray-900">
+                                <dd className="text-sm font-semibold text-green-900">
                                     {[profile.program, profile.year_level].filter(Boolean).join(" • ") || "—"}
                                 </dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Contact number</dt>
-                                <dd className="text-sm font-semibold text-gray-900">{profile.contactno || "—"}</dd>
+                                <dd className="text-sm font-semibold text-green-900">{profile.contactno || "—"}</dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Email</dt>
-                                <dd className="text-sm font-semibold text-gray-900">{profile.email || "—"}</dd>
+                                <dd className="text-sm font-semibold text-green-900">{profile.email || "—"}</dd>
                             </div>
                         </dl>
                     </AccountSection>
