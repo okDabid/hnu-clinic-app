@@ -332,6 +332,11 @@ export function NurseAccountsPageClient({
         }
     }, [usersLoaded, loadUsers]);
 
+    // Always refresh once on mount to ensure working scholar flags reflect latest server state
+    useEffect(() => {
+        void loadUsers({ silent: true });
+    }, [loadUsers]);
+
     useEffect(() => {
         if (role !== "PATIENT") {
             setPatientType("");
@@ -674,6 +679,9 @@ export function NurseAccountsPageClient({
                         : u
                 )
             );
+
+            // Ensure list stays in sync even if other attributes change on the server
+            await loadUsers({ silent: true });
         } catch (err) {
             console.error("Error updating working scholar access", err);
             const message = err instanceof Error ? err.message : "Failed to update working scholar access";
@@ -1593,17 +1601,17 @@ export function NurseAccountsPageClient({
                                                                         </span>
                                                                     )
                                                                 )}
+                                                                {user.role === "PATIENT" && user.patientType ? (
+                                                                    <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700">
+                                                                        <UserRound className="h-3 w-3" />
+                                                                        {user.patientType === "student" ? "Student patient" : "Employee patient"}
+                                                                    </span>
+                                                                ) : null}
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="flex flex-col gap-1">
                                                                 <span className="font-semibold text-gray-900">{user.fullName}</span>
-                                                                {user.patientType ? (
-                                                                    <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700">
-                                                                        <UserRound className="h-3 w-3" />
-                                                                        {user.patientType === "student" ? "Student patient" : "Employee patient"}
-                                                                    </span>
-                                                                ) : null}
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
