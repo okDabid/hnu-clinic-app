@@ -33,6 +33,13 @@ const bloodTypeEnumMap: Record<string, string> = {
 };
 
 // ---------------- UNIQUE ID HELPERS ----------------
+class DuplicateRoleAccountError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "DuplicateRoleAccountError";
+    }
+}
+
 async function ensureUniqueUsername(base: string): Promise<string> {
     let candidate = base;
     let n = 1;
@@ -42,22 +49,30 @@ async function ensureUniqueUsername(base: string): Promise<string> {
     return candidate;
 }
 
-async function ensureUniqueStudentId(value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await prisma.student.findUnique({ where: { student_id: id } })) {
-        id = `${value}-${n++}`;
+async function assertStudentIdAvailableForRole(studentId: string, role: Role) {
+    const existingStudents = await prisma.student.findMany({
+        where: { student_id: studentId },
+        include: { user: { select: { role: true } } },
+    });
+
+    const hasSameRole = existingStudents.some((student) => student.user?.role === role);
+
+    if (hasSameRole) {
+        throw new DuplicateRoleAccountError("An account with this student ID already exists for this role.");
     }
-    return id;
 }
 
-async function ensureUniqueEmployeeId(value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await prisma.employee.findUnique({ where: { employee_id: id } })) {
-        id = `${value}-${n++}`;
+async function assertEmployeeIdAvailableForRole(employeeId: string, role: Role) {
+    const existingEmployees = await prisma.employee.findMany({
+        where: { employee_id: employeeId },
+        include: { user: { select: { role: true } } },
+    });
+
+    const hasSameRole = existingEmployees.some((employee) => employee.user?.role === role);
+
+    if (hasSameRole) {
+        throw new DuplicateRoleAccountError("An account with this employee ID already exists for this role.");
     }
-    return id;
 }
 
 // ---------------- CREATE USER ----------------
@@ -67,6 +82,22 @@ export async function POST(req: Request) {
 
         const payload = await req.json();
         const roleEnum = payload.role as Role;
+
+        if (roleEnum === Role.SCHOLAR) {
+            await assertStudentIdAvailableForRole(payload.school_id, roleEnum);
+        }
+
+        if (roleEnum === Role.PATIENT && payload.patientType === "student") {
+            await assertStudentIdAvailableForRole(payload.student_id, roleEnum);
+        }
+
+        if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
+            await assertEmployeeIdAvailableForRole(payload.employee_id, roleEnum);
+        }
+
+        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
+            await assertEmployeeIdAvailableForRole(payload.employee_id, roleEnum);
+        }
 
         // Determine username
         let username: string;
@@ -124,7 +155,6 @@ export async function POST(req: Request) {
 
         // Create profile based on role
         if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -132,7 +162,7 @@ export async function POST(req: Request) {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
+                    student_id: payload.student_id,
                     department,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
@@ -142,29 +172,26 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
+                    employee_id: payload.employee_id,
                     ...sharedProfileData,
                 },
             });
         }
 
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
+                    employee_id: payload.employee_id,
                     ...sharedProfileData,
                 },
             });
         }
 
         if (roleEnum === Role.SCHOLAR) {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -172,7 +199,7 @@ export async function POST(req: Request) {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
+                    student_id: payload.school_id,
                     department,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
@@ -189,6 +216,10 @@ export async function POST(req: Request) {
         const authResponse = handleAuthError(err);
         if (authResponse) return authResponse;
         console.error("[POST /api/nurse/accounts]", err);
+
+        if (err instanceof DuplicateRoleAccountError) {
+            return NextResponse.json({ error: err.message }, { status: 400 });
+        }
 
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
             const field = (err.meta?.target as string[])?.[0] ?? "field";
