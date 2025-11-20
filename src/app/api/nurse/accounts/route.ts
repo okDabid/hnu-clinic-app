@@ -58,6 +58,7 @@ export async function POST(req: Request) {
 
         const payload = await req.json();
         const roleEnum = payload.role as Role;
+        const workingScholar = Boolean(payload.workingScholar);
 
         // Determine username
         let username: string;
@@ -156,6 +157,7 @@ export async function POST(req: Request) {
                     data: {
                         user_id: newUser.user_id,
                         student_id: payload.student_id,
+                        is_working_scholar: workingScholar,
                         department,
                         program: payload.program ?? null,
                         year_level: payload.year_level ?? null,

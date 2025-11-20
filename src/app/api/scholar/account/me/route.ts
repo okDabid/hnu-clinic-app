@@ -157,6 +157,7 @@ export async function GET() {
             username: user.username,
             role: user.role,
             status: user.status,
+            isWorkingScholar: user.student?.is_working_scholar ?? false,
             profile: user.student ?? null,
         });
     } catch (err) {
@@ -193,6 +194,16 @@ export async function PUT(req: Request) {
                 { error: "Student profile not found for this scholar" },
                 { status: 404 }
             );
+
+        if (existingProfile.is_working_scholar) {
+            return NextResponse.json(
+                {
+                    error:
+                        "Working scholar profiles are managed by the clinic. Contact the nurse station for updates.",
+                },
+                { status: 403 }
+            );
+        }
 
         // Prevent changing DOB once set
         const incomingDOB = toDate(profile.date_of_birth);

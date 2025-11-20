@@ -6,6 +6,7 @@ import { ipKey, withRateLimit } from "@/lib/rate-limit";
 type MinimalUserRelation = {
     fname: string;
     lname: string;
+    is_working_scholar?: boolean;
     user: {
         user_id: string;
         role: string;
@@ -25,17 +26,22 @@ const baseSelect = {
     },
 } as const;
 
+const studentSelect = {
+    ...baseSelect,
+    is_working_scholar: true,
+} as const;
+
 async function findStudentByBaseId(candidateId: string) {
     const exact = await prisma.student.findUnique({
         where: { student_id: candidateId },
-        select: baseSelect,
+        select: studentSelect,
     });
 
     if (exact) return exact;
 
     return prisma.student.findFirst({
         where: { student_id: { startsWith: `${candidateId}-` } },
-        select: baseSelect,
+        select: studentSelect,
     });
 }
 
@@ -75,6 +81,17 @@ async function handler(req: Request) {
                 );
             }
             userRecord = await findStudentByBaseId(school_id);
+
+            if (
+                userRecord?.user &&
+                userRecord.user.role === "PATIENT" &&
+                userRecord.is_working_scholar
+            ) {
+                userRecord = {
+                    ...userRecord,
+                    user: { ...userRecord.user, role: "SCHOLAR" },
+                };
+            }
         } else if (normalizedRole === "PATIENT") {
             if (typeof patient_id !== "string" || patient_id.length === 0) {
                 return NextResponse.json(

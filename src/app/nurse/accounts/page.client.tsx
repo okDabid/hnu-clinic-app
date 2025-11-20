@@ -59,6 +59,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
@@ -95,6 +96,7 @@ type CreateUserPayload = {
     student_id?: string | null;
     school_id?: string | null;
     patientType?: "student" | "employee" | null;
+    workingScholar?: boolean;
     specialization?: "Physician" | "Dentist" | null;
 };
 
@@ -124,6 +126,7 @@ export function NurseAccountsPageClient({
 
     const [role, setRole] = useState("");
     const [patientType, setPatientType] = useState<"student" | "employee" | "">("");
+    const [workingScholar, setWorkingScholar] = useState(false);
     const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("ALL");
     const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
 
@@ -153,6 +156,12 @@ export function NurseAccountsPageClient({
 
     const [isRefreshingUsers, startUsersTransition] = useTransition();
     const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+
+    useEffect(() => {
+        if (role !== "PATIENT" || patientType !== "student") {
+            setWorkingScholar(false);
+        }
+    }, [role, patientType]);
 
     const initializing = !(profileLoaded && usersLoaded);
 
@@ -412,6 +421,7 @@ export function NurseAccountsPageClient({
                 role === "PATIENT" && patientType === "student" ? (studentId || null) : null,
             school_id: role === "SCHOLAR" ? (schoolId || null) : null,
             patientType: patientType || null,
+            workingScholar: role === "PATIENT" && patientType === "student" ? workingScholar : false,
             specialization: role === "DOCTOR" ? specialization : null,
         };
 
@@ -467,6 +477,7 @@ export function NurseAccountsPageClient({
             formRef.current?.reset();
             setRole("");
             setPatientType("");
+            setWorkingScholar(false);
             setSpecialization(null);
             setPendingPayload(null);
             setShowCreateConfirm(false);
@@ -670,6 +681,11 @@ export function NurseAccountsPageClient({
             ? "Student"
             : "Employee"
         : null;
+
+    const pendingScholarLabel =
+        pendingPayload?.workingScholar && pendingPayload.patientType === "student"
+            ? "Also marked as working scholar"
+            : null;
 
     if (initializing) {
         return <NurseAccountsLoading />;
@@ -1228,6 +1244,23 @@ export function NurseAccountsPageClient({
                                 </div>
                             )}
 
+                            {role === "PATIENT" && patientType === "student" && (
+                                <div className="flex items-center justify-between rounded-xl border p-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">Enable working scholar access</p>
+                                        <p className="text-xs text-gray-500">
+                                            Allows this student patient to log in as a working scholar using the same ID and
+                                            credentials.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={workingScholar}
+                                        onCheckedChange={setWorkingScholar}
+                                        aria-label="Mark student patient as working scholar"
+                                    />
+                                </div>
+                            )}
+
                             {/* Student/Employee ID for patient */}
                             {role === "PATIENT" && patientType === "student" && (
                                 <div className="space-y-2">
@@ -1295,6 +1328,12 @@ export function NurseAccountsPageClient({
                                                 <div className="flex items-center justify-between gap-4">
                                                     <dt className="text-gray-500">Patient Type</dt>
                                                     <dd className="font-medium text-gray-900">{pendingPatientTypeLabel}</dd>
+                                                </div>
+                                            )}
+                                            {pendingScholarLabel && (
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <dt className="text-gray-500">Working scholar</dt>
+                                                    <dd className="font-medium text-gray-900">{pendingScholarLabel}</dd>
                                                 </div>
                                             )}
                                             {pendingPayload.role === "DOCTOR" && (
