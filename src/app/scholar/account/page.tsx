@@ -683,8 +683,7 @@ export default function ScholarAccountPage() {
                     <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-6 py-5 text-amber-900">
                         <p className="text-sm font-semibold">Linked to your patient student profile</p>
                         <p className="text-sm text-amber-800">
-                            Core details come from your patient record. To change them, please ask the clinic nurse to update your
-                            student profile.
+                            Core details come from your patient record. To change them, open your student account.
                         </p>
                     </div>
 
@@ -698,7 +697,7 @@ export default function ScholarAccountPage() {
                         <dl className="grid gap-4 sm:grid-cols-2">
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Student ID</dt>
-                                <dd className="text-sm font-semibold text-gray-900">{cleanedId || "—"}</dd>
+                                <dd className="text-sm font-semibold text-green-900">{cleanedId || "—"}</dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Full name</dt>
