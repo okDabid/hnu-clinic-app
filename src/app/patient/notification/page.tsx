@@ -90,21 +90,21 @@ export default function PatientNotificationPage() {
             title={layoutTitle}
             description={layoutDescription}
             actions={
-                <div className="hidden items-center gap-2 rounded-xl border border-green-100 bg-white/80 px-4 py-2 text-xs font-semibold text-green-700 shadow-sm md:flex">
+                <div className="hidden items-center gap-2 rounded-xl border border-primary/20 bg-white/80 px-4 py-2 text-xs font-semibold text-primary shadow-sm md:flex">
                     <Bell className="h-4 w-4" />
                     Real-time alerts
                 </div>
             }
         >
             <div className="space-y-8">
-                <Card className="rounded-3xl border-green-100/80 bg-gradient-to-r from-green-100/80 via-white to-green-50/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-gradient-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                     <CardHeader className="space-y-2 text-center">
-                        <CardTitle className="text-3xl font-semibold text-green-700">Stay informed, stay prepared</CardTitle>
+                        <CardTitle className="text-3xl font-semibold text-primary">Stay informed, stay prepared</CardTitle>
                         <p className="text-sm text-muted-foreground">
-                            Hello <span className="font-semibold text-green-700">{fullName}</span>! Whenever your doctor approves, moves, or completes an appointment, we capture the update here so you never miss a step.
+                            Hello <span className="font-semibold text-primary">{fullName}</span>! Whenever your doctor approves, moves, or completes an appointment, we capture the update here so you never miss a step.
                         </p>
                     </CardHeader>
-                    <CardContent className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-green-700">
+                    <CardContent className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-primary">
                         <span className="rounded-full bg-white/70 px-3 py-1">Email reminders</span>
                         <span className="rounded-full bg-white/70 px-3 py-1">Portal notifications</span>
                         <span className="rounded-full bg-white/70 px-3 py-1">Status explanations</span>
@@ -115,13 +115,13 @@ export default function PatientNotificationPage() {
                     {notificationHighlights.map(({ icon: Icon, title, description }) => (
                         <Card
                             key={title}
-                            className="h-full rounded-3xl border-green-100/70 bg-white/90 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                            className="h-full rounded-3xl border-primary/20/70 bg-white/90 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                         >
                             <CardHeader className="flex flex-col items-start gap-3">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-600/10 text-green-700">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <Icon className="h-5 w-5" />
                                 </span>
-                                <CardTitle className="text-lg text-green-700">{title}</CardTitle>
+                                <CardTitle className="text-lg text-primary">{title}</CardTitle>
                             </CardHeader>
                             <CardContent className="text-sm text-muted-foreground">{description}</CardContent>
                         </Card>
@@ -129,37 +129,37 @@ export default function PatientNotificationPage() {
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-lg text-green-700">How to follow up after an update</CardTitle>
+                            <CardTitle className="text-lg text-primary">How to follow up after an update</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 text-sm text-muted-foreground">
                             <ul className="space-y-2">
                                 {followUpTips.map((tip) => (
-                                    <li key={tip} className="flex items-start gap-2 rounded-2xl bg-green-600/5 p-3">
-                                        <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-green-500" />
+                                    <li key={tip} className="flex items-start gap-2 rounded-2xl bg-primary/10 p-3">
+                                        <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
                                         <span>{tip}</span>
                                     </li>
                                 ))}
                             </ul>
-                            <Button asChild variant="outline" className="mt-2 w-full rounded-xl border-green-200 text-green-700 hover:bg-green-100/60">
+                            <Button asChild variant="outline" className="mt-2 w-full rounded-xl border-primary/30 text-primary hover:bg-primary/10">
                                 <a href="/patient/appointments">Review appointments</a>
                             </Button>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-lg text-green-700">What each status means</CardTitle>
+                            <CardTitle className="text-lg text-primary">What each status means</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {statusUpdates.map(({ icon: Icon, title, description }) => (
-                                <div key={title} className="flex gap-3 rounded-2xl border border-green-100/80 bg-green-600/5 p-3">
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-green-700 shadow-sm">
+                                <div key={title} className="flex gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-3">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-primary shadow-sm">
                                         <Icon className="h-4 w-4" />
                                     </span>
                                     <div className="space-y-1 text-sm">
-                                        <p className="font-semibold text-green-700">{title}</p>
+                                        <p className="font-semibold text-primary">{title}</p>
                                         <p className="text-muted-foreground">{description}</p>
                                     </div>
                                 </div>

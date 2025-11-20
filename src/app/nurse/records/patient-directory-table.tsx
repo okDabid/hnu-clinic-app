@@ -38,7 +38,7 @@ function PatientDirectoryTableComponent({ records, loading, onOpenDetails }: Pat
             return (
                 <TableRow
                     key={record.id}
-                    className="cursor-pointer text-sm transition hover:bg-green-50/60 focus-visible:bg-green-50/60"
+                    className="cursor-pointer text-sm transition hover:bg-primary/10/60 focus-visible:bg-primary/10/60"
                     tabIndex={0}
                     role="button"
                     onClick={() => onOpenDetails(record)}
@@ -49,7 +49,7 @@ function PatientDirectoryTableComponent({ records, loading, onOpenDetails }: Pat
                         }
                     }}
                 >
-                    <TableCell className="font-medium text-green-700">
+                    <TableCell className="font-medium text-primary">
                         <div className="flex flex-col">
                             <span>{record.fullName}</span>
                             <span className="text-xs text-muted-foreground">
@@ -59,7 +59,7 @@ function PatientDirectoryTableComponent({ records, loading, onOpenDetails }: Pat
                     </TableCell>
                     <TableCell className="font-mono text-sm text-muted-foreground">{record.patientId}</TableCell>
                     <TableCell>
-                        <Badge className="rounded-full border-green-200 bg-green-50 text-green-700">
+                        <Badge className="rounded-full border-primary/30 bg-primary/10 text-primary">
                             {record.patientType}
                         </Badge>
                     </TableCell>

@@ -107,7 +107,7 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
 
 const STATUS_BADGE_CLASSES: Record<AppointmentStatus, string> = {
     Pending: "border-amber-200 bg-amber-50 text-amber-700",
-    Approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    Approved: "border-emerald-200 bg-primary/10 text-emerald-700",
     Moved: "border-sky-200 bg-sky-50 text-sky-700",
     Completed: "border-slate-200 bg-slate-100 text-slate-700",
     Cancelled: "border-rose-200 bg-rose-50 text-rose-700",
@@ -791,7 +791,7 @@ export default function PatientAppointmentsPage() {
             title="Appointments"
             description="Plan and manage your clinic visits — from booking a slot to tracking approvals and changes."
             actions={
-                <div className="hidden items-center gap-3 rounded-2xl border border-green-100 bg-white/80 px-4 py-2 text-xs font-medium text-green-700 shadow-sm md:flex">
+                <div className="hidden items-center gap-3 rounded-2xl border border-primary/25 bg-white/80 px-4 py-2 text-xs font-medium text-primary shadow-sm md:flex">
                     <CalendarDays className="h-4 w-4" />
                     Earliest booking: {formatDateOnly(minBookingDate) || minBookingDate}
                 </div>
@@ -807,9 +807,9 @@ export default function PatientAppointmentsPage() {
                     >
                         <form className="space-y-5" onSubmit={handleSubmit}>
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Clinic</Label>
+                                <Label className="text-sm font-medium text-primary">Clinic</Label>
                                 <Select value={clinicId} onValueChange={handleClinicChange} disabled={loadingClinics}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -823,13 +823,13 @@ export default function PatientAppointmentsPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Doctor</Label>
+                                <Label className="text-sm font-medium text-primary">Doctor</Label>
                                 <Select
                                     value={doctorId}
                                     onValueChange={handleDoctorChange}
                                     disabled={!clinicId || loadingDoctors}
                                 >
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue
                                             placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"}
                                         />
@@ -845,9 +845,9 @@ export default function PatientAppointmentsPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Service type</Label>
+                                <Label className="text-sm font-medium text-primary">Service type</Label>
                                 <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -861,18 +861,18 @@ export default function PatientAppointmentsPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Date</Label>
+                                <Label className="text-sm font-medium text-primary">Date</Label>
                                 <Input
                                     type="date"
                                     value={date}
                                     onChange={(event) => setDate(event.target.value)}
                                     min={minBookingDate}
-                                    className="rounded-xl border-green-200"
+                                    className="rounded-xl border-primary/30"
                                 />
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-green-700">Preferred time</Label>
+                                <Label className="text-sm font-medium text-primary">Preferred time</Label>
                                 <Select
                                     value={timeStart}
                                     onValueChange={setTimeStart}
@@ -884,7 +884,7 @@ export default function PatientAppointmentsPage() {
                                         onLeaveDay
                                     }
                                 >
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue
                                             placeholder={
                                                 !doctorId || !date
@@ -918,7 +918,7 @@ export default function PatientAppointmentsPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full rounded-xl bg-green-600 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
+                                className="w-full rounded-xl bg-primary py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
                                 disabled={submitting}
                             >
                                 {submitting ? (
@@ -932,7 +932,7 @@ export default function PatientAppointmentsPage() {
                         </form>
                     </AppointmentPanel>
 
-                    <Card className="rounded-3xl border-green-100/80 bg-linear-to-br from-green-600 via-green-500 to-emerald-500 text-white shadow-md">
+                    <Card className="rounded-3xl border-primary/25 bg-linear-to-br from-primary via-primary/90 to-primary/80 text-white shadow-md">
                         <CardHeader>
                             <CardTitle className="text-lg">Important reminders</CardTitle>
                         </CardHeader>
@@ -945,39 +945,39 @@ export default function PatientAppointmentsPage() {
                 </div>
 
                 <div className="space-y-6">
-                    <Card className="rounded-3xl border-green-100/80 bg-white/95 shadow-sm">
+                    <Card className="rounded-3xl border-primary/25 bg-white/95 shadow-sm">
                         <CardHeader className="space-y-1">
-                            <CardTitle className="text-lg font-semibold text-green-700">Doctor availability</CardTitle>
+                            <CardTitle className="text-lg font-semibold text-primary">Doctor availability</CardTitle>
                             <p className="text-sm text-muted-foreground">
                                 Preview open slots before sending your request.
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {!clinicId ? (
-                                <div className="rounded-2xl border border-dashed border-green-200 bg-white/70 p-4 text-sm text-muted-foreground">
+                                <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-muted-foreground">
                                     Select a clinic to browse available doctors.
                                 </div>
                             ) : loadingDoctors ? (
-                                <div className="flex items-center justify-center gap-2 rounded-2xl border border-green-100 bg-white/70 p-4 text-sm text-muted-foreground">
+                                <div className="flex items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-white/70 p-4 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin" /> Loading doctors...
                                 </div>
                             ) : doctors.length === 0 ? (
-                                <div className="rounded-2xl border border-green-100 bg-green-600/10 p-4 text-sm text-muted-foreground">
+                                <div className="rounded-2xl border border-primary/25 bg-primary/10 p-4 text-sm text-muted-foreground">
                                     No doctors are assigned to this clinic yet. Try another clinic.
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     {selectedClinic ? (
-                                        <div className="rounded-2xl border border-green-100 bg-white/70 p-3">
-                                            <p className="text-xs uppercase tracking-wide text-green-500">{selectedClinic.clinic_name}</p>
-                                            <p className="mt-1 text-sm font-medium text-green-800">
+                                        <div className="rounded-2xl border border-primary/25 bg-white/70 p-3">
+                                            <p className="text-xs uppercase tracking-wide text-primary">{selectedClinic.clinic_name}</p>
+                                            <p className="mt-1 text-sm font-medium text-primary">
                                                 {date ? `Showing availability for ${formatDateOnly(date)}` : "Choose a date to explore available slots."}
                                             </p>
                                         </div>
                                     ) : null}
 
                                     {!date ? (
-                                        <div className="rounded-2xl border border-dashed border-green-200 bg-white/70 p-4 text-sm text-muted-foreground">
+                                        <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-muted-foreground">
                                             Pick a preferred date to display the available times for every doctor.
                                         </div>
                                     ) : null}
@@ -996,13 +996,13 @@ export default function PatientAppointmentsPage() {
                                                     key={doctor.user_id}
                                                     className={cn(
                                                         "rounded-2xl border p-4 transition",
-                                                        "border-green-100 bg-white/80",
-                                                        isActiveDoctor && "border-green-500 bg-green-50 shadow-sm"
+                                                        "border-primary/25 bg-white/80",
+                                                        isActiveDoctor && "border-primary bg-primary/10 shadow-sm"
                                                     )}
                                                 >
                                                     <div className="flex flex-wrap items-start justify-between gap-3">
                                                         <div>
-                                                            <p className="text-sm font-semibold text-green-700">{doctor.name}</p>
+                                                            <p className="text-sm font-semibold text-primary">{doctor.name}</p>
                                                             <p className="text-xs text-muted-foreground">
                                                                 {doctor.specialization ?? "Doctor"}
                                                                 {selectedClinic ? ` · ${selectedClinic.clinic_name}` : ""}
@@ -1011,7 +1011,7 @@ export default function PatientAppointmentsPage() {
                                                         {isActiveDoctor && timeStart ? (
                                                             <Badge
                                                                 variant="outline"
-                                                                className="border-green-500 bg-green-500/10 text-[11px] font-semibold uppercase tracking-wide text-green-700"
+                                                                className="border-primary bg-primary/10 text-[11px] font-semibold uppercase tracking-wide text-primary"
                                                             >
                                                                 Selected
                                                             </Badge>
@@ -1022,7 +1022,7 @@ export default function PatientAppointmentsPage() {
                                                         {!date ? (
                                                             <p className="text-xs text-muted-foreground">Select a date above to view availability.</p>
                                                         ) : doctorLoading ? (
-                                                            <div className="flex items-center gap-2 rounded-2xl border border-green-100 bg-white p-3 text-sm text-muted-foreground">
+                                                            <div className="flex items-center gap-2 rounded-2xl border border-primary/25 bg-white p-3 text-sm text-muted-foreground">
                                                                 <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
                                                             </div>
                                                         ) : doctorError ? (
@@ -1044,8 +1044,8 @@ export default function PatientAppointmentsPage() {
                                                                             onClick={() => handleSlotSelection(doctor, slot)}
                                                                             className={cn(
                                                                                 "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
-                                                                                "border-green-100 bg-white text-green-700 hover:bg-green-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-500",
-                                                                                isSelected && "border-green-600 bg-green-600 text-white hover:bg-green-600 focus-visible:outline-green-600"
+                                                                                "border-primary/25 bg-white text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                                                                                isSelected && "border-primary bg-primary text-white hover:bg-primary/90 focus-visible:outline-primary"
                                                                             )}
                                                                             aria-pressed={isSelected}
                                                                         >
@@ -1079,35 +1079,35 @@ export default function PatientAppointmentsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/25 bg-white/90 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="text-lg text-green-700">Booking summary</CardTitle>
+                            <CardTitle className="text-lg text-primary">Booking summary</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <dl className="space-y-3 text-sm text-muted-foreground">
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Clinic</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                <div className="rounded-2xl border border-primary/25 bg-primary/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-primary">Clinic</dt>
+                                    <dd className="mt-1 text-sm font-medium text-primary">
                                         {selectedClinic ? selectedClinic.clinic_name : "Select a clinic to continue"}
                                     </dd>
                                 </div>
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Doctor</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                <div className="rounded-2xl border border-primary/25 bg-primary/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-primary">Doctor</dt>
+                                    <dd className="mt-1 text-sm font-medium text-primary">
                                         {selectedDoctor
                                             ? `${selectedDoctor.name} ${selectedDoctor.specialization ? `(${selectedDoctor.specialization})` : ""}`
                                             : "Choose a clinic and doctor"}
                                     </dd>
                                 </div>
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Service</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                <div className="rounded-2xl border border-primary/25 bg-primary/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-primary">Service</dt>
+                                    <dd className="mt-1 text-sm font-medium text-primary">
                                         {selectedServiceLabel ?? "Select a service type"}
                                     </dd>
                                 </div>
-                                <div className="rounded-2xl border border-green-100 bg-green-600/5 p-3">
-                                    <dt className="text-xs uppercase tracking-wide text-green-500">Schedule</dt>
-                                    <dd className="mt-1 text-sm font-medium text-green-800">
+                                <div className="rounded-2xl border border-primary/25 bg-primary/5 p-3">
+                                    <dt className="text-xs uppercase tracking-wide text-primary">Schedule</dt>
+                                    <dd className="mt-1 text-sm font-medium text-primary">
                                         {date && selectedSlot ? (
                                             <span>
                                                 {formatDateOnly(date)} · {formatTimeRange(selectedSlot.start, selectedSlot.end)}
@@ -1124,28 +1124,28 @@ export default function PatientAppointmentsPage() {
             </section>
             <section className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-3">
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/25 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">Active requests</CardTitle>
+                                <CardTitle className="text-base font-semibold text-primary">Active requests</CardTitle>
                                 <p className="text-sm text-muted-foreground">Pending, approved, and moved appointments</p>
                             </div>
-                            <Clock3 className="h-9 w-9 text-green-500" />
+                            <Clock3 className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{activeAppointments.length}</p>
+                            <p className="text-3xl font-semibold text-primary">{activeAppointments.length}</p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/25 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">Next visit</CardTitle>
+                                <CardTitle className="text-base font-semibold text-primary">Next visit</CardTitle>
                                 <p className="text-sm text-muted-foreground">Your soonest approved appointment</p>
                             </div>
-                            <CalendarDays className="h-9 w-9 text-green-500" />
+                            <CalendarDays className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{upcomingAppointments.length}</p>
+                            <p className="text-3xl font-semibold text-primary">{upcomingAppointments.length}</p>
                             {nextAppointment ? (
                                 <p className="mt-2 text-xs text-muted-foreground">
                                     {formatAppointmentDate(nextAppointment)} • {formatAppointmentTime(nextAppointment)}
@@ -1153,16 +1153,16 @@ export default function PatientAppointmentsPage() {
                             ) : null}
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/80 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/25 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">Pending approvals</CardTitle>
+                                <CardTitle className="text-base font-semibold text-primary">Pending approvals</CardTitle>
                                 <p className="text-sm text-muted-foreground">Requests awaiting confirmation</p>
                             </div>
                             <AlertCircle className="h-9 w-9 text-amber-500" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{statusCounts.Pending}</p>
+                            <p className="text-3xl font-semibold text-primary">{statusCounts.Pending}</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -1174,7 +1174,7 @@ export default function PatientAppointmentsPage() {
                     actions={
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Confirmed
+                                <span className="h-2 w-2 rounded-full bg-primary/100" /> Confirmed
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-amber-500" /> Pending
@@ -1186,21 +1186,21 @@ export default function PatientAppointmentsPage() {
                     <div className="flex flex-col gap-4">
                         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Search requests</Label>
+                                <Label className="text-sm font-medium text-primary">Search requests</Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         placeholder="Search by clinic, doctor, or status"
                                         value={searchAppointments}
                                         onChange={(event) => setSearchAppointments(event.target.value)}
-                                        className="rounded-xl border-green-200 pl-9"
+                                        className="rounded-xl border-primary/30 pl-9"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Status filter</Label>
+                                <Label className="text-sm font-medium text-primary">Status filter</Label>
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder="All statuses" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1256,7 +1256,7 @@ export default function PatientAppointmentsPage() {
 
                                             return (
                                                 <TableRow key={appointment.id} className="text-sm">
-                                                    <TableCell className="font-medium text-green-700">
+                                                    <TableCell className="font-medium text-primary">
                                                         <div className="flex flex-col">
                                                             <span>{appointment.clinic}</span>
                                                             <span className="text-xs text-muted-foreground">
@@ -1279,7 +1279,7 @@ export default function PatientAppointmentsPage() {
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="sm"
-                                                                        className="rounded-xl text-green-700 hover:bg-green-100"
+                                                                        className="rounded-xl text-primary hover:bg-primary/15"
                                                                         disabled={isRescheduling || isCancelling}
                                                                     >
                                                                         {isRescheduling || isCancelling ? (
@@ -1289,7 +1289,7 @@ export default function PatientAppointmentsPage() {
                                                                         )}
                                                                     </Button>
                                                                 </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="w-48 rounded-xl border-green-100">
+                                                                <DropdownMenuContent align="end" className="w-48 rounded-xl border-primary/25">
                                                                     <DropdownMenuItem
                                                                         onClick={() => openRescheduleDialog(appointment)}
                                                                         disabled={isRescheduling || isCancelling}
@@ -1336,9 +1336,9 @@ export default function PatientAppointmentsPage() {
                     if (!open) closeRescheduleDialog();
                 }}
             >
-                <DialogContent className="max-w-md rounded-3xl border border-green-100/80 bg-white/95">
+                <DialogContent className="max-w-md rounded-3xl border border-primary/25 bg-white/95">
                     <DialogHeader className="space-y-1">
-                        <DialogTitle className="text-lg font-semibold text-green-700">Reschedule appointment</DialogTitle>
+                        <DialogTitle className="text-lg font-semibold text-primary">Reschedule appointment</DialogTitle>
                         <DialogDescription>
                             {rescheduleTarget
                                 ? `Select a new slot for your appointment with ${rescheduleTarget.doctor}. We'll send the request to the clinic for approval. ${earliestBookedMessage}`
@@ -1348,7 +1348,7 @@ export default function PatientAppointmentsPage() {
 
                     <form onSubmit={handleRescheduleSubmit} className="space-y-4 pt-2">
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium text-green-700">Date</Label>
+                            <Label className="text-sm font-medium text-primary">Date</Label>
                             <Input
                                 type="date"
                                 value={rescheduleDate}
@@ -1356,12 +1356,12 @@ export default function PatientAppointmentsPage() {
                                 min={minBookingDate}
                                 required
                                 disabled={rescheduling}
-                                className="rounded-xl border-green-200"
+                                className="rounded-xl border-primary/30"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium text-green-700">Time</Label>
+                            <Label className="text-sm font-medium text-primary">Time</Label>
                             <Select
                                 value={rescheduleTimeStart}
                                 onValueChange={setRescheduleTimeStart}
@@ -1372,7 +1372,7 @@ export default function PatientAppointmentsPage() {
                                     rescheduleSlots.length === 0
                                 }
                             >
-                                <SelectTrigger className="rounded-xl border-green-200">
+                                <SelectTrigger className="rounded-xl border-primary/30">
                                     <SelectValue
                                         placeholder={
                                             !rescheduleTarget
@@ -1398,7 +1398,7 @@ export default function PatientAppointmentsPage() {
                         <DialogFooter>
                             <Button
                                 type="submit"
-                                className="rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
+                                className="rounded-xl bg-primary text-sm font-semibold text-white hover:bg-primary/90"
                                 disabled={rescheduling || !rescheduleTarget || !selectedRescheduleSlot}
                             >
                                 {rescheduling ? (
@@ -1420,9 +1420,9 @@ export default function PatientAppointmentsPage() {
                     if (!open) closeCancelDialog();
                 }}
             >
-                <AlertDialogContent className="max-w-md rounded-3xl border border-green-100/80 bg-white/95">
+                <AlertDialogContent className="max-w-md rounded-3xl border border-primary/25 bg-white/95">
                     <AlertDialogHeader className="space-y-1">
-                        <AlertDialogTitle className="text-lg font-semibold text-green-700">Cancel appointment?</AlertDialogTitle>
+                        <AlertDialogTitle className="text-lg font-semibold text-primary">Cancel appointment?</AlertDialogTitle>
                         <AlertDialogDescription>
                             {cancelTarget
                                 ? `You are cancelling your appointment with ${cancelTarget.doctor} on ${cancelTarget.date} at ${cancelTarget.time}. This action cannot be undone.`
@@ -1430,7 +1430,7 @@ export default function PatientAppointmentsPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="gap-2">
-                        <AlertDialogCancel className="rounded-xl border-green-200" disabled={cancelSubmitting}>
+                        <AlertDialogCancel className="rounded-xl border-primary/30" disabled={cancelSubmitting}>
                             Keep appointment
                         </AlertDialogCancel>
                         <AlertDialogAction

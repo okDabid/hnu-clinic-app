@@ -15,7 +15,7 @@ export default function PatientNotificationLoading() {
                         <Skeleton className="mx-auto h-8 w-64" />
                         <Skeleton className="mx-auto h-4 w-72" />
                     </CardHeader>
-                    <CardContent className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-green-700">
+                    <CardContent className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-primary">
                         {Array.from({ length: 3 }).map((_, index) => (
                             <Skeleton key={index} className="h-6 w-32 rounded-full" />
                         ))}

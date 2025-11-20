@@ -697,31 +697,31 @@ export default function ScholarAccountPage() {
                         <dl className="grid gap-4 sm:grid-cols-2">
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Student ID</dt>
-                                <dd className="text-sm font-semibold text-green-900">{cleanedId || "—"}</dd>
+                                <dd className="text-sm font-semibold text-primary">{cleanedId || "—"}</dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Full name</dt>
-                                <dd className="text-sm font-semibold text-green-900">
+                                <dd className="text-sm font-semibold text-primary">
                                     {[profile.fname, profile.mname, profile.lname].filter(Boolean).join(" ") || "—"}
                                 </dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Department</dt>
-                                <dd className="text-sm font-semibold text-green-900">{profile.department || "—"}</dd>
+                                <dd className="text-sm font-semibold text-primary">{profile.department || "—"}</dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Program & Year</dt>
-                                <dd className="text-sm font-semibold text-green-900">
+                                <dd className="text-sm font-semibold text-primary">
                                     {[profile.program, profile.year_level].filter(Boolean).join(" • ") || "—"}
                                 </dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Contact number</dt>
-                                <dd className="text-sm font-semibold text-green-900">{profile.contactno || "—"}</dd>
+                                <dd className="text-sm font-semibold text-primary">{profile.contactno || "—"}</dd>
                             </div>
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Email</dt>
-                                <dd className="text-sm font-semibold text-green-900">{profile.email || "—"}</dd>
+                                <dd className="text-sm font-semibold text-primary">{profile.email || "—"}</dd>
                             </div>
                         </dl>
                     </AccountSection>
@@ -1138,7 +1138,7 @@ export default function ScholarAccountPage() {
                                     />
                                     <Button
                                         type="submit"
-                                        className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
                                         disabled={updating || dobSaving || genderSaving}
                                     >
                                         {updating || dobSaving || genderSaving ? (

@@ -333,7 +333,7 @@ export function DoctorConsultationPageClient({
                         </span>
                         <div className="flex items-center gap-1">
                             {activeCount > 0 ? (
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary/100" aria-hidden="true" />
                             ) : null}
                             {onLeave ? (
                                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
@@ -356,8 +356,8 @@ export function DoctorConsultationPageClient({
                         ? "border-amber-200 bg-amber-50/80 text-amber-900"
                         : "border-amber-200 bg-amber-50/70 text-amber-900"
                     : context === "inline"
-                        ? "border-green-100/80 bg-emerald-50/70 text-slate-700"
-                        : "border-green-100/80 bg-emerald-50/40 text-slate-700",
+                        ? "border-primary/20 bg-primary/10/70 text-slate-700"
+                        : "border-primary/20 bg-primary/10/40 text-slate-700",
                 context === "inline" && "shadow-sm"
             )}
         >
@@ -366,7 +366,7 @@ export function DoctorConsultationPageClient({
                     <p
                         className={cn(
                             "text-lg font-semibold",
-                            slot.is_on_leave ? "text-amber-800" : "text-green-700"
+                            slot.is_on_leave ? "text-amber-800" : "text-primary"
                         )}
                     >
                         {formatTimeRange(slot.available_timestart, slot.available_timeend)}
@@ -398,7 +398,7 @@ export function DoctorConsultationPageClient({
                 size="sm"
                 variant="outline"
                 className={cn(
-                    "w-full gap-2 rounded-xl border-green-200 text-green-700 hover:bg-green-100/70 sm:w-auto",
+                    "w-full gap-2 rounded-xl border-primary/30 text-primary hover:bg-primary/10 sm:w-auto",
                     slot.is_on_leave &&
                     "border-amber-300 text-amber-800 hover:bg-amber-100/80",
                     context === "inline" && "bg-white/90"
@@ -729,9 +729,9 @@ export function DoctorConsultationPageClient({
             <div className="space-y-6">
                 {/* Consultation Section */}
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-green-100/70 bg-linear-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
+                    <Card className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                         <CardHeader className="space-y-1">
-                            <CardTitle className="text-base font-semibold text-green-700">
+                            <CardTitle className="text-base font-semibold text-primary">
                                 Availability overview
                             </CardTitle>
                             <p className="text-sm text-muted-foreground">
@@ -744,10 +744,10 @@ export function DoctorConsultationPageClient({
                             </p>
                         </CardHeader>
                     </Card>
-                    <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
-                        <CardHeader className="flex flex-col gap-3 border-b border-green-100/70 sm:flex-row sm:items-center sm:justify-between">
+                    <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/85 shadow-sm">
+                        <CardHeader className="flex flex-col gap-3 border-b border-primary/20 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <CardTitle className="text-xl font-semibold text-green-700 sm:text-2xl">
+                                <CardTitle className="text-xl font-semibold text-primary sm:text-2xl">
                                     My duty hours
                                 </CardTitle>
                                 <p className="mt-1 text-sm text-muted-foreground">
@@ -758,7 +758,7 @@ export function DoctorConsultationPageClient({
                                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button
-                                            className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+                                            className="rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
                                             onClick={() => {
                                                 setEditingSlot(null);
                                                 setFormData({
@@ -775,9 +775,9 @@ export function DoctorConsultationPageClient({
                                     </DialogTrigger>
 
                                     {dialogOpen ? (
-                                        <DialogContent className="rounded-3xl border border-green-100 bg-white/95">
+                                        <DialogContent className="rounded-3xl border border-primary/20 bg-white/95">
                                             <DialogHeader>
-                                                <DialogTitle className="text-lg font-semibold text-green-700">
+                                                <DialogTitle className="text-lg font-semibold text-primary">
                                                     {editingSlot ? "Edit consultation slot" : "Generate duty hours"}
                                                 </DialogTitle>
                                                 <DialogDescription className="text-sm text-muted-foreground">
@@ -846,10 +846,10 @@ export function DoctorConsultationPageClient({
                                                 </div>
 
                                                 {editingSlot && (
-                                                    <div className="rounded-2xl border border-green-100/80 bg-emerald-50/40 p-4">
+                                                    <div className="rounded-2xl border border-primary/20 bg-primary/10/40 p-4">
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="space-y-2">
-                                                                <p className="text-sm font-semibold text-green-700">
+                                                                <p className="text-sm font-semibold text-primary">
                                                                     Availability status
                                                                 </p>
                                                                 <p className="text-sm text-muted-foreground">
@@ -877,7 +877,7 @@ export function DoctorConsultationPageClient({
                                                     <Button
                                                         type="submit"
                                                         disabled={loading}
-                                                        className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700"
+                                                        className="rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
                                                     >
                                                         {savingDutyHours && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                                                         {savingDutyHours
@@ -901,16 +901,16 @@ export function DoctorConsultationPageClient({
                                     <Loader2 className="h-5 w-5 animate-spin" /> Loading slots...
                                 </div>
                             ) : (
-                                <div className="rounded-3xl border border-green-100/80 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm sm:p-6">
+                                <div className="rounded-3xl border border-primary/20 bg-linear-to-br from-emerald-50/60 via-white to-emerald-100/60 p-5 shadow-sm sm:p-6">
                                     <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                                         <div>
-                                            <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                                                 Duty hours calendar
                                             </p>
                                             <p>Pick a day to update or review your consultation availability.</p>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                                            <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                            <Badge className="rounded-full bg-primary/15 text-xs font-semibold text-emerald-700">
                                                 {displayedMonthStats.coveredDays} day{displayedMonthStats.coveredDays === 1 ? "" : "s"} plotted
                                             </Badge>
                                             <Badge className="rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-700">
@@ -918,10 +918,10 @@ export function DoctorConsultationPageClient({
                                             </Badge>
                                         </div>
                                     </div>
-                                    <div className="relative mt-4 rounded-2xl border border-green-100/60 bg-white/70 shadow-inner">
+                                    <div className="relative mt-4 rounded-2xl border border-primary/20/60 bg-white/70 shadow-inner">
                                         {displayedMonthLoading ? (
                                             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
-                                                <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+                                                <Loader2 className="h-5 w-5 animate-spin text-primary" />
                                             </div>
                                         ) : null}
                                         <div className="overflow-x-auto px-3 py-3 sm:px-4 sm:py-4">
@@ -949,9 +949,9 @@ export function DoctorConsultationPageClient({
                     </Card>
                     <div className="grid gap-6 pt-6 xl:grid-cols-[1.05fr_0.95fr]">
                         <div className="space-y-4 xl:space-y-5">
-                            <Card className="rounded-3xl border border-green-100/80 bg-white/85 shadow-sm">
+                            <Card className="rounded-3xl border border-primary/20 bg-white/85 shadow-sm">
                                 <CardHeader className="pb-0">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                                         Selected day
                                     </p>
                                     <CardTitle className="text-lg font-semibold text-slate-900">
@@ -964,7 +964,7 @@ export function DoctorConsultationPageClient({
                                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             {selectedDateSlots.length > 0 ? (
                                                 <div className="flex flex-wrap items-center gap-2">
-                                                    <Badge className="rounded-full bg-emerald-100 text-xs font-semibold text-emerald-700">
+                                                    <Badge className="rounded-full bg-primary/15 text-xs font-semibold text-emerald-700">
                                                         {selectedDayCounts.active} active
                                                     </Badge>
                                                     {selectedDayCounts.onLeave > 0 ? (
@@ -978,7 +978,7 @@ export function DoctorConsultationPageClient({
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="rounded-full text-green-700 hover:bg-emerald-100"
+                                                    className="rounded-full text-primary hover:bg-primary/15"
                                                 >
                                                     {dayDetailsExpanded ? "Hide schedule" : "View schedule"}
                                                 </Button>
@@ -991,7 +991,7 @@ export function DoctorConsultationPageClient({
                                                         {selectedDateSlots.map((slot) => renderSlotCard(slot, "inline"))}
                                                     </div>
                                                 ) : (
-                                                    <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/40 p-5 text-sm text-muted-foreground">
+                                                    <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/10 p-5 text-sm text-muted-foreground">
                                                         {totalSlots === 0 ? (
                                                             <>No consultation duty hours yet. Use “Set duty hours” to generate your schedule.</>
                                                         ) : (
@@ -1004,7 +1004,7 @@ export function DoctorConsultationPageClient({
                                     </Collapsible>
                                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground sm:gap-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                            <span className="h-2.5 w-2.5 rounded-full bg-primary/100" />
                                             <span>Active slots</span>
                                         </div>
                                         <div className="flex items-center gap-2">

@@ -16,7 +16,7 @@ export default function NurseDispenseLoading() {
                     <CardContent className="flex flex-1 flex-col pt-4">
                         <div className="overflow-x-auto">
                             <div className="min-w-full space-y-3">
-                                <div className="grid grid-cols-8 gap-3 rounded-2xl bg-green-50/60 p-3 text-sm font-medium text-green-700">
+                                <div className="grid grid-cols-8 gap-3 rounded-2xl bg-primary/10/60 p-3 text-sm font-medium text-primary">
                                     {Array.from({ length: 8 }).map((_, index) => (
                                         <Skeleton key={index} className="h-4 w-full" />
                                     ))}

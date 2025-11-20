@@ -137,7 +137,7 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                 <Button
                     variant="outline"
                     onClick={loadRecords}
-                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
+                    className="rounded-xl border-primary/30 text-primary hover:bg-primary/10"
                     disabled={loading || isRefreshing}
                 >
                     <RefreshCcw className="mr-2 h-4 w-4" />
@@ -147,57 +147,57 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
         >
             <div className="flex flex-col gap-6">
                 <section className="grid gap-4 md:grid-cols-3">
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">Total profiles</CardTitle>
+                                <CardTitle className="text-base font-semibold text-primary">Total profiles</CardTitle>
                                 <p className="text-sm text-muted-foreground">Student and employee records synced</p>
                             </div>
-                            <Users2 className="h-9 w-9 text-green-500" />
+                            <Users2 className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{totalPatients}</p>
+                            <p className="text-3xl font-semibold text-primary">{totalPatients}</p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">With appointments</CardTitle>
+                                <CardTitle className="text-base font-semibold text-primary">With appointments</CardTitle>
                                 <p className="text-sm text-muted-foreground">Latest visit attached to the chart</p>
                             </div>
-                            <BadgeCheck className="h-9 w-9 text-green-500" />
+                            <BadgeCheck className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{withAppointments}</p>
+                            <p className="text-3xl font-semibold text-primary">{withAppointments}</p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">No appointment yet</CardTitle>
+                                <CardTitle className="text-base font-semibold text-primary">No appointment yet</CardTitle>
                                 <p className="text-sm text-muted-foreground">Students ready for intake coordination</p>
                             </div>
                             <AlertCircle className="h-9 w-9 text-amber-500" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{withoutAppointments}</p>
+                            <p className="text-3xl font-semibold text-primary">{withoutAppointments}</p>
                         </CardContent>
                     </Card>
                 </section>
 
-                <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                     <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <div className="space-y-1">
-                            <CardTitle className="text-xl text-green-700">Patient directory</CardTitle>
+                            <CardTitle className="text-xl text-primary">Patient directory</CardTitle>
                             <p className="text-sm text-muted-foreground">
                                 Filter student and employee details before handing off to nurses or doctors.
                             </p>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Patient type</Label>
+                                <Label className="text-sm font-medium text-primary">Patient type</Label>
                                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder="All types" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -208,9 +208,9 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Account status</Label>
+                                <Label className="text-sm font-medium text-primary">Account status</Label>
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -221,9 +221,9 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Appointment link</Label>
+                                <Label className="text-sm font-medium text-primary">Appointment link</Label>
                                 <Select value={appointmentFilter} onValueChange={setAppointmentFilter}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder="Appointment" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -234,14 +234,14 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Search records</Label>
+                                <Label className="text-sm font-medium text-primary">Search records</Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         placeholder="Search by name, ID, or program"
                                         value={search}
                                         onChange={(event) => setSearch(event.target.value)}
-                                        className="rounded-xl border-green-200 pl-9"
+                                        className="rounded-xl border-primary/30 pl-9"
                                     />
                                 </div>
                             </div>

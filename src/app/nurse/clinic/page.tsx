@@ -346,15 +346,15 @@ export default function NurseClinicPage() {
             description="Maintain clinic locations, contact information, and update details for campus services."
         >
             <section className="px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
+                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b">
                         <div className="flex justify-between items-center flex-wrap gap-3">
-                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
                                 Clinics
                             </CardTitle>
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                                    <Button className="bg-primary hover:bg-primary/90 text-white">
                                         + Add Clinic
                                     </Button>
                                 </DialogTrigger>
@@ -392,7 +392,7 @@ export default function NurseClinicPage() {
                                             <Button
                                                 type="submit"
                                                 disabled={loading}
-                                                className="bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                                                className="bg-primary hover:bg-primary/90 flex items-center justify-center gap-2"
                                             >
                                                 {loading ? (
                                                     <>
@@ -413,7 +413,7 @@ export default function NurseClinicPage() {
 
                     <CardContent className="overflow-x-auto">
                         <table className="w-full border-collapse border border-gray-200 text-sm sm:text-base">
-                            <thead className="bg-green-50">
+                            <thead className="bg-primary/10">
                                 <tr>
                                     <th className="border p-2">Name</th>
                                     <th className="border p-2">Location</th>
@@ -423,7 +423,7 @@ export default function NurseClinicPage() {
                             </thead>
                             <tbody>
                                 {clinics.map((clinic) => (
-                                    <tr key={clinic.clinic_id} className="hover:bg-green-50 transition">
+                                    <tr key={clinic.clinic_id} className="hover:bg-primary/10 transition">
                                         <td className="border p-2">{clinic.clinic_name}</td>
                                         <td className="border p-2">{clinic.clinic_location}</td>
                                         <td className="border p-2">{clinic.clinic_contactno}</td>
@@ -475,7 +475,7 @@ export default function NurseClinicPage() {
                                                             <Button
                                                                 type="submit"
                                                                 disabled={loading}
-                                                                className="bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                                                                className="bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2"
                                                             >
                                                                 {loading ? (
                                                                     <>
@@ -497,11 +497,11 @@ export default function NurseClinicPage() {
                         </table>
                     </CardContent>
                 </Card>
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-pxver:shadow-md">
+                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-pxver:shadow-md">
                     <CardHeader className="border-b">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="space-y-1">
-                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
                                     Doctor appointment calendar
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
@@ -534,9 +534,9 @@ export default function NurseClinicPage() {
                         ) : null}
                         <div className="grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr] xl:grid-cols-[minmax(0,400px)_1fr]">
                             <div className="space-y-4">
-                                <div className="rounded-2xl border border-green-100/80 bg-white/70 shadow-inner">
+                                <div className="rounded-2xl border border-primary/20 bg-white/70 shadow-inner">
                                     <div className="px-4 py-3">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                                             Month overview
                                         </p>
                                         <p className="text-sm text-muted-foreground">
@@ -546,7 +546,7 @@ export default function NurseClinicPage() {
                                     <div className="relative px-3 pb-4 pt-2 sm:px-4">
                                         {calendarLoading ? (
                                             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
-                                                <Loader2 className="h-5 w-5 animate-spin text-green-600" />
+                                                <Loader2 className="h-5 w-5 animate-spin text-primary" />
                                             </div>
                                         ) : null}
                                         <Calendar
@@ -571,7 +571,7 @@ export default function NurseClinicPage() {
                             </div>
                             <div className="space-y-4">
                                 <div className="space-y-1">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">
                                         Selected day
                                     </p>
                                     <h3 className="text-lg font-semibold text-slate-900">{selectedDateLabel}</h3>
@@ -591,7 +591,7 @@ export default function NurseClinicPage() {
                                         return (
                                             <div
                                                 key={appointment.id}
-                                                className="rounded-2xl border border-green-50 bg-white/90 p-4 shadow-sm"
+                                                className="rounded-2xl border border-primary/10 bg-white/90 p-4 shadow-sm"
                                             >
                                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                                     <div className="space-y-1">
@@ -616,7 +616,7 @@ export default function NurseClinicPage() {
                                         );
                                     })}
                                     {selectedAppointments.length === 0 ? (
-                                        <div className="rounded-2xl border border-dashed border-green-200 bg-green-50/50 p-6 text-sm text-muted-foreground">
+                                        <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/10/50 p-6 text-sm text-muted-foreground">
                                             No appointments scheduled for this date.
                                         </div>
                                     ) : null}

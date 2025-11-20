@@ -575,45 +575,49 @@ export default function ScholarAppointmentsPage() {
             title="Appointment coordination"
             description="Track campus clinic bookings, monitor status changes, and keep students informed about their schedules."
             actions={
-                <Button variant="outline" onClick={loadAppointments} className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70">
+                <Button
+                    variant="outline"
+                    onClick={loadAppointments}
+                    className="rounded-xl border-primary/30 text-primary hover:bg-primary/10"
+                >
                     <RefreshCcw className="mr-2 h-4 w-4" /> Refresh list
                 </Button>
             }
         >
             <div className="flex flex-col gap-6">
                 <section className="grid gap-4 md:grid-cols-3">
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">
+                                <CardTitle className="text-base font-semibold text-primary">
                                     Active queue
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                     Pending, approved, and moved appointments
                                 </p>
                             </div>
-                            <Clock3 className="h-9 w-9 text-green-500" />
+                            <Clock3 className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">
+                            <p className="text-3xl font-semibold text-primary">
                                 {activeAppointments.length}
                             </p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">
+                                <CardTitle className="text-base font-semibold text-primary">
                                     Today&apos;s visits
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                     Appointments scheduled for today
                                 </p>
                             </div>
-                            <CalendarDays className="h-9 w-9 text-green-500" />
+                            <CalendarDays className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">
+                            <p className="text-3xl font-semibold text-primary">
                                 {todayAppointments.length}
                             </p>
                             {nextAppointment ? (
@@ -623,10 +627,10 @@ export default function ScholarAppointmentsPage() {
                             ) : null}
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">
+                                <CardTitle className="text-base font-semibold text-primary">
                                     Pending approvals
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
@@ -636,7 +640,7 @@ export default function ScholarAppointmentsPage() {
                             <AlertCircle className="h-9 w-9 text-amber-500" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">
+                            <p className="text-3xl font-semibold text-primary">
                                 {statusCounts.Pending}
                             </p>
                         </CardContent>
@@ -660,7 +664,7 @@ export default function ScholarAppointmentsPage() {
                             <Button
                                 type="button"
                                 size="sm"
-                                className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                                className="rounded-xl bg-primary text-white hover:bg-primary/90"
                                 onClick={openCreateDialog}
                             >
                                 Schedule walk-in
@@ -672,21 +676,21 @@ export default function ScholarAppointmentsPage() {
                     <div className="flex flex-col gap-4">
                         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Search queue</Label>
+                                <Label className="text-sm font-medium text-primary">Search queue</Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         placeholder="Search by name, ID, clinic, or note"
                                         value={search}
                                         onChange={(event) => setSearch(event.target.value)}
-                                        className="rounded-xl border-green-200 pl-9"
+                                        className="rounded-xl border-primary/30 pl-9"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Status filter</Label>
+                                <Label className="text-sm font-medium text-primary">Status filter</Label>
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder="All statuses" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -733,7 +737,7 @@ export default function ScholarAppointmentsPage() {
                                     ) : (
                                         filteredAppointments.map((appointment) => (
                                             <TableRow key={appointment.id} className="text-sm">
-                                                <TableCell className="font-medium text-green-700">
+                                                <TableCell className="font-medium text-primary">
                                                     <div className="flex flex-col">
                                                         <span>{appointment.patient.name}</span>
                                                         <span className="text-xs text-muted-foreground">
@@ -774,7 +778,7 @@ export default function ScholarAppointmentsPage() {
                 <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[80vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
                     <form onSubmit={handleCreateSubmit} className="space-y-6">
                         <DialogHeader>
-                            <DialogTitle className="text-xl text-green-700">
+                            <DialogTitle className="text-xl text-primary">
                                 Schedule walk-in appointment
                             </DialogTitle>
                             <DialogDescription className="text-sm text-muted-foreground">
@@ -783,19 +787,19 @@ export default function ScholarAppointmentsPage() {
                         </DialogHeader>
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Find patient</Label>
+                                <Label className="text-sm font-medium text-primary">Find patient</Label>
                                 <Input
                                     placeholder="Search by name, ID, or type"
                                     value={patientSearch}
                                     onChange={(event) => setPatientSearch(event.target.value)}
-                                    className="rounded-xl border-green-200"
+                                    className="rounded-xl border-primary/30"
                                 />
                                 <Select
                                     value={selectedPatientId || undefined}
                                     onValueChange={setSelectedPatientId}
                                     disabled={loadingPatients}
                                 >
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue
                                             placeholder={
                                                 loadingPatients
@@ -834,7 +838,7 @@ export default function ScholarAppointmentsPage() {
                                 </Select>
                                 {selectedPatient ? (
                                     <p className="text-xs text-muted-foreground">
-                                        Scheduling for <span className="font-medium text-green-700">{selectedPatient.name}</span>
+                                        Scheduling for <span className="font-medium text-primary">{selectedPatient.name}</span>
                                         {selectedPatient.identifier
                                             ? ` • ${selectedPatient.identifier}`
                                             : ""} ({selectedPatient.type})
@@ -844,7 +848,7 @@ export default function ScholarAppointmentsPage() {
 
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Clinic</Label>
+                                    <Label className="text-sm font-medium text-primary">Clinic</Label>
                                     <Select
                                         value={createClinicId || undefined}
                                         onValueChange={(value) => {
@@ -856,7 +860,7 @@ export default function ScholarAppointmentsPage() {
                                         }}
                                         disabled={loadingClinics}
                                     >
-                                        <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectTrigger className="rounded-xl border-primary/30">
                                             <SelectValue
                                                 placeholder={
                                                     loadingClinics
@@ -886,7 +890,7 @@ export default function ScholarAppointmentsPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Doctor</Label>
+                                    <Label className="text-sm font-medium text-primary">Doctor</Label>
                                     <Select
                                         value={createDoctorId || undefined}
                                         onValueChange={(value) => {
@@ -897,7 +901,7 @@ export default function ScholarAppointmentsPage() {
                                         }}
                                         disabled={loadingDoctors || !createClinicId}
                                     >
-                                        <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectTrigger className="rounded-xl border-primary/30">
                                             <SelectValue
                                                 placeholder={
                                                     !createClinicId
@@ -934,24 +938,24 @@ export default function ScholarAppointmentsPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Date</Label>
+                                    <Label className="text-sm font-medium text-primary">Date</Label>
                                     <Input
                                         type="date"
                                         value={createDate}
                                         onChange={(event) => setCreateDate(event.target.value)}
                                         min={formatManilaISODate(manilaNow())}
-                                        className="rounded-xl border-green-200"
+                                        className="rounded-xl border-primary/30"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Time</Label>
+                                    <Label className="text-sm font-medium text-primary">Time</Label>
                                     <Select
                                         value={createTimeStart || undefined}
                                         onValueChange={setCreateTimeStart}
                                         disabled={loadingSlots || !createDoctorId || !createDate}
                                     >
-                                        <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectTrigger className="rounded-xl border-primary/30">
                                             <SelectValue
                                                 placeholder={
                                                     !createDoctorId
@@ -983,13 +987,13 @@ export default function ScholarAppointmentsPage() {
                                 </div>
 
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label className="text-sm font-medium text-green-700">Service</Label>
+                                    <Label className="text-sm font-medium text-primary">Service</Label>
                                     <Select
                                         value={createService || undefined}
                                         onValueChange={setCreateService}
                                         disabled={!createDoctorId || availableServices.length === 0}
                                     >
-                                        <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectTrigger className="rounded-xl border-primary/30">
                                             <SelectValue
                                                 placeholder={
                                                     !createDoctorId
@@ -1017,12 +1021,12 @@ export default function ScholarAppointmentsPage() {
                                 </div>
 
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label className="text-sm font-medium text-green-700">Notes</Label>
+                                    <Label className="text-sm font-medium text-primary">Notes</Label>
                                     <Textarea
                                         value={createRemarks}
                                         onChange={(event) => setCreateRemarks(event.target.value)}
                                         placeholder="Optional details for the care team"
-                                        className="min-h-[90px] rounded-xl border-green-200"
+                                        className="min-h-[90px] rounded-xl border-primary/30"
                                     />
                                     <p className="text-xs text-muted-foreground">
                                         Add context such as symptoms reported during the walk-in or follow-up instructions.
@@ -1043,7 +1047,7 @@ export default function ScholarAppointmentsPage() {
                             </Button>
                             <Button
                                 type="submit"
-                                className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                                className="rounded-xl bg-primary text-white hover:bg-primary/90"
                                 disabled={createSubmitting}
                             >
                                 {createSubmitting ? (

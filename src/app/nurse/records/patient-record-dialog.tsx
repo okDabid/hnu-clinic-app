@@ -67,30 +67,30 @@ function RecordDetailsDialogComponent({
             <DialogContent className="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-3xl sm:max-h-none">
                 <div className="space-y-6">
                     <DialogHeader>
-                        <DialogTitle className="text-xl text-green-700">Patient snapshot</DialogTitle>
+                        <DialogTitle className="text-xl text-primary">Patient snapshot</DialogTitle>
                         <DialogDescription className="text-sm text-muted-foreground">
                             Review shared details before updating vitals or logging notes.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="rounded-2xl bg-green-50/70 p-4 text-green-700">
+                    <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
                         <p className="text-lg font-semibold">{record.fullName}</p>
                         <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Patient ID</p>
-                                <p className="font-medium text-green-700">{record.patientId}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
+                                <p className="font-medium text-primary">{record.patientId}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Type</p>
-                                <p className="font-medium text-green-700">{record.patientType}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Type</p>
+                                <p className="font-medium text-primary">{record.patientType}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Date of birth</p>
-                                <p className="font-medium text-green-700">{formatDateOnly(record.date_of_birth)}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Date of birth</p>
+                                <p className="font-medium text-primary">{formatDateOnly(record.date_of_birth)}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Gender</p>
-                                <p className="font-medium text-green-700">{record.gender ?? "—"}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Gender</p>
+                                <p className="font-medium text-primary">{record.gender ?? "—"}</p>
                             </div>
                         </div>
                     </div>
@@ -148,7 +148,7 @@ function RecordDetailsDialogComponent({
                             <Separator />
 
                             <div className="space-y-3 text-sm">
-                                <h4 className="flex items-center gap-2 font-semibold text-green-600">
+                                <h4 className="flex items-center gap-2 font-semibold text-primary">
                                     <Stethoscope className="h-4 w-4" /> Latest appointment
                                 </h4>
                                 {record.latestAppointment?.timestart ? (
@@ -173,7 +173,7 @@ function RecordDetailsDialogComponent({
 
                                 {record.latestAppointment?.consultation ? (
                                     <div className="space-y-1 rounded-md border bg-muted/40 p-3">
-                                        <p className="text-sm font-semibold text-green-600">Consultation Notes</p>
+                                        <p className="text-sm font-semibold text-primary">Consultation Notes</p>
                                         <p>
                                             <strong>Reason:</strong> {record.latestAppointment.consultation.reason_of_visit || "—"}
                                         </p>
@@ -219,7 +219,7 @@ function RecordDetailsDialogComponent({
                                 <Button
                                     type="submit"
                                     disabled={isUpdating}
-                                    className="bg-green-600 text-white hover:bg-green-700"
+                                    className="bg-primary text-white hover:bg-primary/90"
                                 >
                                     {isUpdating ? (
                                         <>
@@ -273,7 +273,7 @@ function RecordDetailsDialogComponent({
                                 <Button
                                     type="submit"
                                     disabled={isSavingNotes || !hasAppointment}
-                                    className="bg-green-600 text-white hover:bg-green-700"
+                                    className="bg-primary text-white hover:bg-primary/90"
                                 >
                                     {isSavingNotes ? (
                                         <>

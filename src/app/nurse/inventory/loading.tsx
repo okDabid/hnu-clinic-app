@@ -22,7 +22,7 @@ export default function NurseInventoryLoading() {
                     <CardContent className="space-y-4 pt-4">
                         <div className="overflow-x-auto">
                             <div className="min-w-full space-y-3">
-                                <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 rounded-2xl bg-green-50/60 p-3 text-sm font-medium text-green-700">
+                                <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 rounded-2xl bg-primary/10/60 p-3 text-sm font-medium text-primary">
                                     {Array.from({ length: 4 }).map((_, index) => (
                                         <Skeleton key={index} className="h-4 w-full" />
                                     ))}

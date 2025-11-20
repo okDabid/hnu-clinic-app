@@ -77,7 +77,7 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
 
 const STATUS_BADGE_CLASSES: Record<AppointmentStatus, string> = {
     Pending: "border-amber-200 bg-amber-50 text-amber-700",
-    Approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    Approved: "border-emerald-200 bg-primary/10 text-primary",
     Moved: "border-sky-200 bg-sky-50 text-sky-700",
     Completed: "border-slate-200 bg-slate-100 text-slate-700",
     Cancelled: "border-rose-200 bg-rose-50 text-rose-700",
@@ -455,7 +455,7 @@ export default function DoctorAppointmentsPage() {
             actions={
                 <Button
                     variant="outline"
-                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
+                    className="rounded-xl border-primary/30 text-primary hover:bg-primary/10"
                     onClick={loadAppointments}
                 >
                     <RefreshCcw className="mr-2 h-4 w-4" /> Refresh list
@@ -464,36 +464,36 @@ export default function DoctorAppointmentsPage() {
         >
             <div className="flex flex-col gap-6">
                 <section className="grid gap-4 md:grid-cols-3">
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">
+                                <CardTitle className="text-base font-semibold text-primary">
                                     Active queue
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                     Pending, approved, and moved appointments
                                 </p>
                             </div>
-                            <Clock3 className="h-9 w-9 text-green-500" />
+                            <Clock3 className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{activeAppointments.length}</p>
+                            <p className="text-3xl font-semibold text-primary">{activeAppointments.length}</p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">
+                                <CardTitle className="text-base font-semibold text-primary">
                                     Today&apos;s visits
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                     Appointments scheduled for today
                                 </p>
                             </div>
-                            <CalendarDays className="h-9 w-9 text-green-500" />
+                            <CalendarDays className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{todayAppointments.length}</p>
+                            <p className="text-3xl font-semibold text-primary">{todayAppointments.length}</p>
                             {nextAppointment ? (
                                 <p className="mt-2 text-xs text-muted-foreground">
                                     Next: {nextAppointment.patientName} at {nextAppointment.time}
@@ -501,20 +501,20 @@ export default function DoctorAppointmentsPage() {
                             ) : null}
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-base font-semibold text-green-700">
+                                <CardTitle className="text-base font-semibold text-primary">
                                     Pending approvals
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                     Requests awaiting confirmation
                                 </p>
                             </div>
-                            <AlertCircle className="h-9 w-9 text-amber-500" />
+                            <AlertCircle className="h-9 w-9 text-primary" />
                         </CardHeader>
                         <CardContent>
-                            <p className="text-3xl font-semibold text-green-700">{statusCounts.Pending}</p>
+                            <p className="text-3xl font-semibold text-primary">{statusCounts.Pending}</p>
                         </CardContent>
                     </Card>
                 </section>
@@ -526,7 +526,7 @@ export default function DoctorAppointmentsPage() {
                     actions={
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500" /> Consultation synced
+                                <span className="h-2 w-2 rounded-full bg-primary/100" /> Consultation synced
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-slate-300" /> Awaiting notes
@@ -538,21 +538,21 @@ export default function DoctorAppointmentsPage() {
                     <div className="flex flex-col gap-4">
                         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Search queue</Label>
+                                <Label className="text-sm font-medium text-primary">Search queue</Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
                                         placeholder="Search by name, clinic, or status"
                                         value={search}
                                         onChange={(event) => setSearch(event.target.value)}
-                                        className="rounded-xl border-green-200 pl-9"
+                                        className="rounded-xl border-primary/30 pl-9"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Status filter</Label>
+                                <Label className="text-sm font-medium text-primary">Status filter</Label>
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="rounded-xl border-green-200">
+                                    <SelectTrigger className="rounded-xl border-primary/30">
                                         <SelectValue placeholder="All statuses" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -618,7 +618,7 @@ export default function DoctorAppointmentsPage() {
 
                                             return (
                                                 <TableRow key={appointment.id} className="text-sm">
-                                                    <TableCell className="font-medium text-green-700">
+                                                    <TableCell className="font-medium text-primary">
                                                         <div className="flex flex-col">
                                                             <span>{appointment.patientName}</span>
                                                             <span className="text-xs text-muted-foreground">
@@ -638,7 +638,7 @@ export default function DoctorAppointmentsPage() {
                                                         <Badge
                                                             variant="outline"
                                                             className={`rounded-full px-2 py-1 text-xs ${appointment.hasConsultation
-                                                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                                    ? "border-emerald-200 bg-primary/10 text-primary"
                                                                     : "border-slate-200 bg-slate-100 text-slate-600"
                                                                 }`}
                                                         >
@@ -651,12 +651,12 @@ export default function DoctorAppointmentsPage() {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    className="rounded-xl text-green-700 hover:bg-green-100"
+                                                                    className="rounded-xl text-primary hover:bg-primary/10"
                                                                 >
                                                                     <MoreHorizontal className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-48 rounded-xl border-green-100">
+                                                            <DropdownMenuContent align="end" className="w-48 rounded-xl border-primary/20">
                                                                 <DropdownMenuItem
                                                                     onClick={() => handleApprove(appointment.id)}
                                                                     disabled={!canApprove}
@@ -731,7 +731,7 @@ export default function DoctorAppointmentsPage() {
             <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
                 <DialogContent className="rounded-3xl sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="text-xl text-green-700">
+                        <DialogTitle className="text-xl text-primary">
                             {actionType === "move" ? "Move appointment" : "Cancel appointment"}
                         </DialogTitle>
                         <DialogDescription className="text-sm text-muted-foreground">
@@ -741,7 +741,7 @@ export default function DoctorAppointmentsPage() {
                         </DialogDescription>
                     </DialogHeader>
                     {selectedAppt ? (
-                        <div className="rounded-2xl bg-green-50/70 p-4 text-sm text-green-700">
+                        <div className="rounded-2xl bg-primary/10 p-4 text-sm text-primary">
                             <p className="font-semibold">{selectedAppt.patientName}</p>
                             <p className="text-xs text-muted-foreground">
                                 {selectedAppt.clinic ?? "Clinic assignment"} • {formatDateOnly(selectedAppt.date)} • {" "}
@@ -752,44 +752,44 @@ export default function DoctorAppointmentsPage() {
                     {actionType === "move" ? (
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div className="space-y-2 sm:col-span-2">
-                                <Label className="text-sm font-medium text-green-700">New date</Label>
+                                <Label className="text-sm font-medium text-primary">New date</Label>
                                 <Input
                                     type="date"
                                     value={newDate}
                                     onChange={(event) => setNewDate(event.target.value)}
-                                    className="rounded-xl border-green-200"
+                                    className="rounded-xl border-primary/30"
                                     disabled={actionSubmitting}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">Start time</Label>
+                                <Label className="text-sm font-medium text-primary">Start time</Label>
                                 <Input
                                     type="time"
                                     value={newTimeStart}
                                     onChange={(event) => setNewTimeStart(event.target.value)}
-                                    className="rounded-xl border-green-200"
+                                    className="rounded-xl border-primary/30"
                                     disabled={actionSubmitting}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-green-700">End time</Label>
+                                <Label className="text-sm font-medium text-primary">End time</Label>
                                 <Input
                                     type="time"
                                     value={newTimeEnd}
                                     onChange={(event) => setNewTimeEnd(event.target.value)}
-                                    className="rounded-xl border-green-200"
+                                    className="rounded-xl border-primary/30"
                                     disabled={actionSubmitting}
                                 />
                             </div>
                         </div>
                     ) : null}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium text-green-700">Reason</Label>
+                        <Label className="text-sm font-medium text-primary">Reason</Label>
                         <Input
                             placeholder={actionType === "move" ? "Share context for the new schedule" : "Explain the cancellation"}
                             value={reason}
                             onChange={(event) => setReason(event.target.value)}
-                            className="rounded-xl border-green-200"
+                            className="rounded-xl border-primary/30"
                             disabled={actionSubmitting}
                         />
                     </div>
@@ -804,7 +804,7 @@ export default function DoctorAppointmentsPage() {
                             Close
                         </Button>
                         <Button
-                            className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                            className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                             onClick={handleActionSubmit}
                             disabled={actionSubmitting}
                         >

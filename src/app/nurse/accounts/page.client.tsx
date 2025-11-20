@@ -1202,7 +1202,7 @@ export function NurseAccountsPageClient({
                                     />
                                     <Button
                                         type="submit"
-                                        className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading ? (
@@ -1221,9 +1221,9 @@ export function NurseAccountsPageClient({
 
 
                 {/* Create User */}
-                <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
+                <Card className="rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b">
-                        <CardTitle className="text-xl sm:text-2xl font-bold text-green-700">
+                        <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
                             Create New User
                         </CardTitle>
                     </CardHeader>
@@ -1339,7 +1339,7 @@ export function NurseAccountsPageClient({
                             {/* Submit */}
                             <Button
                                 type="submit"
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-white hover:bg-primary/90"
                                 disabled={loading}
                             >
                                 {loading && <Loader2 className="h-5 w-5 animate-spin" />}
@@ -1355,7 +1355,7 @@ export function NurseAccountsPageClient({
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 {pendingPayload ? (
-                                    <div className="rounded-2xl border border-green-100 bg-green-50/60 p-4 text-sm text-gray-700">
+                                    <div className="rounded-2xl border border-primary/20 bg-primary/10/60 p-4 text-sm text-gray-700">
                                         <dl className="space-y-2">
                                             <div className="flex items-center justify-between gap-4">
                                                 <dt className="text-gray-500">Role</dt>
@@ -1413,7 +1413,7 @@ export function NurseAccountsPageClient({
                                         disabled={loading || !pendingPayload}
                                         onClick={handleConfirmCreate}
                                         className={cn(
-                                            "bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-200 focus:ring-offset-2",
+                                            "bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
                                             loading && "pointer-events-none opacity-80"
                                         )}
                                     >
@@ -1429,9 +1429,9 @@ export function NurseAccountsPageClient({
                             </AlertDialogContent>
                         </AlertDialog>
                         <Dialog open={showCreateSuccess} onOpenChange={handleCreateSuccessChange}>
-                            <DialogContent className="w-[95%] max-w-md rounded-3xl border border-green-100/80 bg-white/95">
+                            <DialogContent className="w-[95%] max-w-md rounded-3xl border border-primary/20 bg-white/95">
                                 <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2 text-green-700">
+                                    <DialogTitle className="flex items-center gap-2 text-primary">
                                         <CheckCircle2 className="h-5 w-5" /> Account created
                                     </DialogTitle>
                                     <DialogDescription>
@@ -1440,7 +1440,7 @@ export function NurseAccountsPageClient({
                                     </DialogDescription>
                                 </DialogHeader>
                                 {createdCredentials ? (
-                                    <div className="rounded-2xl border border-green-100 bg-green-50/70 p-4 text-sm text-gray-700">
+                                    <div className="rounded-2xl border border-primary/20 bg-primary/10/70 p-4 text-sm text-gray-700">
                                         <div className="flex items-center justify-between gap-4">
                                             <span className="text-gray-500">User ID</span>
                                             <span className="font-semibold text-gray-900">
@@ -1465,7 +1465,7 @@ export function NurseAccountsPageClient({
                                 <DialogFooter>
                                     <Button
                                         type="button"
-                                        className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                                        className="rounded-xl bg-primary text-white hover:bg-primary/90"
                                         onClick={() => handleCreateSuccessChange(false)}
                                     >
                                         Done
@@ -1478,11 +1478,11 @@ export function NurseAccountsPageClient({
 
 
                 {/* Manage Users */}
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/90 shadow-sm transition hover:-translate-y-px hover:shadow-md">
+                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/90 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="flex flex-col gap-4 border-b bg-linear-to-r">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-1">
-                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-700">
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
                                     Manage Existing Users
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
@@ -1586,7 +1586,7 @@ export function NurseAccountsPageClient({
                                                                 <span className="font-medium text-gray-900">{user.role}</span>
                                                                 {user.role === "DOCTOR" && (
                                                                     user.specialization ? (
-                                                                        <span className="text-xs font-medium text-green-700">
+                                                                        <span className="text-xs font-medium text-primary">
                                                                             {user.specialization}
                                                                         </span>
                                                                     ) : (
@@ -1600,8 +1600,8 @@ export function NurseAccountsPageClient({
                                                                         className={cn(
                                                                             "text-xs font-medium",
                                                                             user.patientType === "student"
-                                                                                ? "text-green-700"
-                                                                                : "text-green-700"
+                                                                                ? "text-primary"
+                                                                                : "text-primary"
                                                                         )}
                                                                     >
                                                                         {user.patientType === "student" ? "Student" : "Employee"}
@@ -1618,7 +1618,7 @@ export function NurseAccountsPageClient({
                                                             <Badge
                                                                 variant="outline"
                                                                 className={`px-3 py-1 ${user.status === "Active"
-                                                                    ? "bg-green-100 text-green-700 border-green-200"
+                                                                    ? "bg-primary/15 text-primary border-primary/30"
                                                                     : "bg-red-100 text-red-700 border-red-200"
                                                                     }`}
                                                             >
@@ -1665,7 +1665,7 @@ export function NurseAccountsPageClient({
                                                                             "gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors",
                                                                             user.status === "Active"
                                                                                 ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-                                                                                : "border-green-200 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
+                                                                                : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15 text-primary"
                                                                         )}
                                                                         disabled={isStatusUpdating}
                                                                     >
@@ -1710,7 +1710,7 @@ export function NurseAccountsPageClient({
                                                                                 "text-white focus:outline-none focus:ring-2 focus:ring-offset-2",
                                                                                 user.status === "Active"
                                                                                     ? "bg-red-600 hover:bg-red-700 focus:ring-red-200"
-                                                                                    : "bg-green-600 hover:bg-green-700 focus:ring-green-200"
+                                                                                    : "bg-primary hover:bg-primary/90 focus:ring-primary"
                                                                             )}
                                                                             disabled={isStatusUpdating}
                                                                             onClick={() => handleToggle(user.accountId, user.status)}
