@@ -60,6 +60,20 @@ async function ensureUniqueEmployeeId(value: string): Promise<string> {
     return id;
 }
 
+async function existingStudentWithRole(studentId: string, role: Role) {
+    return prisma.student.findFirst({
+        where: { student_id: studentId, user: { role } },
+        select: { stud_user_id: true },
+    });
+}
+
+async function existingEmployeeWithRole(employeeId: string, role: Role) {
+    return prisma.employee.findFirst({
+        where: { employee_id: employeeId, user: { role } },
+        select: { emp_id: true },
+    });
+}
+
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
@@ -124,6 +138,13 @@ export async function POST(req: Request) {
 
         // Create profile based on role
         if (roleEnum === Role.PATIENT && payload.patientType === "student") {
+            const duplicateStudent = await existingStudentWithRole(payload.student_id, Role.PATIENT);
+            if (duplicateStudent) {
+                return NextResponse.json(
+                    { error: "A patient account with this student ID already exists." },
+                    { status: 400 }
+                );
+            }
             const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
@@ -142,6 +163,13 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
+            const duplicateEmployee = await existingEmployeeWithRole(payload.employee_id, Role.PATIENT);
+            if (duplicateEmployee) {
+                return NextResponse.json(
+                    { error: "A patient account with this employee ID already exists." },
+                    { status: 400 }
+                );
+            }
             const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
@@ -153,6 +181,14 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
+            const duplicateEmployee = await existingEmployeeWithRole(payload.employee_id, roleEnum);
+            if (duplicateEmployee) {
+                const roleLabel = roleEnum === Role.NURSE ? "nurse" : "doctor";
+                return NextResponse.json(
+                    { error: `A ${roleLabel} account with this employee ID already exists.` },
+                    { status: 400 }
+                );
+            }
             const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
@@ -164,6 +200,13 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.SCHOLAR) {
+            const duplicateScholar = await existingStudentWithRole(payload.school_id, Role.SCHOLAR);
+            if (duplicateScholar) {
+                return NextResponse.json(
+                    { error: "A scholar account with this school ID already exists." },
+                    { status: 400 }
+                );
+            }
             const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
