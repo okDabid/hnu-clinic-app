@@ -71,6 +71,7 @@ function buildEmployeeUpdateInput(
     data.emergencyco_name = stringField("emergencyco_name");
     data.emergencyco_num = stringField("emergencyco_num");
     data.emergencyco_relation = stringField("emergencyco_relation");
+    data.department_office = stringField("department_office");
 
     if (isGender(raw.gender)) data.gender = raw.gender;
 
@@ -105,7 +106,7 @@ export async function GET() {
             username: user.username,
             role: user.role,
             status: user.status,
-            specialization: user.specialization ?? null,
+            specialization: user.employee?.specialization ?? null,
             profile: user.employee ?? null,
         });
     } catch (err) {

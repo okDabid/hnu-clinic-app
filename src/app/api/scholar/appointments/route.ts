@@ -316,7 +316,7 @@ async function postHandler(req: Request) {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: doctor_user_id },
-            select: { role: true, specialization: true },
+            select: { role: true, employee: { select: { specialization: true } } },
         });
 
         if (!doctor || doctor.role !== Role.DOCTOR) {
@@ -334,7 +334,7 @@ async function postHandler(req: Request) {
         const now = manilaNow();
         const earliestBookingStart = computeDoctorEarliestBookingStart(
             now,
-            doctor.specialization,
+            doctor.employee?.specialization,
             DEFAULT_MIN_BOOKING_LEAD_DAYS,
         );
 

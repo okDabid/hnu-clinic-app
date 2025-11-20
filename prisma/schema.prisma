@@ -23,7 +23,6 @@ model Users {
   password            String
   status              AccountStatus         @default(Active)
   role                Role
-  specialization      DoctorSpecialization?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   appointmentsCreated Appointment[]         @relation("CreatedAppointments")
@@ -78,6 +77,7 @@ model Employee {
   lname                String
   date_of_birth        DateTime?
   gender               Gender?
+  department_office    String?
   contactno            String?       @unique
   address              String?
   allergies            String?
@@ -88,6 +88,7 @@ model Employee {
   status               AccountStatus @default(Active)
   bloodtype            BloodType?
   email                String?       @unique
+  specialization       DoctorSpecialization?
   user                 Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 

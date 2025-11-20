@@ -123,27 +123,20 @@ export async function POST(req: Request) {
             emergencyco_relation: payload.emergencyco_relation ?? null,
             email: payload.email?.trim() || null,
             contactno: payload.phone?.trim() || null,
+            department_office: payload.department_office?.trim() || null,
         };
 
         const { finalUsername } = await prisma.$transaction(async (tx) => {
             const finalUsername =
                 isStudentPatient || isScholar ? username : await ensureUniqueUsername(tx, username);
 
-            // Create the user record, including specialization when provided
+            // Create the user record
             const newUser = await tx.users.create({
                 data: {
                     username: finalUsername,
                     password: hashedPassword,
                     role: roleEnum,
                     status: AccountStatus.Active,
-                    specialization:
-                        roleEnum === Role.DOCTOR
-                            ? payload.specialization === "Physician"
-                                ? "Physician"
-                                : payload.specialization === "Dentist"
-                                    ? "Dentist"
-                                    : null
-                            : null,
                 },
             });
 
@@ -183,6 +176,14 @@ export async function POST(req: Request) {
                     data: {
                         user_id: newUser.user_id,
                         employee_id: uniqueEmployeeId,
+                        specialization:
+                            roleEnum === Role.DOCTOR
+                                ? payload.specialization === "Physician"
+                                    ? "Physician"
+                                    : payload.specialization === "Dentist"
+                                        ? "Dentist"
+                                        : null
+                                : null,
                         ...sharedProfileData,
                     },
                 });
@@ -272,7 +273,7 @@ export async function GET() {
                 email: u.student?.email ?? u.employee?.email ?? null,
                 contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,
-                specialization: u.specialization,
+                specialization: u.employee?.specialization ?? null,
                 patientType: u.role === Role.PATIENT ? (u.student ? "student" : "employee") : null,
                 isWorkingScholar: u.student?.is_working_scholar ?? false,
             };

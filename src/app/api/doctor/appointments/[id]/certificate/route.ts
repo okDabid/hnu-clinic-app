@@ -666,7 +666,6 @@ export async function GET(
           select: {
             user_id: true,
             username: true,
-            specialization: true,
             employee: {
               select: {
                 fname: true,
@@ -674,6 +673,7 @@ export async function GET(
                 lname: true,
                 employee_id: true,
                 contactno: true,
+                specialization: true,
               },
             },
           },
@@ -748,7 +748,7 @@ export async function GET(
       );
     }
 
-    const specialization = appointment.doctor.specialization;
+    const specialization = appointment.doctor.employee?.specialization;
     if (
       !specialization ||
       ![DoctorSpecialization.Physician, DoctorSpecialization.Dentist].includes(

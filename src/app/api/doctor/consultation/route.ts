@@ -78,6 +78,7 @@ export async function GET(req: Request) {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: session.user.id },
+            include: { employee: { select: { specialization: true } } },
         });
 
         if (!doctor || doctor.role !== Role.DOCTOR) {
@@ -218,7 +219,7 @@ async function postHandler(req: Request) {
         }
 
         const allowedDays = new Set<number>(
-            doctor.specialization === DoctorSpecialization.Dentist
+            doctor.employee?.specialization === DoctorSpecialization.Dentist
                 ? [1, 2, 3, 4, 5, 6]
                 : [1, 2, 3, 4, 5]
         );

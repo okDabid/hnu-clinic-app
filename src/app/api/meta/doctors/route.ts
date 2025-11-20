@@ -40,6 +40,7 @@ async function handler(req: Request) {
                     employee: {
                         is: {
                             status: AccountStatus.Active,
+                            ...(specializationFilter && { specialization: specializationFilter }),
                         },
                     },
                     doctorAvail: {
@@ -47,13 +48,11 @@ async function handler(req: Request) {
                             clinic_id,
                         },
                     },
-                    ...(specializationFilter && { specialization: specializationFilter }),
                 },
                 select: {
                     user_id: true,
                     username: true,
-                    specialization: true,
-                    employee: { select: { fname: true, lname: true } },
+                    employee: { select: { fname: true, lname: true, specialization: true } },
                 },
                 orderBy: { username: "asc" },
             })
@@ -66,7 +65,7 @@ async function handler(req: Request) {
                 d.employee?.fname && d.employee?.lname
                     ? `${d.employee.fname} ${d.employee.lname}`
                     : d.username,
-            specialization: d.specialization ?? null, // 👈 send to frontend
+            specialization: d.employee?.specialization ?? null, // 👈 send to frontend
         }));
 
         return NextResponse.json(shaped);

@@ -155,7 +155,7 @@ async function postHandler(req: Request) {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: doctor_user_id },
-            select: { role: true, specialization: true },
+            select: { role: true, employee: { select: { specialization: true } } },
         });
         if (!doctor || doctor.role !== Role.DOCTOR)
             return NextResponse.json({ message: "Doctor not found" }, { status: 404 });
@@ -169,7 +169,7 @@ async function postHandler(req: Request) {
         const now = manilaNow();
         const earliestBookingStart = computeDoctorEarliestBookingStart(
             now,
-            doctor.specialization,
+            doctor.employee?.specialization,
             DEFAULT_MIN_BOOKING_LEAD_DAYS,
         );
 
@@ -316,7 +316,7 @@ async function patchHandler(req: Request) {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: appointment.doctor_user_id },
-            select: { specialization: true },
+            select: { employee: { select: { specialization: true } } },
         });
 
         if (!doctor) {
@@ -346,7 +346,7 @@ async function patchHandler(req: Request) {
         const appointment_timeend = buildManilaDate(date, time_end);
         const earliestBookingStart = computeDoctorEarliestBookingStart(
             now,
-            doctor.specialization,
+            doctor.employee?.specialization,
             DEFAULT_MIN_BOOKING_LEAD_DAYS,
         );
 
