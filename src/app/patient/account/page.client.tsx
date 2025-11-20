@@ -314,8 +314,8 @@ export function PatientAccountPageClient({
         profile?.emergencyco_relation?.trim()
     );
 
-    const summaryItems: AccountSummaryItem[] = profile
-        ? [
+    const summaryItems = profile
+        ? ([
             {
                 icon: profile.status === "Active" ? ShieldCheck : ShieldAlert,
                 label: "Account status",
@@ -352,7 +352,7 @@ export function PatientAccountPageClient({
                     : "Provide an emergency contact name, number, and relationship.",
                 accent: emergencyReady ? "teal" : "amber",
             },
-        ]
+        ] as unknown as AccountSummaryItem[])
         : [];
 
     const currentYearLevelOptions = getYearLevelOptions(
