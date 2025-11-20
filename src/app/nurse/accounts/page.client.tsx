@@ -371,7 +371,9 @@ export function NurseAccountsPageClient({
                 (u.patientType ? u.patientType.includes(lowerQuery) : false) ||
                 (lowerQuery.includes("scholar") && u.isWorkingScholar);
 
-            const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
+            const isScholarFilteredPatient =
+                roleFilter === "SCHOLAR" && u.role === "PATIENT" && u.patientType === "student" && u.isWorkingScholar;
+            const matchesRole = roleFilter === "ALL" || u.role === roleFilter || isScholarFilteredPatient;
             const matchesStatus = statusFilter === "ALL" || u.status === statusFilter;
 
             return matchesQuery && matchesRole && matchesStatus;
@@ -1528,7 +1530,7 @@ export function NurseAccountsPageClient({
                                     <SelectItem value="DOCTOR">Doctor</SelectItem>
                                     <SelectItem value="NURSE">Nurse</SelectItem>
                                     <SelectItem value="PATIENT">Patient</SelectItem>
-                                    <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
+                                    <SelectItem value="SCHOLAR">Working Scholar (incl. student access)</SelectItem>
                                 </SelectContent>
                             </Select>
                             <Select
@@ -1602,9 +1604,15 @@ export function NurseAccountsPageClient({
                                                                     )
                                                                 )}
                                                                 {user.role === "PATIENT" && user.patientType ? (
-                                                                    <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700">
-                                                                        <UserRound className="h-3 w-3" />
-                                                                        {user.patientType === "student" ? "Student patient" : "Employee patient"}
+                                                                    <span
+                                                                        className={cn(
+                                                                            "mt-1 inline-flex w-fit items-center rounded-full border px-3 py-1 text-[11px]",
+                                                                            user.patientType === "student"
+                                                                                ? "border-emerald-200 bg-emerald-50 font-bold tracking-wide text-emerald-700"
+                                                                                : "border-slate-200 bg-slate-50 font-medium text-slate-700"
+                                                                        )}
+                                                                    >
+                                                                        {user.patientType === "student" ? "STUDENT" : "Employee patient"}
                                                                     </span>
                                                                 ) : null}
                                                             </div>
@@ -1630,9 +1638,9 @@ export function NurseAccountsPageClient({
                                                                 <div className="flex flex-col items-center justify-center gap-2">
                                                                     <Badge
                                                                         variant="secondary"
-                                                                        className="rounded-full bg-emerald-50 text-emerald-700"
+                                                                        className="rounded-full border border-emerald-200 bg-emerald-50 font-bold tracking-wide text-emerald-700"
                                                                     >
-                                                                        Student patient
+                                                                        STUDENT
                                                                     </Badge>
                                                                     <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-2">
                                                                         <Switch
