@@ -39,10 +39,18 @@ export async function GET() {
 
         const scholar = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            select: { user_id: true, role: true },
+            select: {
+                user_id: true,
+                role: true,
+                student: { select: { is_working_scholar: true } },
+            },
         });
 
-        if (!scholar || scholar.role !== Role.SCHOLAR) {
+        const hasScholarAccess =
+            scholar?.role === Role.SCHOLAR ||
+            (scholar?.role === Role.PATIENT && scholar.student?.is_working_scholar);
+
+        if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
@@ -84,10 +92,18 @@ export async function POST(req: Request) {
 
         const scholar = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            select: { user_id: true, role: true },
+            select: {
+                user_id: true,
+                role: true,
+                student: { select: { is_working_scholar: true } },
+            },
         });
 
-        if (!scholar || scholar.role !== Role.SCHOLAR) {
+        const hasScholarAccess =
+            scholar?.role === Role.SCHOLAR ||
+            (scholar?.role === Role.PATIENT && scholar.student?.is_working_scholar);
+
+        if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
