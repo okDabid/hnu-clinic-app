@@ -1474,64 +1474,82 @@ export function NurseAccountsPageClient({
 
 
                 {/* Manage Users */}
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
-                    <CardHeader className="flex flex-col gap-4">
-                        <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                            <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
-                                Manage Existing Users
-                            </CardTitle>
-                            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-end ml-auto">
-                                <div className="relative w-full md:w-60 lg:w-72">
-                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        placeholder="Search by ID, role, or name..."
-                                        value={search}
-                                        onChange={(e) => {
-                                            setSearch(e.target.value);
-                                            setCurrentPage(1);
-                                        }}
-                                        className="pl-8"
-                                        disabled={loading || isRefreshingUsers}
-                                    />
-                                </div>
-                                <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                                        <Select
-                                            value={roleFilter}
-                                            onValueChange={(val) => setRoleFilter(val as RoleFilterValue)}
-                                        >
-                                            <SelectTrigger className="h-10 border-green-200">
-                                                <SelectValue placeholder="All roles" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="ALL">All roles</SelectItem>
-                                                <SelectItem value="DOCTOR">Doctor</SelectItem>
-                                                <SelectItem value="NURSE">Nurse</SelectItem>
-                                                <SelectItem value="PATIENT">Patient</SelectItem>
-                                                <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <Select
-                                            value={statusFilter}
-                                            onValueChange={(val) => setStatusFilter(val as StatusFilterValue)}
-                                        >
-                                            <SelectTrigger className="h-10 border-green-200">
-                                                <SelectValue placeholder="All statuses" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="ALL">All statuses</SelectItem>
-                                                <SelectItem value="Active">Active</SelectItem>
-                                                <SelectItem value="Inactive">Inactive</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                </div>
+                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/90 shadow-sm transition hover:-translate-y-px hover:shadow-md">
+                    <CardHeader className="flex flex-col gap-4 border-b bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/80">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="space-y-1">
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-green-700">
+                                    Manage Existing Users
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    Review current accounts, filter by role or status, and grant working scholar access to student patients.
+                                </p>
                             </div>
+                            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-medium text-emerald-800">
+                                <span className="rounded-full bg-emerald-100 px-3 py-1 shadow-xs">
+                                    {filteredUsers.length} showing
+                                </span>
+                                <span className="rounded-full bg-amber-50 px-3 py-1 shadow-xs">
+                                    {inactiveAccounts} inactive
+                                </span>
+                            </div>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-3">
+                            <div className="relative">
+                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                                <Input
+                                    placeholder="Search by ID, role, or name..."
+                                    value={search}
+                                    onChange={(e) => {
+                                        setSearch(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="pl-8"
+                                    disabled={loading || isRefreshingUsers}
+                                />
+                            </div>
+                            <Select
+                                value={roleFilter}
+                                onValueChange={(val) => setRoleFilter(val as RoleFilterValue)}
+                            >
+                                <SelectTrigger className="h-10 border-green-200">
+                                    <SelectValue placeholder="All roles" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">All roles</SelectItem>
+                                    <SelectItem value="DOCTOR">Doctor</SelectItem>
+                                    <SelectItem value="NURSE">Nurse</SelectItem>
+                                    <SelectItem value="PATIENT">Patient</SelectItem>
+                                    <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select
+                                value={statusFilter}
+                                onValueChange={(val) => setStatusFilter(val as StatusFilterValue)}
+                            >
+                                <SelectTrigger className="h-10 border-green-200">
+                                    <SelectValue placeholder="All statuses" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">All statuses</SelectItem>
+                                    <SelectItem value="Active">Active</SelectItem>
+                                    <SelectItem value="Inactive">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </CardHeader>
 
                     <CardContent className="flex-1 flex flex-col">
+                        <div className="flex flex-wrap items-center gap-3 py-3 text-xs sm:text-sm text-muted-foreground">
+                            <span className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">
+                                <ShieldCheck className="h-4 w-4" />
+                                Student patients can be granted scholar access below.
+                            </span>
+                            <span className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1">
+                                <Loader2 className={cn("h-4 w-4", isRefreshingUsers ? "animate-spin" : "")} />
+                                {isRefreshingUsers ? "Refreshing list…" : "Updates apply instantly"}
+                            </span>
+                        </div>
                         <div className="overflow-x-auto w-full">
                             <Table className="min-w-full text-sm">
                                 <TableHeader>
@@ -1559,8 +1577,8 @@ export function NurseAccountsPageClient({
                                             .map((user) => {
                                                 const isStatusUpdating = pendingStatusIds.includes(user.accountId);
                                                 return (
-                                                    <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-green-50 transition">
-                                                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{user.user_id}</TableCell>
+                                                    <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-emerald-50/60 transition">
+                                                        <TableCell className="whitespace-nowrap text-xs sm:text-sm font-semibold text-emerald-900">{user.user_id}</TableCell>
                                                         <TableCell className="whitespace-nowrap">
                                                             <div className="flex flex-col">
                                                                 <span className="font-medium text-gray-900">{user.role}</span>
@@ -1577,7 +1595,17 @@ export function NurseAccountsPageClient({
                                                                 )}
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell>{user.fullName}</TableCell>
+                                                        <TableCell>
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="font-semibold text-gray-900">{user.fullName}</span>
+                                                                {user.patientType ? (
+                                                                    <span className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700">
+                                                                        <UserRound className="h-3 w-3" />
+                                                                        {user.patientType === "student" ? "Student patient" : "Employee patient"}
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                        </TableCell>
                                                         <TableCell>
                                                             <Badge
                                                                 variant="outline"
@@ -1591,23 +1619,25 @@ export function NurseAccountsPageClient({
                                                         </TableCell>
                                                         <TableCell>
                                                             {user.role === "PATIENT" && user.patientType === "student" ? (
-                                                                <div className="flex items-center justify-center gap-3">
+                                                                <div className="flex flex-col items-center justify-center gap-2">
                                                                     <Badge
                                                                         variant="secondary"
                                                                         className="rounded-full bg-emerald-50 text-emerald-700"
                                                                     >
                                                                         Student patient
                                                                     </Badge>
-                                                                    <div className="flex items-center gap-2">
+                                                                    <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-2">
                                                                         <Switch
+                                                                            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                                                                             checked={user.isWorkingScholar}
                                                                             onCheckedChange={() => handleWorkingScholarToggle(user)}
                                                                             disabled={pendingScholarIds.includes(user.accountId)}
                                                                             aria-label="Toggle working scholar access"
                                                                         />
-                                                                        <span className="text-xs font-semibold text-gray-700">
-                                                                            Working scholar
-                                                                        </span>
+                                                                        <div className="flex flex-col leading-tight">
+                                                                            <span className="text-xs font-semibold text-emerald-900">Working scholar access</span>
+                                                                            <span className="text-[11px] text-slate-600">Allows scholar portal sign-in</span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ) : user.role === "SCHOLAR" ? (
@@ -1704,26 +1734,26 @@ export function NurseAccountsPageClient({
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-between items-center mt-4 pt-4 border-t text-sm sm:text-base">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                            >
-                                Previous
-                            </Button>
-                            <span className="text-gray-600">
-                                Page {currentPage} of {Math.ceil(filteredUsers.length / 8) || 1}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredUsers.length / 8)))}
-                                disabled={currentPage === Math.ceil(filteredUsers.length / 8) || filteredUsers.length === 0}
-                            >
-                                Next
-                            </Button>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4 pt-4 border-t text-sm sm:text-base">
+                            <span className="text-muted-foreground">Page {currentPage} of {Math.ceil(filteredUsers.length / 8) || 1}</span>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredUsers.length / 8)))}
+                                    disabled={currentPage === Math.ceil(filteredUsers.length / 8) || filteredUsers.length === 0}
+                                >
+                                    Next
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
