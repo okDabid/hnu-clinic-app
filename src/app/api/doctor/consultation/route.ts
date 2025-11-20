@@ -160,6 +160,7 @@ async function postHandler(req: Request) {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: session.user.id },
+            include: { employee: { select: { specialization: true } } },
         });
 
         if (!doctor || doctor.role !== Role.DOCTOR) {
@@ -282,8 +283,8 @@ async function postHandler(req: Request) {
         const rangeEnd = lastGeneratedDate
             ? endOfManilaDay(lastGeneratedDate)
             : endOfManilaDay(
-                  formatManilaISODate(new Date(endExclusive.getTime() - DAY_IN_MS))
-              );
+                formatManilaISODate(new Date(endExclusive.getTime() - DAY_IN_MS))
+            );
 
         const existingForYear = await prisma.doctorAvailability.count({
             where: {
@@ -371,9 +372,8 @@ async function postHandler(req: Request) {
             formatManilaISODate(new Date(endExclusive.getTime() - DAY_IN_MS));
 
         return NextResponse.json({
-            message: `Duty hours generated for ${generatedDates.length} day${
-                generatedDates.length === 1 ? "" : "s"
-            } (${firstDay} to ${lastDay}).`,
+            message: `Duty hours generated for ${generatedDates.length} day${generatedDates.length === 1 ? "" : "s"
+                } (${firstDay} to ${lastDay}).`,
             createdCount: generatedDates.length,
         });
     } catch (err) {

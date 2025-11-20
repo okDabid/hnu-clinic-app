@@ -18,25 +18,25 @@ model Clinic {
 }
 
 model Users {
-  user_id             String                @id @unique @default(dbgenerated("concat('USER_', (floor((random() * (1000000)::double precision)))::integer)"))
-  username            String                @unique
+  user_id             String               @id @unique @default(dbgenerated("concat('USER_', (floor((random() * (1000000)::double precision)))::integer)"))
+  username            String               @unique
   password            String
-  status              AccountStatus         @default(Active)
+  status              AccountStatus        @default(Active)
   role                Role
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  appointmentsCreated Appointment[]         @relation("CreatedAppointments")
-  appointmentsDoctor  Appointment[]         @relation("DoctorAppointments")
-  appointmentsPatient Appointment[]         @relation("PatientAppointments")
-  consultationsDoctor Consultation[]        @relation("ConsultationDoctor")
-  consultationsNurse  Consultation[]        @relation("ConsultationNurse")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  appointmentsCreated Appointment[]        @relation("CreatedAppointments")
+  appointmentsDoctor  Appointment[]        @relation("DoctorAppointments")
+  appointmentsPatient Appointment[]        @relation("PatientAppointments")
+  consultationsDoctor Consultation[]       @relation("ConsultationDoctor")
+  consultationsNurse  Consultation[]       @relation("ConsultationNurse")
   doctorAvail         DoctorAvailability[]
   employee            Employee?
-  medcertIssued       MedCert[]             @relation("IssuedCertificates")
-  medcertPatient      MedCert[]             @relation("PatientCertificates")
+  medcertIssued       MedCert[]            @relation("IssuedCertificates")
+  medcertPatient      MedCert[]            @relation("PatientCertificates")
   passwordResetTokens PasswordResetToken[]
   student             Student?
-  scholarDispenses    MedDispense[]         @relation("ScholarDispenses")
+  scholarDispenses    MedDispense[]        @relation("ScholarDispenses")
 
   @@index([role, status])
   @@index([username])
@@ -69,27 +69,27 @@ model Student {
 }
 
 model Employee {
-  emp_id               String        @id @default(dbgenerated("concat('EMP_', (floor((random() * (1000000)::double precision)))::integer)"))
-  user_id              String        @unique
-  employee_id          String        @unique
+  emp_id               String                @id @default(dbgenerated("concat('EMP_', (floor((random() * (1000000)::double precision)))::integer)"))
+  user_id              String                @unique
+  employee_id          String                @unique
   fname                String
   mname                String?
   lname                String
   date_of_birth        DateTime?
   gender               Gender?
   department_office    String?
-  contactno            String?       @unique
+  contactno            String?               @unique
   address              String?
   allergies            String?
   medical_cond         String?
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?
-  status               AccountStatus @default(Active)
+  status               AccountStatus         @default(Active)
   bloodtype            BloodType?
-  email                String?       @unique
+  email                String?               @unique
   specialization       DoctorSpecialization?
-  user                 Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  user                 Users                 @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model MedInventory {
