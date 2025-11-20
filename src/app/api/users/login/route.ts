@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { ipKey, withRateLimit } from "@/lib/rate-limit";
 
-const baseSelect = {
+const studentSelect = {
     fname: true,
     lname: true,
     user: {
@@ -14,10 +14,19 @@ const baseSelect = {
             password: true,
         },
     },
-} as const;
+} satisfies Prisma.StudentSelect;
 
-const studentSelect = Prisma.validator<Prisma.StudentSelect>()(baseSelect);
-const employeeSelect = Prisma.validator<Prisma.EmployeeSelect>()(baseSelect);
+const employeeSelect = {
+    fname: true,
+    lname: true,
+    user: {
+        select: {
+            user_id: true,
+            role: true,
+            password: true,
+        },
+    },
+} satisfies Prisma.EmployeeSelect;
 
 type MinimalUserRelation =
     | Prisma.StudentGetPayload<{ select: typeof studentSelect }>
