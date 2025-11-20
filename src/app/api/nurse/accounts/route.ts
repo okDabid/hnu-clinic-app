@@ -42,15 +42,6 @@ async function ensureUniqueUsername(base: string): Promise<string> {
     return candidate;
 }
 
-async function ensureUniqueStudentId(value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await prisma.student.findUnique({ where: { student_id: id } })) {
-        id = `${value}-${n++}`;
-    }
-    return id;
-}
-
 async function ensureUniqueEmployeeId(value: string): Promise<string> {
     let id = value;
     let n = 1;
@@ -124,7 +115,14 @@ export async function POST(req: Request) {
 
         // Create profile based on role
         if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
+            const existingStudent = await prisma.student.findUnique({ where: { student_id: payload.student_id } });
+            if (existingStudent) {
+                return NextResponse.json(
+                    { error: "Student ID already exists. Please use a unique value." },
+                    { status: 400 }
+                );
+            }
+
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -132,7 +130,7 @@ export async function POST(req: Request) {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
+                    student_id: payload.student_id,
                     department,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
@@ -164,7 +162,14 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.SCHOLAR) {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
+            const existingStudent = await prisma.student.findUnique({ where: { student_id: payload.school_id } });
+            if (existingStudent) {
+                return NextResponse.json(
+                    { error: "Student ID already exists. Please use a unique value." },
+                    { status: 400 }
+                );
+            }
+
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -172,7 +177,7 @@ export async function POST(req: Request) {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
+                    student_id: payload.school_id,
                     department,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
