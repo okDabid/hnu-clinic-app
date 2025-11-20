@@ -60,6 +60,7 @@ model Student {
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?
+  is_working_scholar   Boolean       @default(false)
   status               AccountStatus @default(Active)
   department           Department?
   year_level           YearLevel?

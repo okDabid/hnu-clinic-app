@@ -33,28 +33,19 @@ const bloodTypeEnumMap: Record<string, string> = {
 };
 
 // ---------------- UNIQUE ID HELPERS ----------------
-async function ensureUniqueUsername(base: string): Promise<string> {
+async function ensureUniqueUsername(client: Prisma.TransactionClient, base: string): Promise<string> {
     let candidate = base;
     let n = 1;
-    while (await prisma.users.findUnique({ where: { username: candidate } })) {
+    while (await client.users.findUnique({ where: { username: candidate } })) {
         candidate = `${base}-${n++}`;
     }
     return candidate;
 }
 
-async function ensureUniqueStudentId(value: string): Promise<string> {
+async function ensureUniqueEmployeeId(client: Prisma.TransactionClient, value: string): Promise<string> {
     let id = value;
     let n = 1;
-    while (await prisma.student.findUnique({ where: { student_id: id } })) {
-        id = `${value}-${n++}`;
-    }
-    return id;
-}
-
-async function ensureUniqueEmployeeId(value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await prisma.employee.findUnique({ where: { employee_id: id } })) {
+    while (await client.employee.findUnique({ where: { employee_id: id } })) {
         id = `${value}-${n++}`;
     }
     return id;
@@ -67,6 +58,7 @@ export async function POST(req: Request) {
 
         const payload = await req.json();
         const roleEnum = payload.role as Role;
+        const workingScholar = Boolean(payload.workingScholar);
 
         // Determine username
         let username: string;
@@ -82,29 +74,40 @@ export async function POST(req: Request) {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
 
-        const finalUsername = await ensureUniqueUsername(username);
+        const isStudentPatient = roleEnum === Role.PATIENT && payload.patientType === "student";
+        const isScholar = roleEnum === Role.SCHOLAR;
+
+        if (isStudentPatient) {
+            const [existingStudent, existingUser] = await Promise.all([
+                prisma.student.findUnique({ where: { student_id: payload.student_id } }),
+                prisma.users.findUnique({ where: { username } }),
+            ]);
+
+            if (existingStudent || existingUser) {
+                return NextResponse.json(
+                    { error: "Student ID already exists. Please use a unique value." },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (isScholar) {
+            const [existingStudent, existingUser] = await Promise.all([
+                prisma.student.findUnique({ where: { student_id: payload.school_id } }),
+                prisma.users.findUnique({ where: { username } }),
+            ]);
+
+            if (existingStudent || existingUser) {
+                return NextResponse.json(
+                    { error: "Student ID already exists. Please use a unique value." },
+                    { status: 400 }
+                );
+            }
+        }
 
         // Generate password
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
-
-        // Create the user record, including specialization when provided
-        const newUser = await prisma.users.create({
-            data: {
-                username: finalUsername,
-                password: hashedPassword,
-                role: roleEnum,
-                status: AccountStatus.Active,
-                specialization:
-                    roleEnum === Role.DOCTOR
-                        ? payload.specialization === "Physician"
-                            ? "Physician"
-                            : payload.specialization === "Dentist"
-                                ? "Dentist"
-                                : null
-                        : null,
-            },
-        });
 
         // Shared fields
         const sharedProfileData = {
@@ -122,67 +125,91 @@ export async function POST(req: Request) {
             contactno: payload.phone?.trim() || null,
         };
 
-        // Create profile based on role
-        if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
-            const department =
-                payload.department && Object.values(Department).includes(payload.department)
-                    ? (payload.department as Department)
-                    : null;
-            await prisma.student.create({
-                data: {
-                    user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
-                    department,
-                    program: payload.program ?? null,
-                    year_level: payload.year_level ?? null,
-                    ...sharedProfileData,
-                },
-            });
-        }
+        const { finalUsername } = await prisma.$transaction(async (tx) => {
+            const finalUsername =
+                isStudentPatient || isScholar ? username : await ensureUniqueUsername(tx, username);
 
-        if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
-            await prisma.employee.create({
+            // Create the user record, including specialization when provided
+            const newUser = await tx.users.create({
                 data: {
-                    user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
-                    ...sharedProfileData,
+                    username: finalUsername,
+                    password: hashedPassword,
+                    role: roleEnum,
+                    status: AccountStatus.Active,
+                    specialization:
+                        roleEnum === Role.DOCTOR
+                            ? payload.specialization === "Physician"
+                                ? "Physician"
+                                : payload.specialization === "Dentist"
+                                    ? "Dentist"
+                                    : null
+                            : null,
                 },
             });
-        }
 
-        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
-            await prisma.employee.create({
-                data: {
-                    user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
-                    ...sharedProfileData,
-                },
-            });
-        }
+            // Create profile based on role
+            if (isStudentPatient) {
+                const department =
+                    payload.department && Object.values(Department).includes(payload.department)
+                        ? (payload.department as Department)
+                        : null;
+                await tx.student.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        student_id: payload.student_id,
+                        is_working_scholar: workingScholar,
+                        department,
+                        program: payload.program ?? null,
+                        year_level: payload.year_level ?? null,
+                        ...sharedProfileData,
+                    },
+                });
+            }
 
-        if (roleEnum === Role.SCHOLAR) {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
-            const department =
-                payload.department && Object.values(Department).includes(payload.department)
-                    ? (payload.department as Department)
-                    : null;
-            await prisma.student.create({
-                data: {
-                    user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
-                    department,
-                    program: payload.program ?? null,
-                    year_level: payload.year_level ?? null,
-                    ...sharedProfileData,
-                },
-            });
-        }
+            if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
+                const uniqueEmployeeId = await ensureUniqueEmployeeId(tx, payload.employee_id);
+                await tx.employee.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        employee_id: uniqueEmployeeId,
+                        ...sharedProfileData,
+                    },
+                });
+            }
+
+            if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
+                const uniqueEmployeeId = await ensureUniqueEmployeeId(tx, payload.employee_id);
+                await tx.employee.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        employee_id: uniqueEmployeeId,
+                        ...sharedProfileData,
+                    },
+                });
+            }
+
+            if (isScholar) {
+                const department =
+                    payload.department && Object.values(Department).includes(payload.department)
+                        ? (payload.department as Department)
+                        : null;
+                await tx.student.create({
+                    data: {
+                        user_id: newUser.user_id,
+                        student_id: payload.school_id,
+                        department,
+                        program: payload.program ?? null,
+                        year_level: payload.year_level ?? null,
+                        ...sharedProfileData,
+                    },
+                });
+            }
+
+            return { finalUsername };
+        });
 
         return NextResponse.json({
-            id: username.replace(/-\d+$/, ""), // hide "-1" suffix if any
+            id: finalUsername.replace(/-\d+$/, ""), // hide "-1" suffix if any
             password: plainPassword,
         });
     } catch (err) {
@@ -246,6 +273,8 @@ export async function GET() {
                 contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,
                 specialization: u.specialization,
+                patientType: u.role === Role.PATIENT ? (u.student ? "student" : "employee") : null,
+                isWorkingScholar: u.student?.is_working_scholar ?? false,
             };
         });
 
@@ -263,33 +292,62 @@ export async function PUT(req: Request) {
     try {
         const session = await requireRole([Role.NURSE]);
 
-        const { user_id, newStatus } = await req.json();
+        const { user_id, newStatus, workingScholar } = await req.json();
 
-        if (!user_id || (newStatus !== "Active" && newStatus !== "Inactive")) {
+        if (!user_id) {
             return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
         }
 
-        // Prevent self-deactivation
+        // Prevent self-targeting on status changes
         const currentUser = await prisma.users.findUnique({
             where: { user_id: session.user.id },
             select: { user_id: true },
         });
 
-        if (currentUser && currentUser.user_id === user_id) {
+        if (currentUser && currentUser.user_id === user_id && (newStatus === "Inactive" || newStatus === "Active")) {
             return NextResponse.json(
                 { error: "You cannot deactivate your own account." },
                 { status: 403 }
             );
         }
 
-        // Check if target exists
+        // Check target existence with student profile when needed
         const target = await prisma.users.findUnique({
             where: { user_id },
-            select: { status: true },
+            include: { student: true },
         });
 
         if (!target) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        if (typeof workingScholar === "boolean") {
+            if (target.role !== Role.PATIENT || !target.student) {
+                return NextResponse.json(
+                    { error: "Working scholar access can only be set for student patients." },
+                    { status: 400 }
+                );
+            }
+
+            if (target.student.is_working_scholar === workingScholar) {
+                return NextResponse.json({ message: "No changes made." });
+            }
+
+            await prisma.student.update({
+                where: { user_id },
+                data: { is_working_scholar: workingScholar },
+            });
+
+            return NextResponse.json({
+                message: workingScholar
+                    ? "Working scholar access enabled for this student."
+                    : "Working scholar access removed for this student.",
+                isWorkingScholar: workingScholar,
+            });
+        }
+
+        if (newStatus !== "Active" && newStatus !== "Inactive") {
+            return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
         }
 
         if (target.status === newStatus) {

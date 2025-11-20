@@ -127,10 +127,14 @@ export async function GET(req: Request) {
 
         const account = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            select: { role: true },
+            select: { role: true, student: { select: { is_working_scholar: true } } },
         });
 
-        if (!account || account.role !== Role.SCHOLAR) {
+        const hasScholarAccess =
+            account?.role === Role.SCHOLAR ||
+            (account?.role === Role.PATIENT && account.student?.is_working_scholar);
+
+        if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
@@ -244,10 +248,14 @@ async function postHandler(req: Request) {
 
         const account = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            select: { role: true },
+            select: { role: true, student: { select: { is_working_scholar: true } } },
         });
 
-        if (!account || account.role !== Role.SCHOLAR) {
+        const hasScholarAccess =
+            account?.role === Role.SCHOLAR ||
+            (account?.role === Role.PATIENT && account.student?.is_working_scholar);
+
+        if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
@@ -438,10 +446,14 @@ export async function PATCH(req: Request) {
 
         const account = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            select: { role: true },
+            select: { role: true, student: { select: { is_working_scholar: true } } },
         });
 
-        if (!account || account.role !== Role.SCHOLAR) {
+        const hasScholarAccess =
+            account?.role === Role.SCHOLAR ||
+            (account?.role === Role.PATIENT && account.student?.is_working_scholar);
+
+        if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 

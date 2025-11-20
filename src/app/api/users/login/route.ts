@@ -6,6 +6,7 @@ import { ipKey, withRateLimit } from "@/lib/rate-limit";
 type MinimalUserRelation = {
     fname: string;
     lname: string;
+    is_working_scholar?: boolean;
     user: {
         user_id: string;
         role: string;
@@ -24,6 +25,25 @@ const baseSelect = {
         },
     },
 } as const;
+
+const studentSelect = {
+    ...baseSelect,
+    is_working_scholar: true,
+} as const;
+
+async function findStudentByBaseId(candidateId: string) {
+    const exact = await prisma.student.findUnique({
+        where: { student_id: candidateId },
+        select: studentSelect,
+    });
+
+    if (exact) return exact;
+
+    return prisma.student.findFirst({
+        where: { student_id: { startsWith: `${candidateId}-` } },
+        select: studentSelect,
+    });
+}
 
 async function handler(req: Request) {
     try {
@@ -60,10 +80,18 @@ async function handler(req: Request) {
                     { status: 400 }
                 );
             }
-            userRecord = await prisma.student.findUnique({
-                where: { student_id: school_id },
-                select: baseSelect,
-            });
+            userRecord = await findStudentByBaseId(school_id);
+
+            if (
+                userRecord?.user &&
+                userRecord.user.role === "PATIENT" &&
+                userRecord.is_working_scholar
+            ) {
+                userRecord = {
+                    ...userRecord,
+                    user: { ...userRecord.user, role: "SCHOLAR" },
+                };
+            }
         } else if (normalizedRole === "PATIENT") {
             if (typeof patient_id !== "string" || patient_id.length === 0) {
                 return NextResponse.json(
@@ -73,10 +101,7 @@ async function handler(req: Request) {
             }
 
             const [studentRecord, employeeRecord] = await Promise.all([
-                prisma.student.findUnique({
-                    where: { student_id: patient_id },
-                    select: baseSelect,
-                }),
+                findStudentByBaseId(patient_id),
                 prisma.employee.findUnique({
                     where: { employee_id: patient_id },
                     select: baseSelect,

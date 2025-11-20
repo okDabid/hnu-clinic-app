@@ -156,6 +156,7 @@ type Profile = {
     fname: string;
     mname?: string | null;
     lname: string;
+    isWorkingScholar: boolean;
     date_of_birth?: string;
     email?: string;
     contactno?: string | null;
@@ -181,6 +182,7 @@ function normalizeProfile(
         username: String(response.username ?? ""),
         role: String(response.role ?? ""),
         status: (response.status as Profile["status"]) ?? "Active",
+        isWorkingScholar: Boolean(response.isWorkingScholar),
         fname: String(profile?.fname ?? ""),
         mname: (profile?.mname as string | null) ?? "",
         lname: String(profile?.lname ?? ""),
@@ -617,6 +619,116 @@ export default function ScholarAccountPage() {
 
     if (initializing) {
         return <ScholarAccountLoading />;
+    }
+
+    if (!profile) {
+        return (
+            <ScholarLayout
+                title="Account Management"
+                description="Review your personal information, keep emergency contacts current, and manage your clinic credentials."
+                actions={
+                    <div className="flex items-center gap-3">
+                        <AccountRefreshButton
+                            onClick={() => void loadProfile()}
+                            disabled={profileLoading}
+                            isRefreshing={profileLoading}
+                        />
+                    </div>
+                }
+            >
+                <div className="mx-auto w-full max-w-3xl space-y-6">
+                    <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 shadow-sm backdrop-blur">
+                        <div className="space-y-2 text-center text-emerald-900">
+                            <p className="text-base font-semibold">We couldn’t load your profile.</p>
+                            <p className="text-sm text-muted-foreground">
+                                Please refresh to try again. If the issue persists, contact the clinic team.
+                            </p>
+                        </div>
+                    </Card>
+                </div>
+            </ScholarLayout>
+        );
+    }
+
+    if (profile.isWorkingScholar) {
+        const cleanedId = profile.username.replace(/-\d+$/, "");
+
+        return (
+            <ScholarLayout
+                title="Account Management"
+                description="Your working scholar access is linked to your patient student record."
+                actions={
+                    <div className="flex items-center gap-3">
+                        {statusBadge ? (
+                            <span
+                                className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
+                                    ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
+                                    : "border-rose-200 bg-rose-50/80 text-rose-600"}`}
+                            >
+                                <span
+                                    className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"}`}
+                                />
+                                Status: {statusBadge}
+                            </span>
+                        ) : null}
+                        <AccountRefreshButton
+                            onClick={() => void loadProfile()}
+                            disabled={profileLoading}
+                            isRefreshing={profileLoading}
+                        />
+                    </div>
+                }
+            >
+                <div className="mx-auto w-full max-w-5xl space-y-6">
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50/70 px-6 py-5 text-amber-900">
+                        <p className="text-sm font-semibold">Linked to your patient student profile</p>
+                        <p className="text-sm text-amber-800">
+                            Core details come from your patient record. To change them, please ask the clinic nurse to update your
+                            student profile.
+                        </p>
+                    </div>
+
+                    <AccountSummaryGrid items={summaryItems} />
+
+                    <AccountSection
+                        icon={UserRound}
+                        title="Basic details"
+                        description="View the information shared from your patient student account."
+                    >
+                        <dl className="grid gap-4 sm:grid-cols-2">
+                            <div className="rounded-xl border p-4">
+                                <dt className="text-xs uppercase tracking-wide text-gray-500">Student ID</dt>
+                                <dd className="text-sm font-semibold text-gray-900">{cleanedId || "—"}</dd>
+                            </div>
+                            <div className="rounded-xl border p-4">
+                                <dt className="text-xs uppercase tracking-wide text-gray-500">Full name</dt>
+                                <dd className="text-sm font-semibold text-gray-900">
+                                    {[profile.fname, profile.mname, profile.lname].filter(Boolean).join(" ") || "—"}
+                                </dd>
+                            </div>
+                            <div className="rounded-xl border p-4">
+                                <dt className="text-xs uppercase tracking-wide text-gray-500">Department</dt>
+                                <dd className="text-sm font-semibold text-gray-900">{profile.department || "—"}</dd>
+                            </div>
+                            <div className="rounded-xl border p-4">
+                                <dt className="text-xs uppercase tracking-wide text-gray-500">Program & Year</dt>
+                                <dd className="text-sm font-semibold text-gray-900">
+                                    {[profile.program, profile.year_level].filter(Boolean).join(" • ") || "—"}
+                                </dd>
+                            </div>
+                            <div className="rounded-xl border p-4">
+                                <dt className="text-xs uppercase tracking-wide text-gray-500">Contact number</dt>
+                                <dd className="text-sm font-semibold text-gray-900">{profile.contactno || "—"}</dd>
+                            </div>
+                            <div className="rounded-xl border p-4">
+                                <dt className="text-xs uppercase tracking-wide text-gray-500">Email</dt>
+                                <dd className="text-sm font-semibold text-gray-900">{profile.email || "—"}</dd>
+                            </div>
+                        </dl>
+                    </AccountSection>
+                </div>
+            </ScholarLayout>
+        );
     }
 
     return (
