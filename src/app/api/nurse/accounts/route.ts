@@ -42,24 +42,6 @@ async function ensureUniqueUsername(base: string): Promise<string> {
     return candidate;
 }
 
-async function ensureUniqueStudentId(value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await prisma.student.findUnique({ where: { student_id: id } })) {
-        id = `${value}-${n++}`;
-    }
-    return id;
-}
-
-async function ensureUniqueEmployeeId(value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await prisma.employee.findUnique({ where: { employee_id: id } })) {
-        id = `${value}-${n++}`;
-    }
-    return id;
-}
-
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
@@ -68,21 +50,66 @@ export async function POST(req: Request) {
         const payload = await req.json();
         const roleEnum = payload.role as Role;
 
-        // Determine username
-        let username: string;
+        // Determine username and enforce per-role ID uniqueness
+        let usernameBase: string;
+        let idValue: string;
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            username = payload.employee_id;
+            usernameBase = payload.employee_id;
+            idValue = payload.employee_id;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            username = payload.student_id;
+            usernameBase = payload.student_id;
+            idValue = payload.student_id;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            username = payload.employee_id;
+            usernameBase = payload.employee_id;
+            idValue = payload.employee_id;
         } else if (roleEnum === Role.SCHOLAR) {
-            username = payload.school_id;
+            usernameBase = payload.school_id;
+            idValue = payload.school_id;
         } else {
-            username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
+            usernameBase = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
+            idValue = usernameBase;
         }
 
-        const finalUsername = await ensureUniqueUsername(username);
+        if (!idValue || typeof idValue !== "string") {
+            return NextResponse.json(
+                { error: "A valid ID number is required to create this account." },
+                { status: 400 }
+            );
+        }
+
+        if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR || (roleEnum === Role.PATIENT && payload.patientType === "employee")) {
+            const existingEmployee = await prisma.employee.findFirst({
+                where: {
+                    employee_id: idValue,
+                    user: { role: roleEnum },
+                },
+            });
+
+            if (existingEmployee) {
+                return NextResponse.json(
+                    { error: "An account with this employee ID already exists for the selected role." },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (roleEnum === Role.SCHOLAR || (roleEnum === Role.PATIENT && payload.patientType === "student")) {
+            const existingStudent = await prisma.student.findFirst({
+                where: {
+                    student_id: idValue,
+                    user: { role: roleEnum },
+                },
+            });
+
+            if (existingStudent) {
+                return NextResponse.json(
+                    { error: "An account with this student ID already exists for the selected role." },
+                    { status: 400 }
+                );
+            }
+        }
+
+        const finalUsername = await ensureUniqueUsername(`${usernameBase}-${roleEnum.toLowerCase()}`);
 
         // Generate password
         const plainPassword = generatePassword();
@@ -124,7 +151,6 @@ export async function POST(req: Request) {
 
         // Create profile based on role
         if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -132,7 +158,7 @@ export async function POST(req: Request) {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
+                    student_id: idValue,
                     department,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
@@ -142,29 +168,26 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
+                    employee_id: idValue,
                     ...sharedProfileData,
                 },
             });
         }
 
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
-                    employee_id: uniqueEmployeeId,
+                    employee_id: idValue,
                     ...sharedProfileData,
                 },
             });
         }
 
         if (roleEnum === Role.SCHOLAR) {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -172,7 +195,7 @@ export async function POST(req: Request) {
             await prisma.student.create({
                 data: {
                     user_id: newUser.user_id,
-                    student_id: uniqueStudentId,
+                    student_id: idValue,
                     department,
                     program: payload.program ?? null,
                     year_level: payload.year_level ?? null,
@@ -182,7 +205,7 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({
-            id: username.replace(/-\d+$/, ""), // hide "-1" suffix if any
+            id: idValue,
             password: plainPassword,
         });
     } catch (err) {
