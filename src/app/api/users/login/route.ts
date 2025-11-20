@@ -25,6 +25,20 @@ const baseSelect = {
     },
 } as const;
 
+async function findStudentByBaseId(candidateId: string) {
+    const exact = await prisma.student.findUnique({
+        where: { student_id: candidateId },
+        select: baseSelect,
+    });
+
+    if (exact) return exact;
+
+    return prisma.student.findFirst({
+        where: { student_id: { startsWith: `${candidateId}-` } },
+        select: baseSelect,
+    });
+}
+
 async function handler(req: Request) {
     try {
         const { role, employee_id, school_id, patient_id, password } =
@@ -60,10 +74,7 @@ async function handler(req: Request) {
                     { status: 400 }
                 );
             }
-            userRecord = await prisma.student.findUnique({
-                where: { student_id: school_id },
-                select: baseSelect,
-            });
+            userRecord = await findStudentByBaseId(school_id);
         } else if (normalizedRole === "PATIENT") {
             if (typeof patient_id !== "string" || patient_id.length === 0) {
                 return NextResponse.json(
@@ -73,10 +84,7 @@ async function handler(req: Request) {
             }
 
             const [studentRecord, employeeRecord] = await Promise.all([
-                prisma.student.findUnique({
-                    where: { student_id: patient_id },
-                    select: baseSelect,
-                }),
+                findStudentByBaseId(patient_id),
                 prisma.employee.findUnique({
                     where: { employee_id: patient_id },
                     select: baseSelect,
