@@ -1606,13 +1606,13 @@ export function NurseAccountsPageClient({
                                                                 {user.role === "PATIENT" && user.patientType ? (
                                                                     <span
                                                                         className={cn(
-                                                                            "mt-1 inline-flex w-fit items-center rounded-full border px-3 py-1 text-[11px]",
+                                                                            "mt-1 text-xs font-medium",
                                                                             user.patientType === "student"
-                                                                                ? "border-emerald-200 bg-emerald-50 font-bold tracking-wide text-emerald-700"
-                                                                                : "border-slate-200 bg-slate-50 font-medium text-slate-700"
+                                                                                ? "text-emerald-700"
+                                                                                : "text-slate-600"
                                                                         )}
                                                                     >
-                                                                        {user.patientType === "student" ? "STUDENT" : "Employee patient"}
+                                                                        {user.patientType === "student" ? "Student" : "Employee patient"}
                                                                     </span>
                                                                 ) : null}
                                                             </div>
@@ -1636,12 +1636,6 @@ export function NurseAccountsPageClient({
                                                         <TableCell>
                                                             {user.role === "PATIENT" && user.patientType === "student" ? (
                                                                 <div className="flex flex-col items-center justify-center gap-2">
-                                                                    <Badge
-                                                                        variant="secondary"
-                                                                        className="rounded-full border border-emerald-200 bg-emerald-50 font-bold tracking-wide text-emerald-700"
-                                                                    >
-                                                                        STUDENT
-                                                                    </Badge>
                                                                     <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-2">
                                                                         <Switch
                                                                             className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
