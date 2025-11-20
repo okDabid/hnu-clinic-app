@@ -18,6 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { parseMedicalHistory, serializeMedicalHistory } from "@/lib/medical-history";
 
 import NurseRecordsLoading from "./loading";
 import { PatientDirectoryTable } from "./patient-directory-table";
@@ -137,9 +138,13 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
 
         setUpdatingPatientId(selectedRecord.id);
         const form = event.currentTarget;
+        const rawMedicalCond = (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value;
+        const medicalHistory = parseMedicalHistory(rawMedicalCond);
+        const serializedMedicalCond = serializeMedicalHistory(medicalHistory) ?? "";
+
         const body = {
             type: selectedRecord.patientType,
-            medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value,
+            medical_cond: serializedMedicalCond,
             allergies: (form.elements.namedItem("allergies") as HTMLInputElement)?.value,
         };
 

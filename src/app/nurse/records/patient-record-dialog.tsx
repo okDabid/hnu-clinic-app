@@ -198,7 +198,12 @@ function RecordDetailsDialogComponent({
                                     <Label className="mb-1 block font-medium" htmlFor="medical_cond">
                                         Medical Conditions
                                     </Label>
-                                    <Input id="medical_cond" name="medical_cond" defaultValue={record.medical_cond || ""} />
+                                    <Input
+                                        id="medical_cond"
+                                        name="medical_cond"
+                                        defaultValue={medicalHistoryText}
+                                        placeholder="e.g. Asthma, Hypertension, other details"
+                                    />
                                 </div>
                                 <div>
                                     <Label className="mb-1 block font-medium" htmlFor="allergies">
