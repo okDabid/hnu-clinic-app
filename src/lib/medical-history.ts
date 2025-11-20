@@ -16,6 +16,14 @@ export type MedicalHistoryValue = {
     other?: string;
 };
 
+function sanitizeFreeText(value: string): string {
+    return value
+        .replace(/<[^>]*>/g, " ")
+        .replace(/[\u0000-\u001F\u007F]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 function normalizeOptions(options: unknown): MedicalHistoryOption[] {
     if (!Array.isArray(options)) {
         return [];
@@ -45,7 +53,8 @@ export function parseMedicalHistory(raw?: string | null): MedicalHistoryValue {
             other?: unknown;
         };
         const conditions = normalizeOptions(parsed.conditions);
-        const other = typeof parsed.other === "string" ? parsed.other : "";
+        const other =
+            typeof parsed.other === "string" ? sanitizeFreeText(parsed.other) : "";
         return {
             conditions,
             other,
@@ -77,7 +86,7 @@ export function parseMedicalHistory(raw?: string | null): MedicalHistoryValue {
 
     return {
         conditions,
-        other: otherValues.join(", "),
+        other: sanitizeFreeText(otherValues.join(", ")),
     };
 }
 
@@ -87,7 +96,7 @@ export function serializeMedicalHistory(value: MedicalHistoryValue | null | unde
     }
 
     const conditions = normalizeOptions(value.conditions);
-    const other = value.other?.trim() ?? "";
+    const other = value.other ? sanitizeFreeText(value.other) : "";
 
     if (conditions.length === 0 && other.length === 0) {
         return null;
@@ -104,7 +113,7 @@ export function formatMedicalHistory(value: MedicalHistoryValue | null | undefin
         return "";
     }
 
-    const other = value.other?.trim() ?? "";
+    const other = value.other ? sanitizeFreeText(value.other) : "";
     const parts: string[] = [...value.conditions];
     if (other) {
         parts.push(other);
