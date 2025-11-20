@@ -16,7 +16,9 @@ const baseSelect = {
     },
 } satisfies Prisma.StudentSelect & Prisma.EmployeeSelect;
 
-type MinimalUserRelation = Prisma.StudentGetPayload<{ select: typeof baseSelect }>;
+type MinimalUserRelation =
+    | Prisma.StudentGetPayload<{ select: typeof baseSelect }>
+    | Prisma.EmployeeGetPayload<{ select: typeof baseSelect }>;
 
 async function handler(req: Request) {
     try {
