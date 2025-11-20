@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { formatManilaDateTime } from "@/lib/time";
 import { BLOOD_TYPES } from "@/lib/patient-records-update";
-import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
+import { formatMedicalHistory, parseMedicalHistory, serializeMedicalHistory } from "@/lib/medical-history";
 
 import DoctorPatientsLoading from "./loading";
 
@@ -306,9 +306,13 @@ export default function DoctorPatientsPage() {
 
         setUpdatingPatientId(selectedRecord.id);
         const form = event.currentTarget;
+        const rawMedicalCond = (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value;
+        const medicalHistory = parseMedicalHistory(rawMedicalCond);
+        const serializedMedicalCond = serializeMedicalHistory(medicalHistory) ?? "";
+
         const payload = {
             type: selectedRecord.patientType,
-            medical_cond: (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value,
+            medical_cond: serializedMedicalCond,
             allergies: (form.elements.namedItem("allergies") as HTMLInputElement)?.value,
         };
 
@@ -729,15 +733,16 @@ export default function DoctorPatientsPage() {
                                     <TabsContent value="update" className="space-y-4">
                                         <form onSubmit={handleUpdateInfo} className="space-y-3">
                                             <div>
-                                                <Label className="mb-1 block font-medium" htmlFor="medical_cond">
-                                                    Medical Conditions
-                                                </Label>
-                                                <Input
-                                                    id="medical_cond"
-                                                    name="medical_cond"
-                                                    defaultValue={selectedRecord.medical_cond || ""}
-                                                />
-                                            </div>
+                                            <Label className="mb-1 block font-medium" htmlFor="medical_cond">
+                                                Medical Conditions
+                                            </Label>
+                                            <Input
+                                                id="medical_cond"
+                                                name="medical_cond"
+                                                defaultValue={selectedMedicalHistoryText}
+                                                placeholder="e.g. Asthma, Hypertension, other details"
+                                            />
+                                        </div>
                                             <div>
                                                 <Label className="mb-1 block font-medium" htmlFor="allergies">
                                                     Allergies
