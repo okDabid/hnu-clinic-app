@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { ipKey, withRateLimit } from "@/lib/rate-limit";
 
-const baseSelect = {
+const studentSelect = Prisma.validator<Prisma.StudentSelect>()({
     fname: true,
     lname: true,
     user: {
@@ -14,11 +14,23 @@ const baseSelect = {
             password: true,
         },
     },
-} satisfies Prisma.StudentSelect & Prisma.EmployeeSelect;
+});
+
+const employeeSelect = Prisma.validator<Prisma.EmployeeSelect>()({
+    fname: true,
+    lname: true,
+    user: {
+        select: {
+            user_id: true,
+            role: true,
+            password: true,
+        },
+    },
+});
 
 type MinimalUserRelation =
-    | Prisma.StudentGetPayload<{ select: typeof baseSelect }>
-    | Prisma.EmployeeGetPayload<{ select: typeof baseSelect }>;
+    | Prisma.StudentGetPayload<{ select: typeof studentSelect }>
+    | Prisma.EmployeeGetPayload<{ select: typeof employeeSelect }>;
 
 async function handler(req: Request) {
     try {
@@ -46,7 +58,7 @@ async function handler(req: Request) {
             }
             userRecord = await prisma.employee.findUnique({
                 where: { employee_id },
-                select: baseSelect,
+                select: employeeSelect,
             });
         } else if (normalizedRole === "SCHOLAR") {
             if (typeof school_id !== "string" || school_id.length === 0) {
@@ -57,7 +69,7 @@ async function handler(req: Request) {
             }
             userRecord = await prisma.student.findUnique({
                 where: { student_id: school_id },
-                select: baseSelect,
+                select: studentSelect,
             });
         } else if (normalizedRole === "PATIENT") {
             if (typeof patient_id !== "string" || patient_id.length === 0) {
@@ -70,11 +82,11 @@ async function handler(req: Request) {
             const [studentRecord, employeeRecord] = await Promise.all([
                 prisma.student.findUnique({
                     where: { student_id: patient_id },
-                    select: baseSelect,
+                    select: studentSelect,
                 }),
                 prisma.employee.findUnique({
                     where: { employee_id: patient_id },
-                    select: baseSelect,
+                    select: employeeSelect,
                 }),
             ]);
 
