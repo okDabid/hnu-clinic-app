@@ -2,6 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql"
+}
+
 model Clinic {
   clinic_id        String               @id @default(cuid())
   clinic_name      String
