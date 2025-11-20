@@ -1479,7 +1479,7 @@ export function NurseAccountsPageClient({
 
                 {/* Manage Users */}
                 <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/90 shadow-sm transition hover:-translate-y-px hover:shadow-md">
-                    <CardHeader className="flex flex-col gap-4 border-b bg-linear-to-r from-emerald-50/80 via-white to-emerald-50/80">
+                    <CardHeader className="flex flex-col gap-4 border-b bg-linear-to-r">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-1">
                                 <CardTitle className="text-xl sm:text-2xl font-bold text-green-700">
