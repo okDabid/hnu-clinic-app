@@ -14,12 +14,14 @@ const baseSelect = {
             password: true,
         },
     },
-} as const satisfies Pick<Prisma.StudentSelect, "fname" | "lname" | "user">;
+} as const;
 
-type MinimalUserRelation = Pick<
-    Prisma.StudentGetPayload<{ select: typeof baseSelect }>,
-    "fname" | "lname" | "user"
->;
+const studentSelect = Prisma.validator<Prisma.StudentSelect>()(baseSelect);
+const employeeSelect = Prisma.validator<Prisma.EmployeeSelect>()(baseSelect);
+
+type MinimalUserRelation =
+    | Prisma.StudentGetPayload<{ select: typeof studentSelect }>
+    | Prisma.EmployeeGetPayload<{ select: typeof employeeSelect }>;
 
 async function handler(req: Request) {
     try {
@@ -47,7 +49,7 @@ async function handler(req: Request) {
             }
             userRecord = await prisma.employee.findUnique({
                 where: { employee_id },
-                select: baseSelect,
+                select: employeeSelect,
             });
         } else if (normalizedRole === "SCHOLAR") {
             if (typeof school_id !== "string" || school_id.length === 0) {
@@ -58,7 +60,7 @@ async function handler(req: Request) {
             }
             userRecord = await prisma.student.findUnique({
                 where: { student_id: school_id },
-                select: baseSelect,
+                select: studentSelect,
             });
         } else if (normalizedRole === "PATIENT") {
             if (typeof patient_id !== "string" || patient_id.length === 0) {
@@ -71,11 +73,11 @@ async function handler(req: Request) {
             const [studentRecord, employeeRecord] = await Promise.all([
                 prisma.student.findUnique({
                     where: { student_id: patient_id },
-                    select: baseSelect,
+                    select: studentSelect,
                 }),
                 prisma.employee.findUnique({
                     where: { employee_id: patient_id },
-                    select: baseSelect,
+                    select: employeeSelect,
                 }),
             ]);
 
