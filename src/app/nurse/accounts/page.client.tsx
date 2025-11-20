@@ -1265,7 +1265,7 @@ export function NurseAccountsPageClient({
                             {(role === "NURSE" || role === "DOCTOR") && (
                                 <div className="space-y-2">
                                     <Label>Employee ID</Label>
-                                    <Input name="employee_id" required inputMode="numeric" pattern="\\d*" />
+                                    <Input name="employee_id" required inputMode="numeric" />
                                 </div>
                             )}
 
@@ -1310,13 +1310,13 @@ export function NurseAccountsPageClient({
                             {role === "PATIENT" && patientType === "student" && (
                                 <div className="space-y-2">
                                     <Label>Student ID</Label>
-                                    <Input name="student_id" required inputMode="numeric" pattern="\\d*" />
+                                    <Input name="student_id" required inputMode="numeric" />
                                 </div>
                             )}
                             {role === "PATIENT" && patientType === "employee" && (
                                 <div className="space-y-2">
                                     <Label>Employee ID</Label>
-                                    <Input name="employee_id" required inputMode="numeric" pattern="\\d*" />
+                                    <Input name="employee_id" required inputMode="numeric" />
                                 </div>
                             )}
 
