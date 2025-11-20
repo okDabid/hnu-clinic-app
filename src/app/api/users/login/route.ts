@@ -1,17 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { ipKey, withRateLimit } from "@/lib/rate-limit";
-
-type MinimalUserRelation = {
-    fname: string;
-    lname: string;
-    user: {
-        user_id: string;
-        role: string;
-        password: string;
-    } | null;
-};
 
 const baseSelect = {
     fname: true,
@@ -23,7 +14,9 @@ const baseSelect = {
             password: true,
         },
     },
-} as const;
+} satisfies Prisma.StudentSelect & Prisma.EmployeeSelect;
+
+type MinimalUserRelation = Prisma.StudentGetPayload<{ select: typeof baseSelect }>;
 
 async function handler(req: Request) {
     try {
