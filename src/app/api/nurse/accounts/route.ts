@@ -33,6 +33,12 @@ const bloodTypeEnumMap: Record<string, string> = {
 };
 
 // ---------------- UNIQUE ID HELPERS ----------------
+const numericIdPattern = /^\d+$/;
+
+function isNumericId(value: unknown): value is string {
+    return typeof value === "string" && numericIdPattern.test(value.trim());
+}
+
 async function ensureUniqueUsername(base: string): Promise<string> {
     let candidate = base;
     let n = 1;
@@ -82,9 +88,30 @@ export async function POST(req: Request) {
         const payload = await req.json();
         const roleEnum = payload.role as Role;
 
+        const trimmedStudentId = typeof payload.student_id === "string" ? payload.student_id.trim() : "";
+        const trimmedEmployeeId = typeof payload.employee_id === "string" ? payload.employee_id.trim() : "";
+        const trimmedSchoolId = typeof payload.school_id === "string" ? payload.school_id.trim() : "";
+
+        // Validate numeric ID inputs by role
+        if (roleEnum === Role.PATIENT && payload.patientType === "student" && !isNumericId(trimmedStudentId)) {
+            return NextResponse.json({ error: "Student ID must contain numbers only." }, { status: 400 });
+        }
+
+        if (roleEnum === Role.PATIENT && payload.patientType === "employee" && !isNumericId(trimmedEmployeeId)) {
+            return NextResponse.json({ error: "Employee ID must contain numbers only." }, { status: 400 });
+        }
+
+        if ((roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) && !isNumericId(trimmedEmployeeId)) {
+            return NextResponse.json({ error: "Employee ID must contain numbers only." }, { status: 400 });
+        }
+
+        if (roleEnum === Role.SCHOLAR && !isNumericId(trimmedSchoolId)) {
+            return NextResponse.json({ error: "School ID must contain numbers only." }, { status: 400 });
+        }
+
         // Pre-validate role-specific ID reuse to avoid creating orphaned user rows
         if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const duplicateStudent = await existingStudentWithRole(payload.student_id, Role.PATIENT);
+            const duplicateStudent = await existingStudentWithRole(trimmedStudentId, Role.PATIENT);
             if (duplicateStudent) {
                 return NextResponse.json(
                     { error: "A patient account with this student ID already exists." },
@@ -94,7 +121,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            const duplicateEmployee = await existingEmployeeWithRole(payload.employee_id, Role.PATIENT);
+            const duplicateEmployee = await existingEmployeeWithRole(trimmedEmployeeId, Role.PATIENT);
             if (duplicateEmployee) {
                 return NextResponse.json(
                     { error: "A patient account with this employee ID already exists." },
@@ -104,7 +131,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            const duplicateEmployee = await existingEmployeeWithRole(payload.employee_id, roleEnum);
+            const duplicateEmployee = await existingEmployeeWithRole(trimmedEmployeeId, roleEnum);
             if (duplicateEmployee) {
                 const roleLabel = roleEnum === Role.NURSE ? "nurse" : "doctor";
                 return NextResponse.json(
@@ -115,7 +142,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.SCHOLAR) {
-            const duplicateScholar = await existingStudentWithRole(payload.school_id, Role.SCHOLAR);
+            const duplicateScholar = await existingStudentWithRole(trimmedSchoolId, Role.SCHOLAR);
             if (duplicateScholar) {
                 return NextResponse.json(
                     { error: "A scholar account with this school ID already exists." },
@@ -127,13 +154,13 @@ export async function POST(req: Request) {
         // Determine username
         let username: string;
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            username = payload.employee_id;
+            username = trimmedEmployeeId;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            username = payload.student_id;
+            username = trimmedStudentId;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            username = payload.employee_id;
+            username = trimmedEmployeeId;
         } else if (roleEnum === Role.SCHOLAR) {
-            username = payload.school_id;
+            username = trimmedSchoolId;
         } else {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
@@ -180,7 +207,7 @@ export async function POST(req: Request) {
 
         // Create profile based on role
         if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.student_id);
+            const uniqueStudentId = await ensureUniqueStudentId(trimmedStudentId);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
@@ -198,7 +225,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
+            const uniqueEmployeeId = await ensureUniqueEmployeeId(trimmedEmployeeId);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
@@ -209,7 +236,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            const uniqueEmployeeId = await ensureUniqueEmployeeId(payload.employee_id);
+            const uniqueEmployeeId = await ensureUniqueEmployeeId(trimmedEmployeeId);
             await prisma.employee.create({
                 data: {
                     user_id: newUser.user_id,
@@ -220,7 +247,7 @@ export async function POST(req: Request) {
         }
 
         if (roleEnum === Role.SCHOLAR) {
-            const uniqueStudentId = await ensureUniqueStudentId(payload.school_id);
+            const uniqueStudentId = await ensureUniqueStudentId(trimmedSchoolId);
             const department =
                 payload.department && Object.values(Department).includes(payload.department)
                     ? (payload.department as Department)
