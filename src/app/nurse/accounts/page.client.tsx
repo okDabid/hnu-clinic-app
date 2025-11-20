@@ -1223,7 +1223,7 @@ export function NurseAccountsPageClient({
                 {/* Create User */}
                 <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b">
-                        <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                        <CardTitle className="text-xl sm:text-2xl font-bold text-green-700">
                             Create New User
                         </CardTitle>
                     </CardHeader>
@@ -1291,13 +1291,14 @@ export function NurseAccountsPageClient({
                             {role === "PATIENT" && patientType === "student" && (
                                 <div className="flex items-center justify-between rounded-xl border p-4">
                                     <div>
-                                        <p className="text-sm font-medium text-gray-900">Enable working scholar access</p>
+                                        <p className="text-sm font-medium text-emerald-900">Enable working scholar access</p>
                                         <p className="text-xs text-gray-500">
                                             Allows this student patient to log in as a working scholar using the same ID and
                                             credentials.
                                         </p>
                                     </div>
                                     <Switch
+                                        className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
                                         checked={workingScholar}
                                         onCheckedChange={setWorkingScholar}
                                         aria-label="Mark student patient as working scholar"
@@ -1478,7 +1479,7 @@ export function NurseAccountsPageClient({
 
                 {/* Manage Users */}
                 <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/90 shadow-sm transition hover:-translate-y-px hover:shadow-md">
-                    <CardHeader className="flex flex-col gap-4 border-b bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/80">
+                    <CardHeader className="flex flex-col gap-4 border-b bg-linear-to-r from-emerald-50/80 via-white to-emerald-50/80">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-1">
                                 <CardTitle className="text-xl sm:text-2xl font-bold text-green-700">
@@ -1497,9 +1498,9 @@ export function NurseAccountsPageClient({
                                 </span>
                             </div>
                         </div>
-                        <div className="grid gap-3 md:grid-cols-3">
-                            <div className="relative">
-                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                        <div className="mt-4 grid w-full gap-3">
+                            <div className="relative flex-1">
+                                <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input
                                     placeholder="Search by ID, role, or name..."
                                     value={search}
@@ -1511,34 +1512,36 @@ export function NurseAccountsPageClient({
                                     disabled={loading || isRefreshingUsers}
                                 />
                             </div>
-                            <Select
-                                value={roleFilter}
-                                onValueChange={(val) => setRoleFilter(val as RoleFilterValue)}
-                            >
-                                <SelectTrigger className="h-10 border-green-200">
-                                    <SelectValue placeholder="All roles" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All roles</SelectItem>
-                                    <SelectItem value="DOCTOR">Doctor</SelectItem>
-                                    <SelectItem value="NURSE">Nurse</SelectItem>
-                                    <SelectItem value="PATIENT">Patient</SelectItem>
-                                    <SelectItem value="SCHOLAR">Working Scholar (incl. student access)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select
-                                value={statusFilter}
-                                onValueChange={(val) => setStatusFilter(val as StatusFilterValue)}
-                            >
-                                <SelectTrigger className="h-10 border-green-200">
-                                    <SelectValue placeholder="All statuses" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ALL">All statuses</SelectItem>
-                                    <SelectItem value="Active">Active</SelectItem>
-                                    <SelectItem value="Inactive">Inactive</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+                                <Select
+                                    value={roleFilter}
+                                    onValueChange={(val) => setRoleFilter(val as RoleFilterValue)}
+                                >
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder="All roles" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">All roles</SelectItem>
+                                        <SelectItem value="DOCTOR">Doctor</SelectItem>
+                                        <SelectItem value="NURSE">Nurse</SelectItem>
+                                        <SelectItem value="PATIENT">Patient</SelectItem>
+                                        <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select
+                                    value={statusFilter}
+                                    onValueChange={(val) => setStatusFilter(val as StatusFilterValue)}
+                                >
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder="All statuses" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">All statuses</SelectItem>
+                                        <SelectItem value="Active">Active</SelectItem>
+                                        <SelectItem value="Inactive">Inactive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     </CardHeader>
 
@@ -1547,10 +1550,6 @@ export function NurseAccountsPageClient({
                             <span className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-emerald-700">
                                 <ShieldCheck className="h-4 w-4" />
                                 Student patients can be granted scholar access below.
-                            </span>
-                            <span className="flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1">
-                                <Loader2 className={cn("h-4 w-4", isRefreshingUsers ? "animate-spin" : "")} />
-                                {isRefreshingUsers ? "Refreshing list…" : "Updates apply instantly"}
                             </span>
                         </div>
                         <div className="overflow-x-auto w-full">
@@ -1599,13 +1598,13 @@ export function NurseAccountsPageClient({
                                                                 {user.role === "PATIENT" && user.patientType ? (
                                                                     <span
                                                                         className={cn(
-                                                                            "mt-1 text-xs font-medium",
+                                                                            "text-xs font-medium",
                                                                             user.patientType === "student"
-                                                                                ? "text-emerald-700"
-                                                                                : "text-slate-600"
+                                                                                ? "text-green-700"
+                                                                                : "text-green-700"
                                                                         )}
                                                                     >
-                                                                        {user.patientType === "student" ? "Student" : "Employee patient"}
+                                                                        {user.patientType === "student" ? "Student" : "Employee"}
                                                                     </span>
                                                                 ) : null}
                                                             </div>
