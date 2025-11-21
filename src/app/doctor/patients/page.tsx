@@ -385,7 +385,7 @@ export default function DoctorPatientsPage() {
             actions={
                 <Button
                     variant="outline"
-                    className="rounded-xl border-green-200 text-green-700 hover:bg-green-100/70"
+                    className="rounded-xl border-primary/30 text-primary hover:bg-primary/10/70"
                     onClick={loadRecords}
                 >
                     <RefreshCcw className="mr-2 h-4 w-4" /> Refresh records
@@ -395,57 +395,57 @@ export default function DoctorPatientsPage() {
             <div className="space-y-6">
                 <section className="mx-auto w-full max-w-6xl space-y-8 px-4 sm:px-6">
                     <div className="grid gap-4 md:grid-cols-3">
-                        <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                        <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
-                                    <CardTitle className="text-base font-semibold text-green-700">Total profiles</CardTitle>
+                                    <CardTitle className="text-base font-semibold text-primary">Total profiles</CardTitle>
                                     <p className="text-sm text-muted-foreground">Student and employee records synced</p>
                                 </div>
-                                <Users2 className="h-9 w-9 text-green-500" />
+                                <Users2 className="h-9 w-9 text-primary" />
                             </CardHeader>
                             <CardContent>
-                                <p className="text-3xl font-semibold text-green-700">{totalPatients}</p>
+                                <p className="text-3xl font-semibold text-primary">{totalPatients}</p>
                             </CardContent>
                         </Card>
-                        <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                        <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
-                                    <CardTitle className="text-base font-semibold text-green-700">With appointments</CardTitle>
+                                    <CardTitle className="text-base font-semibold text-primary">With appointments</CardTitle>
                                     <p className="text-sm text-muted-foreground">Latest visit attached to the chart</p>
                                 </div>
-                                <BadgeCheck className="h-9 w-9 text-green-500" />
+                                <BadgeCheck className="h-9 w-9 text-primary" />
                             </CardHeader>
                             <CardContent>
-                                <p className="text-3xl font-semibold text-green-700">{withAppointments}</p>
+                                <p className="text-3xl font-semibold text-primary">{withAppointments}</p>
                             </CardContent>
                         </Card>
-                        <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                        <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <div>
-                                    <CardTitle className="text-base font-semibold text-green-700">No appointment yet</CardTitle>
+                                    <CardTitle className="text-base font-semibold text-primary">No appointment yet</CardTitle>
                                     <p className="text-sm text-muted-foreground">Profiles ready for intake coordination</p>
                                 </div>
                                 <AlertCircle className="h-9 w-9 text-amber-500" />
                             </CardHeader>
                             <CardContent>
-                                <p className="text-3xl font-semibold text-green-700">{withoutAppointments}</p>
+                                <p className="text-3xl font-semibold text-primary">{withoutAppointments}</p>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                             <div className="space-y-1">
-                                <CardTitle className="text-xl text-green-700">Patient directory</CardTitle>
+                                <CardTitle className="text-xl text-primary">Patient directory</CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                     Filter student and employee details before handing off to nurses or doctors.
                                 </p>
                             </div>
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Patient type</Label>
+                                    <Label className="text-sm font-medium text-primary">Patient type</Label>
                                     <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                        <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectTrigger className="rounded-xl border-primary/30">
                                             <SelectValue placeholder="All types" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -456,9 +456,9 @@ export default function DoctorPatientsPage() {
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Account status</Label>
+                                    <Label className="text-sm font-medium text-primary">Account status</Label>
                                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                        <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectTrigger className="rounded-xl border-primary/30">
                                             <SelectValue placeholder="Status" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -469,9 +469,9 @@ export default function DoctorPatientsPage() {
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Appointment link</Label>
+                                    <Label className="text-sm font-medium text-primary">Appointment link</Label>
                                     <Select value={appointmentFilter} onValueChange={setAppointmentFilter}>
-                                        <SelectTrigger className="rounded-xl border-green-200">
+                                        <SelectTrigger className="rounded-xl border-primary/30">
                                             <SelectValue placeholder="Appointments" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -482,14 +482,14 @@ export default function DoctorPatientsPage() {
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-green-700">Search records</Label>
+                                    <Label className="text-sm font-medium text-primary">Search records</Label>
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             placeholder="Search by name or ID"
                                             value={search}
                                             onChange={(event) => setSearch(event.target.value)}
-                                            className="rounded-xl border-green-200 pl-9"
+                                            className="rounded-xl border-primary/30 pl-9"
                                         />
                                     </div>
                                 </div>
@@ -522,7 +522,7 @@ export default function DoctorPatientsPage() {
                                                 return (
                                                     <TableRow
                                                         key={record.id}
-                                                        className="cursor-pointer text-sm transition hover:bg-green-50/60 focus-visible:bg-green-50/60"
+                                                        className="cursor-pointer text-sm transition hover:bg-primary/10/60 focus-visible:bg-primary/10/60"
                                                         onClick={() => openDetails(record)}
                                                         onKeyDown={(event) => {
                                                             if (event.key === "Enter" || event.key === " ") {
@@ -533,7 +533,7 @@ export default function DoctorPatientsPage() {
                                                         tabIndex={0}
                                                         role="button"
                                                     >
-                                                        <TableCell className="font-medium text-green-700">
+                                                        <TableCell className="font-medium text-primary">
                                                             <div className="flex flex-col">
                                                                 <span>{record.fullName}</span>
                                                                 <span className="text-xs text-muted-foreground">
@@ -543,7 +543,7 @@ export default function DoctorPatientsPage() {
                                                         </TableCell>
                                                         <TableCell>{record.patientId}</TableCell>
                                                         <TableCell>
-                                                            <Badge className="rounded-full border-green-200 bg-green-50 text-green-700">
+                                                            <Badge className="rounded-full border-primary/30 bg-primary/10 text-primary">
                                                                 {record.patientType}
                                                             </Badge>
                                                         </TableCell>
@@ -606,30 +606,30 @@ export default function DoctorPatientsPage() {
                         {selectedRecord ? (
                             <div className="space-y-6">
                                 <DialogHeader>
-                                    <DialogTitle className="text-xl text-green-700">Patient snapshot</DialogTitle>
+                                    <DialogTitle className="text-xl text-primary">Patient snapshot</DialogTitle>
                                     <DialogDescription className="text-sm text-muted-foreground">
                                         Contact details and clinical notes shared with the care team.
                                     </DialogDescription>
                                 </DialogHeader>
 
-                                <div className="rounded-2xl bg-green-50/70 p-4 text-green-700">
+                                <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
                                     <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
                                     <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-green-500">Patient ID</p>
-                                            <p className="font-medium text-green-700">{selectedRecord.patientId}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
+                                            <p className="font-medium text-primary">{selectedRecord.patientId}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-green-500">Type</p>
-                                            <p className="font-medium text-green-700">{selectedRecord.patientType}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary">Type</p>
+                                            <p className="font-medium text-primary">{selectedRecord.patientType}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-green-500">Date of birth</p>
-                                            <p className="font-medium text-green-700">{formatDateOnly(selectedRecord.date_of_birth)}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary">Date of birth</p>
+                                            <p className="font-medium text-primary">{formatDateOnly(selectedRecord.date_of_birth)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-green-500">Gender</p>
-                                            <p className="font-medium text-green-700">{selectedRecord.gender ?? "—"}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary">Gender</p>
+                                            <p className="font-medium text-primary">{selectedRecord.gender ?? "—"}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -686,7 +686,7 @@ export default function DoctorPatientsPage() {
                                         <Separator />
 
                                         <div className="space-y-3 text-sm">
-                                            <h4 className="flex items-center gap-2 font-semibold text-green-600">
+                                            <h4 className="flex items-center gap-2 font-semibold text-primary">
                                                 <Stethoscope className="h-4 w-4" /> Latest appointment
                                             </h4>
                                             {selectedRecord.latestAppointment?.timestart ? (
@@ -710,7 +710,7 @@ export default function DoctorPatientsPage() {
 
                                             {selectedRecord.latestAppointment?.consultation ? (
                                                 <div className="space-y-1 rounded-md border bg-muted/40 p-3">
-                                                    <p className="text-sm font-semibold text-green-600">Consultation Notes</p>
+                                                    <p className="text-sm font-semibold text-primary">Consultation Notes</p>
                                                     <p>
                                                         <strong>Reason:</strong> {selectedRecord.latestAppointment.consultation.reason_of_visit || "—"}
                                                     </p>
@@ -757,7 +757,7 @@ export default function DoctorPatientsPage() {
                                             <Button
                                                 type="submit"
                                                 disabled={updatingPatientId === selectedRecord.id}
-                                                className="bg-green-600 text-white hover:bg-green-700"
+                                                className="bg-primary text-primary-foreground hover:bg-primary/90"
                                             >
                                                 {updatingPatientId === selectedRecord.id ? (
                                                     <>
@@ -813,7 +813,7 @@ export default function DoctorPatientsPage() {
                                                     savingNotesPatientId === selectedRecord.id ||
                                                     !selectedRecord.latestAppointment?.id
                                                 }
-                                                className="bg-green-600 text-white hover:bg-green-700"
+                                                className="bg-primary text-primary-foreground hover:bg-primary/90"
                                             >
                                                 {savingNotesPatientId === selectedRecord.id ? (
                                                     <>

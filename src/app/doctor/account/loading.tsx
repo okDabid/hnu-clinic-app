@@ -9,7 +9,7 @@ export default function DoctorAccountLoading() {
             description="Keep your clinic profile accurate, secure, and ready for seamless coordination."
         >
             <div className="mx-auto w-full max-w-4xl space-y-10">
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="space-y-3">
                         <Skeleton className="h-5 w-1/4" />
                         <Skeleton className="h-4 w-2/3" />
@@ -41,7 +41,7 @@ export default function DoctorAccountLoading() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="space-y-3">
                         <Skeleton className="h-5 w-1/3" />
                         <Skeleton className="h-4 w-1/2" />

@@ -278,7 +278,7 @@ export function NurseReportsPageClient({
                 <div className="flex items-center gap-2">
                     <Button
                         size="sm"
-                        className="rounded-xl bg-green-600 text-white hover:bg-green-700"
+                        className="rounded-xl bg-primary text-white hover:bg-primary/90"
                         disabled={!data || exportingPdf}
                         onClick={async () => {
                             if (!data) return;
@@ -332,10 +332,10 @@ export function NurseReportsPageClient({
             }
         >
             <section className="space-y-6">
-                <Card className="rounded-3xl border-transparent bg-white/80 shadow-sm md:border-green-100/70">
+                <Card className="rounded-3xl border-transparent bg-white/80 shadow-sm md:border-primary/20">
                     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <CardTitle className="text-xl font-semibold text-green-700">
+                            <CardTitle className="text-xl font-semibold text-primary">
                                 Report filters
                             </CardTitle>
                             <CardDescription>
@@ -344,7 +344,7 @@ export function NurseReportsPageClient({
                         </div>
                         <div className="flex flex-col gap-3 sm:flex-row">
                             <div className="flex flex-col gap-1">
-                                <span className="text-xs font-semibold uppercase tracking-wide text-green-500">
+                                <span className="text-xs font-semibold uppercase tracking-wide text-primary">
                                     Year
                                 </span>
                                 <Select
@@ -353,7 +353,7 @@ export function NurseReportsPageClient({
                                         setYear(Number(value));
                                     }}
                                 >
-                                    <SelectTrigger className="w-[140px] rounded-xl border-green-200 bg-white/90">
+                                    <SelectTrigger className="w-[140px] rounded-xl border-primary/30 bg-white/90">
                                         <SelectValue placeholder="Select year" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -366,7 +366,7 @@ export function NurseReportsPageClient({
                                 </Select>
                             </div>
                             <div className="flex flex-col gap-1">
-                                <span className="text-xs font-semibold uppercase tracking-wide text-green-500">
+                                <span className="text-xs font-semibold uppercase tracking-wide text-primary">
                                     Quarter
                                 </span>
                                 <Select
@@ -375,7 +375,7 @@ export function NurseReportsPageClient({
                                         setQuarter(Number(value));
                                     }}
                                 >
-                                    <SelectTrigger className="w-[140px] rounded-xl border-green-200 bg-white/90">
+                                    <SelectTrigger className="w-[140px] rounded-xl border-primary/30 bg-white/90">
                                         <SelectValue placeholder="Select quarter" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -391,7 +391,7 @@ export function NurseReportsPageClient({
                     </CardHeader>
                     {loading ? (
                         <CardContent className="flex items-center gap-3 pb-6 text-sm text-muted-foreground">
-                            <Loader2 className="h-4 w-4 animate-spin text-green-600" />
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
                             Generating the latest report…
                         </CardContent>
                     ) : error ? (
@@ -403,17 +403,17 @@ export function NurseReportsPageClient({
                 </Card>
 
                 <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-                    <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <CardTitle className="text-lg font-semibold text-green-700">
+                                <CardTitle className="text-lg font-semibold text-primary">
                                     Consultations overview
                                 </CardTitle>
                                 <CardDescription>
                                     Quarter-by-quarter comparison of unique patients and total consultations.
                                 </CardDescription>
                             </div>
-                            <Badge className="flex items-center gap-2 rounded-full bg-green-50 text-green-700">
+                            <Badge className="flex items-center gap-2 rounded-full bg-primary/10 text-primary">
                                 <CalendarRange className="h-3.5 w-3.5" /> {data?.year ?? year}
                             </Badge>
                         </CardHeader>
@@ -453,16 +453,16 @@ export function NurseReportsPageClient({
                                     </ChartContainer>
                                 </div>
                             ) : (
-                                <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-green-200 bg-green-50/50 text-sm text-muted-foreground">
+                                <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-primary/30 bg-primary/10/50 text-sm text-muted-foreground">
                                     No consultation data recorded for the selected period.
                                 </div>
                             )}
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                    <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-green-700">
+                            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-primary">
                                 <PieChart className="h-5 w-5" /> Patient mix
                             </CardTitle>
                             <CardDescription>
@@ -483,10 +483,10 @@ export function NurseReportsPageClient({
                                             return (
                                                 <div
                                                     key={key}
-                                                    className="flex flex-col gap-3 rounded-2xl bg-green-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                                                    className="flex flex-col gap-3 rounded-2xl bg-primary/10/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                                                 >
                                                     <div className="space-y-1">
-                                                        <p className="text-sm font-semibold text-green-700">{config.label}</p>
+                                                        <p className="text-sm font-semibold text-primary">{config.label}</p>
                                                         <p className="text-xs text-muted-foreground">{count} consultations</p>
                                                     </div>
                                                     <Badge
@@ -499,7 +499,7 @@ export function NurseReportsPageClient({
                                             );
                                         })}
                                     </div>
-                                    <div className="rounded-2xl bg-green-100/40 p-4 text-sm text-green-700">
+                                    <div className="rounded-2xl bg-primary/15/40 p-4 text-sm text-primary">
                                         <p className="font-semibold">{selectedQuarter.label} summary</p>
                                         <p className="text-xs text-muted-foreground">
                                             {formatRange(selectedQuarter.startDate, selectedQuarter.endDate)}
@@ -515,17 +515,17 @@ export function NurseReportsPageClient({
                     </Card>
                 </div>
 
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <CardTitle className="text-lg font-semibold text-green-700">
+                            <CardTitle className="text-lg font-semibold text-primary">
                                 Top diagnoses
                             </CardTitle>
                             <CardDescription>
                                 Most frequently recorded diagnoses in the selected quarter.
                             </CardDescription>
                         </div>
-                        <Badge className="rounded-full bg-green-50 text-green-700">
+                        <Badge className="rounded-full bg-primary/10 text-primary">
                             <BarChart2 className="mr-2 h-4 w-4" /> {selectedQuarter?.diagnosisCounts.length ?? 0} unique entries
                         </Badge>
                     </CardHeader>
@@ -535,11 +535,11 @@ export function NurseReportsPageClient({
                                 {topDiagnoses.map((diagnosis, index) => (
                                     <div
                                         key={diagnosis.diagnosis}
-                                        className="flex items-center justify-between rounded-2xl border border-green-100 bg-white/90 px-4 py-3"
+                                        className="flex items-center justify-between rounded-2xl border border-primary/20 bg-white/90 px-4 py-3"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="text-sm font-semibold text-green-600">#{index + 1}</span>
-                                            <span className="text-sm font-medium text-green-700">{diagnosis.diagnosis}</span>
+                                            <span className="text-sm font-semibold text-primary">#{index + 1}</span>
+                                            <span className="text-sm font-medium text-primary">{diagnosis.diagnosis}</span>
                                         </div>
                                         <span className="text-sm text-muted-foreground">{diagnosis.count} cases</span>
                                     </div>
@@ -553,9 +553,9 @@ export function NurseReportsPageClient({
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-lg font-semibold text-green-700">
+                        <CardTitle className="text-lg font-semibold text-primary">
                             Quarterly breakdown
                         </CardTitle>
                         <CardDescription>
@@ -577,7 +577,7 @@ export function NurseReportsPageClient({
                             <TableBody>
                                 {data?.quarters.map((item) => (
                                     <TableRow key={item.quarter}>
-                                        <TableCell className="font-semibold text-green-700">{item.label}</TableCell>
+                                        <TableCell className="font-semibold text-primary">{item.label}</TableCell>
                                         <TableCell>{numberFormatter.format(item.consultations)}</TableCell>
                                         <TableCell>{numberFormatter.format(item.uniquePatients)}</TableCell>
                                         <TableCell>{numberFormatter.format(item.patientTypeCounts.Student ?? 0)}</TableCell>

@@ -9,14 +9,14 @@ export default function ScholarAccountLoading() {
             description="Review your personal information, keep emergency contacts current, and manage your clinic credentials."
         >
             <section className="space-y-6">
-                <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border border-primary/20 bg-white/80 shadow-sm">
                     <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
                         <Skeleton className="h-5 w-5 rounded-full" />
                         <Skeleton className="h-4 w-40" />
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border border-green-100/70 bg-white/80 shadow-sm">
+                <Card className="rounded-3xl border border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="space-y-3">
                         <Skeleton className="h-5 w-1/3" />
                         <Skeleton className="h-4 w-1/2" />

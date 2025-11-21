@@ -10,8 +10,8 @@ export default function ScholarDispenseLoading() {
             actions={<Skeleton className="h-10 w-28 rounded-xl" />}
         >
             <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
-                <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
-                    <CardHeader className="space-y-2 border-b border-green-100/70">
+                <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
+                    <CardHeader className="space-y-2 border-b border-primary/20">
                         <Skeleton className="h-5 w-1/3" />
                         <Skeleton className="h-4 w-1/2" />
                     </CardHeader>
@@ -28,8 +28,8 @@ export default function ScholarDispenseLoading() {
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border-green-100/70 bg-white/90 shadow-sm">
-                    <CardHeader className="space-y-2 border-b border-green-100/70">
+                <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
+                    <CardHeader className="space-y-2 border-b border-primary/20">
                         <Skeleton className="h-5 w-1/3" />
                         <Skeleton className="h-4 w-1/2" />
                     </CardHeader>
@@ -37,7 +37,7 @@ export default function ScholarDispenseLoading() {
                         {Array.from({ length: 4 }).map((_, index) => (
                             <div
                                 key={index}
-                                className="rounded-2xl border border-green-50 bg-white/80 p-4 shadow-sm"
+                                className="rounded-2xl border border-primary/15 bg-white/80 p-4 shadow-sm"
                             >
                                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                     <div className="flex flex-col gap-2">

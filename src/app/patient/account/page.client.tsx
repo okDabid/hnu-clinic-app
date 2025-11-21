@@ -347,8 +347,9 @@ export function PatientAccountPageClient({
                 label: "Emergency readiness",
                 value: emergencyReady ? "Ready" : "Action required",
                 helper: emergencyReady
-                    ? `${profile.emergencyco_name || "Emergency contact"}${profile.emergencyco_relation ? ` (${profile.emergencyco_relation})` : ""
-                    } • ${profile.emergencyco_num || "—"}`
+                    ? `${profile.emergencyco_name || "Emergency contact"
+                    }${profile.emergencyco_relation ? ` (${profile.emergencyco_relation})` : ""} • ${profile.emergencyco_num || "—"
+                    }`
                     : "Provide an emergency contact name, number, and relationship.",
                 accent: emergencyReady ? "teal" : "amber",
             },
@@ -1113,7 +1114,7 @@ export function PatientAccountPageClient({
                                     />
                                     <Button
                                         type="submit"
-                                        className="flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-60"
+                                        className="flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
                                         disabled={profileLoading}
                                     >
                                         {profileLoading ? (

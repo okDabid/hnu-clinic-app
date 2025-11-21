@@ -6,7 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-type AccountSummaryAccent = "emerald" | "teal" | "amber" | "indigo" | "rose";
+type AccountSummaryAccent = "emerald" | "teal" | "amber" | "indigo" | "rose" | "primary";
 
 const ACCENT_STYLES: Record<
     AccountSummaryAccent,
@@ -17,6 +17,12 @@ const ACCENT_STYLES: Record<
         progress: string;
     }
 > = {
+    primary: {
+        card: "border-primary-100/70",
+        icon: "bg-primary-100 text-primary-700",
+        gradient: "from-primary-50 via-transparent to-primary-100/60",
+        progress: "bg-primary-500",
+    },
     emerald: {
         card: "border-emerald-100/70",
         icon: "bg-emerald-100 text-emerald-600",
@@ -64,7 +70,7 @@ export interface AccountSummaryGridProps {
 }
 
 export function AccountSummaryGrid({ items, className }: AccountSummaryGridProps) {
-    if (!items.length) {
+    if (!Array.isArray(items) || items.length === 0) {
         return null;
     }
 
@@ -72,7 +78,8 @@ export function AccountSummaryGrid({ items, className }: AccountSummaryGridProps
         <div className={cn("grid gap-4 md:grid-cols-3", className)}>
             {items.map((item, index) => {
                 const Icon = item.icon;
-                const accent = ACCENT_STYLES[item.accent ?? "emerald"];
+                const accent = ACCENT_STYLES[item.accent ?? "emerald"] ?? ACCENT_STYLES.emerald;
+                const itemKey = item.label || index;
                 const progressValue =
                     typeof item.progress === "number"
                         ? Math.min(100, Math.max(0, Number.isFinite(item.progress) ? item.progress : 0))
@@ -80,7 +87,7 @@ export function AccountSummaryGrid({ items, className }: AccountSummaryGridProps
 
                 return (
                     <div
-                        key={`${item.label}-${index}`}
+                        key={typeof itemKey === "string" ? itemKey : `${itemKey}-${index}`}
                         className={cn(
                             "relative overflow-hidden rounded-3xl border bg-white/90 shadow-sm backdrop-blur",
                             accent.card

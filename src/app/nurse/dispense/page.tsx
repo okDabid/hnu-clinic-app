@@ -140,45 +140,45 @@ export default function NurseDispensePage() {
         >
             <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col space-y-8">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-br from-green-50 via-white to-green-100/60 shadow-sm">
+                    <Card className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-white  to-primary/5/60 shadow-sm">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Total dispenses</CardTitle>
                         </CardHeader>
                         <CardContent className="pb-6">
-                            <p className="text-3xl font-bold text-green-700">{total}</p>
+                            <p className="text-3xl font-bold text-primary">{total}</p>
                             <p className="mt-2 text-xs text-muted-foreground">
                                 {totalQuantity > 0 ? `${totalQuantity} total items issued` : "No medicines dispensed yet."}
                             </p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Consultations served</CardTitle>
                         </CardHeader>
                         <CardContent className="pb-6">
-                            <p className="text-3xl font-bold text-green-700">{consultations}</p>
+                            <p className="text-3xl font-bold text-primary">{consultations}</p>
                             <p className="mt-2 text-xs text-muted-foreground">
                                 Dispenses linked to consultations handled by the clinic team.
                             </p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Walk-ins assisted</CardTitle>
                         </CardHeader>
                         <CardContent className="pb-6">
-                            <p className="text-3xl font-bold text-green-700">{walkIns}</p>
+                            <p className="text-3xl font-bold text-primary">{walkIns}</p>
                             <p className="mt-2 text-xs text-muted-foreground">
                                 Walk-ins coordinated with scholars for medicine requests.
                             </p>
                         </CardContent>
                     </Card>
-                    <Card className="rounded-3xl border border-green-100/70 bg-white/90 shadow-sm">
+                    <Card className="rounded-3xl border border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Last dispense</CardTitle>
                         </CardHeader>
                         <CardContent className="pb-6">
-                            <p className="text-lg font-semibold text-green-700">
+                            <p className="text-lg font-semibold text-primary">
                                 {latestDispense ? formatManilaDateTime(latestDispense) : "Awaiting first record"}
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
@@ -188,16 +188,16 @@ export default function NurseDispensePage() {
                     </Card>
                 </div>
 
-                <Card className="flex flex-col rounded-3xl border border-green-100/70 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
-                    <CardHeader className="border-b border-green-100/60">
-                        <CardTitle className="text-xl sm:text-2xl font-bold text-green-600">
+                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                    <CardHeader className="border-b border-primary/20/60">
+                        <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
                             Dispense History
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col pt-4">
                         <div className="overflow-x-auto w-full">
                             <Table className="min-w-full text-sm">
-                                <TableHeader className="bg-green-50 text-green-700">
+                                <TableHeader className="bg-primary/10 text-primary">
                                     <TableRow>
                                         <TableHead className="whitespace-nowrap">Clinic</TableHead>
                                         <TableHead className="whitespace-nowrap">Recipient</TableHead>
@@ -214,10 +214,10 @@ export default function NurseDispensePage() {
                                 <TableBody>
                                     {dispenses.length > 0 ? (
                                         dispenses.map((d) => (
-                                            <TableRow key={d.dispense_id} className="transition hover:bg-green-50">
+                                            <TableRow key={d.dispense_id} className="transition hover:bg-primary/10">
                                                 <TableCell>
                                                     <Badge
-                                                        className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-[0.7rem] font-semibold text-green-700"
+                                                        className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[0.7rem] font-semibold text-primary"
                                                         variant="outline"
                                                     >
                                                         {d.consultation?.appointment?.clinic?.clinic_name ??
@@ -253,7 +253,7 @@ export default function NurseDispensePage() {
                                                         variant="outline"
                                                         className={
                                                             d.consultation
-                                                                ? "rounded-full border-green-200 bg-green-100/80 px-3 py-1 text-[0.7rem] font-semibold text-green-700"
+                                                                ? "rounded-full border-primary/30 bg-primary/15/80 px-3 py-1 text-[0.7rem] font-semibold text-primary"
                                                                 : "rounded-full border-amber-200 bg-amber-50 px-3 py-1 text-[0.7rem] font-semibold text-amber-600"
                                                         }
                                                     >
@@ -269,7 +269,7 @@ export default function NurseDispensePage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge className="rounded-full bg-green-600/10 px-3 py-1 text-[0.75rem] font-semibold text-green-700">
+                                                    <Badge className="rounded-full bg-primary/10 px-3 py-1 text-[0.75rem] font-semibold text-primary">
                                                         ×{d.quantity}
                                                     </Badge>
                                                 </TableCell>
@@ -299,9 +299,9 @@ export default function NurseDispensePage() {
                                                             {d.dispenseBatches.map((batch, i) => (
                                                                 <li
                                                                     key={i}
-                                                                    className="rounded-2xl border border-green-100 bg-green-50/60 px-3 py-2 shadow-sm"
+                                                                    className="rounded-2xl border border-primary/20 bg-primary/10/60 px-3 py-2 shadow-sm"
                                                                 >
-                                                                    <div className="flex items-center justify-between text-[0.7rem] font-semibold text-green-700">
+                                                                    <div className="flex items-center justify-between text-[0.7rem] font-semibold text-primary">
                                                                         <span>Batch usage</span>
                                                                         <span>−{batch.quantity_used}</span>
                                                                     </div>

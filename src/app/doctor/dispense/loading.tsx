@@ -11,14 +11,14 @@ export default function DoctorDispenseLoading() {
         >
             <div className="space-y-6">
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-green-100/70 bg-gradient-to-r from-green-100/70 via-white to-green-50/80 shadow-sm">
+                    <Card className="rounded-3xl border border-primary/20 bg-gradient-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                         <CardHeader className="space-y-2">
                             <Skeleton className="h-4 w-1/3" />
                             <Skeleton className="h-4 w-1/2" />
                         </CardHeader>
                     </Card>
-                    <Card className="rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
-                        <CardHeader className="space-y-2 border-b border-green-100/70">
+                    <Card className="rounded-3xl border border-primary/20 bg-white/85 shadow-sm">
+                        <CardHeader className="space-y-2 border-b border-primary/20">
                             <Skeleton className="h-5 w-1/3" />
                             <Skeleton className="h-4 w-2/3" />
                         </CardHeader>
@@ -46,8 +46,8 @@ export default function DoctorDispenseLoading() {
                 </section>
 
                 <section className="mx-auto w-full max-w-6xl space-y-4 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-green-100/70 bg-white/85 shadow-sm">
-                        <CardHeader className="space-y-2 border-b border-green-100/70">
+                    <Card className="rounded-3xl border border-primary/20 bg-white/85 shadow-sm">
+                        <CardHeader className="space-y-2 border-b border-primary/20">
                             <Skeleton className="h-5 w-1/3" />
                             <Skeleton className="h-4 w-1/2" />
                         </CardHeader>
@@ -55,7 +55,7 @@ export default function DoctorDispenseLoading() {
                             {Array.from({ length: 5 }).map((_, index) => (
                                 <div
                                     key={index}
-                                    className="rounded-2xl border border-green-50 bg-white/80 p-4"
+                                    className="rounded-2xl border border-primary/15 bg-white/80 p-4"
                                 >
                                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                         <div className="space-y-2">

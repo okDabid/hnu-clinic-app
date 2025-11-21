@@ -33,38 +33,38 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
         <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
             <DialogContent className="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-3xl sm:max-h-none">
                 <DialogHeader>
-                    <DialogTitle className="text-xl text-green-700">Patient snapshot</DialogTitle>
+                    <DialogTitle className="text-xl text-primary">Patient snapshot</DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground">
                         Contact details and medical notes shared with the clinic team.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 text-sm">
-                    <div className="rounded-2xl bg-green-50/70 p-4 text-green-700">
+                    <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
                         <p className="text-lg font-semibold">{record.fullName}</p>
                         <div className="mt-2 grid gap-2 sm:grid-cols-2">
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Patient ID</p>
-                                <p className="font-medium text-green-700">{record.patientId}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
+                                <p className="font-medium text-primary">{record.patientId}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Type</p>
-                                <p className="font-medium text-green-700">{record.patientType}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Type</p>
+                                <p className="font-medium text-primary">{record.patientType}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Date of birth</p>
-                                <p className="font-medium text-green-700">{formatDateOnly(record.date_of_birth)}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Date of birth</p>
+                                <p className="font-medium text-primary">{formatDateOnly(record.date_of_birth)}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-green-500">Gender</p>
-                                <p className="font-medium text-green-700">{record.gender ?? "—"}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary">Gender</p>
+                                <p className="font-medium text-primary">{record.gender ?? "—"}</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
-                            <h4 className="flex items-center gap-2 text-sm font-semibold text-green-700">
+                        <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/70 p-4">
+                            <h4 className="flex items-center gap-2 text-sm font-semibold text-primary">
                                 <Users2 className="h-4 w-4" /> Academic / department info
                             </h4>
                             <dl className="grid gap-2 text-muted-foreground">
@@ -82,8 +82,8 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
                                 </div>
                             </dl>
                         </div>
-                        <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
-                            <h4 className="flex items-center gap-2 text-sm font-semibold text-green-700">
+                        <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/70 p-4">
+                            <h4 className="flex items-center gap-2 text-sm font-semibold text-primary">
                                 <HeartPulse className="h-4 w-4" /> Medical details
                             </h4>
                             <dl className="grid gap-2 text-muted-foreground">
@@ -104,8 +104,8 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
-                            <h4 className="text-sm font-semibold text-green-700">Contact information</h4>
+                        <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/70 p-4">
+                            <h4 className="text-sm font-semibold text-primary">Contact information</h4>
                             <dl className="grid gap-2 text-muted-foreground">
                                 <div>
                                     <dt className="text-xs uppercase tracking-wide">Phone</dt>
@@ -117,8 +117,8 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
                                 </div>
                             </dl>
                         </div>
-                        <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
-                            <h4 className="text-sm font-semibold text-green-700">Emergency contact</h4>
+                        <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/70 p-4">
+                            <h4 className="text-sm font-semibold text-primary">Emergency contact</h4>
                             <dl className="grid gap-2 text-muted-foreground">
                                 <div>
                                     <dt className="text-xs uppercase tracking-wide">Name</dt>
@@ -136,8 +136,8 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
                         </div>
                     </div>
 
-                    <div className="space-y-3 rounded-2xl border border-green-100 bg-white/70 p-4">
-                        <h4 className="text-sm font-semibold text-green-700">Latest appointment</h4>
+                    <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/70 p-4">
+                        <h4 className="text-sm font-semibold text-primary">Latest appointment</h4>
                         {record.latestAppointment ? (
                             <div className="grid gap-2 text-muted-foreground sm:grid-cols-2">
                                 <div>
