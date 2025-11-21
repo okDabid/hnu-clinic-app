@@ -48,22 +48,22 @@ export default function AboutPage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-linear-to-b from-green-50 via-white to-green-50">
+        <div className="flex flex-col min-h-screen bg-linear-to-b from-primary/10 via-white to-primary/5">
             <SiteHeader navigation={navigation} />
 
             {/* Hero Section */}
             <section className="relative overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-linear-to-br from-green-100 via-white to-green-50" />
-                <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-green-200/40 blur-3xl" />
+                <div className="absolute inset-0 -z-10 bg-linear-to-br from-primary/15 via-white to-primary/5" />
+                <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
                 <div className="max-w-6xl mx-auto px-6 md:px-12 py-20 md:py-24">
                     <div className="max-w-3xl space-y-6 text-center md:text-left">
-                        <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                        <span className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
                             Our Story
                         </span>
-                        <h1 className="text-3xl md:text-5xl font-bold text-green-600 leading-tight">
+                        <h1 className="text-3xl md:text-5xl font-bold text-primary leading-tight">
                             Caring for the Holy Name University community with compassion and technology.
                         </h1>
-                        <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                        <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
                             HNU Clinic is the dedicated health partner for students, faculty, and staff. We blend professional expertise with digital tools that make every visit organized, respectful, and centered on well-being.
                         </p>
                     </div>
@@ -78,9 +78,9 @@ export default function AboutPage() {
                             title: "Guided by Care",
                             description: "Every interaction anchored in safety and respect.",
                         }].map((item) => (
-                            <div key={item.title} className="rounded-2xl border border-green-100 bg-white/80 p-5 text-center shadow-sm">
-                                <p className="text-sm font-semibold text-green-600">{item.title}</p>
-                                <p className="mt-2 text-sm text-gray-600 leading-relaxed">{item.description}</p>
+                            <div key={item.title} className="rounded-2xl border border-primary/20 bg-white/80 p-5 text-center shadow-sm">
+                                <p className="text-sm font-semibold text-primary">{item.title}</p>
+                                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                             </div>
                         ))}
                     </div>
@@ -104,14 +104,14 @@ export default function AboutPage() {
                             icon: ShieldCheck,
                         },
                     ].map(({ title, description, icon: Icon }) => (
-                        <Card key={title} className="rounded-3xl border-green-100 shadow-lg hover:shadow-xl transition">
+                        <Card key={title} className="rounded-3xl border-primary/20 shadow-lg hover:-translate-y-1 hover:shadow-xl transition">
                             <CardHeader className="flex flex-col gap-4">
-                                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600 shadow-sm">
+                                <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
                                     <Icon className="h-6 w-6" />
                                 </span>
-                                <CardTitle className="text-2xl font-semibold text-green-700">{title}</CardTitle>
+                                <CardTitle className="text-2xl font-semibold text-primary">{title}</CardTitle>
                             </CardHeader>
-                            <CardContent className="pt-0 text-gray-700 leading-relaxed">
+                            <CardContent className="pt-0 text-muted-foreground leading-relaxed">
                                 {description}
                             </CardContent>
                         </Card>
@@ -122,11 +122,11 @@ export default function AboutPage() {
             {/* Values */}
             <section className="px-6 md:px-12 py-20 bg-white/60">
                 <div className="max-w-6xl mx-auto text-center space-y-6">
-                    <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                    <span className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
                         Our Pillars
                     </span>
-                    <h2 className="text-2xl md:text-3xl font-bold text-green-600">How we deliver patient-centered care</h2>
-                    <p className="text-gray-600 max-w-3xl mx-auto">
+                    <h2 className="text-2xl md:text-3xl font-bold text-primary">How we deliver patient-centered care</h2>
+                    <p className="text-muted-foreground max-w-3xl mx-auto">
                         Every initiative at HNU Clinic is grounded in empathy, collaboration, and proactive wellness support for the campus.
                     </p>
                     <div className="grid gap-6 md:grid-cols-3">
@@ -143,14 +143,14 @@ export default function AboutPage() {
                             description: "Collaborating across disciplines to ensure continuous, safe care.",
                             icon: UsersRound,
                         }].map(({ title, description, icon: Icon }) => (
-                            <Card key={title} className="rounded-2xl border-green-100 shadow-md hover:shadow-lg transition">
+                            <Card key={title} className="rounded-2xl border-primary/20 shadow-md hover:-translate-y-1 hover:shadow-lg transition">
                                 <CardHeader className="flex flex-col items-center gap-4 text-center">
-                                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600 shadow-sm">
+                                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
                                         <Icon className="h-6 w-6" />
                                     </span>
-                                    <CardTitle className="text-xl font-semibold text-green-700">{title}</CardTitle>
+                                    <CardTitle className="text-xl font-semibold text-primary">{title}</CardTitle>
                                 </CardHeader>
-                                <CardContent className="pt-0 text-sm text-gray-600 leading-relaxed">
+                                <CardContent className="pt-0 text-sm text-muted-foreground leading-relaxed">
                                     {description}
                                 </CardContent>
                             </Card>
@@ -160,16 +160,16 @@ export default function AboutPage() {
             </section>
 
             {/* Team Section */}
-            <section className="px-6 md:px-12 py-20 bg-green-50/60">
+            <section className="px-6 md:px-12 py-20 bg-primary/5">
                 <div className="max-w-6xl mx-auto space-y-12">
                     <div className="text-center space-y-4">
-                        <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                        <span className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
                             Health Services Department
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">
+                        <h2 className="text-2xl md:text-3xl font-bold text-primary">
                             The team behind every HNU Clinic visit
                         </h2>
-                        <p className="text-gray-600 max-w-2xl mx-auto">
+                        <p className="text-muted-foreground max-w-2xl mx-auto">
                             Our doctors, dentists, and nurses work side-by-side to deliver coordinated care and supportive guidance for the HNU community.
                         </p>
                     </div>
@@ -177,14 +177,14 @@ export default function AboutPage() {
                     <div className="space-y-12">
                         <div className="space-y-6">
                             <div className="flex items-center justify-between gap-4">
-                                <h3 className="text-xl font-semibold text-green-700 flex items-center gap-2">
+                                <h3 className="text-xl font-semibold text-primary flex items-center gap-2">
                                     <Stethoscope className="h-5 w-5" /> Clinic Leadership
                                 </h3>
-                                <span className="hidden text-sm text-green-600 md:block">Guiding daily health operations</span>
+                                <span className="hidden text-sm text-primary md:block">Guiding daily health operations</span>
                             </div>
                             <div className="grid gap-6 md:grid-cols-2">
                                 {leadership.map((member) => (
-                                    <Card key={member.name} className="rounded-2xl border-green-100 bg-white/90 shadow-md">
+                                    <Card key={member.name} className="rounded-2xl border-primary/20 bg-white/90 shadow-md">
                                         <CardContent className="flex items-center gap-4 p-6">
                                             <Image
                                                 src={member.img}
@@ -194,8 +194,8 @@ export default function AboutPage() {
                                                 className="h-24 w-24 rounded-full object-cover shadow"
                                             />
                                             <div className="space-y-1 text-left">
-                                                <p className="text-base font-semibold text-green-700">{member.name}</p>
-                                                <p className="text-sm text-gray-600">{member.role}</p>
+                                                <p className="text-base font-semibold text-primary">{member.name}</p>
+                                                <p className="text-sm text-muted-foreground">{member.role}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -204,10 +204,10 @@ export default function AboutPage() {
                         </div>
 
                         <div className="space-y-6">
-                            <h3 className="text-xl font-semibold text-green-700">Dental Care</h3>
+                            <h3 className="text-xl font-semibold text-primary">Dental Care</h3>
                             <div className="grid gap-6 sm:grid-cols-2">
                                 {dentists.map((member) => (
-                                    <Card key={member.name} className="rounded-2xl border-green-100 bg-white/90 shadow-sm">
+                                    <Card key={member.name} className="rounded-2xl border-primary/20 bg-white/90 shadow-sm">
                                         <CardContent className="flex flex-col items-center gap-4 p-6">
                                             <Image
                                                 src={member.img}
@@ -217,8 +217,8 @@ export default function AboutPage() {
                                                 className="h-24 w-24 rounded-full object-cover shadow"
                                             />
                                             <div className="text-center space-y-1">
-                                                <p className="text-base font-semibold text-green-700">{member.name}</p>
-                                                <p className="text-sm text-gray-600">{member.role}</p>
+                                                <p className="text-base font-semibold text-primary">{member.name}</p>
+                                                <p className="text-sm text-muted-foreground">{member.role}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -227,10 +227,10 @@ export default function AboutPage() {
                         </div>
 
                         <div className="space-y-6">
-                            <h3 className="text-xl font-semibold text-green-700">Nursing Team</h3>
+                            <h3 className="text-xl font-semibold text-primary">Nursing Team</h3>
                             <div className="grid gap-6 sm:grid-cols-3">
                                 {nurses.map((member) => (
-                                    <Card key={member.name} className="rounded-2xl border-green-100 bg-white/90 shadow-sm">
+                                    <Card key={member.name} className="rounded-2xl border-primary/20 bg-white/90 shadow-sm">
                                         <CardContent className="flex flex-col items-center gap-4 p-6">
                                             <Image
                                                 src={member.img}
@@ -240,8 +240,8 @@ export default function AboutPage() {
                                                 className="h-24 w-24 rounded-full object-cover shadow"
                                             />
                                             <div className="text-center space-y-1">
-                                                <p className="text-base font-semibold text-green-700">{member.name}</p>
-                                                <p className="text-sm text-gray-600">{member.role}</p>
+                                                <p className="text-base font-semibold text-primary">{member.name}</p>
+                                                <p className="text-sm text-muted-foreground">{member.role}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -257,11 +257,11 @@ export default function AboutPage() {
             <section className="px-6 md:px-12 py-20 bg-white">
                 <div className="max-w-6xl mx-auto space-y-12">
                     <div className="text-center space-y-4">
-                        <span className="inline-flex items-center justify-center rounded-full border border-green-200 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-green-700">
+                        <span className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
                             Core Programs
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-bold text-green-600">Services that support the HNU community</h2>
-                        <p className="text-gray-600 max-w-2xl mx-auto">
+                        <h2 className="text-2xl md:text-3xl font-bold text-primary">Services that support the HNU community</h2>
+                        <p className="text-muted-foreground max-w-2xl mx-auto">
                             Our multidisciplinary team delivers coordinated services that cover assessments, preventive care, and responsive support.
                         </p>
                     </div>
@@ -277,15 +277,15 @@ export default function AboutPage() {
                             title: "Primary Care Program",
                             points: ["Support for urgent medical needs", "Care for minor injuries", "Assistance with sudden illnesses"],
                         }].map((service) => (
-                            <Card key={service.title} className="rounded-3xl border-green-100 bg-white/90 shadow-lg hover:shadow-xl transition">
+                            <Card key={service.title} className="rounded-3xl border-primary/20 bg-white/90 shadow-lg hover:-translate-y-1 hover:shadow-xl transition">
                                 <CardHeader>
-                                    <CardTitle className="text-xl font-semibold text-green-700">{service.title}</CardTitle>
+                                    <CardTitle className="text-xl font-semibold text-primary">{service.title}</CardTitle>
                                 </CardHeader>
-                                <CardContent className="text-sm text-gray-600 leading-relaxed">
+                                <CardContent className="text-sm text-muted-foreground leading-relaxed">
                                     <ul className="space-y-2">
                                         {service.points.map((point) => (
                                             <li key={point} className="flex items-start gap-2">
-                                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-green-500" />
+                                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
                                                 <span>{point}</span>
                                             </li>
                                         ))}
@@ -298,20 +298,20 @@ export default function AboutPage() {
             </section>
 
             {/* Footer */}
-            <footer className="bg-green-900 text-green-50">
+            <footer className="bg-primary text-primary-foreground">
                 <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 grid gap-8 md:grid-cols-3">
                     <div className="space-y-3">
                         <p className="text-lg font-semibold">HNU Clinic</p>
-                        <p className="text-sm text-green-100 leading-relaxed">
+                        <p className="text-sm text-primary-foreground/80 leading-relaxed">
                             Dedicated to providing a safe and welcoming health experience for the Holy Name University community.
                         </p>
                     </div>
                     <div className="space-y-3">
                         <p className="text-lg font-semibold">Quick Links</p>
-                        <ul className="space-y-2 text-sm text-green-100">
+                        <ul className="space-y-2 text-sm text-primary-foreground/80">
                             {navigation.map((item) => (
                                 <li key={item.label}>
-                                    <Link href={item.href} className="hover:text-white transition">
+                                    <Link href={item.href} className="hover:text-primary-foreground transition">
                                         {item.label}
                                     </Link>
                                 </li>
@@ -320,15 +320,15 @@ export default function AboutPage() {
                     </div>
                     <div className="space-y-3">
                         <p className="text-lg font-semibold">Connect with Us</p>
-                        <p className="text-sm text-green-100 leading-relaxed">
+                        <p className="text-sm text-primary-foreground/80 leading-relaxed">
                             Reach out to the clinic staff for guidance on scheduling, records, or wellness programs tailored to campus needs.
                         </p>
-                        <Link href="/learn-more" className="inline-flex text-sm text-white font-medium underline-offset-4 hover:underline">
+                        <Link href="/learn-more" className="inline-flex text-sm text-primary-foreground font-medium underline-offset-4 hover:underline">
                             Learn more about the system
                         </Link>
                     </div>
                 </div>
-                <div className="border-t border-green-700/60 text-center py-4 text-xs text-green-200">
+                <div className="border-t border-primary-foreground/20 text-center py-4 text-xs text-primary-foreground/80">
                     © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System
                 </div>
             </footer>
