@@ -189,7 +189,7 @@ export default function LearnMorePage() {
                                 ))}
                             </div>
                         </div>
-                        <Card className="rounded-3xl border-none bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-xl">
+                        <Card className="rounded-3xl border-none bg-linear-to-br bg-emerald-600 text-primary-foreground shadow-xl">
                             <CardContent className="space-y-5 p-8">
                                 <h4 className="text-2xl font-semibold">Designed for confident clinic operations</h4>
                                 <p className="text-sm text-primary-foreground/90 md:text-base leading-relaxed">
