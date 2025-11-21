@@ -77,7 +77,7 @@ export default function HomePage() {
                                 Our public homepage at <Link href="https://www.hnu-clinic-app.com/" className="font-semibold text-primary underline underline-offset-2">www.hnu-clinic-app.com</Link> introduces the system students, faculty, and staff use to request appointments, manage records, and coordinate care.
                             </p>
                             <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
-                                We help patients schedule visits, notify doctors of updates, and keep sensitive information synchronized between care teams—all while upholding the privacy expectations of the HNU community.
+                                We help patients schedule visits, notify patients of updates, and keep sensitive information synchronized. All while upholding the privacy expectations of the HNU community.
                             </p>
                         </div>
                         <div className="flex flex-1 justify-center md:justify-end">

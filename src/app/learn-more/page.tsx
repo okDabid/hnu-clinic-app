@@ -276,7 +276,7 @@ export default function LearnMorePage() {
                     <div className="mx-auto max-w-5xl rounded-3xl border border-primary/20 bg-linear-to-br from-primary/10 via-white to-primary/5 p-10 text-center shadow-lg">
                         <h3 className="text-2xl font-bold text-primary md:text-3xl">Ready to streamline clinic operations?</h3>
                         <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-                            Log in to the HNU Clinic portal to manage appointments, update records, and keep your team aligned with the latest patient information.
+                            Log in to the HNU Clinic portal to manage appointments, update records, and keep your patient data secured.
                         </p>
                         <div className="mt-8 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
                             <Link href="/login" className="w-full sm:w-auto">
