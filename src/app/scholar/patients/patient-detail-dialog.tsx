@@ -31,7 +31,7 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
 
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
-            <DialogContent className="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-3xl sm:max-h-none">
+            <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
                 <DialogHeader>
                     <DialogTitle className="text-xl text-primary">Patient snapshot</DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground">

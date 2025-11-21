@@ -64,7 +64,7 @@ function RecordDetailsDialogComponent({
                 }
             }}
         >
-            <DialogContent className="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-3xl sm:max-h-none">
+            <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
                 <div className="space-y-6">
                     <DialogHeader>
                         <DialogTitle className="text-xl text-primary">Patient snapshot</DialogTitle>

@@ -602,7 +602,7 @@ export default function DoctorPatientsPage() {
                         }
                     }}
                 >
-                    <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[80vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
+                    <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
                         {selectedRecord ? (
                             <div className="space-y-6">
                                 <DialogHeader>
@@ -733,16 +733,16 @@ export default function DoctorPatientsPage() {
                                     <TabsContent value="update" className="space-y-4">
                                         <form onSubmit={handleUpdateInfo} className="space-y-3">
                                             <div>
-                                            <Label className="mb-1 block font-medium" htmlFor="medical_cond">
-                                                Medical Conditions
-                                            </Label>
-                                            <Input
-                                                id="medical_cond"
-                                                name="medical_cond"
-                                                defaultValue={selectedMedicalHistoryText}
-                                                placeholder="e.g. Asthma, Hypertension, other details"
-                                            />
-                                        </div>
+                                                <Label className="mb-1 block font-medium" htmlFor="medical_cond">
+                                                    Medical Conditions
+                                                </Label>
+                                                <Input
+                                                    id="medical_cond"
+                                                    name="medical_cond"
+                                                    defaultValue={selectedMedicalHistoryText}
+                                                    placeholder="e.g. Asthma, Hypertension, other details"
+                                                />
+                                            </div>
                                             <div>
                                                 <Label className="mb-1 block font-medium" htmlFor="allergies">
                                                     Allergies
