@@ -64,7 +64,7 @@ export default function HomePage() {
             <main className="flex-1">
                 <section className="relative overflow-hidden">
                     <div className="absolute inset-0 -z-10 bg-linear-to-br from-primary/15 via-white to-primary/5" />
-                    <div className="absolute inset-y-0 right-0 -z-10 h-full w-1/2 bg-[radial-gradient(circle_at_top,rgba(22,163,74,0.15),transparent_60%)]" />
+                    <div className="absolute inset-y-0 right-0 -z-10 h-full w-full md:w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(22,163,74,0.15),transparent_60%)]" />
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-12 px-6 py-16 md:flex-row md:px-12 md:py-24">
                         <div className="max-w-xl space-y-6 text-center md:text-left">
                             <span className="inline-flex items-center rounded-full border border-primary/20 bg-white px-4 py-1 text-sm font-semibold text-primary shadow-sm">
