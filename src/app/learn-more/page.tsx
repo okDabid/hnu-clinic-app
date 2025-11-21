@@ -112,9 +112,9 @@ export default function LearnMorePage() {
                             <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
                                 From streamlined appointment requests to comprehensive visit documentation, the platform supports every stage of the patient journey for students, faculty, and staff.
                             </p>
-                            <div className="flex flex-col items-center gap-4 sm:flex-row md:items-start">
+                            <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
                                 <Link href="/login">
-                                    <Button size="lg" className="w-full rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 sm:w-auto">
+                                    <Button size="lg" className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
                                         Go to Portal
                                     </Button>
                                 </Link>
@@ -278,9 +278,9 @@ export default function LearnMorePage() {
                         <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
                             Log in to the HNU Clinic portal to manage appointments, update records, and keep your team aligned with the latest patient information.
                         </p>
-                        <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                            <Link href="/login">
-                                <Button size="lg" className="rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
+                        <div className="mt-8 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
+                            <Link href="/login" className="w-full sm:w-auto">
+                                <Button size="lg" className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
                                     Access the portal
                                 </Button>
                             </Link>
