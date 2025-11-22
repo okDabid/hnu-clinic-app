@@ -150,7 +150,7 @@ export default function LoginPageClient() {
         const trimmed = currentContact.trim();
         const normalized = normalizeResetContact(trimmed);
         if (!normalized) {
-            setContactError("Enter a valid email address.");
+            setContactError("Enter a valid email address or mobile number.");
             return false;
         }
 
@@ -165,7 +165,8 @@ export default function LoginPageClient() {
             });
             const data = await res.json();
             if (res.ok) {
-                toast.success("Verification code sent via email!");
+                const channel = normalized.type === "SMS" ? "SMS" : "email";
+                toast.success(`Verification code sent via ${channel}!`);
                 setTokenSent(true);
                 setResendCooldown(60);
                 return true;
@@ -429,8 +430,8 @@ export default function LoginPageClient() {
                         <DialogTitle className="text-primary">Reset Password</DialogTitle>
                         <DialogDescription className="text-gray-600">
                             {tokenSent
-                                ? "Enter the 6 digit code sent to your email and set your new password."
-                                : "Enter your registered email address to receive a reset code."}
+                                ? "Enter the 6 digit code we sent and set your new password."
+                                : "Enter your registered email or mobile number to receive a reset code."}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -443,7 +444,7 @@ export default function LoginPageClient() {
                                         setContact(e.target.value);
                                         if (contactError) setContactError(null);
                                     }}
-                                    placeholder="Enter email address"
+                                    placeholder="Enter email or mobile number"
                                     disabled={verifying}
                                     required
                                 />
@@ -451,7 +452,7 @@ export default function LoginPageClient() {
                                     <p className="text-sm text-red-600">{contactError}</p>
                                 )}
                                 <p className="text-xs text-slate-500">
-                                    We&apos;ll send a 6-digit code to your email address.
+                                    We&apos;ll send a 6-digit code to your email inbox or via SMS.
                                 </p>
                             </div>
                             <DialogFooter className="flex-col gap-2 sm:flex-row">

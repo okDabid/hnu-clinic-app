@@ -23,7 +23,7 @@ async function handler(req: Request) {
 
         if (!normalized) {
             return NextResponse.json(
-                { error: "Enter a valid email address." },
+                { error: "Enter a valid email address or mobile number." },
                 { status: 400 }
             );
         }

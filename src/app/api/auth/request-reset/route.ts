@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
+import { sendSms } from "@/lib/sms";
 import { generateNumericCode } from "@/lib/security";
 import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
 
@@ -28,7 +29,7 @@ async function handler(req: Request) {
 
         if (typeof contact !== "string") {
             return NextResponse.json(
-                { error: "Contact email is required." },
+                { error: "Email address or mobile number is required." },
                 { status: 400 }
             );
         }
@@ -37,37 +38,57 @@ async function handler(req: Request) {
 
         if (!normalized) {
             return NextResponse.json(
-                { error: "Enter a valid email address." },
+                { error: "Enter a valid email address or mobile number." },
                 { status: 400 }
             );
         }
 
-        // Find user by email
+        // Find user by email or mobile number
         const user = await prisma.users.findFirst({
-            where: {
-                OR: [
-                    {
-                        student: {
-                            is: {
-                                email: {
-                                    equals: normalized.normalized,
-                                    mode: "insensitive",
-                                },
-                            },
-                        },
-                    },
-                    {
-                        employee: {
-                            is: {
-                                email: {
-                                    equals: normalized.normalized,
-                                    mode: "insensitive",
-                                },
-                            },
-                        },
-                    },
-                ],
-            },
+            where:
+                normalized.type === "EMAIL"
+                    ? {
+                          OR: [
+                              {
+                                  student: {
+                                      is: {
+                                          email: {
+                                              equals: normalized.normalized,
+                                              mode: "insensitive",
+                                          },
+                                      },
+                                  },
+                              },
+                              {
+                                  employee: {
+                                      is: {
+                                          email: {
+                                              equals: normalized.normalized,
+                                              mode: "insensitive",
+                                          },
+                                      },
+                                  },
+                              },
+                          ],
+                      }
+                    : {
+                          OR: [
+                              {
+                                  student: {
+                                      is: {
+                                          contactno: { in: normalized.variants },
+                                      },
+                                  },
+                              },
+                              {
+                                  employee: {
+                                      is: {
+                                          contactno: { in: normalized.variants },
+                                      },
+                                  },
+                              },
+                          ],
+                      },
             include: {
                 student: { select: { fname: true, lname: true } },
                 employee: { select: { fname: true, lname: true } },
@@ -77,7 +98,7 @@ async function handler(req: Request) {
         if (!user) {
             return NextResponse.json({
                 success: true,
-                message: "If an account exists for that email, a reset code has been sent.",
+                message: "If an account exists for that contact, a reset code has been sent.",
             });
         }
 
@@ -171,27 +192,46 @@ If you didn't request this, please ignore this email.
 This message was automatically sent from the HNU Clinic Capstone Project website.`;
 
         try {
-            await sendEmail({
-                to: normalized.normalized,
-                subject: "Password Reset Code",
-                html: htmlContent,
-                fromName: "HNU Clinic",
-                text: textContent,
-            });
-        } catch (emailError) {
-            console.error("Failed to send reset email:", emailError);
+            if (normalized.type === "EMAIL") {
+                await sendEmail({
+                    to: normalized.normalized,
+                    subject: "Password Reset Code",
+                    html: htmlContent,
+                    fromName: "HNU Clinic",
+                    text: textContent,
+                });
+            } else {
+                const smsMessage = [
+                    "HNU Clinic password reset code:",
+                    code,
+                    "This code will expire in 10 minutes.",
+                    "Ignore this message if you did not request it.",
+                ].join("\n");
+
+                await sendSms({
+                    to: normalized.normalized,
+                    message: smsMessage,
+                });
+            }
+        } catch (sendError) {
+            console.error("Failed to send reset notification:", sendError);
             try {
                 await prisma.passwordResetToken.delete({ where: { id: createdToken.id } });
             } catch (cleanupError) {
                 console.error(
-                    "Failed to clean up reset token after email error:",
+                    "Failed to clean up reset token after notification error:",
                     cleanupError,
                 );
             }
 
             const missingSender =
-                emailError instanceof Error &&
-                emailError.message.includes("Missing GMAIL_USER in environment");
+                sendError instanceof Error &&
+                sendError.message.includes("Missing GMAIL_USER in environment");
+
+            const missingSmsCredentials =
+                sendError instanceof Error &&
+                (sendError.message.includes("PHILSMS_APP_KEY") ||
+                    sendError.message.includes("PHILSMS_APP_SECRET"));
 
             if (missingSender) {
                 return NextResponse.json(
@@ -200,15 +240,22 @@ This message was automatically sent from the HNU Clinic Capstone Project website
                 );
             }
 
+            if (missingSmsCredentials) {
+                return NextResponse.json(
+                    { error: "SMS service is not configured." },
+                    { status: 500 },
+                );
+            }
+
             return NextResponse.json(
-                { error: "Failed to send reset email. Please try again later." },
+                { error: "Failed to send reset code. Please try again later." },
                 { status: 500 },
             );
         }
 
         return NextResponse.json({
             success: true,
-            message: "If an account exists for that email, a reset code has been sent.",
+            message: "If an account exists for that contact, a reset code has been sent.",
         });
     } catch (error: unknown) {
         console.error("REQUEST-RESET ERROR DETAILS:", error);
@@ -243,7 +290,7 @@ export const POST = withRateLimit(
             limit: 4,
             windowMs: 60 * 60_000,
             message:
-                "Too many reset requests for this email. Please wait before requesting another code.",
+                "Too many reset requests for this contact. Please wait before requesting another code.",
         },
     ],
     handler

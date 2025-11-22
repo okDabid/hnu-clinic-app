@@ -75,6 +75,10 @@ prisma/
 | `GMAIL_CLIENT_ID` | OAuth client ID for Gmail API access (`src/lib/email.ts`). |
 | `GMAIL_CLIENT_SECRET` | OAuth client secret paired with the client ID (`src/lib/email.ts`). |
 | `GMAIL_REFRESH_TOKEN` | Long-lived refresh token used to mint Gmail access tokens (`src/lib/email.ts`). |
+| `PHILSMS_APP_KEY` | API key for the PhilSMS gateway when sending password reset codes via SMS (`src/lib/sms.ts`). |
+| `PHILSMS_APP_SECRET` | API secret for PhilSMS requests (`src/lib/sms.ts`). |
+| `PHILSMS_SENDER_ID` | Optional branded sender ID/label for outbound PhilSMS messages (`src/lib/sms.ts`). |
+| `PHILSMS_API_URL` | Optional override for the PhilSMS API endpoint (defaults to `https://app.philsms.com/api/v3/sms/send`). |
 | `NEXT_PUBLIC_APP_URL` | Public base URL used by nurse-side server actions (`src/app/nurse/actions.ts`). |
 | `TZ` | Time-zone override (set to `Asia/Manila` in `next.config.ts`). |
 
