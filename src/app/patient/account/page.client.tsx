@@ -448,7 +448,13 @@ export function PatientAccountPageClient({
             const res = await fetch("/api/patient/account/me", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ profile: payload }),
+                body: JSON.stringify({
+                    profile: payload,
+                    profileImage:
+                        typeof updatedProfile.profileImage === "string"
+                            ? updatedProfile.profileImage
+                            : updatedProfile.profileImage ?? null,
+                }),
             });
 
             const data = await res.json();
