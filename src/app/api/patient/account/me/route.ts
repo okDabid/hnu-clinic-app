@@ -277,6 +277,10 @@ export async function PUT(req: Request) {
             "profileImage"
         );
         const rawProfileImage = hasProfileImageField ? payload.profileImage : undefined;
+        const hasCloudinaryConfig =
+            Boolean(process.env.CLOUDINARY_CLOUD_NAME) &&
+            Boolean(process.env.CLOUDINARY_API_KEY) &&
+            Boolean(process.env.CLOUDINARY_API_SECRET);
         const normalizedProfileImage =
             typeof rawProfileImage === "string" && rawProfileImage.trim().length
                 ? rawProfileImage.trim()
@@ -317,27 +321,32 @@ export async function PUT(req: Request) {
                 userUpdateInput.profile_image = null;
                 nextProfileImage = null;
             } else if (typeof normalizedProfileImage === "string") {
-                try {
-                    const upload = await uploadDataUrlToCloudinary(
-                        normalizedProfileImage,
-                        session.user.id
-                    );
-                    userUpdateInput.profile_image = upload.secure_url ?? null;
-                    nextProfileImage = upload.secure_url ?? null;
+                if (!hasCloudinaryConfig) {
+                    userUpdateInput.profile_image = normalizedProfileImage;
+                    nextProfileImage = normalizedProfileImage;
+                } else {
+                    try {
+                        const upload = await uploadDataUrlToCloudinary(
+                            normalizedProfileImage,
+                            session.user.id
+                        );
+                        userUpdateInput.profile_image = upload.secure_url ?? null;
+                        nextProfileImage = upload.secure_url ?? null;
 
-                    if (existingPublicId && upload.public_id && existingPublicId !== upload.public_id) {
-                        try {
-                            await deleteCloudinaryImage(existingPublicId);
-                        } catch (error) {
-                            console.error("[Cloudinary] Failed to clean up old avatar", error);
+                        if (existingPublicId && upload.public_id && existingPublicId !== upload.public_id) {
+                            try {
+                                await deleteCloudinaryImage(existingPublicId);
+                            } catch (error) {
+                                console.error("[Cloudinary] Failed to clean up old avatar", error);
+                            }
                         }
+                    } catch (error) {
+                        console.error("[Cloudinary] Upload failed", error);
+                        return NextResponse.json(
+                            { error: "Failed to upload profile image" },
+                            { status: 500 }
+                        );
                     }
-                } catch (error) {
-                    console.error("[Cloudinary] Upload failed", error);
-                    return NextResponse.json(
-                        { error: "Failed to upload profile image" },
-                        { status: 500 }
-                    );
                 }
             }
         }
