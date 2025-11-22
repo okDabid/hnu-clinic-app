@@ -132,7 +132,7 @@ export function PanelLayout({
     );
 
     return (
-        <div className="relative min-h-screen bg-linear-to-br from-primary/10 via-white to-primary/5">
+        <div className="relative min-h-screen overflow-x-hidden bg-linear-to-br from-primary/10 via-white to-primary/5">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(34,197,94,0.12),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(34,197,94,0.1),transparent_25%)]" aria-hidden />
             <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
                 <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-primary/15 bg-white/90 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
