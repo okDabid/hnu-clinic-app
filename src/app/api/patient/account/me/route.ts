@@ -12,6 +12,11 @@ import {
 } from "@prisma/client";
 import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import {
+    deleteCloudinaryImage,
+    extractPublicIdFromUrl,
+    uploadDataUrlToCloudinary,
+} from "@/lib/cloudinary";
 
 // ---------------- ENUM HELPERS ----------------
 function mapDepartment(val?: string | null): Department | undefined {
@@ -298,9 +303,43 @@ export async function PUT(req: Request) {
             (typeof normalizedProfileImage === "string" && normalizedProfileImage.startsWith("data:image"));
         const userUpdateInput: Prisma.UsersUpdateInput = {};
         let nextProfileImage = user.profile_image ?? null;
+        const existingPublicId = extractPublicIdFromUrl(user.profile_image);
 
         if (shouldUpdateProfileImage) {
-            userUpdateInput.profile_image = normalizedProfileImage ?? null;
+            if (normalizedProfileImage === null) {
+                if (existingPublicId) {
+                    try {
+                        await deleteCloudinaryImage(existingPublicId);
+                    } catch (error) {
+                        console.error("[Cloudinary] Failed to delete previous avatar", error);
+                    }
+                }
+                userUpdateInput.profile_image = null;
+                nextProfileImage = null;
+            } else if (typeof normalizedProfileImage === "string") {
+                try {
+                    const upload = await uploadDataUrlToCloudinary(
+                        normalizedProfileImage,
+                        session.user.id
+                    );
+                    userUpdateInput.profile_image = upload.secure_url ?? null;
+                    nextProfileImage = upload.secure_url ?? null;
+
+                    if (existingPublicId && upload.public_id && existingPublicId !== upload.public_id) {
+                        try {
+                            await deleteCloudinaryImage(existingPublicId);
+                        } catch (error) {
+                            console.error("[Cloudinary] Failed to clean up old avatar", error);
+                        }
+                    }
+                } catch (error) {
+                    console.error("[Cloudinary] Upload failed", error);
+                    return NextResponse.json(
+                        { error: "Failed to upload profile image" },
+                        { status: 500 }
+                    );
+                }
+            }
         }
 
         const incomingDOB = toDate(profile.date_of_birth);

@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 
 function buildImageResponse(imageData: string | null | undefined) {
     if (!imageData) return null;
+    if (imageData.startsWith("http://") || imageData.startsWith("https://")) {
+        return NextResponse.redirect(imageData, { status: 302 });
+    }
     const dataUrlMatch = imageData.match(/^data:(.+);base64,(.*)$/);
     if (!dataUrlMatch) return null;
 
