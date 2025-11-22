@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AlertCircle, BadgeCheck, Loader2, RefreshCcw, Search, Stethoscope, Users2 } from "lucide-react";
-
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -505,15 +505,15 @@ export default function DoctorPatientsPage() {
                                 <p className="py-10 text-center text-muted-foreground">No patient records found.</p>
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <Table className="min-w-[900px] text-sm">
+                                    <Table className="min-w-full text-sm">
                                         <TableHeader>
                                             <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                                <TableHead className="min-w-[200px]">Patient</TableHead>
+                                                <TableHead className="min-w-[220px]">Patient</TableHead>
                                                 <TableHead className="min-w-[140px]">ID</TableHead>
                                                 <TableHead className="min-w-[120px]">Type</TableHead>
-                                                <TableHead className="min-w-[120px]">Program / Department</TableHead>
+                                                <TableHead className="min-w-[220px]">Program / Department</TableHead>
                                                 <TableHead className="min-w-[120px]">Status</TableHead>
-                                                <TableHead className="min-w-[200px]">Latest appointment</TableHead>
+                                                <TableHead className="min-w-[220px]">Latest appointment</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -534,11 +534,23 @@ export default function DoctorPatientsPage() {
                                                         role="button"
                                                     >
                                                         <TableCell className="font-medium text-primary">
-                                                            <div className="flex flex-col">
-                                                                <span>{record.fullName}</span>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {record.contactno ? record.contactno : "No contact number"}
-                                                                </span>
+                                                            <div className="flex items-center gap-3">
+                                                                <Avatar className="h-10 w-10 border border-primary/20 bg-primary/5">
+                                                                    <AvatarFallback className="text-xs font-semibold text-primary">
+                                                                        {record.fullName
+                                                                            .split(" ")
+                                                                            .map((chunk) => chunk.charAt(0))
+                                                                            .join("")
+                                                                            .slice(0, 2)
+                                                                            .toUpperCase() || "PT"}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex flex-col">
+                                                                    <span>{record.fullName}</span>
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        {record.contactno ? record.contactno : "No contact number"}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>{record.patientId}</TableCell>
@@ -612,24 +624,41 @@ export default function DoctorPatientsPage() {
                                     </DialogDescription>
                                 </DialogHeader>
 
-                                <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
-                                    <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
-                                    <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                                <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-primary">
+                                    <div className="flex items-start gap-4">
+                                        <Avatar className="h-12 w-12 border border-primary/40 bg-white shadow-sm">
+                                            <AvatarFallback className="bg-primary/10 text-base font-semibold text-primary">
+                                                {selectedRecord.fullName
+                                                    .split(" ")
+                                                    .map((chunk) => chunk.charAt(0))
+                                                    .join("")
+                                                    .slice(0, 2)
+                                                    .toUpperCase() || "PT"}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1">
+                                            <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
+                                            <p className="text-xs font-medium uppercase tracking-wide text-primary/70">
+                                                {selectedRecord.patientType}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 grid gap-3 rounded-xl bg-white/60 p-3 text-sm text-primary sm:grid-cols-2">
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
-                                            <p className="font-medium text-primary">{selectedRecord.patientId}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary/70">Patient ID</p>
+                                            <p className="font-semibold">{selectedRecord.patientId}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary">Type</p>
-                                            <p className="font-medium text-primary">{selectedRecord.patientType}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary/70">Date of birth</p>
+                                            <p className="font-semibold">{formatDateOnly(selectedRecord.date_of_birth)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary">Date of birth</p>
-                                            <p className="font-medium text-primary">{formatDateOnly(selectedRecord.date_of_birth)}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary/70">Gender</p>
+                                            <p className="font-semibold">{selectedRecord.gender ?? "—"}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary">Gender</p>
-                                            <p className="font-medium text-primary">{selectedRecord.gender ?? "—"}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary/70">Type</p>
+                                            <p className="font-semibold">{selectedRecord.patientType}</p>
                                         </div>
                                     </div>
                                 </div>
