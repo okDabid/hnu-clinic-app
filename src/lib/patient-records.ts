@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { buildProfileImagePath } from "@/lib/profile-image";
-import { AppointmentStatus } from "@prisma/client";
+import { AppointmentStatus, Role } from "@prisma/client";
 
 type StaffSummary = {
     id: string;
@@ -147,7 +147,15 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
                     },
                 },
             },
-            where: { user: { role: "PATIENT" } },
+            where: {
+                OR: [
+                    { user: { role: Role.PATIENT } },
+                    {
+                        is_working_scholar: true,
+                        user: { role: Role.SCHOLAR },
+                    },
+                ],
+            },
         }),
         prisma.employee.findMany({
             include: {
