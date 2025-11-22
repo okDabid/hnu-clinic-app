@@ -18,6 +18,7 @@ import {
     uploadDataUrlToCloudinary,
 } from "@/lib/cloudinary";
 import { buildProfileImagePath } from "@/lib/profile-image";
+import { persistLocalAvatar, removeLocalAvatar } from "@/lib/local-avatar";
 
 // ---------------- ENUM HELPERS ----------------
 function mapDepartment(val?: string | null): Department | undefined {
@@ -322,12 +323,24 @@ export async function PUT(req: Request) {
                         console.error("[Cloudinary] Failed to delete previous avatar", error);
                     }
                 }
+                await removeLocalAvatar(user.profile_image);
                 userUpdateInput.profile_image = null;
                 nextProfileImage = null;
             } else if (typeof normalizedProfileImage === "string") {
                 if (!hasCloudinaryConfig) {
-                    userUpdateInput.profile_image = normalizedProfileImage;
-                    nextProfileImage = normalizedProfileImage;
+                    try {
+                        const storedPath = await persistLocalAvatar(
+                            session.user.id,
+                            normalizedProfileImage,
+                            user.profile_image
+                        );
+                        userUpdateInput.profile_image = storedPath;
+                        nextProfileImage = storedPath;
+                    } catch (error) {
+                        console.error("[Local avatar] Failed to persist avatar", error);
+                        userUpdateInput.profile_image = normalizedProfileImage;
+                        nextProfileImage = normalizedProfileImage;
+                    }
                 } else {
                     try {
                         const upload = await uploadDataUrlToCloudinary(
