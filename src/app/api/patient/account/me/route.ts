@@ -244,6 +244,11 @@ export async function GET() {
         if (user.role !== Role.PATIENT)
             return NextResponse.json({ error: "Not a patient" }, { status: 403 });
 
+        const profileImage = buildProfileImagePath(
+            user.user_id,
+            user.profile_image ?? session.user?.image ?? null
+        );
+
         return NextResponse.json({
             accountId: user.user_id,
             username: user.username,
@@ -251,7 +256,7 @@ export async function GET() {
             status: user.status,
             type: user.student ? "student" : user.employee ? "employee" : null,
             profile: user.student ?? user.employee ?? null,
-            profileImage: buildProfileImagePath(user.user_id, user.profile_image),
+            profileImage,
         });
     } catch (err) {
         console.error("[GET /api/patient/account/me]", err);
@@ -491,7 +496,7 @@ export async function PUT(req: Request) {
                 verificationEmailSent: Boolean(verificationEmail),
                 profileImage: buildProfileImagePath(
                     session.user.id,
-                    nextProfileImage
+                    nextProfileImage ?? user.profile_image ?? session.user.image ?? null
                 ),
             });
         }
@@ -637,7 +642,7 @@ export async function PUT(req: Request) {
                 verificationEmailSent: Boolean(verificationEmail),
                 profileImage: buildProfileImagePath(
                     session.user.id,
-                    nextProfileImage
+                    nextProfileImage ?? user.profile_image ?? session.user.image ?? null
                 ),
             });
         }

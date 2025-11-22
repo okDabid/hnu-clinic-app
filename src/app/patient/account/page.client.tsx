@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import {
     Loader2,
@@ -175,11 +176,20 @@ export function PatientAccountPageClient({
     initialPatientType,
     initialProfileLoaded,
 }: PatientAccountPageClientProps) {
+    const { data: session } = useSession();
+    const sessionProfileImage = session?.user?.image ?? null;
     const normalizedTypeValue =
         initialPatientType === "student" || initialPatientType === "employee"
             ? initialPatientType
             : null;
-    const [profile, setProfile] = useState<PatientAccountProfile | null>(initialProfile);
+    const [profile, setProfile] = useState<PatientAccountProfile | null>(() =>
+        initialProfile
+            ? {
+                  ...initialProfile,
+                  profileImage: initialProfile.profileImage ?? sessionProfileImage ?? null,
+              }
+            : null
+    );
     const [profileLoading, setProfileLoading] = useState(false);
     const [hydratingProfile, setHydratingProfile] = useState(false);
 
@@ -207,6 +217,14 @@ export function PatientAccountPageClient({
             setInitializing(false);
         }
     }, [initialProfileLoaded]);
+
+    useEffect(() => {
+        if (!sessionProfileImage) return;
+        setProfile((prev) => {
+            if (!prev || prev.profileImage) return prev;
+            return { ...prev, profileImage: sessionProfileImage };
+        });
+    }, [sessionProfileImage]);
 
     const getYearLevelOptions = (
         dept?: string | null,
@@ -252,7 +270,14 @@ export function PatientAccountPageClient({
             const normalized = normalizePatientAccountProfile(data as PatientAccountProfileApi);
             const nextType =
                 normalized.type === "student" || normalized.type === "employee" ? normalized.type : null;
-            setProfile(normalized.profile);
+            const normalizedProfile = normalized.profile
+                ? {
+                      ...normalized.profile,
+                      profileImage:
+                          normalized.profile.profileImage ?? sessionProfileImage ?? normalized.profile.profileImage ?? null,
+                  }
+                : null;
+            setProfile(normalizedProfile);
             setProfileType(nextType);
             setProfileLoaded(Boolean(normalized.profile));
         } catch {
@@ -264,7 +289,7 @@ export function PatientAccountPageClient({
                 setRefreshingProfile(false);
             }
         }
-    }, []);
+    }, [sessionProfileImage]);
 
     useEffect(() => {
         if (!profileLoaded) {
