@@ -12,6 +12,25 @@ export function buildProfileImagePath(
     imageData: string | null | undefined
 ): string | null {
     if (!imageData) return null;
-    const hash = crypto.createHash("md5").update(imageData).digest("hex");
-    return `/api/profile/avatar/${userId}?v=${hash}`;
+
+    const normalized = imageData.trim();
+    const hash = crypto.createHash("md5").update(normalized).digest("hex");
+
+    // For remote URLs, serve the URL directly with a cache-busting version
+    // so avatars load even when clients cannot call the internal avatar
+    // endpoint (e.g., missing auth cookies on image fetches).
+    if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
+        const separator = normalized.includes("?") ? "&" : "?";
+        return `${normalized}${separator}v=${hash}`;
+    }
+
+    // For embedded data URLs, keep routing through the avatar endpoint to
+    // avoid pushing large base64 strings into client payloads while still
+    // providing a stable, short label.
+    if (normalized.startsWith("data:")) {
+        return `/api/profile/avatar/${userId}?v=${hash}`;
+    }
+
+    // Fallback: return the raw value if it's already a short stored label.
+    return normalized;
 }
