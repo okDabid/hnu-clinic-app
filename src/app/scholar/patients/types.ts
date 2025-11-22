@@ -31,6 +31,7 @@ export type PatientRecord = {
     gender: string | null;
     date_of_birth: string | null;
     status: string;
+    profileImage?: string | null;
     department?: string | null;
     program?: string | null;
     year_level?: string | null;

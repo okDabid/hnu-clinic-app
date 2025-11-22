@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     Table,
     TableBody,
@@ -33,6 +34,8 @@ function PatientsTableComponent({ records, loading, onSelect }: PatientsTablePro
         return records.map((record) => {
             const statusKey = record.status.toLowerCase();
             const statusClasses = PATIENT_STATUS_CLASSES[statusKey] ?? PATIENT_STATUS_CLASSES.inactive;
+            const [first = "", second = ""] = record.fullName.trim().split(" ");
+            const initials = `${first.charAt(0)}${second.charAt(0)}`.toUpperCase() || "PT";
 
             return (
                 <TableRow
@@ -49,11 +52,17 @@ function PatientsTableComponent({ records, loading, onSelect }: PatientsTablePro
                     }}
                 >
                     <TableCell className="font-medium text-primary">
-                        <div className="flex flex-col">
-                            <span>{record.fullName}</span>
-                            <span className="text-xs text-muted-foreground">
-                                {record.contactno ? record.contactno : "No contact number"}
-                            </span>
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 border border-primary/15">
+                                <AvatarImage src={record.profileImage || undefined} alt={record.fullName} />
+                                <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                                <span>{record.fullName}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {record.contactno ? record.contactno : "No contact number"}
+                                </span>
+                            </div>
                         </div>
                     </TableCell>
                     <TableCell>{record.patientId}</TableCell>

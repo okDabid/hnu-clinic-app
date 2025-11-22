@@ -15,6 +15,7 @@ import {
 import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import type { PreparedPatientRecord } from "./types";
 
@@ -28,6 +29,7 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
     if (!record) return null;
 
     const medicalHistoryText = formatMedicalHistory(parseMedicalHistory(record.medical_cond));
+    const initials = buildInitials(record.fullName);
 
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
@@ -41,7 +43,16 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
 
                 <div className="space-y-6 text-sm">
                     <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
-                        <p className="text-lg font-semibold">{record.fullName}</p>
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12 border border-primary/15">
+                                <AvatarImage src={record.profileImage || undefined} alt={record.fullName} />
+                                <AvatarFallback className="bg-white/80 text-primary">{initials}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="text-lg font-semibold">{record.fullName}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary/80">Patient record</p>
+                            </div>
+                        </div>
                         <div className="mt-2 grid gap-2 sm:grid-cols-2">
                             <div>
                                 <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
@@ -172,6 +183,11 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
             </DialogContent>
         </Dialog>
     );
+}
+
+function buildInitials(name: string) {
+    const [first = "", second = ""] = name.trim().split(" ");
+    return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase() || "PT";
 }
 
 export const PatientDetailDialog = memo(PatientDetailDialogComponent);
