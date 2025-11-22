@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { PatientRecord } from "./types";
@@ -54,6 +55,12 @@ function RecordDetailsDialogComponent({
     const isUpdating = updatingPatientId === record.id;
     const isSavingNotes = savingNotesPatientId === record.id;
     const hasAppointment = Boolean(record.latestAppointment?.id);
+    const initials = record.fullName
+        .split(" ")
+        .map((chunk) => chunk.charAt(0))
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
 
     return (
         <Dialog
@@ -73,24 +80,37 @@ function RecordDetailsDialogComponent({
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
-                        <p className="text-lg font-semibold">{record.fullName}</p>
-                        <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                    <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-primary">
+                        <div className="flex items-start gap-4">
+                            <Avatar className="h-12 w-12 border border-primary/40 bg-white shadow-sm">
+                                <AvatarFallback className="bg-primary/10 text-base font-semibold text-primary">
+                                    {initials || "PT"}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                                <p className="text-lg font-semibold">{record.fullName}</p>
+                                <p className="text-xs font-medium uppercase tracking-wide text-primary/70">
+                                    {record.patientType}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 rounded-xl bg-white/60 p-3 text-sm text-primary sm:grid-cols-2">
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
-                                <p className="font-medium text-primary">{record.patientId}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary/70">Patient ID</p>
+                                <p className="font-semibold">{record.patientId}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-primary">Type</p>
-                                <p className="font-medium text-primary">{record.patientType}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary/70">Date of birth</p>
+                                <p className="font-semibold">{formatDateOnly(record.date_of_birth)}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-primary">Date of birth</p>
-                                <p className="font-medium text-primary">{formatDateOnly(record.date_of_birth)}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary/70">Gender</p>
+                                <p className="font-semibold">{record.gender ?? "—"}</p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wide text-primary">Gender</p>
-                                <p className="font-medium text-primary">{record.gender ?? "—"}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary/70">Latest status</p>
+                                <p className="font-semibold">{record.status}</p>
                             </div>
                         </div>
                     </div>

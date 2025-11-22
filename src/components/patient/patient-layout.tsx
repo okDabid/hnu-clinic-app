@@ -24,7 +24,6 @@ export function PatientLayout(props: PatientLayoutProps) {
             navItems={NAV_ITEMS}
             panelLabel="Patient Panel"
             defaultName="Patient"
-            homeHref="/patient"
             sheetAriaLabel="Open patient navigation"
             sheetTitle="Patient Navigation"
             fallbackInitials="PT"

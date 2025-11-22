@@ -25,7 +25,6 @@ export function ScholarLayout(props: ScholarLayoutProps) {
             navItems={NAV_ITEMS}
             panelLabel="Scholar Panel"
             defaultName="Working Scholar"
-            homeHref="/scholar"
             sheetAriaLabel="Open scholar navigation"
             sheetTitle="Scholar Navigation"
             fallbackInitials="WS"

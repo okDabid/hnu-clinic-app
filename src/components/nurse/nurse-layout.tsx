@@ -35,7 +35,6 @@ export function NurseLayout(props: NurseLayoutProps) {
             navItems={NAV_ITEMS}
             panelLabel="Nurse Panel"
             defaultName="Nurse"
-            homeHref="/nurse"
             sheetAriaLabel="Open nurse navigation"
             sheetTitle="Nurse Navigation"
             fallbackInitials="NR"
