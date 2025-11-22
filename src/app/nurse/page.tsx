@@ -43,6 +43,12 @@ const quickActions = [
     },
 ];
 
+const flowChecklist = [
+    "Confirm today's appointment roster and pre-stage vitals equipment.",
+    "Coordinate with physicians on critical follow-ups before opening hours.",
+    "Document dispensing and inventory updates in real time to avoid reconciliation gaps.",
+];
+
 export default function NurseDashboardPage() {
     const { data: session } = useSession();
     const fullName = session?.user?.name ?? "Nurse";
@@ -66,6 +72,17 @@ export default function NurseDashboardPage() {
                         <p className="max-w-2xl text-sm text-muted-foreground">
                             Keep the clinic running smoothly with instant visibility into schedules, stock levels, and patient coordination. Use the quick tools below to support the care team.
                         </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-center text-sm">
+                        {["Records ready", "Pending restocks", "Queued walk-ins", "Follow-ups"].map((label) => (
+                            <div
+                                key={label}
+                                className="rounded-2xl border border-primary/20 bg-white/70 px-4 py-3 shadow-sm"
+                            >
+                                <p className="text-xs uppercase tracking-wide text-primary/70">{label}</p>
+                                <p className="text-2xl font-semibold text-primary">—</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -120,18 +137,42 @@ export default function NurseDashboardPage() {
                         <CardTitle className="text-lg text-primary">How to keep clinic flow steady</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <p>
-                            Review pending appointments each morning and pre-stage the necessary charts and equipment so care teams can begin on time.
-                        </p>
-                        <p>
-                            Document every dispensing and inventory update as it happens. Accurate logs keep compliance effortless during audits.
-                        </p>
-                        <Button asChild variant="outline" className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary/10">
-                            <Link href="/nurse/dispense">Open dispensing log</Link>
-                        </Button>
-                        <Button asChild variant="ghost" className="w-full rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
-                            <Link href="/nurse/clinic">View clinic schedule</Link>
-                        </Button>
+                        {flowChecklist.map((item) => (
+                            <div key={item} className="flex gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-3">
+                                <BarChart3 className="mt-1 h-4 w-4 text-primary" />
+                                <p>{item}</p>
+                            </div>
+                        ))}
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <Button asChild variant="outline" className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary/10">
+                                <Link href="/nurse/dispense">Open dispensing log</Link>
+                            </Button>
+                            <Button asChild variant="ghost" className="w-full rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
+                                <Link href="/nurse/clinic">View clinic schedule</Link>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg text-primary">Team signals</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                        <p>Share a quick update when intake queues change or when a physician becomes available.</p>
+                        <ul className="space-y-2">
+                            <li className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
+                                <span>Send intake summary</span>
+                                <Button asChild variant="link" className="h-auto p-0 text-primary">
+                                    <Link href="/nurse/records">Open records</Link>
+                                </Button>
+                            </li>
+                            <li className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
+                                <span>Flag supply concern</span>
+                                <Button asChild variant="link" className="h-auto p-0 text-primary">
+                                    <Link href="/nurse/inventory">Review inventory</Link>
+                                </Button>
+                            </li>
+                        </ul>
                     </CardContent>
                 </Card>
             </section>

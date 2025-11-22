@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     Table,
     TableBody,
@@ -50,11 +51,23 @@ function PatientDirectoryTableComponent({ records, loading, onOpenDetails }: Pat
                     }}
                 >
                     <TableCell className="font-medium text-primary">
-                        <div className="flex flex-col">
-                            <span>{record.fullName}</span>
-                            <span className="text-xs text-muted-foreground">
-                                {record.contactno ? record.contactno : "No contact number"}
-                            </span>
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 border border-primary/20 bg-primary/5">
+                                <AvatarFallback className="text-xs font-semibold text-primary">
+                                    {record.fullName
+                                        .split(" ")
+                                        .map((chunk) => chunk.charAt(0))
+                                        .join("")
+                                        .slice(0, 2)
+                                        .toUpperCase() || "PT"}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                                <span>{record.fullName}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {record.contactno ? record.contactno : "No contact number"}
+                                </span>
+                            </div>
                         </div>
                     </TableCell>
                     <TableCell className="font-mono text-sm text-muted-foreground">{record.patientId}</TableCell>
