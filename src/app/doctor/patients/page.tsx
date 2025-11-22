@@ -553,7 +553,7 @@ export default function DoctorPatientsPage() {
                                                                 </div>
                                                             </div>
                                                         </TableCell>
-                                                        <TableCell>{record.patientId}</TableCell>
+                                                        <TableCell className="font-mono text-sm text-muted-foreground">{record.patientId}</TableCell>
                                                         <TableCell>
                                                             <Badge className="rounded-full border-primary/30 bg-primary/10 text-primary">
                                                                 {record.patientType}
@@ -566,6 +566,9 @@ export default function DoctorPatientsPage() {
                                                                         {formatDeptTypes(record.department)}
                                                                     </span>
                                                                     <span className="block">{formatDeptTypes(record.program)}</span>
+                                                                    <span className="block text-xs text-muted-foreground">
+                                                                        {formatYearTypes(record.year_level)}
+                                                                    </span>
                                                                 </>
                                                             ) : (
                                                                 formatDeptTypes(record.department) || "—"
