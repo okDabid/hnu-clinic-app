@@ -1226,6 +1226,9 @@ export function NurseAccountsPageClient({
                         <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
                             Create New User
                         </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Create a new user account for nurses, doctors, or patients.
+                        </p>
                     </CardHeader>
 
                     <CardContent className="pt-6">
