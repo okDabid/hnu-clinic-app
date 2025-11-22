@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { buildProfileImagePath } from "@/lib/profile-image";
 import { AppointmentStatus } from "@prisma/client";
 
 type StaffSummary = {
@@ -175,9 +176,10 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
             gender: student.gender ?? null,
             date_of_birth: student.date_of_birth?.toISOString() ?? null,
             status: student.user.status,
-            profileImage: student.user.profile_image
-                ? `/api/profile/avatar/${student.user.user_id}`
-                : null,
+            profileImage: buildProfileImagePath(
+                student.user.user_id,
+                student.user.profile_image
+            ),
             department: student.department,
             program: student.program,
             year_level: student.year_level,
@@ -225,9 +227,10 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
             gender: employee.gender ?? null,
             date_of_birth: employee.date_of_birth?.toISOString() ?? null,
             status: employee.user.status,
-            profileImage: employee.user.profile_image
-                ? `/api/profile/avatar/${employee.user.user_id}`
-                : null,
+            profileImage: buildProfileImagePath(
+                employee.user.user_id,
+                employee.user.profile_image
+            ),
             contactno: employee.contactno,
             address: employee.address,
             bloodtype: employee.bloodtype,

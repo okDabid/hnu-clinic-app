@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs"; // non-blocking, faster in serverless
 import { prisma } from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
 import { withDb } from "@/lib/withDb";
+import { buildProfileImagePath } from "@/lib/profile-image";
 
 /** Extend next-auth types used by the application. */
 declare module "next-auth" {
@@ -161,9 +162,7 @@ export const authOptions: NextAuthOptions = {
                             : "User",
                     role: user.role,
                     status: user.status,
-                    image: user.profile_image
-                        ? `/api/profile/avatar/${user.user_id}`
-                        : null,
+                    image: buildProfileImagePath(user.user_id, user.profile_image),
                 };
             },
         }),
@@ -194,9 +193,10 @@ export const authOptions: NextAuthOptions = {
                     );
                     token.status = dbUser?.status ?? AccountStatus.Inactive;
                     (token as AppJWT).lastChecked = now;
-                    token.image = dbUser?.profile_image
-                        ? `/api/profile/avatar/${token.id}`
-                        : null;
+                    token.image = buildProfileImagePath(
+                        token.id as string,
+                        dbUser?.profile_image ?? null
+                    );
                 }
             }
             return token as AppJWT;

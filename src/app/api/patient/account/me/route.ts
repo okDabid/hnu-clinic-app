@@ -17,6 +17,7 @@ import {
     extractPublicIdFromUrl,
     uploadDataUrlToCloudinary,
 } from "@/lib/cloudinary";
+import { buildProfileImagePath } from "@/lib/profile-image";
 
 // ---------------- ENUM HELPERS ----------------
 function mapDepartment(val?: string | null): Department | undefined {
@@ -250,9 +251,7 @@ export async function GET() {
             status: user.status,
             type: user.student ? "student" : user.employee ? "employee" : null,
             profile: user.student ?? user.employee ?? null,
-            profileImage: user.profile_image
-                ? `/api/profile/avatar/${user.user_id}`
-                : null,
+            profileImage: buildProfileImagePath(user.user_id, user.profile_image),
         });
     } catch (err) {
         console.error("[GET /api/patient/account/me]", err);
@@ -490,9 +489,10 @@ export async function PUT(req: Request) {
                 profile: updated,
                 type: "student",
                 verificationEmailSent: Boolean(verificationEmail),
-                profileImage: nextProfileImage
-                    ? `/api/profile/avatar/${session.user.id}`
-                    : null,
+                profileImage: buildProfileImagePath(
+                    session.user.id,
+                    nextProfileImage
+                ),
             });
         }
 
@@ -635,9 +635,10 @@ export async function PUT(req: Request) {
                 profile: updated,
                 type: "employee",
                 verificationEmailSent: Boolean(verificationEmail),
-                profileImage: nextProfileImage
-                    ? `/api/profile/avatar/${session.user.id}`
-                    : null,
+                profileImage: buildProfileImagePath(
+                    session.user.id,
+                    nextProfileImage
+                ),
             });
         }
 
