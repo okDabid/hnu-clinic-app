@@ -41,7 +41,6 @@ export function DoctorLayout(props: DoctorLayoutProps) {
             navItems={NAV_ITEMS}
             panelLabel="Doctor Panel"
             defaultName="Doctor"
-            homeHref="/doctor"
             sheetAriaLabel="Open doctor navigation"
             sheetTitle="Doctor Navigation"
             fallbackInitials="DR"

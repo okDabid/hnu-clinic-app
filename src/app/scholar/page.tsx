@@ -66,12 +66,6 @@ const documentationTips = [
     },
 ] as const;
 
-const deskReminders = [
-    "Announce changes in the queue so nurses can adjust consultation flow.",
-    "Verify IDs during intake to keep appointment records accurate.",
-    "Share quick context with the physician when a patient is returning for follow-up.",
-];
-
 export default function ScholarDashboardPage() {
     const { data: session } = useSession();
     const fullName = session?.user?.name ?? "Working Scholar";
@@ -99,17 +93,6 @@ export default function ScholarDashboardPage() {
                             Keep the clinic desk synchronized—double-check booking requests, guide students through intake, and
                             flag any priority concerns early so the team can respond quickly.
                         </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-center text-sm">
-                        {["Appointments", "Walk-ins", "Clearances", "Reminders"].map((label) => (
-                            <div
-                                key={label}
-                                className="rounded-2xl border border-primary/20 bg-white/70 px-4 py-3 shadow-sm"
-                            >
-                                <p className="text-xs uppercase tracking-wide text-primary/70">{label}</p>
-                                <p className="text-2xl font-semibold text-primary">—</p>
-                            </div>
-                        ))}
                     </div>
                 </div>
             </section>
@@ -192,14 +175,6 @@ export default function ScholarDashboardPage() {
                                 <p>{description}</p>
                             </div>
                         ))}
-                        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
-                            <p className="font-semibold text-primary">Front-desk reminders</p>
-                            <ul className="mt-2 space-y-1 list-disc list-inside">
-                                {deskReminders.map((item) => (
-                                    <li key={item}>{item}</li>
-                                ))}
-                            </ul>
-                        </div>
                     </CardContent>
                 </Card>
             </section>

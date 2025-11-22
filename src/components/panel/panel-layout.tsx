@@ -37,7 +37,6 @@ export type PanelLayoutProps = PanelLayoutContentProps & {
     navItems: readonly PanelNavItem[];
     panelLabel: string;
     defaultName: string;
-    homeHref: string;
     sheetAriaLabel: string;
     sheetTitle: string;
     fallbackInitials: string;
@@ -53,7 +52,6 @@ export function PanelLayout({
     navItems,
     panelLabel,
     defaultName,
-    homeHref,
     sheetAriaLabel,
     sheetTitle,
     fallbackInitials,
@@ -137,19 +135,19 @@ export function PanelLayout({
             <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
                 <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-primary/15 bg-white/90 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
                     <div className="flex h-full flex-col overflow-hidden">
-                        <div className="flex items-center gap-3 pb-6">
-                            <span className="relative inline-flex h-11 w-11 items-center justify-center">
+                        <div className="mb-5 flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-3 shadow-sm">
+                            <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-primary/10">
                                 <Image
                                     src="/clinic-illustration.svg"
                                     alt="HNU Clinic Health Record & Appointment System emblem"
                                     width={44}
                                     height={44}
-                                    className="h-9 w-9 object-contain"
+                                    className="h-8 w-8 object-contain"
                                 />
                             </span>
                             <div className="flex flex-col leading-tight text-left">
                                 <span className="text-sm font-semibold text-primary">HNU Clinic</span>
-                                <span className="text-xs font-medium text-foreground">
+                                <span className="text-xs font-medium text-primary/80">
                                     Health Record &amp; Appointment System
                                 </span>
                             </div>
@@ -190,23 +188,6 @@ export function PanelLayout({
                     <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white/85 px-4 py-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/65 md:px-6">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div className="space-y-3">
-                                <Link
-                                    href={homeHref}
-                                    className="group flex items-center gap-3 rounded-2xl border border-primary/15 bg-white/90 px-3 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:-translate-y-px hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
-                                >
-                                    <span className="relative inline-flex h-9 w-9 items-center justify-center">
-                                        <Image
-                                            src="/clinic-illustration.svg"
-                                            alt="HNU Clinic Health Record & Appointment System emblem"
-                                            width={32}
-                                            height={32}
-                                            className="h-7 w-7 object-contain"
-                                        />
-                                    </span>
-                                    <span className="text-left text-sm font-semibold leading-tight text-primary text-balance">
-                                        HNU Clinic Health Record &amp; Appointment System
-                                    </span>
-                                </Link>
                                 <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
                                 <h2 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h2>
                                 {description ? (

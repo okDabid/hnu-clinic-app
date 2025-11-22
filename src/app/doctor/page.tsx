@@ -65,24 +65,6 @@ const operationalHighlights = [
     "Document dispensed medicines within the same day to keep the inventory ledger accurate.",
 ];
 
-const coordinationSignals = [
-    {
-        title: "Confirm today's rounds",
-        description: "Review the queue and let the desk know if you need to shorten or extend a block.",
-        href: "/doctor/appointments",
-    },
-    {
-        title: "Share follow-up plans",
-        description: "Add quick notes to the latest consultation so nurses can brief the patient.",
-        href: "/doctor/patients",
-    },
-    {
-        title: "Sync dispensing",
-        description: "Log new prescriptions to keep the pharmacy ledger aligned with clinic notes.",
-        href: "/doctor/dispense",
-    },
-];
-
 export default function DoctorDashboardPage() {
     const { data: session } = useSession();
     const fullName = session?.user?.name ?? "Doctor";
@@ -110,18 +92,6 @@ export default function DoctorDashboardPage() {
                         <p className="max-w-2xl text-sm text-muted-foreground">
                             Review key updates for the day, respond to appointment movements, and keep your consultation schedule aligned with campus demand.
                         </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-center text-sm">
-                        {["Upcoming consults", "Pending approvals", "Follow-ups", "Dispensing"]
-                            .map((label) => (
-                                <div
-                                    key={label}
-                                    className="rounded-2xl border border-primary/20 bg-white/70 px-4 py-3 shadow-sm"
-                                >
-                                    <p className="text-xs uppercase tracking-wide text-primary/70">{label}</p>
-                                    <p className="text-2xl font-semibold text-primary">—</p>
-                                </div>
-                            ))}
                     </div>
                 </div>
             </section>
@@ -188,20 +158,18 @@ export default function DoctorDashboardPage() {
                 </Card>
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-lg text-primary">Coordination signals</CardTitle>
+                        <CardTitle className="text-lg text-primary">Resources</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4 text-sm text-muted-foreground">
-                        {coordinationSignals.map(({ title, description, href }) => (
-                            <div key={title} className="space-y-2 rounded-2xl border border-primary/15 bg-primary/5 p-4">
-                                <div className="flex items-center justify-between">
-                                    <p className="font-semibold text-primary">{title}</p>
-                                    <Button asChild variant="link" className="h-auto p-0 text-primary">
-                                        <Link href={href}>Open</Link>
-                                    </Button>
-                                </div>
-                                <p>{description}</p>
-                            </div>
-                        ))}
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                        <p>
+                            Access updated clinic forms, incident templates, and medication guides to keep documentation consistent across the team.
+                        </p>
+                        <Button asChild variant="outline" className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary/10">
+                            <Link href="/doctor/dispense">Go to dispensing log</Link>
+                        </Button>
+                        <Button asChild variant="ghost" className="w-full rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
+                            <Link href="/doctor/patients">Browse patient registry</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </section>
