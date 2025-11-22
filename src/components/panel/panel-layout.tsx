@@ -90,12 +90,12 @@ export function PanelLayout({
         try {
             setIsLoggingOut(true);
             setMobileOpen(false);
-            const data = await signOut({ redirect: false, callbackUrl: "/login?logout=success" });
+            const data = await signOut({ redirect: false, callbackUrl: "/login" });
             hasRedirectedRef.current = true;
             if (data?.url) {
                 router.replace(data.url);
             } else {
-                router.replace("/login?logout=success");
+                router.replace("/login");
             }
         } finally {
             setIsLoggingOut(false);
