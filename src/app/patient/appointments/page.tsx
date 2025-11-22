@@ -1174,7 +1174,7 @@ export default function PatientAppointmentsPage() {
                     actions={
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-primary/100" /> Confirmed
+                                <span className="h-2 w-2 rounded-full bg-primary" /> Confirmed
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-amber-500" /> Pending
