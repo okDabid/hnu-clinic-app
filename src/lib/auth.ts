@@ -29,6 +29,7 @@ interface AppUser {
     name?: string | null;
     role: Role;
     status: AccountStatus;
+    image?: string | null;
 }
 
 interface AppJWT extends JWT {
@@ -36,6 +37,7 @@ interface AppJWT extends JWT {
     role?: Role;
     status?: AccountStatus;
     lastChecked?: number;
+    image?: string | null;
 }
 
 interface AppSession extends Session {
@@ -52,6 +54,7 @@ type FoundUser = {
     password: string;
     role: Role;
     status: AccountStatus;
+    profile_image?: string | null;
     student: { fname: string; lname: string } | null;
     employee: { fname: string; lname: string } | null;
 };
@@ -96,6 +99,7 @@ export const authOptions: NextAuthOptions = {
                             password: true,
                             role: true,
                             status: true,
+                            profile_image: true,
                             student: { select: { fname: true, lname: true } },
                             employee: { select: { fname: true, lname: true } },
                         },
@@ -157,6 +161,9 @@ export const authOptions: NextAuthOptions = {
                             : "User",
                     role: user.role,
                     status: user.status,
+                    image: user.profile_image
+                        ? `/api/profile/avatar/${user.user_id}`
+                        : null,
                 };
             },
         }),
@@ -172,6 +179,7 @@ export const authOptions: NextAuthOptions = {
                 token.name = u.name ?? token.name;
                 token.status = u.status;
                 token.lastChecked = Date.now();
+                token.image = u.image ?? token.image;
             } else if (token.id) {
                 // Refresh account status every five minutes to keep status in sync
                 const now = Date.now();
@@ -181,11 +189,14 @@ export const authOptions: NextAuthOptions = {
                     const dbUser = await withDb(() =>
                         prisma.users.findUnique({
                             where: { user_id: token.id as string },
-                            select: { status: true },
+                            select: { status: true, profile_image: true },
                         })
                     );
                     token.status = dbUser?.status ?? AccountStatus.Inactive;
                     (token as AppJWT).lastChecked = now;
+                    token.image = dbUser?.profile_image
+                        ? `/api/profile/avatar/${token.id}`
+                        : null;
                 }
             }
             return token as AppJWT;
@@ -199,6 +210,7 @@ export const authOptions: NextAuthOptions = {
                 session.user.role = t.role ?? Role.PATIENT;
                 session.user.name = t.name ?? session.user.name;
                 session.user.status = t.status ?? AccountStatus.Inactive;
+                session.user.image = t.image ?? session.user.image ?? null;
             }
             return session as AppSession;
         },

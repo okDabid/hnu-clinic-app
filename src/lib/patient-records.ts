@@ -26,6 +26,7 @@ export type PatientRecordEntry = {
     gender: string | null;
     date_of_birth: string | null;
     status: string;
+    profileImage?: string | null;
     department?: string | null;
     program?: string | null;
     year_level?: string | null;
@@ -140,6 +141,7 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
                         role: true,
                         status: true,
                         user_id: true,
+                        profile_image: true,
                         appointmentsPatient: appointmentSelection,
                     },
                 },
@@ -153,6 +155,7 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
                         role: true,
                         status: true,
                         user_id: true,
+                        profile_image: true,
                         appointmentsPatient: appointmentSelection,
                     },
                 },
@@ -172,6 +175,9 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
             gender: student.gender ?? null,
             date_of_birth: student.date_of_birth?.toISOString() ?? null,
             status: student.user.status,
+            profileImage: student.user.profile_image
+                ? `/api/profile/avatar/${student.user.user_id}`
+                : null,
             department: student.department,
             program: student.program,
             year_level: student.year_level,
@@ -219,6 +225,9 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
             gender: employee.gender ?? null,
             date_of_birth: employee.date_of_birth?.toISOString() ?? null,
             status: employee.user.status,
+            profileImage: employee.user.profile_image
+                ? `/api/profile/avatar/${employee.user.user_id}`
+                : null,
             contactno: employee.contactno,
             address: employee.address,
             bloodtype: employee.bloodtype,

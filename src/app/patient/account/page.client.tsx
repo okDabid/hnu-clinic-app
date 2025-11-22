@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import {
     Loader2,
@@ -14,6 +14,7 @@ import {
     UserRound,
     KeyRound,
     HeartPulse,
+    Image as ImageIcon,
 } from "lucide-react";
 
 import PatientLayout from "@/components/patient/patient-layout";
@@ -39,6 +40,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
@@ -160,6 +162,7 @@ const isBasicEducationDepartment = (dept?: string | null) => dept === BASIC_EDUC
 
 const departmentOptions = Object.values(patientDepartmentEnumMap);
 const bloodTypeOptions = Object.values(patientBloodTypeEnumMap);
+const MAX_AVATAR_SIZE_BYTES = 500 * 1024; // 500KB
 
 export type PatientAccountPageClientProps = {
     initialProfile: PatientAccountProfile | null;
@@ -190,6 +193,7 @@ export function PatientAccountPageClient({
     const [tempGender, setTempGender] = useState<"Male" | "Female" | "">("");
     const [showGenderConfirm, setShowGenderConfirm] = useState(false);
     const [refreshingProfile, setRefreshingProfile] = useState(false);
+    const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
     const buildYearLevelPayload = (target: PatientAccountProfile) => {
         if (profileType !== "student") {
@@ -362,6 +366,44 @@ export function PatientAccountPageClient({
         profile?.year_level
     );
 
+    const profileInitials = (() => {
+        const first = profile?.fname?.charAt(0) ?? profile?.username?.charAt(0) ?? "";
+        const last = profile?.lname?.charAt(0) ?? profile?.username?.charAt(1) ?? "";
+        const initials = `${first}${last}`.toUpperCase();
+        return initials || "PT";
+    })();
+
+    const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please upload an image file.");
+            return;
+        }
+
+        if (file.size > MAX_AVATAR_SIZE_BYTES) {
+            toast.error("Profile photo must be 500KB or smaller.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const result = reader.result;
+            if (typeof result === "string") {
+                setProfile((prev) => (prev ? { ...prev, profileImage: result } : prev));
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleAvatarRemove = () => {
+        setProfile((prev) => (prev ? { ...prev, profileImage: null } : prev));
+        if (avatarInputRef.current) {
+            avatarInputRef.current.value = "";
+        }
+    };
+
     const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!profile) return;
@@ -442,6 +484,10 @@ export function PatientAccountPageClient({
                     const nextYearLevel = data.profile.year_level
                         ? patientYearLevelEnumMap[data.profile.year_level]
                         : prev?.year_level;
+                    const nextProfileImage =
+                        typeof data.profileImage === "string"
+                            ? data.profileImage
+                            : prev?.profileImage ?? null;
 
                     return {
                         ...prev!,
@@ -451,6 +497,7 @@ export function PatientAccountPageClient({
                         bloodtype: data.profile.bloodtype
                             ? patientBloodTypeEnumMap[data.profile.bloodtype]
                             : prev?.bloodtype,
+                        profileImage: nextProfileImage,
                     };
                 });
             }
@@ -538,6 +585,49 @@ export function PatientAccountPageClient({
                             onPasswordSubmit={handlePasswordSubmit}
                         >
                             <form onSubmit={handleProfileUpdate} className="space-y-10">
+                                <AccountSection
+                                    icon={ImageIcon}
+                                    title="Profile photo"
+                                    description="Personalize your account with a clear picture."
+                                >
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                                        <Avatar className="h-20 w-20 border-2 border-emerald-100">
+                                            <AvatarImage
+                                                src={profile.profileImage || undefined}
+                                                alt={`${profile.fname} ${profile.lname}`.trim() || "User avatar"}
+                                            />
+                                            <AvatarFallback className="bg-emerald-50 text-emerald-700">
+                                                {profileInitials}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="space-y-2">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                                                <Input
+                                                    ref={avatarInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="max-w-xs cursor-pointer"
+                                                    onChange={handleAvatarChange}
+                                                />
+                                                {profile.profileImage ? (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="rounded-xl"
+                                                        onClick={handleAvatarRemove}
+                                                    >
+                                                        Remove photo
+                                                    </Button>
+                                                ) : null}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Upload a recent square photo under 500KB. If no image is saved, your initials
+                                                will be shown.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </AccountSection>
+
                                 <AccountSection
                                     icon={KeyRound}
                                     title="Account credentials"

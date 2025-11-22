@@ -245,6 +245,9 @@ export async function GET() {
             status: user.status,
             type: user.student ? "student" : user.employee ? "employee" : null,
             profile: user.student ?? user.employee ?? null,
+            profileImage: user.profile_image
+                ? `/api/profile/avatar/${user.user_id}`
+                : null,
         });
     } catch (err) {
         console.error("[GET /api/patient/account/me]", err);
@@ -264,6 +267,17 @@ export async function PUT(req: Request) {
 
         const payload = await req.json();
         const profile = (payload?.profile ?? {}) as Record<string, unknown>;
+        const hasProfileImageField = Object.prototype.hasOwnProperty.call(
+            payload,
+            "profileImage"
+        );
+        const rawProfileImage = hasProfileImageField ? payload.profileImage : undefined;
+        const normalizedProfileImage =
+            typeof rawProfileImage === "string" && rawProfileImage.trim().length
+                ? rawProfileImage.trim()
+                : rawProfileImage === null
+                    ? null
+                    : undefined;
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
@@ -279,6 +293,15 @@ export async function PUT(req: Request) {
         const isStudent = Boolean(user.student);
         const isEmployee = Boolean(user.employee);
         const existingProfile = user.student ?? user.employee;
+        const shouldUpdateProfileImage =
+            normalizedProfileImage === null ||
+            (typeof normalizedProfileImage === "string" && normalizedProfileImage.startsWith("data:image"));
+        const userUpdateInput: Prisma.UsersUpdateInput = {};
+        let nextProfileImage = user.profile_image ?? null;
+
+        if (shouldUpdateProfileImage) {
+            userUpdateInput.profile_image = normalizedProfileImage ?? null;
+        }
 
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existingProfile?.date_of_birth ?? null;
@@ -380,6 +403,15 @@ export async function PUT(req: Request) {
                 data,
             });
 
+            if (Object.keys(userUpdateInput).length > 0) {
+                const updatedUser = await prisma.users.update({
+                    where: { user_id: session.user.id },
+                    data: userUpdateInput,
+                    select: { profile_image: true },
+                });
+                nextProfileImage = updatedUser.profile_image ?? null;
+            }
+
             if (shouldClearVerification) {
                 await clearEmailVerifications(session.user.id);
             }
@@ -412,6 +444,9 @@ export async function PUT(req: Request) {
                 profile: updated,
                 type: "student",
                 verificationEmailSent: Boolean(verificationEmail),
+                profileImage: nextProfileImage
+                    ? `/api/profile/avatar/${session.user.id}`
+                    : null,
             });
         }
 
@@ -513,6 +548,15 @@ export async function PUT(req: Request) {
                 data,
             });
 
+            if (Object.keys(userUpdateInput).length > 0) {
+                const updatedUser = await prisma.users.update({
+                    where: { user_id: session.user.id },
+                    data: userUpdateInput,
+                    select: { profile_image: true },
+                });
+                nextProfileImage = updatedUser.profile_image ?? null;
+            }
+
             if (shouldClearVerification) {
                 await clearEmailVerifications(session.user.id);
             }
@@ -545,6 +589,9 @@ export async function PUT(req: Request) {
                 profile: updated,
                 type: "employee",
                 verificationEmailSent: Boolean(verificationEmail),
+                profileImage: nextProfileImage
+                    ? `/api/profile/avatar/${session.user.id}`
+                    : null,
             });
         }
 

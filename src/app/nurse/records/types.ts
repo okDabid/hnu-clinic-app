@@ -32,6 +32,7 @@ export type PatientRecord = {
     date_of_birth: string | null;
     status: string;
     appointment_id: string | null;
+    profileImage?: string | null;
     department?: string | null;
     program?: string | null;
     year_level?: string | null;

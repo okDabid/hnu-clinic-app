@@ -31,6 +31,7 @@ export type PatientAccountProfileApi = {
     } | null;
     patientType?: string | null;
     type?: string | null;
+    profileImage?: string | null;
 };
 
 export const patientDepartmentEnumMap: Record<string, string> = {
@@ -114,6 +115,7 @@ export type PatientAccountProfile = {
     emergencyco_name?: string | null;
     emergencyco_num?: string | null;
     emergencyco_relation?: string | null;
+    profileImage?: string | null;
 };
 
 export type PatientAccountNormalization = {
@@ -136,6 +138,7 @@ export function normalizePatientAccountProfile(
         username: response.username || "",
         role: response.role || "",
         status: response.status || "Inactive",
+        profileImage: response.profileImage || null,
         fname: raw.fname || "",
         mname: raw.mname || "",
         lname: raw.lname || "",

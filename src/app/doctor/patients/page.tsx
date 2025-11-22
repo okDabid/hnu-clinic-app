@@ -7,6 +7,7 @@ import { AlertCircle, BadgeCheck, Loader2, RefreshCcw, Search, Stethoscope, User
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,7 @@ type PatientRecord = {
     date_of_birth: string | null;
     status: string;
     appointment_id: string | null;
+    profileImage?: string | null;
     department?: string | null;
     program?: string | null;
     year_level?: string | null;
@@ -188,6 +190,12 @@ function formatYearTypes(value: string | null | undefined) {
         return humanizeEnumValue(value);
     }
     return value;
+}
+
+function buildInitials(name: string) {
+    const [first = "", second = ""] = name.trim().split(" ");
+    const initials = `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
+    return initials || "PT";
 }
 
 function formatBloodType(value: string | null | undefined) {
@@ -519,6 +527,7 @@ export default function DoctorPatientsPage() {
                                         <TableBody>
                                             {filteredRecords.map((record) => {
                                                 const statusKey = record.status.toLowerCase();
+                                                const initials = buildInitials(record.fullName);
                                                 return (
                                                     <TableRow
                                                         key={record.id}
@@ -534,11 +543,22 @@ export default function DoctorPatientsPage() {
                                                         role="button"
                                                     >
                                                         <TableCell className="font-medium text-primary">
-                                                            <div className="flex flex-col">
-                                                                <span>{record.fullName}</span>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {record.contactno ? record.contactno : "No contact number"}
-                                                                </span>
+                                                            <div className="flex items-center gap-3">
+                                                                <Avatar className="h-10 w-10 border border-primary/15">
+                                                                    <AvatarImage
+                                                                        src={record.profileImage || undefined}
+                                                                        alt={record.fullName}
+                                                                    />
+                                                                    <AvatarFallback className="bg-primary/10 text-primary">
+                                                                        {initials}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex flex-col">
+                                                                    <span>{record.fullName}</span>
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        {record.contactno ? record.contactno : "No contact number"}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>{record.patientId}</TableCell>
@@ -613,8 +633,22 @@ export default function DoctorPatientsPage() {
                                 </DialogHeader>
 
                                 <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
-                                    <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
-                                    <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-12 w-12 border border-primary/15">
+                                            <AvatarImage
+                                                src={selectedRecord.profileImage || undefined}
+                                                alt={selectedRecord.fullName}
+                                            />
+                                            <AvatarFallback className="bg-white/80 text-primary">
+                                                {buildInitials(selectedRecord.fullName)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
+                                            <p className="text-xs uppercase tracking-wide text-primary/80">Patient record</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
                                         <div>
                                             <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
                                             <p className="font-medium text-primary">{selectedRecord.patientId}</p>

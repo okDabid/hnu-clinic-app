@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     Table,
     TableBody,
@@ -29,11 +30,18 @@ interface PatientDirectoryTableProps {
     onOpenDetails: (record: PatientRecord) => void;
 }
 
+function buildInitials(name: string) {
+    const [first = "", second = ""] = name.trim().split(" ");
+    const initials = `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
+    return initials || "PT";
+}
+
 function PatientDirectoryTableComponent({ records, loading, onOpenDetails }: PatientDirectoryTableProps) {
     const rows = useMemo(() => {
         return records.map((record) => {
             const statusKey = record.status.toLowerCase();
             const statusClasses = PATIENT_STATUS_CLASSES[statusKey] ?? PATIENT_STATUS_CLASSES.inactive;
+            const initials = buildInitials(record.fullName);
 
             return (
                 <TableRow
@@ -50,11 +58,17 @@ function PatientDirectoryTableComponent({ records, loading, onOpenDetails }: Pat
                     }}
                 >
                     <TableCell className="font-medium text-primary">
-                        <div className="flex flex-col">
-                            <span>{record.fullName}</span>
-                            <span className="text-xs text-muted-foreground">
-                                {record.contactno ? record.contactno : "No contact number"}
-                            </span>
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 border border-primary/15">
+                                <AvatarImage src={record.profileImage || undefined} alt={record.fullName} />
+                                <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                                <span>{record.fullName}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {record.contactno ? record.contactno : "No contact number"}
+                                </span>
+                            </div>
                         </div>
                     </TableCell>
                     <TableCell className="font-mono text-sm text-muted-foreground">{record.patientId}</TableCell>

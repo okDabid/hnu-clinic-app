@@ -15,6 +15,7 @@ import {
 } from "@/lib/patient-format";
 import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,12 @@ interface RecordDetailsDialogProps {
     onSaveNotes: (event: React.FormEvent<HTMLFormElement>) => void;
     updatingPatientId: string | null;
     savingNotesPatientId: string | null;
+}
+
+function buildInitials(name: string) {
+    const [first = "", second = ""] = name.trim().split(" ");
+    const initials = `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
+    return initials || "PT";
 }
 
 function RecordDetailsDialogComponent({
@@ -74,8 +81,19 @@ function RecordDetailsDialogComponent({
                     </DialogHeader>
 
                     <div className="rounded-2xl bg-primary/10/70 p-4 text-primary">
-                        <p className="text-lg font-semibold">{record.fullName}</p>
-                        <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                        <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12 border border-primary/15">
+                                <AvatarImage src={record.profileImage || undefined} alt={record.fullName} />
+                                <AvatarFallback className="bg-white/80 text-primary">
+                                    {buildInitials(record.fullName)}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="text-lg font-semibold">{record.fullName}</p>
+                                <p className="text-xs uppercase tracking-wide text-primary/80">Patient record</p>
+                            </div>
+                        </div>
+                        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
                             <div>
                                 <p className="text-xs uppercase tracking-wide text-primary">Patient ID</p>
                                 <p className="font-medium text-primary">{record.patientId}</p>
