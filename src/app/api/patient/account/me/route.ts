@@ -341,11 +341,9 @@ export async function PUT(req: Request) {
                             }
                         }
                     } catch (error) {
-                        console.error("[Cloudinary] Upload failed", error);
-                        return NextResponse.json(
-                            { error: "Failed to upload profile image" },
-                            { status: 500 }
-                        );
+                        console.error("[Cloudinary] Upload failed, falling back to stored data URL", error);
+                        userUpdateInput.profile_image = normalizedProfileImage;
+                        nextProfileImage = normalizedProfileImage;
                     }
                 }
             }
