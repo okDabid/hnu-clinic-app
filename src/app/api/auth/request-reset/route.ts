@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { generateNumericCode } from "@/lib/security";
 import { ipKey, jsonFieldKey, withRateLimit } from "@/lib/rate-limit";
+import { isEmailVerified } from "@/lib/email-verification";
 
 async function handler(req: Request) {
     try {
@@ -69,8 +70,8 @@ async function handler(req: Request) {
                 ],
             },
             include: {
-                student: { select: { fname: true, lname: true } },
-                employee: { select: { fname: true, lname: true } },
+                student: { select: { fname: true, lname: true, email: true } },
+                employee: { select: { fname: true, lname: true, email: true } },
             },
         });
 
@@ -79,6 +80,19 @@ async function handler(req: Request) {
                 success: true,
                 message: "If an account exists for that email, a reset code has been sent.",
             });
+        }
+
+        const primaryEmail =
+            user.student?.email?.trim() ?? user.employee?.email?.trim() ?? "";
+
+        const verified = await isEmailVerified(user.user_id, primaryEmail);
+        if (!verified) {
+            return NextResponse.json(
+                {
+                    error: "Please verify your email address before requesting a password reset.",
+                },
+                { status: 400 },
+            );
         }
 
         // Display name
