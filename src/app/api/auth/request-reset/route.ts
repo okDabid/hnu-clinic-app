@@ -75,24 +75,22 @@ async function handler(req: Request) {
             },
         });
 
-        if (!user) {
+        const primaryEmail =
+            user?.student?.email?.trim() ?? user?.employee?.email?.trim() ?? "";
+
+        if (!user || !primaryEmail) {
             return NextResponse.json({
                 success: true,
                 message: "If an account exists for that email, a reset code has been sent.",
             });
         }
 
-        const primaryEmail =
-            user.student?.email?.trim() ?? user.employee?.email?.trim() ?? "";
-
         const verified = await isEmailVerified(user.user_id, primaryEmail);
         if (!verified) {
-            return NextResponse.json(
-                {
-                    error: "Please verify your email address before requesting a password reset.",
-                },
-                { status: 400 },
-            );
+            return NextResponse.json({
+                success: true,
+                message: "If an account exists for that email, a reset code has been sent.",
+            });
         }
 
         // Display name
