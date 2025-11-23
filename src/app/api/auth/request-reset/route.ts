@@ -75,10 +75,10 @@ async function handler(req: Request) {
         });
 
         if (!user) {
-            return NextResponse.json({
-                success: true,
-                message: "If an account exists for that email, a reset code has been sent.",
-            });
+            return NextResponse.json(
+                { error: "No account found for that email." },
+                { status: 404 }
+            );
         }
 
         // Display name
