@@ -1,8 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import {
     CalendarDays,
     ClipboardList,
@@ -12,9 +10,12 @@ import {
     Clock4,
 } from "lucide-react";
 
+import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
+import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDashboardUser } from "@/hooks/use-dashboard-user";
 
 const managementAreas = [
     {
@@ -66,9 +67,7 @@ const operationalHighlights = [
 ];
 
 export default function DoctorDashboardPage() {
-    const { data: session } = useSession();
-    const fullName = session?.user?.name ?? "Doctor";
-    const firstName = useMemo(() => fullName.split(" ")[0] || fullName, [fullName]);
+    const { firstName } = useDashboardUser("Doctor");
 
     return (
         <DoctorLayout
@@ -80,65 +79,24 @@ export default function DoctorDashboardPage() {
                 </Button>
             }
         >
-            <section className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 p-6 shadow-sm">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-3">
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">
-                            Welcome back
-                        </p>
-                        <h3 className="text-3xl font-semibold text-primary md:text-4xl">
-                            Good day, Dr. {firstName}
-                        </h3>
-                        <p className="max-w-2xl text-sm text-muted-foreground">
-                            Review key updates for the day, respond to appointment movements, and keep your consultation schedule aligned with campus demand.
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <DashboardWelcome
+                heading={`Good day, Dr. ${firstName}`}
+                description="Review key updates for the day, respond to appointment movements, and keep your consultation schedule aligned with campus demand."
+                className="bg-linear-to-r"
+            />
 
-            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {managementAreas.map(({ title, description, href, icon: Icon, cta }) => (
-                    <Card
-                        key={title}
-                        className="h-full rounded-3xl border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                    >
-                        <CardHeader className="flex flex-row items-start justify-between gap-3">
-                            <div className="space-y-1">
-                                <CardTitle className="flex items-center gap-3 text-lg text-primary">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                        <Icon className="h-5 w-5" />
-                                    </span>
-                                    {title}
-                                </CardTitle>
-                                <p className="text-sm font-normal text-muted-foreground">{description}</p>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <Button asChild variant="ghost" className="rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary hover:bg-primary/20">
-                                <Link href={href}>{cta}</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ))}
-                <Card className="h-full rounded-3xl border-primary/20 bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-lg">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
-                                <Stethoscope className="h-5 w-5" />
-                            </span>
-                            Clinic insights
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm leading-relaxed text-white/90">
-                        <p>
-                            Align your consultation blocks with high-demand clinics to reduce wait times and improve patient satisfaction.
-                        </p>
-                        <p>
-                            Use the dispensing log to monitor supply usage so the pharmacy team can replenish critical medicines on schedule.
-                        </p>
-                    </CardContent>
-                </Card>
-            </section>
+            <QuickActionsGrid
+                actions={managementAreas}
+                highlight={{
+                    title: "Clinic insights",
+                    icon: Stethoscope,
+                    description: [
+                        "Align your consultation blocks with high-demand clinics to reduce wait times and improve patient satisfaction.",
+                        "Use the dispensing log to monitor supply usage so the pharmacy team can replenish critical medicines on schedule.",
+                    ],
+                    className: "bg-linear-to-br",
+                }}
+            />
 
             <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
