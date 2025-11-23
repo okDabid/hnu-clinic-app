@@ -7,7 +7,6 @@ import { Loader2 } from "lucide-react";
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,15 +16,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import { formatManilaDateTime } from "@/lib/time";
+import { summarizeDispenses } from "@/lib/dispense";
+import { formatProfileName } from "@/lib/staff-name";
+import { DispenseHistoryRow, DispenseHistoryTable } from "@/components/dispense/dispense-history-table";
 
 import DoctorDispenseLoading from "./loading";
 
@@ -86,46 +80,9 @@ type DispenseResponse = {
     error?: string;
 };
 
-function formatDateTime(
-    value: string | null | undefined,
-    options?: Intl.DateTimeFormatOptions
-) {
+function formatDateTime(value: string | null | undefined, options?: Intl.DateTimeFormatOptions) {
     const formatted = formatManilaDateTime(value, options);
     return formatted || "—";
-}
-
-function formatDate(value: string | null | undefined) {
-    if (!value) return "—";
-    const formatted = formatManilaDateTime(value, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: undefined,
-        minute: undefined,
-    });
-    return formatted || "—";
-}
-
-function formatStaffName(
-    staff:
-        | {
-            username: string;
-            student: { fname: string | null; mname: string | null; lname: string | null } | null;
-            employee: { fname: string | null; mname: string | null; lname: string | null } | null;
-        }
-        | null
-) {
-    if (!staff) return "—";
-    const fromStudent = staff.student
-        ? [staff.student.fname, staff.student.mname, staff.student.lname].filter(Boolean).join(" ")
-        : "";
-    if (fromStudent) return fromStudent;
-
-    const fromEmployee = staff.employee
-        ? [staff.employee.fname, staff.employee.mname, staff.employee.lname].filter(Boolean).join(" ")
-        : "";
-
-    return fromEmployee || staff.username || "—";
 }
 
 export default function DoctorDispensePage() {
@@ -141,31 +98,36 @@ export default function DoctorDispensePage() {
         quantity: "",
     });
 
-    const summary = useMemo(() => {
-        let walkInCount = 0;
-        let latest: string | null = null;
-        let quantityTotal = 0;
+    const summary = useMemo(() => summarizeDispenses(dispenses), [dispenses]);
 
-        for (const record of dispenses) {
-            if (!record.consultation) {
-                walkInCount += 1;
-            }
-
-            quantityTotal += Number(record.quantity) || 0;
-
-            if (!latest || new Date(record.createdAt).getTime() > new Date(latest).getTime()) {
-                latest = record.createdAt;
-            }
-        }
-
-        return {
-            total: dispenses.length,
-            consultations: dispenses.length - walkInCount,
-            walkIns: walkInCount,
-            latestDispense: latest,
-            totalQuantity: quantityTotal,
-        };
-    }, [dispenses]);
+    const tableRows = useMemo<DispenseHistoryRow[]>(
+        () =>
+            dispenses.map((record) => ({
+                id: record.dispense_id,
+                clinicName:
+                    record.consultation?.appointment?.clinic?.clinic_name ?? record.med.clinic.clinic_name,
+                recipient:
+                    record.consultation?.appointment?.patient?.username ??
+                    (record.walk_in_id_number ? `Walk-in ID: ${record.walk_in_id_number}` : "—"),
+                visitType: record.consultation ? "Consultation" : "Walk-in",
+                medicineName: record.med.item_name,
+                medicineClinic: record.med.clinic.clinic_name,
+                quantity: record.quantity,
+                doctorName: formatProfileName(record.consultation?.doctor),
+                nurseName: formatProfileName(record.consultation?.nurse),
+                scholarName: formatProfileName(record.scholar),
+                createdAt: record.createdAt,
+                batches: record.dispenseBatches.map((batch) => ({
+                    id: batch.id,
+                    quantity_used: batch.quantity_used,
+                    expiry_date: batch.replenishment.expiry_date,
+                    date_received: batch.replenishment.date_received,
+                })),
+                walkInContact: record.walk_in_contact,
+                walkInNotes: record.walk_in_notes,
+            })),
+        [dispenses]
+    );
 
     const selectedMedicine = useMemo(
         () => medicines.find((med) => med.med_id === form.med_id) || null,
@@ -453,145 +415,7 @@ export default function DoctorDispensePage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-4">
-                            {loading ? (
-                                <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
-                                    <Loader2 className="h-5 w-5 animate-spin" /> Loading records...
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <Table className="min-w-full text-sm">
-                                        <TableHeader className="bg-primary/10 text-primary">
-                                            <TableRow>
-                                                <TableHead className="whitespace-nowrap">Clinic</TableHead>
-                                                <TableHead className="whitespace-nowrap">Recipient</TableHead>
-                                                <TableHead className="whitespace-nowrap">Visit Type</TableHead>
-                                                <TableHead className="whitespace-nowrap">Medicine</TableHead>
-                                                <TableHead className="whitespace-nowrap">Quantity</TableHead>
-                                                <TableHead className="whitespace-nowrap">Doctor</TableHead>
-                                                <TableHead className="whitespace-nowrap">Nurse</TableHead>
-                                                <TableHead className="whitespace-nowrap">Scholar</TableHead>
-                                                <TableHead className="whitespace-nowrap">Dispensed At</TableHead>
-                                                <TableHead className="whitespace-nowrap">Batch Details</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {dispenses.length > 0 ? (
-                                                dispenses.map((d) => (
-                                                    <TableRow key={d.dispense_id} className="transition hover:bg-primary/10">
-                                                        <TableCell>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[0.7rem] font-semibold text-primary"
-                                                            >
-                                                                {d.consultation?.appointment?.clinic?.clinic_name ??
-                                                                    d.med.clinic.clinic_name}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="font-semibold text-gray-900">
-                                                                    {d.consultation?.appointment?.patient?.username ??
-                                                                        (d.walk_in_id_number
-                                                                            ? `Walk-in ID: ${d.walk_in_id_number}`
-                                                                            : "—")}
-                                                                </span>
-                                                                {!d.consultation && (
-                                                                    <>
-                                                                        {d.walk_in_contact ? (
-                                                                            <span className="text-xs text-muted-foreground">
-                                                                                Contact: {d.walk_in_contact}
-                                                                            </span>
-                                                                        ) : null}
-                                                                        {d.walk_in_notes ? (
-                                                                            <span className="text-xs text-muted-foreground">
-                                                                                Notes: {d.walk_in_notes}
-                                                                            </span>
-                                                                        ) : null}
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className={
-                                                                    d.consultation
-                                                                        ? "rounded-full border-primary/30  bg-primary/15/80 px-3 py-1 text-[0.7rem] font-semibold text-primary"
-                                                                        : "rounded-full border-amber-200 bg-amber-50 px-3 py-1 text-[0.7rem] font-semibold text-amber-600"
-                                                                }
-                                                            >
-                                                                {d.consultation ? "Consultation" : "Walk-in"}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex flex-col">
-                                                                <span className="font-medium text-gray-900">{d.med.item_name}</span>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {d.med.clinic.clinic_name}
-                                                                </span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge className="rounded-full bg-primary/10 px-3 py-1 text-[0.75rem] font-semibold text-primary">
-                                                                ×{d.quantity}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <span className="text-sm font-medium text-gray-800">
-                                                                {d.consultation?.doctor?.username || "—"}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <span className="text-sm font-medium text-gray-800">
-                                                                {d.consultation?.nurse?.username || "—"}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <span className="text-sm font-medium text-gray-800">
-                                                                {formatStaffName(d.scholar)}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <span className="text-sm text-muted-foreground">
-                                                                {formatDateTime(d.createdAt)}
-                                                            </span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {d.dispenseBatches.length > 0 ? (
-                                                                <ul className="space-y-2 text-xs text-muted-foreground">
-                                                                    {d.dispenseBatches.map((batch) => (
-                                                                        <li
-                                                                            key={batch.id}
-                                                                            className="rounded-2xl border border-primary/20 bg-primary/10 px-3 py-2 shadow-sm"
-                                                                        >
-                                                                            <div className="flex items-center justify-between text-[0.7rem] font-semibold text-primary">
-                                                                                <span>Batch usage</span>
-                                                                                <span>−{batch.quantity_used}</span>
-                                                                            </div>
-                                                                            <div className="mt-1 space-y-1 text-[0.65rem] text-muted-foreground">
-                                                                                <p>Expiry: {formatDate(batch.replenishment.expiry_date)}</p>
-                                                                                <p>Received: {formatDate(batch.replenishment.date_received)}</p>
-                                                                            </div>
-                                                                        </li>
-                                                                    ))}
-                                                                </ul>
-                                                            ) : (
-                                                                "—"
-                                                            )}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))
-                                            ) : (
-                                                <TableRow>
-                                                    <TableCell colSpan={10} className="py-6 text-center text-muted-foreground">
-                                                        No dispense records found
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                            <DispenseHistoryTable rows={tableRows} loading={loading} />
                         </CardContent>
                     </Card>
                 </section>

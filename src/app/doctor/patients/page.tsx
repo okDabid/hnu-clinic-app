@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { AlertCircle, BadgeCheck, Loader2, RefreshCcw, Search, Stethoscope, Users2 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AlertCircle, BadgeCheck, RefreshCcw, Search, Users2 } from "lucide-react";
+
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,193 +17,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { formatManilaDateTime } from "@/lib/time";
-import { BLOOD_TYPES } from "@/lib/patient-records-update";
-import { formatMedicalHistory, parseMedicalHistory, serializeMedicalHistory } from "@/lib/medical-history";
+import { parseMedicalHistory, serializeMedicalHistory } from "@/lib/medical-history";
 
 import DoctorPatientsLoading from "./loading";
+import { PatientDirectoryTable } from "@/app/nurse/records/patient-directory-table";
+import type { RecordDetailsDialogTab } from "@/app/nurse/records/patient-record-dialog";
+import type { PatientRecord } from "@/app/nurse/records/types";
 
-type PatientRecord = {
-    id: string;
-    userId: string;
-    patientId: string;
-    fullName: string;
-    patientType: "Student" | "Employee";
-    gender: string | null;
-    date_of_birth: string | null;
-    status: string;
-    appointment_id: string | null;
-    department?: string | null;
-    program?: string | null;
-    year_level?: string | null;
-    contactno?: string | null;
-    address?: string | null;
-    bloodtype?: string | null;
-    allergies?: string | null;
-    medical_cond?: string | null;
-    emergency?: {
-        name?: string | null;
-        num?: string | null;
-        relation?: string | null;
-    };
-    latestAppointment: {
-        id: string;
-        timestart: string | null;
-        timeend: string | null;
-        doctor: {
-            id: string;
-            username: string;
-            fullName: string | null;
-        } | null;
-        consultation: {
-            id: string;
-            reason_of_visit: string | null;
-            findings: string | null;
-            diagnosis: string | null;
-            updatedAt: string | null;
-            doctor: {
-                id: string;
-                username: string;
-                fullName: string | null;
-            } | null;
-            nurse: {
-                id: string;
-                username: string;
-                fullName: string | null;
-            } | null;
-        } | null;
-    } | null;
-};
-
-function formatDateOnly(value: string | null | undefined) {
-    if (!value) return "—";
-    const formatted = formatManilaDateTime(value, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: undefined,
-        minute: undefined,
-    });
-    return formatted || "—";
-}
-
-function formatAppointmentWindow(appointment: PatientRecord["latestAppointment"]): string {
-    if (!appointment?.timestart) return "";
-    const start = formatManilaDateTime(appointment.timestart);
-    const end = appointment.timeend
-        ? formatManilaDateTime(appointment.timeend, {
-            year: undefined,
-            month: undefined,
-            day: undefined,
-        })
-        : null;
-
-    if (start && end) {
-        return `${start} – ${end}`;
+const RecordDetailsDialog = dynamic(
+    () => import("@/app/nurse/records/patient-record-dialog").then((mod) => mod.RecordDetailsDialog),
+    {
+        loading: () => (
+            <div className="px-6 py-8 text-center text-sm text-muted-foreground">Loading patient details…</div>
+        ),
+        ssr: false,
     }
-
-    return start || "";
-}
-
-const bloodTypeLabels: Record<(typeof BLOOD_TYPES)[number], string> = {
-    A_POS: "A+",
-    A_NEG: "A-",
-    B_POS: "B+",
-    B_NEG: "B-",
-    AB_POS: "AB+",
-    AB_NEG: "AB-",
-    O_POS: "O+",
-    O_NEG: "O-",
-};
-
-const departmentTypeLabels: Record<string, string> = {
-    EDUCATION: "College of Education",
-    ARTS_AND_SCIENCES: "College of Arts and Sciences",
-    BUSINESS_AND_ACCOUNTANCY: "College of Business and Accountancy",
-    ENGINEERING_AND_COMPUTER_STUDIES: "College of Engineering and Computer Studies",
-    HEALTH_SCIENCES: "College of Health Sciences",
-    LAW: "College of Law",
-    BASIC_EDUCATION: "Integrated Basic Education Department",
-};
-
-const yearTypeLabels: Record<string, string> = {
-    FIRST_YEAR: "1st Year",
-    SECOND_YEAR: "2nd Year",
-    THIRD_YEAR: "3rd Year",
-    FOURTH_YEAR: "4th Year",
-    FIFTH_YEAR: "5th Year",
-    KINDERGARTEN_1: "Kindergarten 1",
-    KINDERGARTEN_2: "Kindergarten 2",
-    GRADE_1: "Grade 1",
-    GRADE_2: "Grade 2",
-    GRADE_3: "Grade 3",
-    GRADE_4: "Grade 4",
-    GRADE_5: "Grade 5",
-    GRADE_6: "Grade 6",
-    GRADE_7: "Grade 7",
-    GRADE_8: "Grade 8",
-    GRADE_9: "Grade 9",
-    GRADE_10: "Grade 10",
-    GRADE_11: "Grade 11",
-    GRADE_12: "Grade 12",
-};
-
-function humanizeEnumValue(value: string) {
-    const normalized = value.replace(/_/g, " ").trim();
-    return normalized
-        .split(" ")
-        .map((word) => {
-            if (word.length <= 3 && word === word.toUpperCase()) {
-                return word;
-            }
-            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-        })
-        .join(" ");
-}
-
-function formatDeptTypes(value: string | null | undefined) {
-    if (!value) return "—";
-    if (departmentTypeLabels[value]) return departmentTypeLabels[value];
-    if (/^[A-Z0-9_]+$/.test(value)) {
-        return humanizeEnumValue(value);
-    }
-    return value;
-}
-
-function formatYearTypes(value: string | null | undefined) {
-    if (!value) return "—";
-    if (yearTypeLabels[value]) return yearTypeLabels[value];
-    if (/^[A-Z0-9_]+$/.test(value)) {
-        return humanizeEnumValue(value);
-    }
-    return value;
-}
-
-function formatBloodType(value: string | null | undefined) {
-    if (!value) return "—";
-    return bloodTypeLabels[value as (typeof BLOOD_TYPES)[number]] ?? value;
-}
-
-function formatStaffName(staff?: { fullName: string | null; username: string } | null) {
-    if (!staff) return "—";
-    return staff.fullName || staff.username || "—";
-}
-
-const PATIENT_STATUS_CLASSES: Record<string, string> = {
-    active: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    inactive: "border-slate-200 bg-slate-100 text-slate-700",
-};
+);
 
 export default function DoctorPatientsPage() {
     const [records, setRecords] = useState<PatientRecord[]>([]);
@@ -213,38 +42,35 @@ export default function DoctorPatientsPage() {
     const [appointmentFilter, setAppointmentFilter] = useState("All");
     const [loadingRecords, setLoadingRecords] = useState(false);
     const [initializing, setInitializing] = useState(true);
-    const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
-    const [savingNotesPatientId, setSavingNotesPatientId] = useState<string | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<PatientRecord | null>(null);
-    const [activeTab, setActiveTab] = useState<"details" | "update" | "notes">("details");
+    const [activeTab, setActiveTab] = useState<RecordDetailsDialogTab>("details");
+    const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
+    const [savingNotesPatientId, setSavingNotesPatientId] = useState<string | null>(null);
+    const [isRefreshing, startTransition] = useTransition();
 
-    const selectedMedicalHistoryText = selectedRecord
-        ? formatMedicalHistory(parseMedicalHistory(selectedRecord.medical_cond))
-        : "";
+    const deferredSearch = useDeferredValue(search.trim().toLowerCase());
 
     const loadRecords = useCallback(async () => {
         try {
             setLoadingRecords(true);
             const res = await fetch("/api/doctor/patients", { cache: "no-store" });
-            if (!res.ok) {
-                const error = await res.json().catch(() => null);
-                throw new Error(error?.error || "Failed to load records");
-            }
-
-            const data = (await res.json()) as PatientRecord[];
-            setRecords(data);
+            if (!res.ok) throw new Error("Failed to load records");
+            const data: PatientRecord[] = await res.json();
+            startTransition(() => {
+                setRecords(data);
+            });
         } catch (error) {
             console.error(error);
-            toast.error(error instanceof Error ? error.message : "Failed to load patient records");
+            toast.error("Error loading patient records.");
         } finally {
             setLoadingRecords(false);
             setInitializing(false);
         }
-    }, []);
+    }, [startTransition]);
 
     useEffect(() => {
-        loadRecords();
+        void loadRecords();
     }, [loadRecords]);
 
     useEffect(() => {
@@ -256,19 +82,17 @@ export default function DoctorPatientsPage() {
     }, [records, selectedRecord]);
 
     const filteredRecords = useMemo(() => {
+        if (!deferredSearch && statusFilter === "All" && typeFilter === "All" && appointmentFilter === "All") {
+            return records;
+        }
+
         return records.filter((record) => {
-            const query = search.toLowerCase();
-            const matchesSearch = [
-                record.fullName,
-                record.patientId,
-                record.patientType,
-                record.contactno ?? "",
-                record.address ?? "",
-                record.department ?? "",
-                record.program ?? "",
-            ]
-                .filter(Boolean)
-                .some((value) => value.toLowerCase().includes(query));
+            const matchesSearch =
+                record.fullName.toLowerCase().includes(deferredSearch) ||
+                record.patientId.toLowerCase().includes(deferredSearch) ||
+                record.patientType.toLowerCase().includes(deferredSearch) ||
+                (record.department ?? "").toLowerCase().includes(deferredSearch) ||
+                (record.program ?? "").toLowerCase().includes(deferredSearch);
 
             const matchesStatus = statusFilter === "All" || record.status === statusFilter;
             const matchesType = typeFilter === "All" || record.patientType === typeFilter;
@@ -279,7 +103,7 @@ export default function DoctorPatientsPage() {
 
             return matchesSearch && matchesStatus && matchesType && matchesAppointment;
         });
-    }, [appointmentFilter, records, search, statusFilter, typeFilter]);
+    }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
 
     const totalPatients = records.length;
     const withAppointments = useMemo(
@@ -288,7 +112,7 @@ export default function DoctorPatientsPage() {
     );
     const withoutAppointments = totalPatients - withAppointments;
 
-    function openDetails(record: PatientRecord, tab: "details" | "update" | "notes" = "details") {
+    function openDetails(record: PatientRecord, tab: RecordDetailsDialogTab = "details") {
         setSelectedRecord(record);
         setActiveTab(tab);
         setDetailOpen(true);
@@ -387,8 +211,10 @@ export default function DoctorPatientsPage() {
                     variant="outline"
                     className="rounded-xl border-primary/30 text-primary hover:bg-primary/10/70"
                     onClick={loadRecords}
+                    disabled={loadingRecords || isRefreshing}
                 >
-                    <RefreshCcw className="mr-2 h-4 w-4" /> Refresh records
+                    <RefreshCcw className="mr-2 h-4 w-4" />
+                    {loadingRecords || isRefreshing ? "Refreshing..." : "Refresh records"}
                 </Button>
             }
         >
@@ -495,375 +321,28 @@ export default function DoctorPatientsPage() {
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-4 pt-4">
-
-                            {loadingRecords ? (
-                                <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
-                                    <Loader2 className="h-5 w-5 animate-spin" /> Loading patient records...
-                                </div>
-                            ) : filteredRecords.length === 0 ? (
-                                <p className="py-10 text-center text-muted-foreground">No patient records found.</p>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <Table className="min-w-full text-sm">
-                                        <TableHeader>
-                                            <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                                <TableHead className="min-w-[220px]">Patient</TableHead>
-                                                <TableHead className="min-w-[140px]">ID</TableHead>
-                                                <TableHead className="min-w-[120px]">Type</TableHead>
-                                                <TableHead className="min-w-[220px]">Program / Department</TableHead>
-                                                <TableHead className="min-w-[120px]">Status</TableHead>
-                                                <TableHead className="min-w-[220px]">Latest appointment</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredRecords.map((record) => {
-                                                const statusKey = record.status.toLowerCase();
-                                                return (
-                                                    <TableRow
-                                                        key={record.id}
-                                                        className="cursor-pointer text-sm transition hover:bg-primary/10/60 focus-visible:bg-primary/10/60"
-                                                        onClick={() => openDetails(record)}
-                                                        onKeyDown={(event) => {
-                                                            if (event.key === "Enter" || event.key === " ") {
-                                                                event.preventDefault();
-                                                                openDetails(record);
-                                                            }
-                                                        }}
-                                                        tabIndex={0}
-                                                        role="button"
-                                                    >
-                                                        <TableCell className="font-medium text-primary">
-                                                            <div className="flex items-center gap-3">
-                                                                <Avatar className="h-10 w-10 border border-primary/20 bg-primary/5">
-                                                                    <AvatarFallback className="text-xs font-semibold text-primary">
-                                                                        {record.fullName
-                                                                            .split(" ")
-                                                                            .map((chunk) => chunk.charAt(0))
-                                                                            .join("")
-                                                                            .slice(0, 2)
-                                                                            .toUpperCase() || "PT"}
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <div className="flex flex-col">
-                                                                    <span>{record.fullName}</span>
-                                                                    <span className="text-xs text-muted-foreground">
-                                                                        {record.contactno ? record.contactno : "No contact number"}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="font-mono text-sm text-muted-foreground">{record.patientId}</TableCell>
-                                                        <TableCell>
-                                                            <Badge className="rounded-full border-primary/30 bg-primary/10 text-primary">
-                                                                {record.patientType}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell className="whitespace-pre-wrap text-muted-foreground">
-                                                            {record.patientType === "Student" ? (
-                                                                <>
-                                                                    <span className="block font-medium text-foreground">
-                                                                        {formatDeptTypes(record.department)}
-                                                                    </span>
-                                                                    <span className="block">{formatDeptTypes(record.program)}</span>
-                                                                    <span className="block text-xs text-muted-foreground">
-                                                                        {formatYearTypes(record.year_level)}
-                                                                    </span>
-                                                                </>
-                                                            ) : (
-                                                                formatDeptTypes(record.department) || "—"
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge
-                                                                className={`rounded-full px-2 py-1 text-xs ${PATIENT_STATUS_CLASSES[statusKey] ??
-                                                                    "border-slate-200 bg-slate-100 text-slate-700"
-                                                                    }`}
-                                                            >
-                                                                {record.status}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell className="whitespace-pre-wrap">
-                                                            {record.latestAppointment?.timestart ? (
-                                                                <div className="flex flex-col">
-                                                                    <span>{formatAppointmentWindow(record.latestAppointment)}</span>
-                                                                    <span className="text-xs text-muted-foreground">
-                                                                        Doctor: {formatStaffName(record.latestAppointment.doctor)}
-                                                                    </span>
-                                                                    <span className="text-xs text-muted-foreground">
-                                                                        Nurse: {formatStaffName(record.latestAppointment.consultation?.nurse)}
-                                                                    </span>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-muted-foreground">—</span>
-                                                            )}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                        <CardContent className="pt-4">
+                            <PatientDirectoryTable
+                                records={filteredRecords}
+                                loading={loadingRecords}
+                                onOpenDetails={openDetails}
+                            />
                         </CardContent>
                     </Card>
                 </section>
-
-                <Dialog
-                    open={detailOpen}
-                    onOpenChange={(open) => {
-                        if (!open) {
-                            closeDetails();
-                        }
-                    }}
-                >
-                    <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl">
-                        {selectedRecord ? (
-                            <div className="space-y-6">
-                                <DialogHeader>
-                                    <DialogTitle className="text-xl text-primary">Patient snapshot</DialogTitle>
-                                    <DialogDescription className="text-sm text-muted-foreground">
-                                        Contact details and clinical notes shared with the care team.
-                                    </DialogDescription>
-                                </DialogHeader>
-
-                                <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-primary">
-                                    <div className="flex items-start gap-4">
-                                        <Avatar className="h-12 w-12 border border-primary/40 bg-white shadow-sm">
-                                            <AvatarFallback className="bg-primary/10 text-base font-semibold text-primary">
-                                                {selectedRecord.fullName
-                                                    .split(" ")
-                                                    .map((chunk) => chunk.charAt(0))
-                                                    .join("")
-                                                    .slice(0, 2)
-                                                    .toUpperCase() || "PT"}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                        <div className="flex-1">
-                                            <p className="text-lg font-semibold">{selectedRecord.fullName}</p>
-                                            <p className="text-xs font-medium uppercase tracking-wide text-primary/70">
-                                                {selectedRecord.patientType}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 grid gap-3 rounded-xl bg-white/60 p-3 text-sm text-primary sm:grid-cols-2">
-                                        <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary/70">Patient ID</p>
-                                            <p className="font-semibold">{selectedRecord.patientId}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary/70">Date of birth</p>
-                                            <p className="font-semibold">{formatDateOnly(selectedRecord.date_of_birth)}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary/70">Gender</p>
-                                            <p className="font-semibold">{selectedRecord.gender ?? "—"}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs uppercase tracking-wide text-primary/70">Type</p>
-                                            <p className="font-semibold">{selectedRecord.patientType}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Tabs
-                                    value={activeTab}
-                                    onValueChange={(value) => setActiveTab(value as "details" | "update" | "notes")}
-                                    className="space-y-4"
-                                >
-                                    <div className="flex justify-center">
-                                        <TabsList className="flex flex-wrap gap-2">
-                                            <TabsTrigger value="details">Details</TabsTrigger>
-                                            <TabsTrigger value="update">Update Info</TabsTrigger>
-                                            <TabsTrigger value="notes">Consultation Notes</TabsTrigger>
-                                        </TabsList>
-                                    </div>
-
-                                    <TabsContent value="details" className="space-y-4">
-                                        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                                            <p>
-                                                <strong>Contact:</strong> {selectedRecord.contactno || "—"}
-                                            </p>
-                                            <p>
-                                                <strong>Address:</strong> {selectedRecord.address || "—"}
-                                            </p>
-                                            <p>
-                                                <strong>Blood Type:</strong> {formatBloodType(selectedRecord.bloodtype)}
-                                            </p>
-                                            <p>
-                                                <strong>Allergies:</strong> {selectedRecord.allergies || "—"}
-                                            </p>
-                                            <p>
-                                                <strong>Medical Conditions:</strong> {selectedMedicalHistoryText || "—"}
-                                            </p>
-                                            <p>
-                                                <strong>Emergency:</strong> {selectedRecord.emergency?.name || "—"} (
-                                                {selectedRecord.emergency?.relation || "—"}) – {selectedRecord.emergency?.num || "—"}
-                                            </p>
-                                            {selectedRecord.patientType === "Student" ? (
-                                                <>
-                                                    <p>
-                                                        <strong>Department:</strong> {formatDeptTypes(selectedRecord.department)}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Program:</strong> {formatDeptTypes(selectedRecord.program)}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Year Level:</strong> {formatYearTypes(selectedRecord.year_level)}
-                                                    </p>
-                                                </>
-                                            ) : null}
-                                        </div>
-
-                                        <Separator />
-
-                                        <div className="space-y-3 text-sm">
-                                            <h4 className="flex items-center gap-2 font-semibold text-primary">
-                                                <Stethoscope className="h-4 w-4" /> Latest appointment
-                                            </h4>
-                                            {selectedRecord.latestAppointment?.timestart ? (
-                                                <div className="grid gap-2 sm:grid-cols-2">
-                                                    <p>
-                                                        <strong>Schedule:</strong> {formatAppointmentWindow(selectedRecord.latestAppointment)}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Doctor:</strong> {formatStaffName(selectedRecord.latestAppointment.doctor)}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Nurse:</strong> {formatStaffName(selectedRecord.latestAppointment.consultation?.nurse)}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Appointment ID:</strong> {selectedRecord.latestAppointment.id}
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <p className="text-muted-foreground">No recent appointment on file.</p>
-                                            )}
-
-                                            {selectedRecord.latestAppointment?.consultation ? (
-                                                <div className="space-y-1 rounded-md border bg-muted/40 p-3">
-                                                    <p className="text-sm font-semibold text-primary">Consultation Notes</p>
-                                                    <p>
-                                                        <strong>Reason:</strong> {selectedRecord.latestAppointment.consultation.reason_of_visit || "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Findings:</strong> {selectedRecord.latestAppointment.consultation.findings || "—"}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Diagnosis:</strong> {selectedRecord.latestAppointment.consultation.diagnosis || "—"}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Updated by {formatStaffName(selectedRecord.latestAppointment.consultation.doctor)} on
-                                                        {" "}
-                                                        {formatManilaDateTime(selectedRecord.latestAppointment.consultation.updatedAt) || "—"}
-                                                    </p>
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    </TabsContent>
-
-                                    <TabsContent value="update" className="space-y-4">
-                                        <form onSubmit={handleUpdateInfo} className="space-y-3">
-                                            <div>
-                                                <Label className="mb-1 block font-medium" htmlFor="medical_cond">
-                                                    Medical Conditions
-                                                </Label>
-                                                <Input
-                                                    id="medical_cond"
-                                                    name="medical_cond"
-                                                    defaultValue={selectedMedicalHistoryText}
-                                                    placeholder="e.g. Asthma, Hypertension, other details"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label className="mb-1 block font-medium" htmlFor="allergies">
-                                                    Allergies
-                                                </Label>
-                                                <Input
-                                                    id="allergies"
-                                                    name="allergies"
-                                                    defaultValue={selectedRecord.allergies || ""}
-                                                    placeholder="e.g. Penicillin, Peanuts"
-                                                />
-                                            </div>
-                                            <Button
-                                                type="submit"
-                                                disabled={updatingPatientId === selectedRecord.id}
-                                                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                                            >
-                                                {updatingPatientId === selectedRecord.id ? (
-                                                    <>
-                                                        <Loader2 className="h-4 w-4 animate-spin" /> Saving...
-                                                    </>
-                                                ) : (
-                                                    "Save info"
-                                                )}
-                                            </Button>
-                                        </form>
-                                    </TabsContent>
-
-                                    <TabsContent value="notes" className="space-y-4">
-                                        <form onSubmit={handleSaveNotes} className="space-y-3">
-                                            {!selectedRecord.latestAppointment?.id ? (
-                                                <p className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-700">
-                                                    This patient has no active appointment. Approve or schedule one to record consultation notes.
-                                                </p>
-                                            ) : null}
-                                            <div>
-                                                <Label className="mb-1 block font-medium" htmlFor="reason_of_visit">
-                                                    Reason of Visit
-                                                </Label>
-                                                <Input
-                                                    id="reason_of_visit"
-                                                    name="reason_of_visit"
-                                                    defaultValue={selectedRecord.latestAppointment?.consultation?.reason_of_visit || ""}
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label className="mb-1 block font-medium" htmlFor="findings">
-                                                    Findings
-                                                </Label>
-                                                <Input
-                                                    id="findings"
-                                                    name="findings"
-                                                    defaultValue={selectedRecord.latestAppointment?.consultation?.findings || ""}
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label className="mb-1 block font-medium" htmlFor="diagnosis">
-                                                    Diagnosis
-                                                </Label>
-                                                <Input
-                                                    id="diagnosis"
-                                                    name="diagnosis"
-                                                    defaultValue={selectedRecord.latestAppointment?.consultation?.diagnosis || ""}
-                                                />
-                                            </div>
-                                            <Button
-                                                type="submit"
-                                                disabled={
-                                                    savingNotesPatientId === selectedRecord.id ||
-                                                    !selectedRecord.latestAppointment?.id
-                                                }
-                                                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                                            >
-                                                {savingNotesPatientId === selectedRecord.id ? (
-                                                    <>
-                                                        <Loader2 className="h-4 w-4 animate-spin" /> Saving...
-                                                    </>
-                                                ) : !selectedRecord.latestAppointment?.id ? (
-                                                    "No appointment"
-                                                ) : (
-                                                    "Save notes"
-                                                )}
-                                            </Button>
-                                        </form>
-                                    </TabsContent>
-                                </Tabs>
-                            </div>
-                        ) : null}
-                    </DialogContent>
-                </Dialog>
+                {detailOpen && selectedRecord ? (
+                    <RecordDetailsDialog
+                        open={detailOpen}
+                        record={selectedRecord}
+                        activeTab={activeTab}
+                        onTabChange={setActiveTab}
+                        onClose={closeDetails}
+                        onUpdateInfo={handleUpdateInfo}
+                        onSaveNotes={handleSaveNotes}
+                        updatingPatientId={updatingPatientId}
+                        savingNotesPatientId={savingNotesPatientId}
+                    />
+                ) : null}
             </div>
         </DoctorLayout>
     );
