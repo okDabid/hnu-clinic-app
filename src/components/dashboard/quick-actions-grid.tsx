@@ -56,7 +56,7 @@ export function QuickActionsGrid({ actions, highlight, className }: QuickActions
             ))}
             <Card
                 className={cn(
-                    "h-full rounded-3xl border-primary/20 bg-gradient-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md",
+                    "h-full rounded-3xl border-primary/20 bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md",
                     highlightClassName,
                 )}
             >
