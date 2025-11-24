@@ -333,8 +333,10 @@ export function NurseAccountsPageClient({
 
     // Always refresh once on mount to ensure working scholar flags reflect latest server state
     useEffect(() => {
-        void loadUsers({ silent: true });
-    }, [loadUsers]);
+        if (initialUsersLoaded) {
+            void loadUsers({ silent: true });
+        }
+    }, [initialUsersLoaded, loadUsers]);
 
     useEffect(() => {
         if (role !== "PATIENT") {
