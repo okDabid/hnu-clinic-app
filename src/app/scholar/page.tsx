@@ -4,67 +4,38 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
+    Activity,
     CalendarDays,
-    ClipboardList,
     FileSpreadsheet,
     NotebookPen,
     Users2,
+    Workflow,
 } from "lucide-react";
 
+import { StatCard } from "@/components/dashboard/stat-card";
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
-const workflowHighlights = [
-    {
-        title: "Coordinate appointments",
-        description:
-            "Review upcoming visits, arrange queues, and update the board when there are walk-ins or cancellations.",
-        href: "/scholar/appointments",
-        icon: CalendarDays,
-        cta: "Open appointment hub",
-    },
-    {
-        title: "Assist patient intake",
-        description:
-            "Search student profiles, confirm eligibility, and share the latest notes with the nursing team.",
-        href: "/scholar/patients",
-        icon: Users2,
-        cta: "View patient list",
-    },
-    {
-        title: "Maintain scholar records",
-        description:
-            "Keep your contact and emergency details updated so the clinic can reach you during campus operations.",
-        href: "/scholar/account",
-        icon: ClipboardList,
-        cta: "Manage account",
-    },
-] as const;
-
-const supportChecklist = [
-    "Confirm the day’s appointment roster at least one hour before clinic opening.",
-    "Log every walk-in case in the shared tracker so nurses can assign the next available slot.",
-    "Escalate urgent symptoms directly to the nurse channel to alert the medical team immediately.",
+const tasks = [
+    { label: "Confirm morning queue", detail: "Coordinate with nurses", status: "Due 8:30 AM" },
+    { label: "Update walk-ins", detail: "Log new arrivals", status: "Ongoing" },
+    { label: "Share patient notes", detail: "Send to doctor channel", status: "Before 3 PM" },
 ];
 
-const documentationTips = [
-    {
-        label: "Schedule walk-ins",
-        description: "Document walk-in for visibility across the clinic.",
-        href: "/scholar/appointments",
-    },
-    {
-        label: "Sync patient information",
-        description: "Verify program, year level, and contact details during intake.",
-        href: "/scholar/patients",
-    },
-    {
-        label: "Refresh personal records",
-        description: "Review your profile and confirm that emergency contacts are current.",
-        href: "/scholar/account",
-    },
-] as const;
+const quickLinks = [
+    { label: "Appointment board", href: "/scholar/appointments" },
+    { label: "Patient list", href: "/scholar/patients" },
+    { label: "Manage account", href: "/scholar/account" },
+];
+
+const metrics = [
+    { label: "Appointments", value: 26 },
+    { label: "Walk-ins", value: 9 },
+    { label: "Pending updates", value: 4 },
+];
 
 export default function ScholarDashboardPage() {
     const { data: session } = useSession();
@@ -74,7 +45,7 @@ export default function ScholarDashboardPage() {
     return (
         <ScholarLayout
             title="Clinic coordination hub"
-            description="Monitor appointments, support patient intake, and keep campus care moving smoothly."
+            description="Monitor appointments, keep the board aligned, and support patient intake with a fresh dashboard layout."
             actions={
                 <Button
                     asChild
@@ -84,97 +55,141 @@ export default function ScholarDashboardPage() {
                 </Button>
             }
         >
-            <section className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 p-6 shadow-sm">
+            <section className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-emerald-50 p-8 shadow-sm">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-3">
                         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">Welcome back</p>
                         <h3 className="text-3xl font-semibold text-primary md:text-4xl">Good day, Scholar {firstName}</h3>
                         <p className="max-w-2xl text-sm text-muted-foreground">
-                            Keep the clinic desk synchronized—double-check booking requests, guide students through intake, and
-                            flag any priority concerns early so the team can respond quickly.
+                            Keep the queue visible, log walk-ins quickly, and share updates with the clinic team so today&apos;s flow stays smooth.
                         </p>
+                        <div className="flex flex-wrap gap-3">
+                            <Badge className="rounded-full bg-primary/15 px-3 py-1 text-primary">Desk open</Badge>
+                            <Badge variant="secondary" className="rounded-full bg-white text-primary shadow-sm">
+                                <Workflow className="mr-1.5 h-4 w-4" />
+                                Sync in progress
+                            </Badge>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4 rounded-2xl border border-primary/20 bg-white/80 px-5 py-4 shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                            <FileSpreadsheet className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-muted-foreground">Priority</p>
+                            <p className="text-lg font-semibold text-primary">Finalize morning roster</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {workflowHighlights.map(({ title, description, href, icon: Icon, cta }) => (
-                    <Card
-                        key={title}
-                        className="h-full rounded-3xl border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                    >
-                        <CardHeader className="flex flex-row items-start justify-between gap-3">
-                            <div className="space-y-1">
-                                <CardTitle className="flex items-center gap-3 text-lg text-primary">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                        <Icon className="h-5 w-5" />
-                                    </span>
-                                    {title}
-                                </CardTitle>
-                                <p className="text-sm font-normal text-muted-foreground">{description}</p>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <Button
-                                asChild
-                                variant="ghost"
-                                className="rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary hover:bg-primary/20"
-                            >
-                                <Link href={href}>{cta}</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ))}
-                <Card className="h-full rounded-3xl border-primary/20 bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-lg">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
-                                <NotebookPen className="h-5 w-5" />
-                            </span>
-                            Coordination insights
-                        </CardTitle>
+            <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                    title="Appointments today"
+                    value="26"
+                    helper="Including walk-ins"
+                    icon={CalendarDays}
+                    trendLabel="+5"
+                    trendValue="vs yesterday"
+                />
+                <StatCard
+                    title="Patients assisted"
+                    value="41"
+                    helper="Checked-in students"
+                    icon={Users2}
+                    trendLabel="+7"
+                    trendValue="handled"
+                />
+                <StatCard
+                    title="Board updates"
+                    value="12"
+                    helper="Status changes"
+                    icon={Activity}
+                    trendLabel="Live"
+                    trendValue="now"
+                />
+                <StatCard
+                    title="Notes shared"
+                    value="18"
+                    helper="Sent to clinic"
+                    icon={NotebookPen}
+                    trendLabel="Clear"
+                    trendValue="handoffs"
+                />
+            </section>
+
+            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+                <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between gap-3">
+                        <div>
+                            <CardTitle className="text-lg text-primary">Shift checklist</CardTitle>
+                            <p className="text-sm text-muted-foreground">Keep the clinic team informed as you move through tasks.</p>
+                        </div>
+                        <Button asChild variant="ghost" className="rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
+                            <Link href="/scholar/appointments">Open board</Link>
+                        </Button>
                     </CardHeader>
-                    <CardContent className="space-y-3 text-sm leading-relaxed text-white/90">
-                        <p>
-                            Share status updates in the clinic chat when appointment queues change so the medical team can adapt their rounds.
-                        </p>
-                        <p>
-                            Keep intake forms organized before handoff—complete profiles help nurses and doctors focus on care instead of paperwork.
-                        </p>
+                    <CardContent className="space-y-3">
+                        {tasks.map((item) => (
+                            <div key={item.label} className="flex items-center justify-between rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                                <div>
+                                    <p className="text-sm font-semibold text-primary">{item.label}</p>
+                                    <p className="text-sm text-muted-foreground">{item.detail}</p>
+                                </div>
+                                <Badge variant="outline" className="rounded-full border-primary/30 text-primary">
+                                    {item.status}
+                                </Badge>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg text-primary">Quick navigation</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                        <p>Jump into the tools you use most often.</p>
+                        <div className="space-y-2">
+                            {quickLinks.map((link) => (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className="flex items-center justify-between rounded-2xl border border-primary/15 bg-primary/5 px-3 py-2 font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/10"
+                                >
+                                    {link.label}
+                                    <NotebookPen className="h-4 w-4" />
+                                </Link>
+                            ))}
+                        </div>
                     </CardContent>
                 </Card>
             </section>
 
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
+            <section className="grid gap-5 lg:grid-cols-[1fr_1.1fr]">
+                <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-lg text-primary">Checklist for smooth clinic flow</CardTitle>
+                        <CardTitle className="text-lg text-primary">Coordination stats</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        {supportChecklist.map((item) => (
-                            <div key={item} className="flex gap-3">
-                                <FileSpreadsheet className="mt-1 h-4 w-4 text-primary" />
-                                <p>{item}</p>
+                    <CardContent className="grid gap-4 md:grid-cols-3">
+                        {metrics.map((item) => (
+                            <div key={item.label} className="space-y-2 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                                <p className="text-sm text-muted-foreground">{item.label}</p>
+                                <p className="text-2xl font-semibold text-primary">{item.value}</p>
+                                <Progress value={Math.min(item.value, 100)} className="h-2" />
                             </div>
                         ))}
                     </CardContent>
                 </Card>
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
+
+                <Card className="rounded-3xl border-primary/20 bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md">
                     <CardHeader>
-                        <CardTitle className="text-lg text-primary">Documentation shortcuts</CardTitle>
+                        <CardTitle className="text-lg">Handoff reminders</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4 text-sm text-muted-foreground">
-                        {documentationTips.map(({ label, description, href }) => (
-                            <div key={label} className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                                <div className="flex items-center justify-between">
-                                    <p className="font-semibold text-primary">{label}</p>
-                                    <Button asChild variant="link" className="h-auto p-0 text-sm font-semibold text-primary">
-                                        <Link href={href}>Open</Link>
-                                    </Button>
-                                </div>
-                                <p>{description}</p>
-                            </div>
-                        ))}
+                    <CardContent className="space-y-3 text-sm leading-relaxed text-white/90">
+                        <p>Log every walk-in on the appointment board so nurses and doctors see changes immediately.</p>
+                        <p>Share quick notes with the care team when symptoms warrant faster triage.</p>
+                        <p>Confirm student details during intake to avoid delays during the consultation.</p>
                     </CardContent>
                 </Card>
             </section>
