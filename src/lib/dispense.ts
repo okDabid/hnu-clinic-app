@@ -128,7 +128,11 @@ export async function recordDispense({
                     remaining_qty: { gt: 0 },
                     expiry_date: { gte: now },
                 },
-                orderBy: { expiry_date: "asc" },
+                orderBy: [
+                    { date_received: "asc" },
+                    { expiry_date: "asc" },
+                    { replenishment_id: "asc" },
+                ],
             },
         },
     });
