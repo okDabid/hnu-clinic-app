@@ -251,13 +251,14 @@ export default function LoginPageClient() {
 
     // ---------- FORM RENDER ----------
     const renderForm = (role: string, label: string, fieldName: string, placeholder: string) => (
-        <form className="space-y-5" onSubmit={(e) => handleLogin(e, role)}>
+        <form className="space-y-5" onSubmit={(e) => handleLogin(e, role)} autoComplete="on">
             <Input
                 name={fieldName}
                 placeholder={placeholder}
                 required
                 disabled={!!loadingRole}
                 className="h-11 rounded-xl border-primary/20 bg-white/90 text-foreground placeholder:text-slate-400 focus-visible:ring-primary/50"
+                autoComplete="username"
             />
 
             <div className="relative">
@@ -268,6 +269,7 @@ export default function LoginPageClient() {
                     required
                     className="h-11 rounded-xl border-primary/20 bg-white/90 pr-12 text-foreground placeholder:text-slate-400 focus-visible:ring-primary/50"
                     disabled={!!loadingRole}
+                    autoComplete="current-password"
                 />
                 <Button
                     type="button"
@@ -446,6 +448,7 @@ export default function LoginPageClient() {
                                     placeholder="Enter email address"
                                     disabled={verifying}
                                     required
+                                    autoComplete="email"
                                 />
                                 {contactError && (
                                     <p className="text-sm text-red-600">{contactError}</p>
@@ -526,6 +529,7 @@ export default function LoginPageClient() {
                                                 if (codeError) setCodeError(null);
                                             }}
                                             required
+                                            autoComplete="one-time-code"
                                         />
                                         {codeError && <p className="text-sm text-red-600">{codeError}</p>}
                                     </div>
@@ -542,6 +546,7 @@ export default function LoginPageClient() {
                                                 }}
                                                 className="pr-12"
                                                 required
+                                                autoComplete="new-password"
                                             />
                                             <Button
                                                 type="button"
@@ -584,6 +589,7 @@ export default function LoginPageClient() {
                                                 }}
                                                 className="pr-12"
                                                 required
+                                                autoComplete="new-password"
                                             />
                                             <Button
                                                 type="button"
