@@ -93,12 +93,12 @@ const patientMixConfig = {
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
 
-function previewPdf(blob: Blob) {
+function previewPdf(blob: Blob, filename?: string) {
     if (typeof window === "undefined") return;
 
     const url = URL.createObjectURL(blob);
 
-    const scheduleCleanup = () => {
+    const cleanupUrl = () => {
         window.setTimeout(() => {
             URL.revokeObjectURL(url);
         }, 1000);
@@ -107,11 +107,35 @@ function previewPdf(blob: Blob) {
     const previewWindow = window.open(url, "_blank", "noopener,noreferrer");
 
     if (previewWindow) {
-        previewWindow.addEventListener("beforeunload", scheduleCleanup, { once: true });
+        if (filename) {
+            previewWindow.document.title = filename;
+        }
+        previewWindow.addEventListener("beforeunload", cleanupUrl, { once: true });
     } else {
-        scheduleCleanup();
-        throw new Error("Allow pop-ups to preview the PDF report.");
+        // Fallback to same-tab navigation when pop-ups are blocked.
+        window.location.assign(url);
+        cleanupUrl();
     }
+}
+
+function parseFilenameFromDisposition(disposition: string | null) {
+    if (!disposition) return null;
+    const match = disposition.match(/filename\*=UTF-8''([^;\n]+)/i);
+    if (match?.[1]) {
+        try {
+            return decodeURIComponent(match[1]);
+        } catch {
+            return match[1];
+        }
+    }
+
+    const fallbackMatch = disposition.match(/filename="?([^";]+)"?/i);
+    return fallbackMatch?.[1] ?? null;
+}
+
+function ensurePdfBlob(blob: Blob) {
+    if (blob.type === "application/pdf") return blob;
+    return new Blob([blob], { type: "application/pdf" });
 }
 
 export type NurseReportsPageClientProps = {
@@ -252,7 +276,9 @@ export function NurseReportsPageClient({
                                     params.set("quarter", String(selectionForPdf));
                                 }
 
-                                const response = await fetch(`/api/nurse/reports/pdf?${params.toString()}`);
+                                const pdfUrl = `/api/nurse/reports/pdf?${params.toString()}`;
+
+                                const response = await fetch(pdfUrl, { cache: "no-store" });
                                 if (!response.ok) {
                                     const body = await response.json().catch(() => null);
                                     if (
@@ -267,9 +293,23 @@ export function NurseReportsPageClient({
                                     throw new Error(body?.error ?? "Failed to generate PDF report");
                                 }
 
-                                const blob = await response.blob();
+                                const filename = parseFilenameFromDisposition(
+                                    response.headers.get("Content-Disposition")
+                                );
 
-                                previewPdf(blob);
+                                // Prefer opening the actual PDF route so the browser can use the
+                                // filename and proper MIME type when saving. Fall back to an
+                                // in-memory preview if pop-ups are blocked.
+                                if (typeof window !== "undefined") {
+                                    const opened = window.open(pdfUrl, "_blank", "noopener,noreferrer");
+                                    if (opened) {
+                                        return;
+                                    }
+                                }
+
+                                const blob = ensurePdfBlob(await response.blob());
+
+                                previewPdf(blob, filename ?? undefined);
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 const fallbackMessage =
