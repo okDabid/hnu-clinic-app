@@ -93,51 +93,6 @@ const patientMixConfig = {
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
 
-function previewPdf(blob: Blob, filename?: string) {
-    if (typeof window === "undefined") return;
-
-    const url = URL.createObjectURL(blob);
-
-    const cleanupUrl = () => {
-        window.setTimeout(() => {
-            URL.revokeObjectURL(url);
-        }, 1000);
-    };
-
-    const previewWindow = window.open(url, "_blank", "noopener,noreferrer");
-
-    if (previewWindow) {
-        if (filename) {
-            previewWindow.document.title = filename;
-        }
-        previewWindow.addEventListener("beforeunload", cleanupUrl, { once: true });
-    } else {
-        // Fallback to same-tab navigation when pop-ups are blocked.
-        window.location.assign(url);
-        cleanupUrl();
-    }
-}
-
-function parseFilenameFromDisposition(disposition: string | null) {
-    if (!disposition) return null;
-    const match = disposition.match(/filename\*=UTF-8''([^;\n]+)/i);
-    if (match?.[1]) {
-        try {
-            return decodeURIComponent(match[1]);
-        } catch {
-            return match[1];
-        }
-    }
-
-    const fallbackMatch = disposition.match(/filename="?([^";]+)"?/i);
-    return fallbackMatch?.[1] ?? null;
-}
-
-function ensurePdfBlob(blob: Blob) {
-    if (blob.type === "application/pdf") return blob;
-    return new Blob([blob], { type: "application/pdf" });
-}
-
 export type NurseReportsPageClientProps = {
     initialYear: number;
     initialQuarter: number;
@@ -278,6 +233,22 @@ export function NurseReportsPageClient({
 
                                 const pdfUrl = `/api/nurse/reports/pdf?${params.toString()}`;
 
+                                if (typeof window !== "undefined") {
+                                    const opened = window.open(
+                                        pdfUrl,
+                                        "_blank",
+                                        "noopener,noreferrer"
+                                    );
+
+                                    if (opened) {
+                                        return;
+                                    }
+
+                                    // Fallback to same-tab navigation when pop-ups are blocked.
+                                    window.location.assign(pdfUrl);
+                                    return;
+                                }
+
                                 const response = await fetch(pdfUrl, { cache: "no-store" });
                                 if (!response.ok) {
                                     const body = await response.json().catch(() => null);
@@ -292,35 +263,6 @@ export function NurseReportsPageClient({
                                     }
                                     throw new Error(body?.error ?? "Failed to generate PDF report");
                                 }
-
-                                const blob = ensurePdfBlob(await response.blob());
-                                const filename = parseFilenameFromDisposition(
-                                    response.headers.get("Content-Disposition")
-                                );
-
-                                if (typeof window !== "undefined") {
-                                    const objectUrl = URL.createObjectURL(blob);
-                                    const cleanupUrl = () =>
-                                        window.setTimeout(() => {
-                                            URL.revokeObjectURL(objectUrl);
-                                        }, 1000);
-
-                                    const opened = window.open(objectUrl, "_blank", "noopener,noreferrer");
-
-                                    if (opened) {
-                                        if (filename) {
-                                            opened.document.title = filename;
-                                        }
-                                        opened.addEventListener("beforeunload", cleanupUrl, { once: true });
-                                        return;
-                                    }
-
-                                    window.location.assign(objectUrl);
-                                    cleanupUrl();
-                                    return;
-                                }
-
-                                previewPdf(blob, filename ?? undefined);
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 const fallbackMessage =
