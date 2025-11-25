@@ -93,26 +93,7 @@ const patientMixConfig = {
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
 
-function isMobileDevice() {
-    if (typeof navigator === "undefined") return false;
-    const userAgent = navigator.userAgent || navigator.vendor || "";
-    return /(android|iphone|ipad|ipod|mobile|blackberry|iemobile|opera mini)/i.test(userAgent);
-}
-
-function isIOSDevice() {
-    if (typeof navigator === "undefined") return false;
-    const userAgent = navigator.userAgent || navigator.vendor || "";
-    return /(iphone|ipad|ipod)/i.test(userAgent);
-}
-
-function buildReportFilename(year: number, quarter?: number | null) {
-    const base = `nurse-quarterly-report-${year}`;
-    return typeof quarter === "number" && Number.isFinite(quarter)
-        ? `${base}-q${quarter}.pdf`
-        : `${base}.pdf`;
-}
-
-function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
+function previewPdf(blob: Blob) {
     if (typeof window === "undefined") return;
 
     const url = URL.createObjectURL(blob);
@@ -123,32 +104,14 @@ function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
         }, 1000);
     };
 
-    if (isIOSDevice()) {
-        const newWindow = window.open(url, "_blank");
+    const previewWindow = window.open(url, "_blank", "noopener,noreferrer");
 
-        if (!newWindow) {
-            window.location.href = url;
-        }
-
+    if (previewWindow) {
+        previewWindow.addEventListener("beforeunload", scheduleCleanup, { once: true });
+    } else {
         scheduleCleanup();
-        return;
+        throw new Error("Allow pop-ups to preview the PDF report.");
     }
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.style.display = "none";
-
-    if (isMobile) {
-        link.rel = "noopener";
-        link.target = "_blank";
-    }
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    scheduleCleanup();
 }
 
 export type NurseReportsPageClientProps = {
@@ -305,10 +268,8 @@ export function NurseReportsPageClient({
                                 }
 
                                 const blob = await response.blob();
-                                const mobile = isMobileDevice();
-                                const filename = buildReportFilename(data.year, selectionForPdf);
 
-                                downloadBlob(blob, filename, mobile);
+                                previewPdf(blob);
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 const fallbackMessage =
