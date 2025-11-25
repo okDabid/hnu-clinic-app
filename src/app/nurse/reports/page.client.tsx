@@ -293,21 +293,32 @@ export function NurseReportsPageClient({
                                     throw new Error(body?.error ?? "Failed to generate PDF report");
                                 }
 
+                                const blob = ensurePdfBlob(await response.blob());
                                 const filename = parseFilenameFromDisposition(
                                     response.headers.get("Content-Disposition")
                                 );
 
-                                // Prefer opening the actual PDF route so the browser can use the
-                                // filename and proper MIME type when saving. Fall back to an
-                                // in-memory preview if pop-ups are blocked.
                                 if (typeof window !== "undefined") {
-                                    const opened = window.open(pdfUrl, "_blank", "noopener,noreferrer");
+                                    const objectUrl = URL.createObjectURL(blob);
+                                    const cleanupUrl = () =>
+                                        window.setTimeout(() => {
+                                            URL.revokeObjectURL(objectUrl);
+                                        }, 1000);
+
+                                    const opened = window.open(objectUrl, "_blank", "noopener,noreferrer");
+
                                     if (opened) {
+                                        if (filename) {
+                                            opened.document.title = filename;
+                                        }
+                                        opened.addEventListener("beforeunload", cleanupUrl, { once: true });
                                         return;
                                     }
-                                }
 
-                                const blob = ensurePdfBlob(await response.blob());
+                                    window.location.assign(objectUrl);
+                                    cleanupUrl();
+                                    return;
+                                }
 
                                 previewPdf(blob, filename ?? undefined);
                             } catch (pdfError) {
