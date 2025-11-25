@@ -309,6 +309,7 @@ enum MedType {
   Syrup
   Suspension
   Solution
+  Topical
 }
 
 enum Department {
