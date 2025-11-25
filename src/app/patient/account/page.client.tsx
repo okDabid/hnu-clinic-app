@@ -545,31 +545,49 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">User ID</Label>
-                                            <Input value={profile.user_id} disabled />
+                                            <Label htmlFor="user-id" className="text-sm font-medium text-emerald-900">
+                                                User ID
+                                            </Label>
+                                            <Input id="user-id" name="userId" value={profile.user_id} disabled />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">
+                                            <Label
+                                                htmlFor="account-identifier"
+                                                className="text-sm font-medium text-emerald-900"
+                                            >
                                                 {profileType === "student"
                                                     ? "School ID"
                                                     : profileType === "employee"
                                                         ? "Employee ID"
                                                         : "ID"}
                                             </Label>
-                                            <Input value={profile.username} disabled />
+                                            <Input
+                                                id="account-identifier"
+                                                name="accountIdentifier"
+                                                value={profile.username}
+                                                disabled
+                                            />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Role</Label>
-                                            <Input value={profile.role} disabled />
+                                            <Label htmlFor="account-role" className="text-sm font-medium text-emerald-900">
+                                                Role
+                                            </Label>
+                                            <Input id="account-role" name="role" value={profile.role} disabled />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Status</Label>
-                                            <Input value={profile.status} disabled />
+                                            <Label htmlFor="account-status" className="text-sm font-medium text-emerald-900">
+                                                Status
+                                            </Label>
+                                            <Input id="account-status" name="status" value={profile.status} disabled />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Date of birth</Label>
+                                            <Label htmlFor="date-of-birth" className="text-sm font-medium text-emerald-900">
+                                                Date of birth
+                                            </Label>
                                             {profile.date_of_birth ? (
                                                 <Input
+                                                    id="date-of-birth"
+                                                    name="dateOfBirth"
                                                     type="date"
                                                     value={profile.date_of_birth?.slice(0, 10) || ""}
                                                     disabled
@@ -577,6 +595,8 @@ export function PatientAccountPageClient({
                                             ) : (
                                                 <>
                                                     <Input
+                                                        id="date-of-birth"
+                                                        name="dateOfBirth"
                                                         type="date"
                                                         value={tempDOB}
                                                         onChange={(e) => setTempDOB(e.target.value)}
@@ -709,16 +729,18 @@ export function PatientAccountPageClient({
                                             )}
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Gender</Label>
+                                            <Label htmlFor="patient-gender" className="text-sm font-medium text-emerald-900">
+                                                Gender
+                                            </Label>
                                             {profile.gender ? (
-                                                <Input value={profile.gender || ""} disabled />
+                                                <Input id="patient-gender" name="gender" value={profile.gender || ""} disabled />
                                             ) : (
                                                 <>
                                                     <Select
                                                         value={tempGender}
                                                         onValueChange={(value) => setTempGender(value as "Male" | "Female")}
                                                     >
-                                                        <SelectTrigger>
+                                                        <SelectTrigger id="patient-gender">
                                                             <SelectValue placeholder="Select gender" />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -854,22 +876,34 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-3">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">First name</Label>
+                                            <Label htmlFor="first-name" className="text-sm font-medium text-emerald-900">
+                                                First name
+                                            </Label>
                                             <Input
+                                                id="first-name"
+                                                name="firstName"
                                                 value={profile.fname}
                                                 onChange={(e) => setProfile({ ...profile, fname: e.target.value })}
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Middle name</Label>
+                                            <Label htmlFor="middle-name" className="text-sm font-medium text-emerald-900">
+                                                Middle name
+                                            </Label>
                                             <Input
+                                                id="middle-name"
+                                                name="middleName"
                                                 value={profile.mname || ""}
                                                 onChange={(e) => setProfile({ ...profile, mname: e.target.value })}
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Last name</Label>
+                                            <Label htmlFor="last-name" className="text-sm font-medium text-emerald-900">
+                                                Last name
+                                            </Label>
                                             <Input
+                                                id="last-name"
+                                                name="lastName"
                                                 value={profile.lname}
                                                 onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
                                             />
@@ -884,8 +918,12 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Email</Label>
+                                            <Label htmlFor="email" className="text-sm font-medium text-emerald-900">
+                                                Email
+                                            </Label>
                                             <Input
+                                                id="email"
+                                                name="email"
                                                 type="email"
                                                 placeholder="example@hnu.edu.ph"
                                                 value={profile.email || ""}
@@ -896,8 +934,12 @@ export function PatientAccountPageClient({
                                             </p>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
+                                            <Label htmlFor="contact-number" className="text-sm font-medium text-emerald-900">
+                                                Contact number
+                                            </Label>
                                             <Input
+                                                id="contact-number"
+                                                name="contactNumber"
                                                 type="tel"
                                                 placeholder="09XXXXXXXXX"
                                                 value={profile.contactno || ""}
@@ -906,8 +948,12 @@ export function PatientAccountPageClient({
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">Address</Label>
+                                        <Label htmlFor="address" className="text-sm font-medium text-emerald-900">
+                                            Address
+                                        </Label>
                                         <Input
+                                            id="address"
+                                            name="address"
                                             value={profile.address || ""}
                                             onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                                         />
@@ -922,7 +968,12 @@ export function PatientAccountPageClient({
                                     >
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-emerald-900">Department</Label>
+                                                <Label
+                                                    htmlFor="student-department"
+                                                    className="text-sm font-medium text-emerald-900"
+                                                >
+                                                    Department
+                                                </Label>
                                                 <Select
                                                     value={profile.department || ""}
                                                     onValueChange={(val) =>
@@ -934,7 +985,10 @@ export function PatientAccountPageClient({
                                                         })
                                                     }
                                                 >
-                                                    <SelectTrigger className="w-full whitespace-normal text-left leading-snug">
+                                                    <SelectTrigger
+                                                        id="student-department"
+                                                        className="w-full whitespace-normal text-left leading-snug"
+                                                    >
                                                         <SelectValue
                                                             className="line-clamp-none whitespace-normal text-left"
                                                             placeholder="Select department"
@@ -950,7 +1004,9 @@ export function PatientAccountPageClient({
                                                 </Select>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-emerald-900">Program</Label>
+                                                <Label htmlFor="student-program" className="text-sm font-medium text-emerald-900">
+                                                    Program
+                                                </Label>
                                                 <Select
                                                     value={profile.program || ""}
                                                     onValueChange={(val) =>
@@ -966,7 +1022,7 @@ export function PatientAccountPageClient({
                                                         })
                                                     }
                                                 >
-                                                    <SelectTrigger>
+                                                    <SelectTrigger id="student-program">
                                                         <SelectValue placeholder="Select program" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -979,7 +1035,7 @@ export function PatientAccountPageClient({
                                                 </Select>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-emerald-900">
+                                                <Label htmlFor="student-year-level" className="text-sm font-medium text-emerald-900">
                                                     Year level
                                                 </Label>
                                                 <Select
@@ -989,7 +1045,7 @@ export function PatientAccountPageClient({
                                                     }
                                                     disabled={!currentYearLevelOptions.length}
                                                 >
-                                                    <SelectTrigger>
+                                                    <SelectTrigger id="student-year-level">
                                                         <SelectValue placeholder="Select year level" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -1013,8 +1069,15 @@ export function PatientAccountPageClient({
                                     >
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="space-y-2">
-                                                <Label className="text-sm font-medium text-emerald-900">Department / Office</Label>
+                                                <Label
+                                                    htmlFor="employee-department"
+                                                    className="text-sm font-medium text-emerald-900"
+                                                >
+                                                    Department / Office
+                                                </Label>
                                                 <Input
+                                                    id="employee-department"
+                                                    name="employeeDepartment"
                                                     value={profile.department || ""}
                                                     onChange={(e) => setProfile({ ...profile, department: e.target.value })}
                                                     placeholder="e.g. HR, Accounting, Nursing"
@@ -1031,12 +1094,14 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Blood type</Label>
+                                            <Label htmlFor="blood-type" className="text-sm font-medium text-emerald-900">
+                                                Blood type
+                                            </Label>
                                             <Select
                                                 value={profile.bloodtype || ""}
                                                 onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
                                             >
-                                                <SelectTrigger>
+                                                <SelectTrigger id="blood-type">
                                                     <SelectValue placeholder="Select blood type" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -1049,8 +1114,12 @@ export function PatientAccountPageClient({
                                             </Select>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Allergies</Label>
+                                            <Label htmlFor="allergies" className="text-sm font-medium text-emerald-900">
+                                                Allergies
+                                            </Label>
                                             <Input
+                                                id="allergies"
+                                                name="allergies"
                                                 value={profile.allergies || ""}
                                                 onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
                                                 placeholder="Please specify"
@@ -1058,7 +1127,10 @@ export function PatientAccountPageClient({
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">
+                                        <Label
+                                            htmlFor="patient-medical-history-other"
+                                            className="text-sm font-medium text-emerald-900"
+                                        >
                                             Medical conditions
                                         </Label>
                                         <MedicalHistoryField
@@ -1078,24 +1150,45 @@ export function PatientAccountPageClient({
                                 >
                                     <div className="grid gap-4 md:grid-cols-3">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Contact name</Label>
+                                            <Label
+                                                htmlFor="emergency-contact-name"
+                                                className="text-sm font-medium text-emerald-900"
+                                            >
+                                                Contact name
+                                            </Label>
                                             <Input
+                                                id="emergency-contact-name"
+                                                name="emergencyContactName"
                                                 value={profile.emergencyco_name || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
                                                 placeholder="Full name of contact"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
+                                            <Label
+                                                htmlFor="emergency-contact-number"
+                                                className="text-sm font-medium text-emerald-900"
+                                            >
+                                                Contact number
+                                            </Label>
                                             <Input
+                                                id="emergency-contact-number"
+                                                name="emergencyContactNumber"
                                                 value={profile.emergencyco_num || ""}
                                                 onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
                                                 placeholder="09XXXXXXXXX"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Relationship</Label>
+                                            <Label
+                                                htmlFor="emergency-contact-relationship"
+                                                className="text-sm font-medium text-emerald-900"
+                                            >
+                                                Relationship
+                                            </Label>
                                             <Input
+                                                id="emergency-contact-relationship"
+                                                name="emergencyContactRelationship"
                                                 value={profile.emergencyco_relation || ""}
                                                 onChange={(e) =>
                                                     setProfile({ ...profile, emergencyco_relation: e.target.value })

@@ -807,9 +807,11 @@ export default function PatientAppointmentsPage() {
                     >
                         <form className="space-y-5" onSubmit={handleSubmit}>
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-primary">Clinic</Label>
+                                <Label htmlFor="appointment-clinic" className="text-sm font-medium text-primary">
+                                    Clinic
+                                </Label>
                                 <Select value={clinicId} onValueChange={handleClinicChange} disabled={loadingClinics}>
-                                    <SelectTrigger className="rounded-xl border-primary/30">
+                                    <SelectTrigger id="appointment-clinic" className="rounded-xl border-primary/30">
                                         <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -823,13 +825,15 @@ export default function PatientAppointmentsPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-primary">Doctor</Label>
+                                <Label htmlFor="appointment-doctor" className="text-sm font-medium text-primary">
+                                    Doctor
+                                </Label>
                                 <Select
                                     value={doctorId}
                                     onValueChange={handleDoctorChange}
                                     disabled={!clinicId || loadingDoctors}
                                 >
-                                    <SelectTrigger className="rounded-xl border-primary/30">
+                                    <SelectTrigger id="appointment-doctor" className="rounded-xl border-primary/30">
                                         <SelectValue
                                             placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"}
                                         />
@@ -845,9 +849,11 @@ export default function PatientAppointmentsPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-primary">Service type</Label>
+                                <Label htmlFor="appointment-service" className="text-sm font-medium text-primary">
+                                    Service type
+                                </Label>
                                 <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
-                                    <SelectTrigger className="rounded-xl border-primary/30">
+                                    <SelectTrigger id="appointment-service" className="rounded-xl border-primary/30">
                                         <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -861,8 +867,12 @@ export default function PatientAppointmentsPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-primary">Date</Label>
+                                <Label htmlFor="appointment-date" className="text-sm font-medium text-primary">
+                                    Date
+                                </Label>
                                 <Input
+                                    id="appointment-date"
+                                    name="appointmentDate"
                                     type="date"
                                     value={date}
                                     onChange={(event) => setDate(event.target.value)}
@@ -872,7 +882,9 @@ export default function PatientAppointmentsPage() {
                             </div>
 
                             <div className="grid gap-2">
-                                <Label className="text-sm font-medium text-primary">Preferred time</Label>
+                                <Label htmlFor="appointment-time" className="text-sm font-medium text-primary">
+                                    Preferred time
+                                </Label>
                                 <Select
                                     value={timeStart}
                                     onValueChange={setTimeStart}
@@ -884,7 +896,7 @@ export default function PatientAppointmentsPage() {
                                         onLeaveDay
                                     }
                                 >
-                                    <SelectTrigger className="rounded-xl border-primary/30">
+                                    <SelectTrigger id="appointment-time" className="rounded-xl border-primary/30">
                                         <SelectValue
                                             placeholder={
                                                 !doctorId || !date
@@ -1186,10 +1198,14 @@ export default function PatientAppointmentsPage() {
                     <div className="flex flex-col gap-4">
                         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-primary">Search requests</Label>
+                                <Label htmlFor="appointment-search" className="text-sm font-medium text-primary">
+                                    Search requests
+                                </Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input
+                                        id="appointment-search"
+                                        name="appointmentSearch"
                                         placeholder="Search by clinic, doctor, or status"
                                         value={searchAppointments}
                                         onChange={(event) => setSearchAppointments(event.target.value)}
@@ -1198,9 +1214,11 @@ export default function PatientAppointmentsPage() {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-sm font-medium text-primary">Status filter</Label>
+                                <Label htmlFor="appointment-status-filter" className="text-sm font-medium text-primary">
+                                    Status filter
+                                </Label>
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="rounded-xl border-primary/30">
+                                    <SelectTrigger id="appointment-status-filter" className="rounded-xl border-primary/30">
                                         <SelectValue placeholder="All statuses" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1348,8 +1366,12 @@ export default function PatientAppointmentsPage() {
 
                     <form onSubmit={handleRescheduleSubmit} className="space-y-4 pt-2">
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium text-primary">Date</Label>
+                            <Label htmlFor="reschedule-date" className="text-sm font-medium text-primary">
+                                Date
+                            </Label>
                             <Input
+                                id="reschedule-date"
+                                name="rescheduleDate"
                                 type="date"
                                 value={rescheduleDate}
                                 onChange={(event) => setRescheduleDate(event.target.value)}
@@ -1361,7 +1383,9 @@ export default function PatientAppointmentsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium text-primary">Time</Label>
+                            <Label htmlFor="reschedule-time" className="text-sm font-medium text-primary">
+                                Time
+                            </Label>
                             <Select
                                 value={rescheduleTimeStart}
                                 onValueChange={setRescheduleTimeStart}
@@ -1372,7 +1396,7 @@ export default function PatientAppointmentsPage() {
                                     rescheduleSlots.length === 0
                                 }
                             >
-                                <SelectTrigger className="rounded-xl border-primary/30">
+                                <SelectTrigger id="reschedule-time" className="rounded-xl border-primary/30">
                                     <SelectValue
                                         placeholder={
                                             !rescheduleTarget
