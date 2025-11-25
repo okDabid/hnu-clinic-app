@@ -287,16 +287,10 @@ enum ServiceType {
 
 enum MedCategory {
   Analgesic
-  Antibiotic
-  Antiviral
   Antifungal
-  Antiparasitic
   Antihistamine
   Antacid
-  Antidiabetic
   Cardiovascular
-  Psychiatric
-  Supplement
   Other
 }
 
