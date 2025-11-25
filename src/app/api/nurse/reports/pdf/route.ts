@@ -522,7 +522,7 @@ async function getHandler(request: RateLimitedRequest) {
             status: 200,
             headers: {
                 "Content-Type": "application/pdf",
-                "Content-Disposition": `inline; filename="${filename}"`,
+                "Content-Disposition": `attachment; filename="${filename}"`,
                 "Cache-Control": "no-store",
             },
         });
