@@ -234,18 +234,15 @@ export function NurseReportsPageClient({
                                 const pdfUrl = `/api/nurse/reports/pdf?${params.toString()}`;
 
                                 if (typeof window !== "undefined") {
-                                    const opened = window.open(
-                                        pdfUrl,
-                                        "_blank",
-                                        "noopener,noreferrer"
-                                    );
+                                    const anchor = document.createElement("a");
+                                    anchor.href = pdfUrl;
+                                    anchor.target = "_blank";
+                                    anchor.rel = "noopener noreferrer";
 
-                                    if (opened) {
-                                        return;
-                                    }
+                                    document.body.appendChild(anchor);
+                                    anchor.click();
+                                    anchor.remove();
 
-                                    // Fallback to same-tab navigation when pop-ups are blocked.
-                                    window.location.assign(pdfUrl);
                                     return;
                                 }
 
