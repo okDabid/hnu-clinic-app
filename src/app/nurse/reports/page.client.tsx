@@ -93,62 +93,49 @@ const patientMixConfig = {
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
 
-function isMobileDevice() {
-    if (typeof navigator === "undefined") return false;
-    const userAgent = navigator.userAgent || navigator.vendor || "";
-    return /(android|iphone|ipad|ipod|mobile|blackberry|iemobile|opera mini)/i.test(userAgent);
-}
-
-function isIOSDevice() {
-    if (typeof navigator === "undefined") return false;
-    const userAgent = navigator.userAgent || navigator.vendor || "";
-    return /(iphone|ipad|ipod)/i.test(userAgent);
-}
-
-function buildReportFilename(year: number, quarter?: number | null) {
-    const base = `nurse-quarterly-report-${year}`;
-    return typeof quarter === "number" && Number.isFinite(quarter)
-        ? `${base}-q${quarter}.pdf`
-        : `${base}.pdf`;
-}
-
-function downloadBlob(blob: Blob, filename: string, isMobile: boolean) {
+function previewPdf(blob: Blob, filename?: string) {
     if (typeof window === "undefined") return;
 
     const url = URL.createObjectURL(blob);
 
-    const scheduleCleanup = () => {
+    const cleanupUrl = () => {
         window.setTimeout(() => {
             URL.revokeObjectURL(url);
         }, 1000);
     };
 
-    if (isIOSDevice()) {
-        const newWindow = window.open(url, "_blank");
+    const previewWindow = window.open(url, "_blank", "noopener,noreferrer");
 
-        if (!newWindow) {
-            window.location.href = url;
+    if (previewWindow) {
+        if (filename) {
+            previewWindow.document.title = filename;
         }
+        previewWindow.addEventListener("beforeunload", cleanupUrl, { once: true });
+    } else {
+        // Fallback to same-tab navigation when pop-ups are blocked.
+        window.location.assign(url);
+        cleanupUrl();
+    }
+}
 
-        scheduleCleanup();
-        return;
+function parseFilenameFromDisposition(disposition: string | null) {
+    if (!disposition) return null;
+    const match = disposition.match(/filename\*=UTF-8''([^;\n]+)/i);
+    if (match?.[1]) {
+        try {
+            return decodeURIComponent(match[1]);
+        } catch {
+            return match[1];
+        }
     }
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.style.display = "none";
+    const fallbackMatch = disposition.match(/filename="?([^";]+)"?/i);
+    return fallbackMatch?.[1] ?? null;
+}
 
-    if (isMobile) {
-        link.rel = "noopener";
-        link.target = "_blank";
-    }
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    scheduleCleanup();
+function ensurePdfBlob(blob: Blob) {
+    if (blob.type === "application/pdf") return blob;
+    return new Blob([blob], { type: "application/pdf" });
 }
 
 export type NurseReportsPageClientProps = {
@@ -289,7 +276,9 @@ export function NurseReportsPageClient({
                                     params.set("quarter", String(selectionForPdf));
                                 }
 
-                                const response = await fetch(`/api/nurse/reports/pdf?${params.toString()}`);
+                                const pdfUrl = `/api/nurse/reports/pdf?${params.toString()}`;
+
+                                const response = await fetch(pdfUrl, { cache: "no-store" });
                                 if (!response.ok) {
                                     const body = await response.json().catch(() => null);
                                     if (
@@ -304,11 +293,23 @@ export function NurseReportsPageClient({
                                     throw new Error(body?.error ?? "Failed to generate PDF report");
                                 }
 
-                                const blob = await response.blob();
-                                const mobile = isMobileDevice();
-                                const filename = buildReportFilename(data.year, selectionForPdf);
+                                const filename = parseFilenameFromDisposition(
+                                    response.headers.get("Content-Disposition")
+                                );
 
-                                downloadBlob(blob, filename, mobile);
+                                // Prefer opening the actual PDF route so the browser can use the
+                                // filename and proper MIME type when saving. Fall back to an
+                                // in-memory preview if pop-ups are blocked.
+                                if (typeof window !== "undefined") {
+                                    const opened = window.open(pdfUrl, "_blank", "noopener,noreferrer");
+                                    if (opened) {
+                                        return;
+                                    }
+                                }
+
+                                const blob = ensurePdfBlob(await response.blob());
+
+                                previewPdf(blob, filename ?? undefined);
                             } catch (pdfError) {
                                 console.error(pdfError);
                                 const fallbackMessage =
