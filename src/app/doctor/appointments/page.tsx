@@ -236,11 +236,6 @@ export default function DoctorAppointmentsPage() {
     }, [newDate, actionType]);
 
     useEffect(() => {
-        if (actionType !== "move" || !dialogOpen) return;
-        setNewTimeEnd(selectedMoveSlot?.end ?? "");
-    }, [selectedMoveSlot, actionType, dialogOpen]);
-
-    useEffect(() => {
         if (!dialogOpen || actionType !== "move" || !selectedAppt || !newDate) {
             setMoveSlots([]);
             setMoveOnLeave(false);
@@ -340,6 +335,11 @@ export default function DoctorAppointmentsPage() {
         () => moveSlots.find((slot) => slot.start === newTimeStart) ?? null,
         [moveSlots, newTimeStart]
     );
+
+    useEffect(() => {
+        if (actionType !== "move" || !dialogOpen) return;
+        setNewTimeEnd(selectedMoveSlot?.end ?? "");
+    }, [selectedMoveSlot, actionType, dialogOpen]);
 
     useEffect(() => {
         preferredMoveStartRef.current = newTimeStart || moveOriginalStart;
