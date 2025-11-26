@@ -170,40 +170,56 @@ If you didn't request this, please ignore this email.
 
 This message was automatically sent from the HNU Clinic Capstone Project website.`;
 
-        try {
-            await sendEmail({
-                to: normalized.normalized,
-                subject: "Password Reset Code",
-                html: htmlContent,
-                fromName: "HNU Clinic",
-                text: textContent,
-            });
-        } catch (emailError) {
-            console.error("Failed to send reset email:", emailError);
-            try {
-                await prisma.passwordResetToken.delete({ where: { id: createdToken.id } });
-            } catch (cleanupError) {
-                console.error(
-                    "Failed to clean up reset token after email error:",
-                    cleanupError,
-                );
-            }
+        const emailPromise = sendEmail({
+            to: normalized.normalized,
+            subject: "Password Reset Code",
+            html: htmlContent,
+            fromName: "HNU Clinic",
+            text: textContent,
+        });
 
-            const missingSender =
-                emailError instanceof Error &&
-                emailError.message.includes("Missing GMAIL_USER in environment");
+        const emailOutcome = await Promise.race<
+            "pending" | "sent" | { failed: unknown }
+        >([
+            emailPromise.then(() => "sent" as const).catch((error) => ({ failed: error })),
+            new Promise((resolve) => setTimeout(() => resolve("pending" as const), 1500)),
+        ]);
 
-            if (missingSender) {
+        if (emailOutcome !== "sent") {
+            const handleEmailFailure = async (emailError: unknown) => {
+                console.error("Failed to send reset email:", emailError);
+                try {
+                    await prisma.passwordResetToken.delete({ where: { id: createdToken.id } });
+                } catch (cleanupError) {
+                    console.error(
+                        "Failed to clean up reset token after email error:",
+                        cleanupError,
+                    );
+                }
+
+                const missingSender =
+                    emailError instanceof Error &&
+                    emailError.message.includes("Missing GMAIL_USER in environment");
+
+                if (missingSender) {
+                    return NextResponse.json(
+                        { error: "Email service is not configured." },
+                        { status: 500 },
+                    );
+                }
+
                 return NextResponse.json(
-                    { error: "Email service is not configured." },
+                    { error: "Failed to send reset email. Please try again later." },
                     { status: 500 },
                 );
-            }
+            };
 
-            return NextResponse.json(
-                { error: "Failed to send reset email. Please try again later." },
-                { status: 500 },
-            );
+            if (emailOutcome === "pending") {
+                emailPromise.catch((error) => void handleEmailFailure(error));
+            } else {
+                const failureResponse = await handleEmailFailure(emailOutcome.failed);
+                return failureResponse;
+            }
         }
 
         return NextResponse.json({
