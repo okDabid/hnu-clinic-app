@@ -749,14 +749,16 @@ export async function GET(
     }
 
     const specialization = appointment.doctor.employee?.specialization;
-    if (
-      !specialization ||
-      ![DoctorSpecialization.Physician, DoctorSpecialization.Dentist].includes(
-        specialization
-      )
-    ) {
+    if (!specialization) {
       return NextResponse.json(
         { error: "Doctor specialization is required to generate a certificate." },
+        { status: 400 }
+      );
+    }
+
+    if (specialization !== DoctorSpecialization.Physician) {
+      return NextResponse.json(
+        { error: "Dental certificate issuance is no longer supported." },
         { status: 400 }
       );
     }
@@ -822,10 +824,7 @@ export async function GET(
         ? appointment.doctor.username
         : `Dr. ${appointment.doctor.username}`;
 
-    const doctorTitle =
-      specialization === DoctorSpecialization.Dentist
-        ? "Attending Dentist"
-        : "Attending Physician";
+    const doctorTitle = "Attending Physician";
 
     const issueDateDisplay = formatDateLong(medcert.issue_date);
     const consultationDate =
@@ -833,8 +832,7 @@ export async function GET(
 
     const context: CertificateContext = {
       certificateId: medcert.certificate_id,
-      certificateType:
-        specialization === DoctorSpecialization.Dentist ? "dental" : "medical",
+      certificateType: "medical",
       issueDate: medcert.issue_date,
       validUntil: medcert.valid_until,
       issueDateDisplay,

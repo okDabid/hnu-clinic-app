@@ -290,7 +290,7 @@ export default function AboutPage() {
                             points: ["Physical examinations", "Consultations", "Medical certificate issuance"],
                         }, {
                             title: "Dental Program",
-                            points: ["Consultations and examinations", "Oral prophylaxis", "Tooth extractions", "Dental certificate issuance"],
+                            points: ["Consultations and examinations", "Oral prophylaxis", "Tooth extractions"],
                         }, {
                             title: "Primary Care Program",
                             points: ["Support for urgent medical needs", "Care for minor injuries", "Assistance with sudden illnesses"],
