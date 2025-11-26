@@ -14,14 +14,19 @@ export async function GET() {
 
         const doctor = await prisma.users.findUnique({
             where: { user_id: session.user.id },
-            select: { role: true },
+            select: {
+                role: true,
+                employee: {
+                    select: { specialization: true },
+                },
+            },
         });
 
         if (!doctor || doctor.role !== Role.DOCTOR) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        const records = await fetchPatientRecords();
+        const records = await fetchPatientRecords({ specialization: doctor.employee?.specialization });
         return NextResponse.json(records);
     } catch (err) {
         console.error("[GET /api/doctor/patients]", err);

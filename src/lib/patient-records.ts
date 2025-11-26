@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { AppointmentStatus } from "@prisma/client";
+import { AppointmentStatus, DoctorSpecialization } from "@prisma/client";
 
 type StaffSummary = {
     id: string;
@@ -88,10 +88,19 @@ function buildStaffSummary(
 /**
  * Retrieves all active patient records with their most recent appointment data.
  */
-export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
+export async function fetchPatientRecords(options?: { specialization?: DoctorSpecialization | null }): Promise<PatientRecordEntry[]> {
+    const { specialization } = options ?? {};
+
     const appointmentSelection = {
         where: {
             status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved, AppointmentStatus.Completed] },
+            ...(specialization
+                ? {
+                      doctor: {
+                          employee: { specialization },
+                      },
+                  }
+                : {}),
         },
         orderBy: [
             { appointment_date: "desc" as const },
