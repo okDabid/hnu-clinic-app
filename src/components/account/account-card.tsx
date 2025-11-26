@@ -75,7 +75,7 @@ export function AccountCard({
                     onSubmit={onPasswordSubmit}
                     onSuccess={onPasswordSuccess}
                     triggerAriaLabel={triggerAriaLabel}
-                    triggerClassName="rounded-2xl border-white/40 bg-white/20 text-white shadow-sm transition hover:bg-white/30 hover:text-white"
+                    triggerClassName="justify-between border-white/50 bg-white/15 text-white backdrop-blur md:w-auto md:justify-start"
                     dialogTitle="Update account password"
                 />
             </CardHeader>

@@ -181,16 +181,16 @@ export function AccountPasswordDialog({
                     variant="outline"
                     aria-label={triggerAriaLabel}
                     className={cn(
-                        "group inline-flex items-center gap-3 rounded-2xl border-green-100 bg-white/80 px-3 py-2 text-green-700 shadow-sm transition hover:-translate-y-[1px] hover:border-green-200 hover:bg-white",
+                        "group inline-flex w-full max-w-sm items-center gap-2 rounded-full border-green-200/80 bg-white/90 px-2 py-2 text-green-800 shadow-sm transition duration-150 hover:-translate-y-[1px] hover:border-green-300 hover:bg-white md:w-auto",
                         triggerClassName
                     )}
                 >
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-700 shadow-sm transition group-hover:bg-green-100">
-                        <Cog className="h-5 w-5" />
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-green-700 ring-1 ring-inset ring-green-200">
+                        Security
                     </span>
-                    <span className="text-left">
-                        <span className="block text-xs font-semibold uppercase tracking-wide text-green-800">Security</span>
-                        <span className="text-sm font-semibold">Update password</span>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-3 py-1 text-sm font-semibold text-white shadow-inner shadow-emerald-400/30 transition group-hover:from-emerald-600 group-hover:to-green-600">
+                        <Cog className="h-4 w-4" />
+                        <span className="whitespace-nowrap">Update password</span>
                     </span>
                 </Button>
             </DialogTrigger>
