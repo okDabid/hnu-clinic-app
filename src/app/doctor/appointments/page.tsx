@@ -235,6 +235,11 @@ export default function DoctorAppointmentsPage() {
         setNewTimeEnd("");
     }, [newDate, actionType]);
 
+    const moveOriginalStart = useMemo(
+        () => (selectedAppt ? formatHHmm(parseStartDate(selectedAppt)) : ""),
+        [selectedAppt]
+    );
+
     useEffect(() => {
         if (!dialogOpen || actionType !== "move" || !selectedAppt || !newDate) {
             setMoveSlots([]);
@@ -325,11 +330,6 @@ export default function DoctorAppointmentsPage() {
             return haystack.includes(searchTerm);
         });
     }, [appointments, searchTerm, statusFilter]);
-
-    const moveOriginalStart = useMemo(
-        () => (selectedAppt ? formatHHmm(parseStartDate(selectedAppt)) : ""),
-        [selectedAppt]
-    );
 
     const selectedMoveSlot = useMemo(
         () => moveSlots.find((slot) => slot.start === newTimeStart) ?? null,
