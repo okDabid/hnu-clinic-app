@@ -48,7 +48,7 @@ export function AccountCard({
     return (
         <Card
             className={cn(
-                "relative overflow-hidden rounded-[32px] border border-green-100/70 bg-white/95 shadow-xl backdrop-blur",
+                "relative overflow-hidden rounded-4xl border border-green-100/70 bg-white/95 shadow-xl backdrop-blur",
                 className
             )}
         >
@@ -59,7 +59,7 @@ export function AccountCard({
             </div>
             <CardHeader
                 className={cn(
-                    "relative flex flex-col gap-4 border-b border-white/10 bg-gradient-to-r from-emerald-600 via-green-600 to-emerald-500 px-6 py-6 text-white md:flex-row md:items-center md:justify-between",
+                    "relative flex flex-col gap-4 border-b border-white/10 bg-linear-to-r from-emerald-600 via-green-600 to-emerald-500 px-6 py-6 text-white md:flex-row md:items-center md:justify-between",
                     headerClassName
                 )}
             >
