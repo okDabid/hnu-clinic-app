@@ -222,16 +222,16 @@ export default function AboutPage() {
                             <h3 className="text-xl font-semibold text-primary">Dental Care</h3>
                             <div className="grid gap-6 sm:grid-cols-2">
                                 {dentists.map((member) => (
-                                    <Card key={member.name} className="rounded-2xl border-primary/20 bg-white/90 shadow-sm">
-                                        <CardContent className="flex flex-col items-center gap-4 p-6">
+                                    <Card key={member.name} className="rounded-2xl border-primary/20 bg-white/90 shadow-md">
+                                        <CardContent className="flex items-center gap-4 p-6">
                                             <Image
                                                 src={member.img}
                                                 alt={member.name}
-                                                width={110}
-                                                height={110}
+                                                width={96}
+                                                height={96}
                                                 className="h-24 w-24 rounded-full object-cover shadow"
                                             />
-                                            <div className="text-center space-y-1">
+                                            <div className="space-y-1 text-left">
                                                 <p className="text-base font-semibold text-primary">{member.name}</p>
                                                 <p className="text-sm text-muted-foreground">{member.role}</p>
                                                 {member.availability && (
