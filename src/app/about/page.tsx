@@ -28,17 +28,29 @@ export default function AboutPage() {
             name: "Shanna Kathleen M. Escalona, MD",
             role: "Head, Health Services Department",
             img: "/profile/clinic/head-illustration.png",
+            availability: "Monday to Friday • 2:00 PM – 5:00 PM",
         },
         {
             name: "Lovella I. Calvelo, MD",
             role: "School Physician",
             img: "/profile/clinic/physician-illustration.png",
+            availability: "Monday to Friday • 8:00 AM – 11:00 PM",
         },
     ];
 
     const dentists = [
-        { name: "Minette B. Barrete", role: "School Dentist", img: "/profile/clinic/dentist1-illustration.png" },
-        { name: "Roche T. Pamaran", role: "School Dentist", img: "/profile/clinic/dentist2-illustration.png" },
+        {
+            name: "Minette B. Barrete",
+            role: "School Dentist",
+            img: "/profile/clinic/dentist1-illustration.png",
+            availability: "Monday to Saturday • 7:30 AM – 9:30 AM",
+        },
+        {
+            name: "Roche T. Pamaran",
+            role: "School Dentist",
+            img: "/profile/clinic/dentist2-illustration.png",
+            availability: "Monday to Saturday • 9:30 AM – 11:30 AM",
+        },
     ];
 
     const nurses = [
@@ -196,6 +208,9 @@ export default function AboutPage() {
                                             <div className="space-y-1 text-left">
                                                 <p className="text-base font-semibold text-primary">{member.name}</p>
                                                 <p className="text-sm text-muted-foreground">{member.role}</p>
+                                                {member.availability && (
+                                                    <p className="text-xs font-medium text-primary/80">{member.availability}</p>
+                                                )}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -219,6 +234,9 @@ export default function AboutPage() {
                                             <div className="text-center space-y-1">
                                                 <p className="text-base font-semibold text-primary">{member.name}</p>
                                                 <p className="text-sm text-muted-foreground">{member.role}</p>
+                                                {member.availability && (
+                                                    <p className="text-xs font-medium text-primary/80">{member.availability}</p>
+                                                )}
                                             </div>
                                         </CardContent>
                                     </Card>
