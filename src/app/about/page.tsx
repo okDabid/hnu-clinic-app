@@ -34,7 +34,7 @@ export default function AboutPage() {
             name: "Dr. Lovella I. Calvelo, MD",
             role: "School Physician",
             img: "/profile/clinic/physician-illustration.png",
-            availability: "Monday to Friday • 8:00 AM – 11:00 PM",
+            availability: "Monday to Friday • 8:00 AM – 11:00 AM",
         },
     ];
 
