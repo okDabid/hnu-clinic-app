@@ -16,7 +16,6 @@ const DENTIST_SERVICE_OPTIONS: ServiceOption[] = [
     { label: "Consultations and examinations", value: "Dental-consult", serviceType: "Dental" },
     { label: "Oral prophylaxis", value: "Dental-cleaning", serviceType: "Dental" },
     { label: "Tooth extractions", value: "Dental-extraction", serviceType: "Dental" },
-    { label: "Dental certificate issuance", value: "Dental-cert", serviceType: "Dental" },
 ];
 
 const ALL_SERVICE_OPTIONS: ServiceOption[] = [

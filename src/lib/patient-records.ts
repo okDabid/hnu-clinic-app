@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { AppointmentStatus } from "@prisma/client";
+import { AppointmentStatus, DoctorSpecialization } from "@prisma/client";
 
 type StaffSummary = {
     id: string;
@@ -15,6 +15,17 @@ type ConsultationSummary = {
     updatedAt: string | null;
     doctor: StaffSummary | null;
     nurse: StaffSummary | null;
+};
+
+type AppointmentSummary = {
+    id: string;
+    timestart: string | null;
+    timeend: string | null;
+    status: AppointmentStatus;
+    service_type: string | null;
+    remarks: string | null;
+    doctor: StaffSummary | null;
+    consultation: ConsultationSummary | null;
 };
 
 export type PatientRecordEntry = {
@@ -40,13 +51,8 @@ export type PatientRecordEntry = {
         relation?: string | null;
     };
     appointment_id: string | null;
-    latestAppointment: {
-        id: string;
-        timestart: string | null;
-        timeend: string | null;
-        doctor: StaffSummary | null;
-        consultation: ConsultationSummary | null;
-    } | null;
+    latestAppointment: AppointmentSummary | null;
+    appointments: AppointmentSummary[];
 };
 
 /**
@@ -82,15 +88,29 @@ function buildStaffSummary(
 /**
  * Retrieves all active patient records with their most recent appointment data.
  */
-export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
+export async function fetchPatientRecords(options?: { specialization?: DoctorSpecialization | null }): Promise<PatientRecordEntry[]> {
+    const { specialization } = options ?? {};
+
     const appointmentSelection = {
         where: {
             status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved, AppointmentStatus.Completed] },
+            ...(specialization
+                ? {
+                      doctor: {
+                          employee: { specialization },
+                      },
+                  }
+                : {}),
         },
-        orderBy: { appointment_date: "desc" as const },
-        take: 1,
+        orderBy: [
+            { appointment_date: "desc" as const },
+            { appointment_timestart: "desc" as const },
+        ],
         select: {
             appointment_id: true,
+            status: true,
+            service_type: true,
+            remarks: true,
             appointment_timestart: true,
             appointment_timeend: true,
             doctor: {
@@ -163,6 +183,7 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
 
     const studentRecords: PatientRecordEntry[] = students.map((student) => {
         const appointment = student.user.appointmentsPatient?.[0] ?? null;
+        const appointments = student.user.appointmentsPatient ?? [];
         return {
             id: student.stud_user_id,
             userId: student.user.user_id,
@@ -186,30 +207,14 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
                 relation: student.emergencyco_relation,
             },
             appointment_id: appointment?.appointment_id ?? null,
-            latestAppointment: appointment
-                ? {
-                    id: appointment.appointment_id,
-                    timestart: appointment.appointment_timestart?.toISOString() ?? null,
-                    timeend: appointment.appointment_timeend?.toISOString() ?? null,
-                    doctor: buildStaffSummary(appointment.doctor),
-                    consultation: appointment.consultation
-                        ? {
-                            id: appointment.consultation.consultation_id,
-                            reason_of_visit: appointment.consultation.reason_of_visit ?? null,
-                            findings: appointment.consultation.findings ?? null,
-                            diagnosis: appointment.consultation.diagnosis ?? null,
-                            updatedAt: appointment.consultation.updatedAt?.toISOString() ?? null,
-                            doctor: buildStaffSummary(appointment.consultation.doctor),
-                            nurse: buildStaffSummary(appointment.consultation.nurse),
-                        }
-                        : null,
-                }
-                : null,
+            latestAppointment: appointment ? buildAppointmentSummary(appointment) : null,
+            appointments: appointments.map((appt) => buildAppointmentSummary(appt)),
         };
     });
 
     const employeeRecords: PatientRecordEntry[] = employees.map((employee) => {
         const appointment = employee.user.appointmentsPatient?.[0] ?? null;
+        const appointments = employee.user.appointmentsPatient ?? [];
         return {
             id: employee.emp_id,
             userId: employee.user.user_id,
@@ -230,27 +235,64 @@ export async function fetchPatientRecords(): Promise<PatientRecordEntry[]> {
                 relation: employee.emergencyco_relation,
             },
             appointment_id: appointment?.appointment_id ?? null,
-            latestAppointment: appointment
-                ? {
-                    id: appointment.appointment_id,
-                    timestart: appointment.appointment_timestart?.toISOString() ?? null,
-                    timeend: appointment.appointment_timeend?.toISOString() ?? null,
-                    doctor: buildStaffSummary(appointment.doctor),
-                    consultation: appointment.consultation
-                        ? {
-                            id: appointment.consultation.consultation_id,
-                            reason_of_visit: appointment.consultation.reason_of_visit ?? null,
-                            findings: appointment.consultation.findings ?? null,
-                            diagnosis: appointment.consultation.diagnosis ?? null,
-                            updatedAt: appointment.consultation.updatedAt?.toISOString() ?? null,
-                            doctor: buildStaffSummary(appointment.consultation.doctor),
-                            nurse: buildStaffSummary(appointment.consultation.nurse),
-                        }
-                        : null,
-                }
-                : null,
+            latestAppointment: appointment ? buildAppointmentSummary(appointment) : null,
+            appointments: appointments.map((appt) => buildAppointmentSummary(appt)),
         };
     });
 
     return [...studentRecords, ...employeeRecords];
+}
+
+function buildAppointmentSummary(
+    appointment: {
+        appointment_id: string;
+        appointment_timestart: Date | null;
+        appointment_timeend: Date | null;
+        status: AppointmentStatus;
+        service_type: string | null;
+        remarks: string | null;
+        doctor: {
+            user_id: string;
+            username: string;
+            employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+        } | null;
+        consultation: {
+            consultation_id: string;
+            reason_of_visit: string | null;
+            findings: string | null;
+            diagnosis: string | null;
+            updatedAt: Date | null;
+            doctor: {
+                user_id: string;
+                username: string;
+                employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+            } | null;
+            nurse: {
+                user_id: string;
+                username: string;
+                employee: { fname: string | null; mname: string | null; lname: string | null } | null;
+            } | null;
+        } | null;
+    }
+): AppointmentSummary {
+    return {
+        id: appointment.appointment_id,
+        timestart: appointment.appointment_timestart?.toISOString() ?? null,
+        timeend: appointment.appointment_timeend?.toISOString() ?? null,
+        status: appointment.status,
+        service_type: appointment.service_type,
+        remarks: appointment.remarks,
+        doctor: buildStaffSummary(appointment.doctor),
+        consultation: appointment.consultation
+            ? {
+                id: appointment.consultation.consultation_id,
+                reason_of_visit: appointment.consultation.reason_of_visit ?? null,
+                findings: appointment.consultation.findings ?? null,
+                diagnosis: appointment.consultation.diagnosis ?? null,
+                updatedAt: appointment.consultation.updatedAt?.toISOString() ?? null,
+                doctor: buildStaffSummary(appointment.consultation.doctor),
+                nurse: buildStaffSummary(appointment.consultation.nurse),
+            }
+            : null,
+    };
 }

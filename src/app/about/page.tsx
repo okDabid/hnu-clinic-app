@@ -25,20 +25,32 @@ export default function AboutPage() {
 
     const leadership = [
         {
-            name: "Shanna Kathleen M. Escalona, MD",
+            name: "Dr. Shanna Kathleen M. Escalona, MD",
             role: "Head, Health Services Department",
             img: "/profile/clinic/head-illustration.png",
+            availability: "Monday to Friday • 2:00 PM – 5:00 PM",
         },
         {
-            name: "Lovella I. Calvelo, MD",
+            name: "Dr. Lovella I. Calvelo, MD",
             role: "School Physician",
             img: "/profile/clinic/physician-illustration.png",
+            availability: "Monday to Friday • 8:00 AM – 11:00 AM",
         },
     ];
 
     const dentists = [
-        { name: "Minette B. Barrete", role: "School Dentist", img: "/profile/clinic/dentist1-illustration.png" },
-        { name: "Roche T. Pamaran", role: "School Dentist", img: "/profile/clinic/dentist2-illustration.png" },
+        {
+            name: "Dr. Minette B. Barrete, DMD",
+            role: "School Dentist",
+            img: "/profile/clinic/dentist1-illustration.png",
+            availability: "Monday to Saturday • 7:30 AM – 9:30 AM",
+        },
+        {
+            name: "Dr. Roche T. Pamaran, DMD",
+            role: "School Dentist",
+            img: "/profile/clinic/dentist2-illustration.png",
+            availability: "Monday to Saturday • 9:30 AM – 11:30 AM",
+        },
     ];
 
     const nurses = [
@@ -196,6 +208,9 @@ export default function AboutPage() {
                                             <div className="space-y-1 text-left">
                                                 <p className="text-base font-semibold text-primary">{member.name}</p>
                                                 <p className="text-sm text-muted-foreground">{member.role}</p>
+                                                {member.availability && (
+                                                    <p className="text-xs font-medium text-primary/80">{member.availability}</p>
+                                                )}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -207,18 +222,21 @@ export default function AboutPage() {
                             <h3 className="text-xl font-semibold text-primary">Dental Care</h3>
                             <div className="grid gap-6 sm:grid-cols-2">
                                 {dentists.map((member) => (
-                                    <Card key={member.name} className="rounded-2xl border-primary/20 bg-white/90 shadow-sm">
-                                        <CardContent className="flex flex-col items-center gap-4 p-6">
+                                    <Card key={member.name} className="rounded-2xl border-primary/20 bg-white/90 shadow-md">
+                                        <CardContent className="flex items-center gap-4 p-6">
                                             <Image
                                                 src={member.img}
                                                 alt={member.name}
-                                                width={110}
-                                                height={110}
+                                                width={96}
+                                                height={96}
                                                 className="h-24 w-24 rounded-full object-cover shadow"
                                             />
-                                            <div className="text-center space-y-1">
+                                            <div className="space-y-1 text-left">
                                                 <p className="text-base font-semibold text-primary">{member.name}</p>
                                                 <p className="text-sm text-muted-foreground">{member.role}</p>
+                                                {member.availability && (
+                                                    <p className="text-xs font-medium text-primary/80">{member.availability}</p>
+                                                )}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -272,7 +290,7 @@ export default function AboutPage() {
                             points: ["Physical examinations", "Consultations", "Medical certificate issuance"],
                         }, {
                             title: "Dental Program",
-                            points: ["Consultations and examinations", "Oral prophylaxis", "Tooth extractions", "Dental certificate issuance"],
+                            points: ["Consultations and examinations", "Oral prophylaxis", "Tooth extractions"],
                         }, {
                             title: "Primary Care Program",
                             points: ["Support for urgent medical needs", "Care for minor injuries", "Assistance with sudden illnesses"],
