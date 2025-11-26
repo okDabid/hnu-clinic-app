@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 import type { PatientRecord } from "./types";
 
@@ -209,6 +210,48 @@ function RecordDetailsDialogComponent({
                                         </p>
                                     </div>
                                 ) : null}
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-3 text-sm">
+                                <h4 className="font-semibold text-primary">Appointment history</h4>
+                                {record.appointments.length ? (
+                                    <div className="space-y-2">
+                                        {record.appointments.map((appointment) => {
+                                            const purpose =
+                                                appointment.service_type ||
+                                                appointment.consultation?.reason_of_visit ||
+                                                appointment.remarks ||
+                                                "—";
+
+                                            return (
+                                                <div
+                                                    key={appointment.id}
+                                                    className="rounded-lg border border-primary/10 bg-muted/30 p-3"
+                                                >
+                                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                                        <div className="font-semibold">
+                                                            {formatAppointmentWindow(appointment)}
+                                                        </div>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-primary/30 bg-white text-primary"
+                                                        >
+                                                            {appointment.status}
+                                                        </Badge>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Doctor: {formatStaffName(appointment.doctor)}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">Purpose: {purpose}</p>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-muted-foreground">No appointments recorded yet.</p>
+                                )}
                             </div>
                         </TabsContent>
 

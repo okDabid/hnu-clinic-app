@@ -18,6 +18,9 @@ export type AppointmentSummary = {
     id: string;
     timestart: string | null;
     timeend: string | null;
+    status: string;
+    service_type: string | null;
+    remarks: string | null;
     doctor: StaffSummary | null;
     consultation: ConsultationSummary | null;
 };
@@ -46,6 +49,7 @@ export type PatientRecord = {
     };
     appointment_id: string | null;
     latestAppointment: AppointmentSummary | null;
+    appointments: AppointmentSummary[];
 };
 
 export type PreparedPatientRecord = PatientRecord & {
