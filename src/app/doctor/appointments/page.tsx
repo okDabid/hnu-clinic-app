@@ -526,7 +526,7 @@ export default function DoctorAppointmentsPage() {
                     actions={
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                             <div className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-primary/100" /> Consultation synced
+                                <span className="h-2 w-2 rounded-full bg-primary" /> Consultation synced
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-slate-300" /> Awaiting notes
@@ -638,8 +638,8 @@ export default function DoctorAppointmentsPage() {
                                                         <Badge
                                                             variant="outline"
                                                             className={`rounded-full px-2 py-1 text-xs ${appointment.hasConsultation
-                                                                    ? "border-emerald-200 bg-primary/10 text-primary"
-                                                                    : "border-slate-200 bg-slate-100 text-slate-600"
+                                                                ? "border-emerald-200 bg-primary/10 text-primary"
+                                                                : "border-slate-200 bg-slate-100 text-slate-600"
                                                                 }`}
                                                         >
                                                             {appointment.hasConsultation ? "Consultation ready" : "Awaiting notes"}

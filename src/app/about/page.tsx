@@ -25,13 +25,13 @@ export default function AboutPage() {
 
     const leadership = [
         {
-            name: "Shanna Kathleen M. Escalona, MD",
+            name: "Dr. Shanna Kathleen M. Escalona, MD",
             role: "Head, Health Services Department",
             img: "/profile/clinic/head-illustration.png",
             availability: "Monday to Friday • 2:00 PM – 5:00 PM",
         },
         {
-            name: "Lovella I. Calvelo, MD",
+            name: "Dr. Lovella I. Calvelo, MD",
             role: "School Physician",
             img: "/profile/clinic/physician-illustration.png",
             availability: "Monday to Friday • 8:00 AM – 11:00 PM",
@@ -40,13 +40,13 @@ export default function AboutPage() {
 
     const dentists = [
         {
-            name: "Minette B. Barrete",
+            name: "Dr. Minette B. Barrete, DMD",
             role: "School Dentist",
             img: "/profile/clinic/dentist1-illustration.png",
             availability: "Monday to Saturday • 7:30 AM – 9:30 AM",
         },
         {
-            name: "Roche T. Pamaran",
+            name: "Dr. Roche T. Pamaran, DMD",
             role: "School Dentist",
             img: "/profile/clinic/dentist2-illustration.png",
             availability: "Monday to Saturday • 9:30 AM – 11:30 AM",
