@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
     AlertCircle,
@@ -56,6 +56,8 @@ type AppointmentStatus = (typeof STATUS_ORDER)[number];
 
 type Appointment = {
     id: string;
+    clinicId: string;
+    doctorId: string;
     patientName: string;
     date: string;
     time: string;
@@ -63,6 +65,11 @@ type Appointment = {
     clinic?: string;
     hasConsultation: boolean;
     patientType: "Student" | "Employee" | "Unknown";
+};
+
+type Slot = {
+    start: string;
+    end: string;
 };
 
 type DoctorSpecialization = "Physician" | "Dentist";
@@ -141,6 +148,28 @@ function parseStartDate(appointment: Appointment) {
     return new Date(iso);
 }
 
+function formatHHmm(date: Date) {
+    return new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Manila",
+    }).format(date);
+}
+
+function formatTimeLabel(time: string) {
+    return (
+        formatManilaDateTime(`2000-01-01T${time}:00+08:00`, {
+            hour: "numeric",
+            minute: "2-digit",
+        }) ?? time
+    );
+}
+
+function formatSlotLabel(slot: Slot) {
+    return `${formatTimeLabel(slot.start)} - ${formatTimeLabel(slot.end)}`;
+}
+
 export default function DoctorAppointmentsPage() {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -151,12 +180,16 @@ export default function DoctorAppointmentsPage() {
     const [newDate, setNewDate] = useState("");
     const [newTimeStart, setNewTimeStart] = useState("");
     const [newTimeEnd, setNewTimeEnd] = useState("");
+    const [moveSlots, setMoveSlots] = useState<Slot[]>([]);
+    const [loadingMoveSlots, setLoadingMoveSlots] = useState(false);
+    const [moveOnLeave, setMoveOnLeave] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [actionSubmitting, setActionSubmitting] = useState(false);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
     const [specialization, setSpecialization] = useState<DoctorSpecialization | null>(null);
     const [certificateLoadingId, setCertificateLoadingId] = useState<string | null>(null);
+    const preferredMoveStartRef = useRef("");
 
     const loadAppointments = useCallback(async () => {
         try {
@@ -196,6 +229,75 @@ export default function DoctorAppointmentsPage() {
         loadProfile();
     }, []);
 
+    useEffect(() => {
+        if (actionType !== "move") return;
+        setNewTimeStart("");
+        setNewTimeEnd("");
+    }, [newDate, actionType]);
+
+    useEffect(() => {
+        if (actionType !== "move" || !dialogOpen) return;
+        setNewTimeEnd(selectedMoveSlot?.end ?? "");
+    }, [selectedMoveSlot, actionType, dialogOpen]);
+
+    useEffect(() => {
+        if (!dialogOpen || actionType !== "move" || !selectedAppt || !newDate) {
+            setMoveSlots([]);
+            setMoveOnLeave(false);
+            setLoadingMoveSlots(false);
+            return;
+        }
+
+        let cancelled = false;
+        const preferredStart = preferredMoveStartRef.current;
+
+        (async () => {
+            try {
+                setLoadingMoveSlots(true);
+                const params = new URLSearchParams({
+                    clinic_id: selectedAppt.clinicId,
+                    doctor_user_id: selectedAppt.doctorId,
+                    date: newDate,
+                });
+                const res = await fetch(`/api/meta/doctor-availability?${params.toString()}`);
+                const data = await res.json();
+                if (cancelled) return;
+
+                if (!res.ok) {
+                    toast.error(data?.error ?? "Failed to load available slots");
+                    setMoveSlots([]);
+                    setMoveOnLeave(false);
+                    setNewTimeStart("");
+                    setNewTimeEnd("");
+                    return;
+                }
+
+                const slots: Slot[] = Array.isArray(data?.slots) ? data.slots : [];
+                setMoveSlots(slots);
+                setMoveOnLeave(Boolean(data?.onLeave));
+
+                const nextSlot = slots.find((slot) => slot.start === preferredStart) ?? slots[0];
+                setNewTimeStart(nextSlot?.start ?? "");
+                setNewTimeEnd(nextSlot?.end ?? "");
+            } catch (error) {
+                console.error(error);
+                if (cancelled) return;
+                toast.error("Failed to load available slots");
+                setMoveSlots([]);
+                setMoveOnLeave(false);
+                setNewTimeStart("");
+                setNewTimeEnd("");
+            } finally {
+                if (cancelled) return;
+                setLoadingMoveSlots(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [dialogOpen, actionType, selectedAppt, newDate, moveOriginalStart]);
+
     const searchTerm = search.trim().toLowerCase();
 
     const filteredAppointments = useMemo(() => {
@@ -228,6 +330,20 @@ export default function DoctorAppointmentsPage() {
             return haystack.includes(searchTerm);
         });
     }, [appointments, searchTerm, statusFilter]);
+
+    const moveOriginalStart = useMemo(
+        () => (selectedAppt ? formatHHmm(parseStartDate(selectedAppt)) : ""),
+        [selectedAppt]
+    );
+
+    const selectedMoveSlot = useMemo(
+        () => moveSlots.find((slot) => slot.start === newTimeStart) ?? null,
+        [moveSlots, newTimeStart]
+    );
+
+    useEffect(() => {
+        preferredMoveStartRef.current = newTimeStart || moveOriginalStart;
+    }, [newTimeStart, moveOriginalStart]);
 
     const statusCounts = useMemo(() => {
         const counts: Record<AppointmentStatus, number> = {
@@ -373,6 +489,8 @@ export default function DoctorAppointmentsPage() {
         setNewDate("");
         setNewTimeStart("");
         setNewTimeEnd("");
+        setMoveSlots([]);
+        setMoveOnLeave(false);
         setActionSubmitting(false);
     };
 
@@ -384,7 +502,7 @@ export default function DoctorAppointmentsPage() {
         }
         if (
             actionType === "move" &&
-            (!reason.trim() || !newDate || !newTimeStart || !newTimeEnd)
+            (!reason.trim() || !newDate || !selectedMoveSlot || !newTimeEnd)
         ) {
             toast.error("Please complete all move fields");
             return;
@@ -690,7 +808,7 @@ export default function DoctorAppointmentsPage() {
                                                                         setDialogOpen(true);
                                                                         setReason("");
                                                                         setNewDate(appointment.date);
-                                                                        setNewTimeStart("");
+                                                                        setNewTimeStart(formatHHmm(parseStartDate(appointment)));
                                                                         setNewTimeEnd("");
                                                                     }}
                                                                     disabled={!canManage}
@@ -756,25 +874,50 @@ export default function DoctorAppointmentsPage() {
                                     disabled={actionSubmitting}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium text-primary">Start time</Label>
-                                <Input
-                                    type="time"
+                            <div className="space-y-2 sm:col-span-2">
+                                <Label className="text-sm font-medium text-primary">Available slots</Label>
+                                <Select
                                     value={newTimeStart}
-                                    onChange={(event) => setNewTimeStart(event.target.value)}
-                                    className="rounded-xl border-primary/30"
-                                    disabled={actionSubmitting}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium text-primary">End time</Label>
-                                <Input
-                                    type="time"
-                                    value={newTimeEnd}
-                                    onChange={(event) => setNewTimeEnd(event.target.value)}
-                                    className="rounded-xl border-primary/30"
-                                    disabled={actionSubmitting}
-                                />
+                                    onValueChange={setNewTimeStart}
+                                    disabled={
+                                        actionSubmitting ||
+                                        loadingMoveSlots ||
+                                        moveSlots.length === 0 ||
+                                        moveOnLeave
+                                    }
+                                >
+                                    <SelectTrigger className="rounded-xl border-primary/30">
+                                        <SelectValue
+                                            placeholder={
+                                                loadingMoveSlots
+                                                    ? "Loading slots..."
+                                                    : moveOnLeave
+                                                        ? "Marked on leave"
+                                                        : moveSlots.length === 0
+                                                            ? "No slots available"
+                                                            : "Select a time"
+                                            }
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {moveSlots.map((slot) => (
+                                            <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
+                                                {formatSlotLabel(slot)}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">
+                                    {loadingMoveSlots
+                                        ? "Checking your duty hours for this date..."
+                                        : moveOnLeave
+                                            ? "You're marked on leave for this day."
+                                            : moveSlots.length === 0
+                                                ? "No open slots match this date."
+                                                : selectedMoveSlot
+                                                    ? `Selected slot ends at ${formatTimeLabel(selectedMoveSlot.end)}.`
+                                                    : "Choose a slot to continue."}
+                                </p>
                             </div>
                         </div>
                     ) : null}
@@ -801,7 +944,10 @@ export default function DoctorAppointmentsPage() {
                         <Button
                             className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
                             onClick={handleActionSubmit}
-                            disabled={actionSubmitting}
+                            disabled={
+                                actionSubmitting ||
+                                (actionType === "move" && (!selectedMoveSlot || loadingMoveSlots))
+                            }
                         >
                             {actionSubmitting ? (
                                 <>

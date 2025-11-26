@@ -42,6 +42,8 @@ export async function GET() {
 
         const formatted = appointments.map((a) => ({
             id: a.appointment_id,
+            clinicId: a.clinic_id,
+            doctorId: a.doctor_user_id,
             patientName:
                 a.patient.student?.fname && a.patient.student?.lname
                     ? `${a.patient.student.fname} ${a.patient.student.lname}`
