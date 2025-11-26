@@ -179,14 +179,19 @@ export function AccountPasswordDialog({
             <DialogTrigger asChild>
                 <Button
                     variant="outline"
-                    size="icon"
                     aria-label={triggerAriaLabel}
                     className={cn(
-                        "rounded-xl border-green-200 text-green-700 hover:bg-green-100/60",
+                        "group inline-flex items-center gap-3 rounded-2xl border-green-100 bg-white/80 px-3 py-2 text-green-700 shadow-sm transition hover:-translate-y-[1px] hover:border-green-200 hover:bg-white",
                         triggerClassName
                     )}
                 >
-                    <Cog className="h-5 w-5 text-white" />
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-700 shadow-sm transition group-hover:bg-green-100">
+                        <Cog className="h-5 w-5" />
+                    </span>
+                    <span className="text-left">
+                        <span className="block text-xs font-semibold uppercase tracking-wide text-green-800">Security</span>
+                        <span className="text-sm font-semibold">Update password</span>
+                    </span>
                 </Button>
             </DialogTrigger>
 
