@@ -46,7 +46,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatManilaDateTime, formatManilaISODate, manilaNow } from "@/lib/time";
+import { formatManilaDateTime, formatManilaISODate, formatTimeString12, manilaNow } from "@/lib/time";
 
 import DoctorAppointmentsLoading from "./loading";
 
@@ -158,12 +158,7 @@ function formatHHmm(date: Date) {
 }
 
 function formatTimeLabel(time: string) {
-    return (
-        formatManilaDateTime(`2000-01-01T${time}:00+08:00`, {
-            hour: "numeric",
-            minute: "2-digit",
-        }) ?? time
-    );
+    return formatTimeString12(time) || time;
 }
 
 function formatSlotLabel(slot: Slot) {
