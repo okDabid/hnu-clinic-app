@@ -59,6 +59,7 @@ export async function GET(req: Request) {
                     record.patientType,
                     record.department,
                     record.program,
+                    record.department_office,
                     record.year_level,
                     record.contactno,
                     record.address,

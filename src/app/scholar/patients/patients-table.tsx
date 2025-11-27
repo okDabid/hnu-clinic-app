@@ -65,7 +65,7 @@ function PatientsTableComponent({ records, loading, onSelect }: PatientsTablePro
                     <TableCell>
                         {record.patientType === "Student"
                             ? formatProgram(record.program) || "—"
-                            : formatDepartment(record.department) || "—"}
+                            : formatDepartment(record.department_office ?? record.department) || "—"}
                     </TableCell>
                     <TableCell>
                         <Badge className={`rounded-full px-2 py-1 text-xs ${statusClasses}`}>{record.status}</Badge>
@@ -95,7 +95,7 @@ function PatientsTableComponent({ records, loading, onSelect }: PatientsTablePro
                         <TableHead className="min-w-[200px]">Patient</TableHead>
                         <TableHead className="min-w-[140px]">ID</TableHead>
                         <TableHead className="min-w-[120px]">Type</TableHead>
-                        <TableHead className="min-w-[160px]">Program / Department</TableHead>
+                        <TableHead className="min-w-[160px]">Program / Department / Office</TableHead>
                         <TableHead className="min-w-[120px]">Status</TableHead>
                         <TableHead className="min-w-[200px]">Latest appointment</TableHead>
                     </TableRow>
