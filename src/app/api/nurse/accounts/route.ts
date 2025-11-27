@@ -123,6 +123,10 @@ export async function POST(req: Request) {
             emergencyco_relation: payload.emergencyco_relation ?? null,
             email: payload.email?.trim() || null,
             contactno: payload.phone?.trim() || null,
+        };
+
+        const employeeProfileData = {
+            ...sharedProfileData,
             department_office: payload.department_office?.trim() || null,
         };
 
@@ -165,7 +169,7 @@ export async function POST(req: Request) {
                     data: {
                         user_id: newUser.user_id,
                         employee_id: uniqueEmployeeId,
-                        ...sharedProfileData,
+                        ...employeeProfileData,
                     },
                 });
             }
@@ -184,7 +188,7 @@ export async function POST(req: Request) {
                                         ? "Dentist"
                                         : null
                                 : null,
-                        ...sharedProfileData,
+                        ...employeeProfileData,
                     },
                 });
             }
