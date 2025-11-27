@@ -196,6 +196,9 @@ function buildEmployeeUpdateInput(
     const bloodtype = mapBloodType(raw.bloodtype as string);
     if (bloodtype) data.bloodtype = bloodtype;
 
+    const department_office = stringField("department_office");
+    if (department_office !== undefined) data.department_office = department_office;
+
     const contactno = stringField("contactno");
     if (contactno !== undefined) data.contactno = contactno;
 
