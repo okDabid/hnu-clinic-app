@@ -19,6 +19,7 @@ export type NurseAccountsUserApi = {
     specialization?: "Physician" | "Dentist" | null;
     patientType?: "student" | "employee" | null;
     isWorkingScholar?: boolean;
+    department_office?: string | null;
 };
 
 export type NurseAccountProfileApi = {

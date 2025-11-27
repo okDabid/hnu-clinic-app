@@ -97,6 +97,7 @@ type CreateUserPayload = {
     patientType?: "student" | "employee" | null;
     workingScholar?: boolean;
     specialization?: "Physician" | "Dentist" | null;
+    department_office?: string | null;
 };
 
 type CreateUserResponse = {
@@ -414,18 +415,7 @@ export function NurseAccountsPageClient({
         const lname = getTrimmedValue("lname");
         const employeeId = getTrimmedValue("employee_id");
         const studentId = getTrimmedValue("student_id");
-
-        const isNumeric = (value: string) => /^\d+$/.test(value);
-
-        if (employeeId && !isNumeric(employeeId)) {
-            toast.error("Employee ID must contain numbers only.", { position: "top-center" });
-            return;
-        }
-
-        if (studentId && !isNumeric(studentId)) {
-            toast.error("Student ID must contain numbers only.", { position: "top-center" });
-            return;
-        }
+        const departmentOffice = getTrimmedValue("department_office");
 
         const payload: CreateUserPayload = {
             role,
@@ -443,6 +433,7 @@ export function NurseAccountsPageClient({
             patientType: patientType || null,
             workingScholar: role === "PATIENT" && patientType === "student" ? workingScholar : false,
             specialization: role === "DOCTOR" ? specialization : null,
+            department_office: departmentOffice || null,
         };
 
         setPendingPayload(payload);
@@ -1320,6 +1311,17 @@ export function NurseAccountsPageClient({
                                 <div className="space-y-2">
                                     <Label>Employee ID</Label>
                                     <Input name="employee_id" required inputMode="numeric" />
+                                </div>
+                            )}
+
+                            {role === "PATIENT" && patientType === "employee" && (
+                                <div className="space-y-2">
+                                    <Label>Department / Office</Label>
+                                    <Input
+                                        name="department_office"
+                                        placeholder="e.g. Finance Office"
+                                        autoComplete="organization"
+                                    />
                                 </div>
                             )}
 
