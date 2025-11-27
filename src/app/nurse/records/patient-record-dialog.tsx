@@ -166,7 +166,7 @@ function RecordDetailsDialogComponent({
                                 ) : (
                                     <p>
                                         <strong>Department / Office:</strong>{" "}
-                                        {formatDepartment(record.department ?? record.department_office)}
+                                        {formatDepartment(record.department_office ?? record.department)}
                                     </p>
                                 )}
                             </div>
