@@ -22,6 +22,7 @@ export type PatientAccountProfileApi = {
         allergies?: string | null;
         medical_cond?: string | null;
         gender?: string | null;
+        department_office?: string | null;
         department?: string | null;
         program?: string | null;
         year_level?: string | null;
@@ -108,6 +109,7 @@ export type PatientAccountProfile = {
     allergies?: string | null;
     medicalHistory: MedicalHistoryValue;
     gender?: string | null;
+    department_office?: string | null;
     department?: string | null;
     program?: string | null;
     year_level?: string | null;
@@ -129,7 +131,9 @@ export function normalizePatientAccountProfile(
     }
 
     const raw = response.profile ?? {};
-    const normalizedDepartment = raw.department ? patientDepartmentEnumMap[raw.department] || "" : "";
+    const normalizedDepartment = raw.department
+        ? patientDepartmentEnumMap[raw.department] || ""
+        : "";
 
     const profile: PatientAccountProfile = {
         user_id: response.accountId || "",
@@ -147,6 +151,7 @@ export function normalizePatientAccountProfile(
         allergies: raw.allergies || "",
         medicalHistory: parseMedicalHistory(raw.medical_cond || ""),
         gender: raw.gender || "",
+        department_office: raw.department_office || "",
         department: normalizedDepartment,
         program: raw.program || "",
         year_level: raw.year_level ? patientYearLevelEnumMap[raw.year_level] || "" : "",
