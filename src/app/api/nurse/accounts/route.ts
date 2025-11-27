@@ -123,7 +123,6 @@ export async function POST(req: Request) {
             emergencyco_relation: payload.emergencyco_relation ?? null,
             email: payload.email?.trim() || null,
             contactno: payload.phone?.trim() || null,
-            department_office: payload.department_office?.trim() || null,
         };
 
         const { finalUsername } = await prisma.$transaction(async (tx) => {
