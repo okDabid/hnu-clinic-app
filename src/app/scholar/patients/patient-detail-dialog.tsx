@@ -67,20 +67,29 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
                             <h4 className="flex items-center gap-2 text-sm font-semibold text-primary">
                                 <Users2 className="h-4 w-4" /> Academic / department info
                             </h4>
-                            <dl className="grid gap-2 text-muted-foreground">
-                                <div>
-                                    <dt className="text-xs uppercase tracking-wide">Program</dt>
-                                    <dd>{formatProgram(record.program)}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-xs uppercase tracking-wide">Department</dt>
-                                    <dd>{formatDepartment(record.department)}</dd>
-                                </div>
-                                <div>
-                                    <dt className="text-xs uppercase tracking-wide">Year level</dt>
-                                    <dd>{formatYearLevel(record.year_level)}</dd>
-                                </div>
-                            </dl>
+                            {record.patientType === "Student" ? (
+                                <dl className="grid gap-2 text-muted-foreground">
+                                    <div>
+                                        <dt className="text-xs uppercase tracking-wide">Program</dt>
+                                        <dd>{formatProgram(record.program)}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-xs uppercase tracking-wide">Department</dt>
+                                        <dd>{formatDepartment(record.department)}</dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-xs uppercase tracking-wide">Year level</dt>
+                                        <dd>{formatYearLevel(record.year_level)}</dd>
+                                    </div>
+                                </dl>
+                            ) : (
+                                <dl className="grid gap-2 text-muted-foreground">
+                                    <div>
+                                        <dt className="text-xs uppercase tracking-wide">Department / Office</dt>
+                                        <dd>{formatDepartment(record.department_office)}</dd>
+                                    </div>
+                                </dl>
+                            )}
                         </div>
                         <div className="space-y-3 rounded-2xl border border-primary/20 bg-white/70 p-4">
                             <h4 className="flex items-center gap-2 text-sm font-semibold text-primary">

@@ -163,6 +163,10 @@ function RecordDetailsDialogComponent({
                                             <strong>Year Level:</strong> {formatYearLevel(record.year_level)}
                                         </p>
                                     </>
+                                ) : record.patientType === "Employee" ? (
+                                    <p>
+                                        <strong>Department / Office:</strong> {formatDepartment(record.department_office)}
+                                    </p>
                                 ) : null}
                             </div>
 
