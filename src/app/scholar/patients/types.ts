@@ -35,6 +35,7 @@ export type PatientRecord = {
     date_of_birth: string | null;
     status: string;
     department?: string | null;
+    department_office?: string | null;
     program?: string | null;
     year_level?: string | null;
     contactno?: string | null;
@@ -62,6 +63,7 @@ export function buildPatientSearchText(record: PatientRecord): string {
         record.patientId,
         record.patientType,
         record.department,
+        record.department_office,
         record.program,
         record.year_level,
         record.contactno,

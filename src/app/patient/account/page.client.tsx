@@ -392,16 +392,23 @@ export function PatientAccountPageClient({
         try {
             setProfileLoading(true);
             const { medicalHistory, ...restProfile } = updatedProfile;
-            const payload = {
+            const payload: Record<string, unknown> = {
                 ...restProfile,
                 medical_cond: serializePatientMedicalHistory(medicalHistory),
-                department:
-                    profileType === "student"
-                        ? patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null
-                        : updatedProfile.department || null,
                 year_level: buildYearLevelPayload(updatedProfile),
                 bloodtype: patientReverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
+
+            if (profileType === "student") {
+                payload.department =
+                    patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null;
+                delete payload.department_office;
+            }
+
+            if (profileType === "employee") {
+                payload.department_office = updatedProfile.department_office?.trim() || null;
+                delete payload.department;
+            }
 
             const res = await fetch("/api/patient/account/me", {
                 method: "PUT",
@@ -442,11 +449,16 @@ export function PatientAccountPageClient({
                     const nextYearLevel = data.profile.year_level
                         ? patientYearLevelEnumMap[data.profile.year_level]
                         : prev?.year_level;
+                    const nextDepartmentOffice =
+                        Object.prototype.hasOwnProperty.call(data.profile, "department_office")
+                            ? data.profile.department_office ?? ""
+                            : prev?.department_office;
 
                     return {
                         ...prev!,
                         ...data.profile,
                         department: departmentLabel,
+                        department_office: nextDepartmentOffice,
                         year_level: nextYearLevel,
                         bloodtype: data.profile.bloodtype
                             ? patientBloodTypeEnumMap[data.profile.bloodtype]
@@ -661,23 +673,32 @@ export function PatientAccountPageClient({
 
                                                                             try {
                                                                                 setProfileLoading(true);
-                                                                                const payload = {
+                                                                                const payload: Record<string, unknown> = {
                                                                                     ...updatedProfile,
-                                                                                    department:
-                                                                                        profileType === "student"
-                                                                                            ? patientReverseDepartmentEnumMap[
-                                                                                            updatedProfile.department || ""
-                                                                                            ] || null
-                                                                                            : updatedProfile.department || null,
                                                                                     year_level:
                                                                                         buildYearLevelPayload(
                                                                                             updatedProfile
                                                                                         ),
                                                                                     bloodtype:
                                                                                         patientReverseBloodTypeEnumMap[
-                                                                                        updatedProfile?.bloodtype || ""
+                                                                                            updatedProfile?.bloodtype || ""
                                                                                         ] || null,
                                                                                 };
+
+                                                                                if (profileType === "student") {
+                                                                                    payload.department =
+                                                                                        patientReverseDepartmentEnumMap[
+                                                                                            updatedProfile.department || ""
+                                                                                        ] || null;
+                                                                                    delete payload.department_office;
+                                                                                }
+
+                                                                                if (profileType === "employee") {
+                                                                                    payload.department_office =
+                                                                                        updatedProfile.department_office?.trim() ||
+                                                                                        null;
+                                                                                    delete payload.department;
+                                                                                }
 
                                                                                 const res = await fetch("/api/patient/account/me", {
                                                                                     method: "PUT",
@@ -1078,8 +1099,10 @@ export function PatientAccountPageClient({
                                                 <Input
                                                     id="employee-department"
                                                     name="employeeDepartment"
-                                                    value={profile.department || ""}
-                                                    onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+                                                    value={profile.department_office || ""}
+                                                    onChange={(e) =>
+                                                        setProfile({ ...profile, department_office: e.target.value })
+                                                    }
                                                     placeholder="e.g. HR, Accounting, Nursing"
                                                 />
                                             </div>

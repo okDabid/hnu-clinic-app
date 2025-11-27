@@ -100,6 +100,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
                 record.patientId.toLowerCase().includes(term) ||
                 record.patientType.toLowerCase().includes(term) ||
                 (record.department ?? "").toLowerCase().includes(term) ||
+                (record.department_office ?? "").toLowerCase().includes(term) ||
                 (record.program ?? "").toLowerCase().includes(term);
 
             const matchesStatus = statusFilter === "All" || record.status === statusFilter;

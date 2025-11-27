@@ -38,6 +38,7 @@ export type PatientRecordEntry = {
     date_of_birth: string | null;
     status: string;
     department?: string | null;
+    department_office?: string | null;
     program?: string | null;
     year_level?: string | null;
     contactno?: string | null;
@@ -224,6 +225,7 @@ export async function fetchPatientRecords(options?: { specialization?: DoctorSpe
             gender: employee.gender ?? null,
             date_of_birth: employee.date_of_birth?.toISOString() ?? null,
             status: employee.user.status,
+            department_office: employee.department_office,
             contactno: employee.contactno,
             address: employee.address,
             bloodtype: employee.bloodtype,

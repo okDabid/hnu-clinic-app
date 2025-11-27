@@ -92,6 +92,7 @@ export default function DoctorPatientsPage() {
                 record.patientId.toLowerCase().includes(deferredSearch) ||
                 record.patientType.toLowerCase().includes(deferredSearch) ||
                 (record.department ?? "").toLowerCase().includes(deferredSearch) ||
+                (record.department_office ?? "").toLowerCase().includes(deferredSearch) ||
                 (record.program ?? "").toLowerCase().includes(deferredSearch);
 
             const matchesStatus = statusFilter === "All" || record.status === statusFilter;
