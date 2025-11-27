@@ -28,7 +28,7 @@ export default function AboutPage() {
             name: "Dr. Shanna Kathleen M. Escalona, MD",
             role: "Head, Health Services Department",
             img: "/profile/clinic/head-illustration.png",
-            availability: "Monday to Friday • 2:00 PM – 5:00 PM",
+            availability: "Monday to Friday • 1:30 PM – 4:30 PM",
         },
         {
             name: "Dr. Lovella I. Calvelo, MD",
