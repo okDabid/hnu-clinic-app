@@ -47,6 +47,8 @@ export default function DoctorPatientsPage() {
     const [activeTab, setActiveTab] = useState<RecordDetailsDialogTab>("details");
     const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
     const [savingNotesPatientId, setSavingNotesPatientId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [isRefreshing, startTransition] = useTransition();
 
     const deferredSearch = useDeferredValue(search.trim().toLowerCase());
@@ -105,6 +107,22 @@ export default function DoctorPatientsPage() {
             return matchesSearch && matchesStatus && matchesType && matchesAppointment;
         });
     }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [appointmentFilter, deferredSearch, statusFilter, typeFilter]);
+
+    useEffect(() => {
+        const maxPage = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+        if (currentPage > maxPage) {
+            setCurrentPage(maxPage);
+        }
+    }, [currentPage, filteredRecords.length, pageSize]);
+
+    const paginatedRecords = useMemo(() => {
+        const start = (currentPage - 1) * pageSize;
+        return filteredRecords.slice(start, start + pageSize);
+    }, [currentPage, filteredRecords, pageSize]);
 
     const totalPatients = records.length;
     const withAppointments = useMemo(
@@ -324,9 +342,13 @@ export default function DoctorPatientsPage() {
                         </CardHeader>
                         <CardContent className="pt-4">
                             <PatientDirectoryTable
-                                records={filteredRecords}
+                                records={paginatedRecords}
                                 loading={loadingRecords}
                                 onOpenDetails={openDetails}
+                                totalRecords={filteredRecords.length}
+                                pageSize={pageSize}
+                                currentPage={currentPage}
+                                onPageChange={setCurrentPage}
                             />
                         </CardContent>
                     </Card>
