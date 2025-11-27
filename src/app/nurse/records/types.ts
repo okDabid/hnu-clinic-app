@@ -36,6 +36,7 @@ export type PatientRecord = {
     status: string;
     appointment_id: string | null;
     department?: string | null;
+    department_office?: string | null;
     program?: string | null;
     year_level?: string | null;
     contactno?: string | null;

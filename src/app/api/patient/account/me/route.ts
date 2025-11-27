@@ -205,6 +205,9 @@ function buildEmployeeUpdateInput(
     const allergies = stringField("allergies");
     if (allergies !== undefined) data.allergies = allergies;
 
+    const departmentOffice = stringField("department_office");
+    if (departmentOffice !== undefined) data.department_office = departmentOffice;
+
     const medicalCond = normalizeStringOrNull(raw.medical_cond);
     if (medicalCond !== undefined) data.medical_cond = medicalCond;
 

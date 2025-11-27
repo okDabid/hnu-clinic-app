@@ -392,16 +392,21 @@ export function PatientAccountPageClient({
         try {
             setProfileLoading(true);
             const { medicalHistory, ...restProfile } = updatedProfile;
-            const payload = {
+            const payload: Record<string, unknown> = {
                 ...restProfile,
                 medical_cond: serializePatientMedicalHistory(medicalHistory),
-                department:
-                    profileType === "student"
-                        ? patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null
-                        : updatedProfile.department || null,
                 year_level: buildYearLevelPayload(updatedProfile),
                 bloodtype: patientReverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
+
+            if (profileType === "student") {
+                payload.department =
+                    patientReverseDepartmentEnumMap[updatedProfile.department || ""] || null;
+            } else {
+                payload.department_office =
+                    updatedProfile.department || updatedProfile.department_office || null;
+                delete payload.department;
+            }
 
             const res = await fetch("/api/patient/account/me", {
                 method: "PUT",
@@ -1078,8 +1083,14 @@ export function PatientAccountPageClient({
                                                 <Input
                                                     id="employee-department"
                                                     name="employeeDepartment"
-                                                    value={profile.department || ""}
-                                                    onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+                                                    value={profile.department || profile.department_office || ""}
+                                                    onChange={(e) =>
+                                                        setProfile({
+                                                            ...profile,
+                                                            department: e.target.value,
+                                                            department_office: e.target.value,
+                                                        })
+                                                    }
                                                     placeholder="e.g. HR, Accounting, Nursing"
                                                 />
                                             </div>

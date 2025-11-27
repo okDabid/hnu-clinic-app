@@ -163,7 +163,12 @@ function RecordDetailsDialogComponent({
                                             <strong>Year Level:</strong> {formatYearLevel(record.year_level)}
                                         </p>
                                     </>
-                                ) : null}
+                                ) : (
+                                    <p>
+                                        <strong>Department / Office:</strong>{" "}
+                                        {formatDepartment(record.department ?? record.department_office)}
+                                    </p>
+                                )}
                             </div>
 
                             <Separator />

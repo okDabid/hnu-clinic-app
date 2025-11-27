@@ -88,7 +88,7 @@ function PatientDirectoryTableComponent({ records, loading, onOpenDetails }: Pat
                                 </span>
                             </>
                         ) : (
-                            formatDepartment(record.department)
+                            formatDepartment(record.department ?? record.department_office)
                         )}
                     </TableCell>
                     <TableCell>
