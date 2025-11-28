@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         if (err instanceof Error) {
             console.error("POST /clinic error:", err.message, err.stack);
             return NextResponse.json(
-                { error: "Failed to create clinic", details: err.message },
+                { error: "Failed to create clinic" },
                 { status: 500 }
             );
         }

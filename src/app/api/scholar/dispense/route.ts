@@ -130,7 +130,7 @@ export async function POST(req: Request) {
         return NextResponse.json(newDispense);
     } catch (err) {
         if (err instanceof DispenseError) {
-            return NextResponse.json({ error: err.message }, { status: err.status });
+            return NextResponse.json({ error: "Unable to dispense medicine" }, { status: err.status });
         }
 
         console.error("POST /api/scholar/dispense error:", err);

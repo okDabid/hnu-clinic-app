@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         const authResponse = handleAuthError(err);
         if (authResponse) return authResponse;
         if (err instanceof DispenseError) {
-            return NextResponse.json({ error: err.message }, { status: err.status });
+            return NextResponse.json({ error: "Unable to dispense medicine" }, { status: err.status });
         }
 
         console.error("POST /api/nurse/dispense error:", err);
