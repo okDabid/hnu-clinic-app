@@ -16,6 +16,7 @@ import {
 import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
 import { AppointmentPanel } from "@/components/appointments/appointment-panel";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -47,7 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
-import { formatManilaDateTime, formatTimeRange, manilaNow } from "@/lib/time";
+import { formatManilaDateTime, formatManilaISODate, formatTimeRange, manilaNow } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
@@ -208,6 +209,11 @@ export default function PatientAppointmentsPage() {
     const [serviceType, setServiceType] = useState<string>("");
     const [date, setDate] = useState<string>("");
     const [timeStart, setTimeStart] = useState<string>("");
+    const [calendarMonth, setCalendarMonth] = useState<Date>(() => manilaNow());
+    const [availableDates, setAvailableDates] = useState<string[]>([]);
+    const [leaveDates, setLeaveDates] = useState<string[]>([]);
+    const [calendarLoading, setCalendarLoading] = useState(false);
+    const [calendarError, setCalendarError] = useState<string | null>(null);
 
     // My appointments
     const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -237,12 +243,16 @@ export default function PatientAppointmentsPage() {
         setDoctorId("");
         setServiceType("");
         setTimeStart("");
+        setDate("");
+        setCalendarMonth(manilaNow());
     };
 
     const handleDoctorChange = (nextDoctorId: string) => {
         setDoctorId(nextDoctorId);
         setServiceType("");
         setTimeStart("");
+        setDate("");
+        setCalendarMonth(manilaNow());
     };
 
     const handleSlotSelection = (doctor: Doctor, slot: Slot) => {
@@ -406,6 +416,59 @@ export default function PatientAppointmentsPage() {
         })();
     }, [clinicId]);
 
+    // Load available/leave dates for selected doctor
+    useEffect(() => {
+        if (!clinicId || !doctorId) {
+            setAvailableDates([]);
+            setLeaveDates([]);
+            setCalendarError(null);
+            return;
+        }
+
+        const monthKey = formatManilaISODate(calendarMonth).slice(0, 7);
+        let cancelled = false;
+
+        (async () => {
+            try {
+                setCalendarLoading(true);
+                setCalendarError(null);
+                const params = new URLSearchParams({
+                    clinic_id: clinicId,
+                    doctor_user_id: doctorId,
+                    month: monthKey,
+                });
+                const res = await fetch(`/api/meta/doctor-availability/calendar?${params.toString()}`);
+                const data = await res.json();
+
+                if (cancelled) return;
+
+                if (!res.ok) {
+                    setAvailableDates([]);
+                    setLeaveDates([]);
+                    setCalendarError(data?.message ?? "Failed to load schedule overview");
+                    return;
+                }
+
+                setAvailableDates(Array.isArray(data?.availableDates) ? data.availableDates : []);
+                setLeaveDates(Array.isArray(data?.leaveDates) ? data.leaveDates : []);
+            } catch (err) {
+                if (cancelled) return;
+                console.error(err);
+                setAvailableDates([]);
+                setLeaveDates([]);
+                setCalendarError("Unable to load schedule overview");
+            } finally {
+                if (!cancelled) {
+                    setCalendarLoading(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [calendarMonth, clinicId, doctorId]);
+
     // Load availability for doctors when clinic/date change
     useEffect(() => {
         if (!clinicId || doctors.length === 0) {
@@ -518,6 +581,15 @@ export default function PatientAppointmentsPage() {
     const onLeaveDay = selectedDoctorAvailability?.onLeave ?? false;
     const selectedSlot = useMemo(() => slots.find((s) => s.start === timeStart), [slots, timeStart]);
     const selectedDoctor = useMemo(() => doctors.find((d) => d.user_id === doctorId) || null, [doctorId, doctors]);
+    const selectedDate = useMemo(() => (date ? new Date(`${date}T00:00:00+08:00`) : undefined), [date]);
+    const availableDateObjects = useMemo(
+        () => availableDates.map((value) => new Date(`${value}T00:00:00+08:00`)),
+        [availableDates]
+    );
+    const leaveDateObjects = useMemo(
+        () => leaveDates.map((value) => new Date(`${value}T00:00:00+08:00`)),
+        [leaveDates]
+    );
     const selectedClinic = useMemo(
         () => clinics.find((clinic) => clinic.clinic_id === clinicId) ?? null,
         [clinics, clinicId]
@@ -866,66 +938,8 @@ export default function PatientAppointmentsPage() {
                                 </Select>
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="appointment-date" className="text-sm font-medium text-primary">
-                                    Date
-                                </Label>
-                                <Input
-                                    id="appointment-date"
-                                    name="appointmentDate"
-                                    type="date"
-                                    value={date}
-                                    onChange={(event) => setDate(event.target.value)}
-                                    min={minBookingDate}
-                                    className="rounded-xl border-primary/30"
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="appointment-time" className="text-sm font-medium text-primary">
-                                    Preferred time
-                                </Label>
-                                <Select
-                                    value={timeStart}
-                                    onValueChange={setTimeStart}
-                                    disabled={
-                                        loadingSlots ||
-                                        !doctorId ||
-                                        !date ||
-                                        !!selectedDoctorAvailabilityError ||
-                                        onLeaveDay
-                                    }
-                                >
-                                    <SelectTrigger id="appointment-time" className="rounded-xl border-primary/30">
-                                        <SelectValue
-                                            placeholder={
-                                                !doctorId || !date
-                                                    ? "Select doctor and date"
-                                                    : loadingSlots
-                                                        ? "Loading slots..."
-                                                        : selectedDoctorAvailabilityError
-                                                            ? "Unable to load slots"
-                                                            : onLeaveDay
-                                                                ? "Doctor is on leave"
-                                                                : slots.length
-                                                                    ? "Select a time"
-                                                                    : "No slots available"
-                                            }
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {slots.map((slot) => (
-                                            <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
-                                                {formatTimeRange(slot.start, slot.end)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {onLeaveDay && (
-                                    <p className="text-sm text-amber-600">
-                                        This doctor is marked as on leave for the selected date.
-                                    </p>
-                                )}
+                            <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3 text-sm text-primary">
+                                Pick a date and time using the schedule card on the right.
                             </div>
 
                             <Button
@@ -959,132 +973,133 @@ export default function PatientAppointmentsPage() {
                 <div className="space-y-6">
                     <Card className="rounded-3xl border-primary/25 bg-white/95 shadow-sm">
                         <CardHeader className="space-y-1">
-                            <CardTitle className="text-lg font-semibold text-primary">Doctor availability</CardTitle>
+                            <CardTitle className="text-lg font-semibold text-primary">Schedule availability</CardTitle>
                             <p className="text-sm text-muted-foreground">
-                                Preview open slots before sending your request.
+                                Browse dates with open slots, see leave days, and pick your preferred time.
                             </p>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            {!clinicId ? (
+                        <CardContent className="space-y-5">
+                            {!clinicId || !doctorId ? (
                                 <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-muted-foreground">
-                                    Select a clinic to browse available doctors.
-                                </div>
-                            ) : loadingDoctors ? (
-                                <div className="flex items-center justify-center gap-2 rounded-2xl border border-primary/25 bg-white/70 p-4 text-sm text-muted-foreground">
-                                    <Loader2 className="h-4 w-4 animate-spin" /> Loading doctors...
-                                </div>
-                            ) : doctors.length === 0 ? (
-                                <div className="rounded-2xl border border-primary/25 bg-primary/10 p-4 text-sm text-muted-foreground">
-                                    No doctors are assigned to this clinic yet. Try another clinic.
+                                    Select a clinic and doctor to preview the calendar.
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    {selectedClinic ? (
-                                        <div className="rounded-2xl border border-primary/25 bg-white/70 p-3">
-                                            <p className="text-xs uppercase tracking-wide text-primary">{selectedClinic.clinic_name}</p>
-                                            <p className="mt-1 text-sm font-medium text-primary">
-                                                {date ? `Showing availability for ${formatDateOnly(date)}` : "Choose a date to explore available slots."}
+                                <div className="grid gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
+                                    <div className="rounded-2xl border border-primary/20 bg-white/70 shadow-inner">
+                                        <div className="px-4 py-3">
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Month overview</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {selectedDoctor?.name ? `Availability for ${selectedDoctor.name}` : "Pick a doctor to load availability"}
                                             </p>
                                         </div>
-                                    ) : null}
-
-                                    {!date ? (
-                                        <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-muted-foreground">
-                                            Pick a preferred date to display the available times for every doctor.
-                                        </div>
-                                    ) : null}
-
-                                    <div className="space-y-3">
-                                        {doctors.map((doctor) => {
-                                            const availability = doctorAvailability[doctor.user_id];
-                                            const doctorSlots = availability?.slots ?? [];
-                                            const doctorLoading = date ? availability?.loading ?? false : false;
-                                            const doctorError = date ? availability?.error ?? null : null;
-                                            const doctorOnLeave = date ? availability?.onLeave ?? false : false;
-                                            const isActiveDoctor = doctor.user_id === doctorId;
-
-                                            return (
-                                                <div
-                                                    key={doctor.user_id}
-                                                    className={cn(
-                                                        "rounded-2xl border p-4 transition",
-                                                        "border-primary/25 bg-white/80",
-                                                        isActiveDoctor && "border-primary bg-primary/10 shadow-sm"
-                                                    )}
-                                                >
-                                                    <div className="flex flex-wrap items-start justify-between gap-3">
-                                                        <div>
-                                                            <p className="text-sm font-semibold text-primary">{doctor.name}</p>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {doctor.specialization ?? "Doctor"}
-                                                                {selectedClinic ? ` · ${selectedClinic.clinic_name}` : ""}
-                                                            </p>
-                                                        </div>
-                                                        {isActiveDoctor && timeStart ? (
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="border-primary bg-primary/10 text-[11px] font-semibold uppercase tracking-wide text-primary"
-                                                            >
-                                                                Selected
-                                                            </Badge>
-                                                        ) : null}
-                                                    </div>
-
-                                                    <div className="mt-3">
-                                                        {!date ? (
-                                                            <p className="text-xs text-muted-foreground">Select a date above to view availability.</p>
-                                                        ) : doctorLoading ? (
-                                                            <div className="flex items-center gap-2 rounded-2xl border border-primary/25 bg-white p-3 text-sm text-muted-foreground">
-                                                                <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
-                                                            </div>
-                                                        ) : doctorError ? (
-                                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
-                                                                Unable to load the schedule for this doctor. Try again later.
-                                                            </div>
-                                                        ) : doctorOnLeave ? (
-                                                            <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-800">
-                                                                This doctor is marked as on leave for {formatDateOnly(date)}.
-                                                            </div>
-                                                        ) : doctorSlots.length > 0 ? (
-                                                            <div className="grid gap-2 sm:grid-cols-2">
-                                                                {doctorSlots.map((slot) => {
-                                                                    const isSelected = isActiveDoctor && timeStart === slot.start;
-                                                                    return (
-                                                                        <button
-                                                                            key={`${doctor.user_id}-${slot.start}-${slot.end}`}
-                                                                            type="button"
-                                                                            onClick={() => handleSlotSelection(doctor, slot)}
-                                                                            className={cn(
-                                                                                "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
-                                                                                "border-primary/25 bg-white text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                                                                                isSelected && "border-primary bg-primary text-white hover:bg-primary/90 focus-visible:outline-primary"
-                                                                            )}
-                                                                            aria-pressed={isSelected}
-                                                                        >
-                                                                            <span className="leading-tight">
-                                                                                {formatTimeRange(slot.start, slot.end)}
-                                                                            </span>
-                                                                            <span
-                                                                                className={cn(
-                                                                                    "text-xs font-medium leading-tight",
-                                                                                    isSelected ? "text-white/80" : "text-muted-foreground"
-                                                                                )}
-                                                                            >
-                                                                                {isSelected ? "Selected" : "Available"}
-                                                                            </span>
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
-                                                                No available slots for this date. Try another day.
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                        <div className="relative px-3 pb-4 pt-2 sm:px-4">
+                                            {calendarLoading ? (
+                                                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
+                                                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
                                                 </div>
-                                            );
-                                        })}
+                                            ) : null}
+                                            <Calendar
+                                                mode="single"
+                                                month={calendarMonth}
+                                                onMonthChange={setCalendarMonth}
+                                                selected={selectedDate}
+                                                onSelect={(value) => {
+                                                    if (value) {
+                                                        setDate(formatManilaISODate(value));
+                                                        setTimeStart("");
+                                                        setCalendarMonth(value);
+                                                    }
+                                                }}
+                                                disabled={(day) => day < new Date(`${minBookingDate}T00:00:00+08:00`)}
+                                                modifiers={{ available: availableDateObjects, leave: leaveDateObjects }}
+                                                modifiersClassNames={{
+                                                    available:
+                                                        "[&>button]:border [&>button]:border-emerald-200 [&>button]:bg-emerald-50 [&>button]:text-emerald-700 [&>button[data-selected-single=true]]:!border-transparent [&>button[data-selected-single=true]]:!bg-emerald-500 [&>button[data-selected-single=true]]:!text-white [&>button[data-selected-single=true]]:!shadow-[0_10px_30px_-12px_rgba(16,185,129,0.55)] [&>button[data-selected-single=true]]:!ring-2 [&>button[data-selected-single=true]]:!ring-emerald-200/70 [&>button[data-selected-single=true]]:!ring-offset-0",
+                                                    leave:
+                                                        "[&>button]:border [&>button]:border-amber-200 [&>button]:bg-amber-50 [&>button]:text-amber-700 [&>button[data-selected-single=true]]:!border-transparent [&>button[data-selected-single=true]]:!bg-amber-500 [&>button[data-selected-single=true]]:!text-white",
+                                                }}
+                                                className="mx-auto w-full max-w-sm [--cell-size:2.4rem] sm:[--cell-size:2.7rem] [&_button[data-selected-single=true]]:border-transparent! [&_button[data-selected-single=true]]:bg-emerald-500! [&_button[data-selected-single=true]]:text-white! [&_button[data-selected-single=true]]:shadow-[0_10px_30px_-12px_rgba(16,185,129,0.55)]! [&_button[data-selected-single=true]]:ring-2! [&_button[data-selected-single=true]]:ring-emerald-200/70! [&_button[data-selected-single=true]]:ring-offset-0! [&_button[data-selected-single=true]]:outline-none! [&_button[data-selected-single=true]]:transition [&_button[data-selected-single=true]]:duration-150 [&_button[data-selected-single=true]]:ease-out [&_button[data-selected-single=true]]:scale-[1.02]"
+                                            />
+                                            <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="h-2 w-2 rounded-full bg-emerald-500" /> Available date
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="h-2 w-2 rounded-full bg-amber-500" /> Leave day
+                                                </div>
+                                            </div>
+                                            {calendarError ? (
+                                                <p className="mt-3 text-xs text-rose-600">{calendarError}</p>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selected day</p>
+                                            <h3 className="text-lg font-semibold text-slate-900">
+                                                {selectedDate ? formatDateOnly(date) : "Choose a date"}
+                                            </h3>
+                                            <p className="text-sm text-muted-foreground">
+                                                {!selectedDate
+                                                    ? "Pick a date to view open slots."
+                                                    : onLeaveDay || leaveDates.includes(date)
+                                                        ? `${selectedDoctor?.name ?? "Doctor"} is on leave for this day.`
+                                                        : slots.length > 0
+                                                            ? "Select a time to include in your request."
+                                                            : "No open times for this day."}
+                                            </p>
+                                        </div>
+
+                                        {!selectedDate ? (
+                                            <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/10/50 p-6 text-sm text-muted-foreground">
+                                                Choose a date on the calendar to view available times.
+                                            </div>
+                                        ) : loadingSlots ? (
+                                            <div className="flex items-center gap-2 rounded-2xl border border-primary/25 bg-white p-3 text-sm text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
+                                            </div>
+                                        ) : selectedDoctorAvailabilityError ? (
+                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
+                                                Unable to load the schedule for this doctor. Try again later.
+                                            </div>
+                                        ) : onLeaveDay || leaveDates.includes(date) ? (
+                                            <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-800">
+                                                This doctor is marked as on leave for {formatDateOnly(date)}.
+                                            </div>
+                                        ) : slots.length > 0 ? (
+                                            <div className="grid gap-2 sm:grid-cols-2">
+                                                {slots.map((slot) => {
+                                                    const isSelected = timeStart === slot.start;
+                                                    return (
+                                                        <button
+                                                            key={`${doctorId}-${slot.start}-${slot.end}`}
+                                                            type="button"
+                                                            onClick={() => selectedDoctor && handleSlotSelection(selectedDoctor, slot)}
+                                                            className={cn(
+                                                                "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
+                                                                "border-primary/25 bg-white text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                                                                isSelected && "border-primary bg-primary text-white hover:bg-primary/90 focus-visible:outline-primary"
+                                                            )}
+                                                            aria-pressed={isSelected}
+                                                        >
+                                                            <span className="leading-tight">{formatTimeRange(slot.start, slot.end)}</span>
+                                                            <span
+                                                                className={cn(
+                                                                    "text-xs font-medium leading-tight",
+                                                                    isSelected ? "text-white/80" : "text-muted-foreground"
+                                                                )}
+                                                            >
+                                                                {isSelected ? "Selected" : "Available"}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
+                                                No available slots for this date. Try another day.
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
