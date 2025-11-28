@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import {
     formatManilaDateTime,
@@ -154,6 +155,9 @@ export default function ScholarAppointmentsPage() {
     const [statusFilter, setStatusFilter] = useState<string>("active");
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [createSubmitting, setCreateSubmitting] = useState(false);
+    const canSubmitCreate =
+        Boolean(selectedPatientId && createClinicId && createDoctorId && createDate && createTimeStart && serviceTypeValue) &&
+        !createSubmitting;
 
     const [patientOptions, setPatientOptions] = useState<PatientOption[]>([]);
     const [patientsLoaded, setPatientsLoaded] = useState(false);
@@ -172,10 +176,18 @@ export default function ScholarAppointmentsPage() {
     const [slots, setSlots] = useState<SlotOption[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [createTimeStart, setCreateTimeStart] = useState("");
+    const [availabilityMonth, setAvailabilityMonth] = useState<Date>(() => manilaNow());
+    const [availableDates, setAvailableDates] = useState<string[]>([]);
+    const [leaveDates, setLeaveDates] = useState<string[]>([]);
+    const [availabilityLoading, setAvailabilityLoading] = useState(false);
+    const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+    const [onLeaveDay, setOnLeaveDay] = useState(false);
 
     const [createService, setCreateService] = useState("");
     const [createDate, setCreateDate] = useState(() => formatManilaISODate(manilaNow()));
     const [createRemarks, setCreateRemarks] = useState("");
+
+    const selectedSlot = useMemo(() => slots.find((slot) => slot.start === createTimeStart) ?? null, [slots, createTimeStart]);
 
     const resetCreateForm = useCallback(() => {
         const today = formatManilaISODate(manilaNow());
@@ -185,6 +197,11 @@ export default function ScholarAppointmentsPage() {
         setCreateDoctorId("");
         setDoctors([]);
         setSlots([]);
+        setAvailableDates([]);
+        setLeaveDates([]);
+        setAvailabilityMonth(today instanceof Date ? today : manilaNow());
+        setAvailabilityError(null);
+        setOnLeaveDay(false);
         setCreateDate(today);
         setCreateTimeStart("");
         setCreateService("");
@@ -243,6 +260,58 @@ export default function ScholarAppointmentsPage() {
             setLoadingClinics(false);
         }
     }, []);
+
+    useEffect(() => {
+        if (!createDialogOpen || !createClinicId || !createDoctorId) {
+            setAvailableDates([]);
+            setLeaveDates([]);
+            setAvailabilityError(null);
+            return;
+        }
+
+        const monthKey = formatManilaISODate(availabilityMonth).slice(0, 7);
+        let cancelled = false;
+
+        (async () => {
+            try {
+                setAvailabilityLoading(true);
+                setAvailabilityError(null);
+                const params = new URLSearchParams({
+                    clinic_id: createClinicId,
+                    doctor_user_id: createDoctorId,
+                    month: monthKey,
+                });
+                const res = await fetch(`/api/meta/doctor-availability/calendar?${params.toString()}`);
+                const data = await res.json();
+
+                if (cancelled) return;
+
+                if (!res.ok) {
+                    setAvailableDates([]);
+                    setLeaveDates([]);
+                    setAvailabilityError(data?.message ?? "Unable to load availability overview");
+                    return;
+                }
+
+                setAvailableDates(Array.isArray(data?.availableDates) ? data.availableDates : []);
+                setLeaveDates(Array.isArray(data?.leaveDates) ? data.leaveDates : []);
+            } catch (err) {
+                if (cancelled) return;
+                console.error(err);
+                setAvailableDates([]);
+                setLeaveDates([]);
+                setAvailabilityError("Unable to load availability overview");
+            } finally {
+                if (!cancelled) {
+                    setAvailabilityLoading(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [availabilityMonth, createClinicId, createDialogOpen, createDoctorId]);
 
     const loadAppointments = useCallback(async () => {
         try {
@@ -334,6 +403,7 @@ export default function ScholarAppointmentsPage() {
                 setSlots([]);
                 setCreateTimeStart("");
             }
+            setOnLeaveDay(false);
             return;
         }
 
@@ -364,6 +434,7 @@ export default function ScholarAppointmentsPage() {
                     return;
                 }
                 setSlots(Array.isArray(data?.slots) ? (data.slots as SlotOption[]) : []);
+                setOnLeaveDay(Boolean(data?.onLeave));
             } catch (err) {
                 console.error(err);
                 toast.error("Unable to load available slots");
@@ -384,6 +455,19 @@ export default function ScholarAppointmentsPage() {
     }, [createDoctorId, createDate, createDialogOpen]);
 
     const searchTerm = search.trim().toLowerCase();
+    const selectedDoctor = useMemo(
+        () => doctors.find((doctor) => doctor.user_id === createDoctorId) ?? null,
+        [createDoctorId, doctors]
+    );
+    const selectedDate = useMemo(() => (createDate ? new Date(`${createDate}T00:00:00+08:00`) : undefined), [createDate]);
+    const availableDateObjects = useMemo(
+        () => availableDates.map((value) => new Date(`${value}T00:00:00+08:00`)),
+        [availableDates]
+    );
+    const leaveDateObjects = useMemo(
+        () => leaveDates.map((value) => new Date(`${value}T00:00:00+08:00`)),
+        [leaveDates]
+    );
 
     const filteredAppointments = useMemo(() => {
         return appointments.filter((appointment) => {
@@ -857,6 +941,9 @@ export default function ScholarAppointmentsPage() {
                                             setCreateService("");
                                             setSlots([]);
                                             setCreateTimeStart("");
+                                            setAvailableDates([]);
+                                            setLeaveDates([]);
+                                            setAvailabilityError(null);
                                         }}
                                         disabled={loadingClinics}
                                     >
@@ -898,6 +985,9 @@ export default function ScholarAppointmentsPage() {
                                             setCreateService("");
                                             setSlots([]);
                                             setCreateTimeStart("");
+                                            setAvailableDates([]);
+                                            setLeaveDates([]);
+                                            setAvailabilityError(null);
                                         }}
                                         disabled={loadingDoctors || !createClinicId}
                                     >
@@ -937,53 +1027,179 @@ export default function ScholarAppointmentsPage() {
                                     </Select>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-primary">Date</Label>
-                                    <Input
-                                        type="date"
-                                        value={createDate}
-                                        onChange={(event) => setCreateDate(event.target.value)}
-                                        min={formatManilaISODate(manilaNow())}
-                                        className="rounded-xl border-primary/30"
-                                    />
-                                </div>
+                                <div className="space-y-4 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:col-span-2">
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-semibold text-primary">Schedule</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Explore available dates and select an open time for this patient.
+                                        </p>
+                                    </div>
+                                    {!createDoctorId || !createClinicId ? (
+                                        <div className="rounded-2xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-muted-foreground">
+                                            Choose a clinic and doctor to view availability.
+                                        </div>
+                                    ) : (
+                                        <div className="grid gap-4 md:grid-cols-[minmax(0,320px)_1fr]">
+                                            <div className="rounded-2xl border border-primary/20 bg-white/70 shadow-inner">
+                                                <div className="px-4 py-3">
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">Month overview</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {selectedDoctor?.name ? `Availability for ${selectedDoctor.name}` : "Pick a doctor"}
+                                                    </p>
+                                                </div>
+                                                <div className="relative px-3 pb-4 pt-2 sm:px-4">
+                                                    {availabilityLoading ? (
+                                                        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/70 backdrop-blur-sm">
+                                                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                                                        </div>
+                                                    ) : null}
+                                                    <Calendar
+                                                        mode="single"
+                                                        month={availabilityMonth}
+                                                        onMonthChange={setAvailabilityMonth}
+                                                        selected={selectedDate}
+                                                        onSelect={(value) => {
+                                                            if (value) {
+                                                                setCreateDate(formatManilaISODate(value));
+                                                                setCreateTimeStart("");
+                                                                setAvailabilityMonth(value);
+                                                            }
+                                                        }}
+                                                        disabled={(day) =>
+                                                            day < new Date(`${formatManilaISODate(manilaNow())}T00:00:00+08:00`)
+                                                        }
+                                                        modifiers={{ available: availableDateObjects, leave: leaveDateObjects }}
+                                                        modifiersClassNames={{
+                                                            available:
+                                                                "[&>button]:border [&>button]:border-emerald-200 [&>button]:bg-emerald-50 [&>button]:text-emerald-700 [&>button[data-selected-single=true]]:!border-transparent [&>button[data-selected-single=true]]:!bg-emerald-500 [&>button[data-selected-single=true]]:!text-white",
+                                                            leave:
+                                                                "[&>button]:border [&>button]:border-amber-200 [&>button]:bg-amber-50 [&>button]:text-amber-700 [&>button[data-selected-single=true]]:!border-transparent [&>button[data-selected-single=true]]:!bg-amber-500 [&>button[data-selected-single=true]]:!text-white",
+                                                        }}
+                                                        className="mx-auto w-full max-w-sm [--cell-size:2.3rem] sm:[--cell-size:2.6rem]"
+                                                    />
+                                                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Available date
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="h-2 w-2 rounded-full bg-amber-500" /> Leave day
+                                                        </div>
+                                                    </div>
+                                                    {availabilityError ? (
+                                                        <p className="mt-3 text-xs text-rose-600">{availabilityError}</p>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <div className="space-y-1">
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selected day</p>
+                                                    <h4 className="text-lg font-semibold text-slate-900">
+                                                        {selectedDate ? toManilaDateString(selectedDate) : "Choose a date"}
+                                                    </h4>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {!selectedDate
+                                                            ? "Pick a date to load available times."
+                                                            : onLeaveDay || leaveDates.includes(createDate)
+                                                                ? `${selectedDoctor?.name ?? "Doctor"} is on leave.`
+                                                                : slots.length > 0
+                                                                    ? "Select a time slot for this patient."
+                                                                    : "No open slots for this day."}
+                                                    </p>
+                                                </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-primary">Time</Label>
-                                    <Select
-                                        value={createTimeStart || undefined}
-                                        onValueChange={setCreateTimeStart}
-                                        disabled={loadingSlots || !createDoctorId || !createDate}
-                                    >
-                                        <SelectTrigger className="rounded-xl border-primary/30">
-                                            <SelectValue
-                                                placeholder={
-                                                    !createDoctorId
-                                                        ? "Select a doctor first"
-                                                        : loadingSlots
-                                                            ? "Checking availability..."
-                                                            : "Select time slot"
-                                                }
-                                            />
-                                        </SelectTrigger>
-                                        <SelectContent className="max-h-60">
-                                            {loadingSlots ? (
-                                                <SelectItem value="loading" disabled>
-                                                    Checking availability...
-                                                </SelectItem>
-                                            ) : slots.length === 0 ? (
-                                                <SelectItem value="none" disabled>
-                                                    No open slots for the selected date
-                                                </SelectItem>
-                                            ) : (
-                                                slots.map((slot) => (
-                                                    <SelectItem key={`${slot.start}-${slot.end}`} value={slot.start}>
-                                                        {formatTimeRange(slot.start, slot.end)}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
+                                                {!selectedDate ? (
+                                                    <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/10/50 p-6 text-sm text-muted-foreground">
+                                                        Choose a date on the calendar to view available times.
+                                                    </div>
+                                                ) : loadingSlots ? (
+                                                    <div className="flex items-center gap-2 rounded-2xl border border-primary/25 bg-white p-3 text-sm text-muted-foreground">
+                                                        <Loader2 className="h-4 w-4 animate-spin" /> Checking availability...
+                                                    </div>
+                                                ) : availabilityError ? (
+                                                    <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
+                                                        Unable to load the schedule. Try again later.
+                                                    </div>
+                                                ) : onLeaveDay || leaveDates.includes(createDate) ? (
+                                                    <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-3 text-sm text-amber-800">
+                                                        This doctor is marked as on leave for this day.
+                                                    </div>
+                                                ) : slots.length > 0 ? (
+                                                    <div className="grid gap-2 sm:grid-cols-2">
+                                                        {slots.map((slot) => {
+                                                            const isSelected = createTimeStart === slot.start;
+                                                            return (
+                                                                <button
+                                                                    key={`${createDoctorId}-${slot.start}-${slot.end}`}
+                                                                    type="button"
+                                                                    onClick={() => selectedDoctor && setCreateTimeStart(slot.start)}
+                                                                    className={cn(
+                                                                        "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
+                                                                        "border-primary/25 bg-white text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                                                                        isSelected && "border-primary bg-primary text-white hover:bg-primary/90 focus-visible:outline-primary"
+                                                                    )}
+                                                                    aria-pressed={isSelected}
+                                                                >
+                                                                    <span className="leading-tight">{formatTimeRange(slot.start, slot.end)}</span>
+                                                                    <span
+                                                                        className={cn(
+                                                                            "text-xs font-medium leading-tight",
+                                                                            isSelected ? "text-white/80" : "text-muted-foreground"
+                                                                        )}
+                                                                    >
+                                                                        {isSelected ? "Selected" : "Available"}
+                                                                    </span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-3 text-sm text-rose-700">
+                                                        No available slots for this date.
+                                                    </div>
+                                                )}
+                                                <div className="space-y-3 rounded-2xl border border-primary/25 bg-white/80 p-3">
+                                                    <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {createDate && createTimeStart && selectedDoctor ? (
+                                                                <div className="space-y-1">
+                                                                    <p className="font-semibold text-primary">Slot selected</p>
+                                                                    <p className="leading-tight text-slate-700">
+                                                                        {toManilaDateString(selectedDate!)} · {formatTimeRange(createTimeStart, selectedSlot?.end ?? createTimeStart)} with {selectedDoctor.name}
+                                                                    </p>
+                                                                </div>
+                                                            ) : (
+                                                                <p>Select a date and time above to proceed.</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                className="rounded-xl"
+                                                                onClick={() => setCreateDialogOpen(false)}
+                                                                disabled={createSubmitting}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                            <Button
+                                                                type="submit"
+                                                                className="rounded-xl bg-primary text-white hover:bg-primary/90"
+                                                                disabled={!canSubmitCreate}
+                                                            >
+                                                                {createSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                                {createSubmitting ? "Scheduling..." : "Schedule availability"}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                    {!canSubmitCreate ? (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Select a patient, clinic, doctor, service, and slot to enable scheduling.
+                                                        </p>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2 sm:col-span-2">
@@ -1035,27 +1251,7 @@ export default function ScholarAppointmentsPage() {
                             </div>
                         </div>
 
-                        <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setCreateDialogOpen(false)}
-                                className="rounded-xl"
-                                disabled={createSubmitting}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                className="rounded-xl bg-primary text-white hover:bg-primary/90"
-                                disabled={createSubmitting}
-                            >
-                                {createSubmitting ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : null}
-                                Schedule appointment
-                            </Button>
-                        </DialogFooter>
+                        <DialogFooter />
                     </form>
                 </DialogContent>
             </Dialog>
