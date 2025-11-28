@@ -271,9 +271,9 @@ export function PatientAccountPageClient({
     const layoutTitle = hydratingProfile
         ? "Loading profile"
         : profileType === "employee"
-            ? "Employee profile"
+            ? "Employee patient profile"
             : profileType === "student"
-                ? "Student profile"
+                ? "Student patient profile"
                 : "Account overview";
 
     const layoutDescription = hydratingProfile
@@ -681,14 +681,14 @@ export function PatientAccountPageClient({
                                                                                         ),
                                                                                     bloodtype:
                                                                                         patientReverseBloodTypeEnumMap[
-                                                                                            updatedProfile?.bloodtype || ""
+                                                                                        updatedProfile?.bloodtype || ""
                                                                                         ] || null,
                                                                                 };
 
                                                                                 if (profileType === "student") {
                                                                                     payload.department =
                                                                                         patientReverseDepartmentEnumMap[
-                                                                                            updatedProfile.department || ""
+                                                                                        updatedProfile.department || ""
                                                                                         ] || null;
                                                                                     delete payload.department_office;
                                                                                 }
