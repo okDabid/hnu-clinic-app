@@ -869,7 +869,7 @@ export default function PatientAppointmentsPage() {
                 </div>
             }
         >
-            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] 2xl:gap-8">
+            <section className="space-y-6 2xl:space-y-8">
                 <Card className="rounded-3xl border-primary/25 bg-white/95 shadow-sm">
                     <CardHeader className="space-y-1 border-b border-primary/15 pb-5">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1104,7 +1104,7 @@ export default function PatientAppointmentsPage() {
                     </CardContent>
                 </Card>
 
-                <div className="space-y-6">
+                <div className="grid gap-6 lg:grid-cols-2 2xl:gap-8">
                     <Card className="rounded-3xl border-primary/25 bg-linear-to-br from-primary via-primary/90 to-primary/80 text-white shadow-md">
                         <CardHeader>
                             <CardTitle className="text-lg">Important reminders</CardTitle>
