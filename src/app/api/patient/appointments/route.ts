@@ -510,9 +510,23 @@ async function deleteHandler(req: Request) {
             return NextResponse.json({ message: "Appointment already cancelled" });
         }
 
-        await prisma.appointment.update({
-            where: { appointment_id },
-            data: { status: AppointmentStatus.Cancelled },
+        await prisma.$transaction(async (tx) => {
+            // Clear any previously cancelled appointments in the same slot to avoid
+            // uniqueness conflicts when cancelling and rebooking the same time.
+            await tx.appointment.deleteMany({
+                where: {
+                    appointment_id: { not: appointment_id },
+                    doctor_user_id: appointment.doctor_user_id,
+                    appointment_timestart: appointment.appointment_timestart,
+                    appointment_timeend: appointment.appointment_timeend,
+                    status: AppointmentStatus.Cancelled,
+                },
+            });
+
+            await tx.appointment.update({
+                where: { appointment_id },
+                data: { status: AppointmentStatus.Cancelled },
+            });
         });
 
         return NextResponse.json({ message: "Appointment cancelled" });
