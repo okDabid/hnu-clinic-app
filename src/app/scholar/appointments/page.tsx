@@ -44,6 +44,9 @@ import ScholarAppointmentsLoading from "./loading";
 
 const STATUS_ORDER = ["Pending", "Approved", "Moved", "Completed", "Cancelled"] as const;
 
+const MIN_BOOKING_LEAD_DAYS = 3;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 type AppointmentStatus = (typeof STATUS_ORDER)[number];
 
 type ScholarAppointment = {
@@ -147,6 +150,12 @@ function formatTimeWindow(start: string, end: string) {
     return endText ? `${startText} – ${endText}` : startText;
 }
 
+function computeMinBookingDate(): string {
+    const base = manilaNow();
+    const future = new Date(base.getTime() + MIN_BOOKING_LEAD_DAYS * DAY_IN_MS);
+    return formatManilaISODate(future);
+}
+
 export default function ScholarAppointmentsPage() {
     const [appointments, setAppointments] = useState<ScholarAppointment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -155,6 +164,7 @@ export default function ScholarAppointmentsPage() {
     const [statusFilter, setStatusFilter] = useState<string>("active");
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [createSubmitting, setCreateSubmitting] = useState(false);
+    const [minBookingDate, setMinBookingDate] = useState(() => computeMinBookingDate());
 
     const [patientOptions, setPatientOptions] = useState<PatientOption[]>([]);
     const [patientsLoaded, setPatientsLoaded] = useState(false);
@@ -181,11 +191,36 @@ export default function ScholarAppointmentsPage() {
     const [onLeaveDay, setOnLeaveDay] = useState(false);
 
     const [createService, setCreateService] = useState("");
-    const [createDate, setCreateDate] = useState(() => formatManilaISODate(manilaNow()));
+    const [createDate, setCreateDate] = useState(() => computeMinBookingDate());
     const [createRemarks, setCreateRemarks] = useState("");
 
+    useEffect(() => {
+        const updateMinDate = () =>
+            setMinBookingDate((current) => {
+                const next = computeMinBookingDate();
+                return current === next ? current : next;
+            });
+
+        updateMinDate();
+        const interval = setInterval(updateMinDate, 60 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        const minDate = new Date(`${minBookingDate}T00:00:00+08:00`);
+        setAvailabilityMonth(minDate);
+        setCreateDate((current) => {
+            if (!current) return minBookingDate;
+            const currentDate = new Date(`${current}T00:00:00+08:00`);
+            if (currentDate < minDate) {
+                return minBookingDate;
+            }
+            return current;
+        });
+    }, [minBookingDate]);
+
     const resetCreateForm = useCallback(() => {
-        const today = formatManilaISODate(manilaNow());
+        const minDate = new Date(`${minBookingDate}T00:00:00+08:00`);
         setSelectedPatientId("");
         setPatientSearch("");
         setCreateClinicId("");
@@ -194,14 +229,14 @@ export default function ScholarAppointmentsPage() {
         setSlots([]);
         setAvailableDates([]);
         setLeaveDates([]);
-        setAvailabilityMonth(manilaNow());
+        setAvailabilityMonth(minDate);
         setAvailabilityError(null);
         setOnLeaveDay(false);
-        setCreateDate(today);
+        setCreateDate(minBookingDate);
         setCreateTimeStart("");
         setCreateService("");
         setCreateRemarks("");
-    }, []);
+    }, [minBookingDate]);
 
     const loadPatientOptions = useCallback(async () => {
         try {
@@ -1057,7 +1092,7 @@ export default function ScholarAppointmentsPage() {
                                                             }
                                                         }}
                                                         disabled={(day) =>
-                                                            day < new Date(`${formatManilaISODate(manilaNow())}T00:00:00+08:00`)
+                                                            day < new Date(`${minBookingDate}T00:00:00+08:00`)
                                                         }
                                                         modifiers={{ available: availableDateObjects, leave: leaveDateObjects }}
                                                         modifiersClassNames={{
