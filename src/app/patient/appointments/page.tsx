@@ -168,12 +168,6 @@ function humanizeService(value: string | null | undefined) {
 
 export default function PatientAppointmentsPage() {
     const [minBookingDate, setMinBookingDate] = useState(() => computeMinBookingDate());
-    const earliestScheduledMessage = useMemo(() => {
-        const label = formatDateOnly(minBookingDate);
-        return label
-            ? `Appointments must be scheduled on ${label} at earliest.`
-            : "Appointments must be scheduled at least 3 days in advance.";
-    }, [minBookingDate]);
 
     const earliestBookedMessage = useMemo(() => {
         const label = formatDateOnly(minBookingDate);
@@ -878,14 +872,11 @@ export default function PatientAppointmentsPage() {
                                     <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                         <CalendarDays className="h-5 w-5" />
                                     </span>
-                                    Schedule availability & booking
+                                    Schedule an Appointment
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                     Browse open dates, pick a slot, and submit your request in one place.
                                 </p>
-                            </div>
-                            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-medium text-primary shadow-sm">
-                                Earliest booking: {formatDateOnly(minBookingDate) || minBookingDate}
                             </div>
                         </div>
                     </CardHeader>
@@ -1084,7 +1075,7 @@ export default function PatientAppointmentsPage() {
 
                             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3 text-sm text-primary">
-                                    {earliestScheduledMessage}
+                                    Appointment must be scheduled at least 3 days prior.
                                 </div>
                                 <Button
                                     type="submit"
