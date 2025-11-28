@@ -194,7 +194,7 @@ export default function ScholarAppointmentsPage() {
         setSlots([]);
         setAvailableDates([]);
         setLeaveDates([]);
-        setAvailabilityMonth(today instanceof Date ? today : manilaNow());
+        setAvailabilityMonth(manilaNow());
         setAvailabilityError(null);
         setOnLeaveDay(false);
         setCreateDate(today);
@@ -450,10 +450,6 @@ export default function ScholarAppointmentsPage() {
     }, [createDoctorId, createDate, createDialogOpen]);
 
     const searchTerm = search.trim().toLowerCase();
-    const selectedDoctor = useMemo(
-        () => doctors.find((doctor) => doctor.user_id === createDoctorId) ?? null,
-        [createDoctorId, doctors]
-    );
     const selectedDate = useMemo(() => (createDate ? new Date(`${createDate}T00:00:00+08:00`) : undefined), [createDate]);
     const availableDateObjects = useMemo(
         () => availableDates.map((value) => new Date(`${value}T00:00:00+08:00`)),
@@ -1089,7 +1085,7 @@ export default function ScholarAppointmentsPage() {
                                                 <div className="space-y-1">
                                                     <p className="text-xs font-semibold uppercase tracking-wide text-primary">Selected day</p>
                                                     <h4 className="text-lg font-semibold text-slate-900">
-                                                        {selectedDate ? toManilaDateString(selectedDate) : "Choose a date"}
+                                                        {selectedDate ? toManilaDateString(formatManilaISODate(selectedDate)) : "Choose a date"}
                                                     </h4>
                                                     <p className="text-sm text-muted-foreground">
                                                         {!selectedDate
