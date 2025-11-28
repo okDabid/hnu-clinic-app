@@ -72,10 +72,10 @@ async function handler(req: Request) {
     if (error instanceof Error) {
       console.error("Email error:", error.message);
       return NextResponse.json(
-        { error: `Failed to send message: ${error.message}` },
+        { error: "Failed to send message" },
         { status: 500 }
-      );
-    }
+    );
+}
 
     console.error("Unknown error occurred while sending email.");
     return NextResponse.json(
