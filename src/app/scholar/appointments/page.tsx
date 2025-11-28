@@ -850,7 +850,7 @@ export default function ScholarAppointmentsPage() {
                 </AppointmentPanel>
             </div>
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                <DialogContent className="rounded-3xl sm:max-w-3xl max-h-[80vh] overflow-y-auto sm:overflow-visible sm:max-h-none">
+                <DialogContent className="max-h-[85vh] overflow-y-auto rounded-3xl sm:max-w-3xl">
                     <form onSubmit={handleCreateSubmit} className="space-y-6">
                         <DialogHeader>
                             <DialogTitle className="text-xl text-primary">
