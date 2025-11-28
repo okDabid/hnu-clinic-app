@@ -157,7 +157,7 @@ model Appointment {
   patient               Users             @relation("PatientAppointments", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
   consultation          Consultation?
 
-  @@unique([doctor_user_id, appointment_timestart, appointment_timeend])
+  @@unique([doctor_user_id, appointment_timestart, appointment_timeend, status])
   @@index([doctor_user_id, appointment_date, status])
   @@index([patient_user_id, appointment_date, status])
 }
