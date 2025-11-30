@@ -883,13 +883,16 @@ export default function PatientAppointmentsPage() {
 
                     <CardContent className="space-y-6 pt-6">
                         <form className="space-y-6" onSubmit={handleSubmit}>
-                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                <div className="grid gap-2">
+                            <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                <div className="grid min-w-0 gap-2">
                                     <Label htmlFor="appointment-clinic" className="text-sm font-medium text-primary">
                                         Clinic
                                     </Label>
                                     <Select value={clinicId} onValueChange={handleClinicChange} disabled={loadingClinics}>
-                                        <SelectTrigger id="appointment-clinic" className="rounded-xl border-primary/30 bg-white">
+                                        <SelectTrigger
+                                            id="appointment-clinic"
+                                            className="w-full min-w-0 rounded-xl border-primary/30 bg-white"
+                                        >
                                             <SelectValue placeholder={loadingClinics ? "Loading clinics..." : "Select clinic"} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -902,7 +905,7 @@ export default function PatientAppointmentsPage() {
                                     </Select>
                                 </div>
 
-                                <div className="grid gap-2">
+                                <div className="grid min-w-0 gap-2">
                                     <Label htmlFor="appointment-doctor" className="text-sm font-medium text-primary">
                                         Doctor
                                     </Label>
@@ -911,9 +914,14 @@ export default function PatientAppointmentsPage() {
                                         onValueChange={handleDoctorChange}
                                         disabled={!clinicId || loadingDoctors}
                                     >
-                                        <SelectTrigger id="appointment-doctor" className="rounded-xl border-primary/30 bg-white">
+                                        <SelectTrigger
+                                            id="appointment-doctor"
+                                            className="w-full min-w-0 rounded-xl border-primary/30 bg-white"
+                                        >
                                             <SelectValue
-                                                placeholder={!clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"}
+                                                placeholder={
+                                                    !clinicId ? "Select clinic first" : loadingDoctors ? "Loading doctors..." : "Select doctor"
+                                                }
                                             />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -926,12 +934,15 @@ export default function PatientAppointmentsPage() {
                                     </Select>
                                 </div>
 
-                                <div className="grid gap-2 md:col-span-2 xl:col-span-1">
+                                <div className="grid min-w-0 gap-2 md:col-span-2 xl:col-span-1">
                                     <Label htmlFor="appointment-service" className="text-sm font-medium text-primary">
                                         Service type
                                     </Label>
                                     <Select value={serviceType} onValueChange={setServiceType} disabled={!selectedDoctor}>
-                                        <SelectTrigger id="appointment-service" className="rounded-xl border-primary/30 bg-white">
+                                        <SelectTrigger
+                                            id="appointment-service"
+                                            className="w-full min-w-0 rounded-xl border-primary/30 bg-white"
+                                        >
                                             <SelectValue placeholder={!selectedDoctor ? "Select doctor first" : "Select service"} />
                                         </SelectTrigger>
                                         <SelectContent>
