@@ -65,6 +65,8 @@ async function checkExistingProfile(options: {
     profileType: PatientType | "student";
     profileId: string;
 }): Promise<{ exists: boolean; error?: string }> {
+    const baseId = options.profileId.split("-")[0];
+
     if (options.profileType === "student") {
         const existingStudent = await prisma.student.findUnique({
             where: { student_id: options.profileId },
@@ -76,8 +78,14 @@ async function checkExistingProfile(options: {
             };
         }
     } else if (options.profileType === "employee") {
-        const existingEmployee = await prisma.employee.findUnique({
-            where: { employee_id: options.profileId },
+        const existingEmployee = await prisma.employee.findFirst({
+            where: {
+                OR: [
+                    { employee_id: options.profileId },
+                    { employee_id: baseId },
+                    { employee_id: { startsWith: `${baseId}-` } },
+                ],
+            },
         });
         if (existingEmployee) {
             return {
@@ -91,10 +99,20 @@ async function checkExistingProfile(options: {
 }
 
 async function checkExistingAccountByProfileId(profileId: string) {
+    const baseId = profileId.split("-")[0];
+
     return prisma.users.findFirst({
         where: {
             OR: [
-                { employee: { employee_id: profileId } },
+                {
+                    employee: {
+                        OR: [
+                            { employee_id: profileId },
+                            { employee_id: baseId },
+                            { employee_id: { startsWith: `${baseId}-` } },
+                        ],
+                    },
+                },
                 { student: { student_id: profileId } },
             ],
         },
