@@ -36,17 +36,7 @@ const normalizeId = (value: unknown) => {
     return trimmed || null;
 };
 
-const getIdVariants = (identifier: string) => {
-    const baseId = identifier.split("-")[0];
-    const withBase = Boolean(baseId);
-
-    return {
-        exact: identifier,
-        baseId,
-        baseIdFilter: withBase ? baseId : undefined,
-        prefixedVariant: withBase ? `${baseId}-` : undefined,
-    };
-};
+const getBaseId = (identifier: string) => identifier.split("-")[0] ?? identifier;
 
 function buildIdentifiers(options: {
     role: Role;
@@ -56,40 +46,38 @@ function buildIdentifiers(options: {
     schoolId: string | null;
 }): { username: string; profileId: string; profileType: PatientType | "student" } {
     if (options.role === Role.NURSE || options.role === Role.DOCTOR) {
-        const employeeId = options.employeeId ?? `EMP-${Date.now()}`;
-        return { username: employeeId, profileId: employeeId, profileType: "employee" };
+        const employeeId = options.employeeId ? getBaseId(options.employeeId) : null;
+        const finalEmployeeId = employeeId ?? `EMP-${Date.now()}`;
+        return { username: finalEmployeeId, profileId: finalEmployeeId, profileType: "employee" };
     }
 
     if (options.role === Role.PATIENT) {
         const profileType = options.patientType ?? "employee";
-        const profileId =
-            profileType === "student"
-                ? options.studentId ?? `STUD-${Date.now()}`
-                : options.employeeId ?? `EMP-${Date.now()}`;
-        return { username: profileId, profileId, profileType };
+        const profileId = profileType === "student"
+            ? options.studentId
+                ? getBaseId(options.studentId)
+                : null
+            : options.employeeId
+                ? getBaseId(options.employeeId)
+                : null;
+        const finalProfileId = profileId ?? (profileType === "student" ? `STUD-${Date.now()}` : `EMP-${Date.now()}`);
+        return { username: finalProfileId, profileId: finalProfileId, profileType };
     }
 
-    const schoolId = options.schoolId ?? `SCH-${Date.now()}`;
-    return { username: schoolId, profileId: schoolId, profileType: "student" };
+    const schoolId = options.schoolId ? getBaseId(options.schoolId) : null;
+    const finalSchoolId = schoolId ?? `SCH-${Date.now()}`;
+    return { username: finalSchoolId, profileId: finalSchoolId, profileType: "student" };
 }
 
 async function checkExistingProfile(options: {
     profileType: PatientType | "student";
     profileId: string;
 }): Promise<{ exists: boolean; error?: string }> {
-    const variants = getIdVariants(options.profileId);
+    const baseId = getBaseId(options.profileId);
 
     if (options.profileType === "student") {
         const existingStudent = await prisma.student.findFirst({
-            where: {
-                OR: [
-                    { student_id: variants.exact },
-                    variants.baseIdFilter ? { student_id: variants.baseIdFilter } : undefined,
-                    variants.prefixedVariant
-                        ? { student_id: { startsWith: variants.prefixedVariant } }
-                        : undefined,
-                ].filter(Boolean) as object[],
-            },
+            where: { student_id: baseId },
         });
 
         if (existingStudent) {
@@ -100,15 +88,7 @@ async function checkExistingProfile(options: {
         }
     } else if (options.profileType === "employee") {
         const existingEmployee = await prisma.employee.findFirst({
-            where: {
-                OR: [
-                    { employee_id: variants.exact },
-                    variants.baseIdFilter ? { employee_id: variants.baseIdFilter } : undefined,
-                    variants.prefixedVariant
-                        ? { employee_id: { startsWith: variants.prefixedVariant } }
-                        : undefined,
-                ].filter(Boolean) as object[],
-            },
+            where: { employee_id: baseId },
         });
 
         if (existingEmployee) {
@@ -123,7 +103,7 @@ async function checkExistingProfile(options: {
 }
 
 async function checkExistingAccountByProfileId(profileType: PatientType | "student", profileId: string) {
-    const variants = getIdVariants(profileId);
+    const baseId = getBaseId(profileId);
 
     return prisma.users.findFirst({
         where: {
@@ -131,33 +111,13 @@ async function checkExistingAccountByProfileId(profileType: PatientType | "stude
                 {
                     employee:
                         profileType === "employee"
-                            ? {
-                                OR: [
-                                    { employee_id: variants.exact },
-                                    variants.baseIdFilter
-                                        ? { employee_id: variants.baseIdFilter }
-                                        : undefined,
-                                    variants.prefixedVariant
-                                        ? { employee_id: { startsWith: variants.prefixedVariant } }
-                                        : undefined,
-                                ].filter(Boolean) as object[],
-                            }
+                            ? { employee_id: baseId }
                             : undefined,
                 },
                 {
                     student:
                         profileType === "student"
-                            ? {
-                                OR: [
-                                    { student_id: variants.exact },
-                                    variants.baseIdFilter
-                                        ? { student_id: variants.baseIdFilter }
-                                        : undefined,
-                                    variants.prefixedVariant
-                                        ? { student_id: { startsWith: variants.prefixedVariant } }
-                                        : undefined,
-                                ].filter(Boolean) as object[],
-                            }
+                            ? { student_id: baseId }
                             : undefined,
                 },
             ].filter(Boolean) as object[],
