@@ -72,7 +72,7 @@ async function handler(req: Request) {
                 where: { employee_id },
                 select: baseSelect,
             });
-        } else if (normalizedRole === "PATIENT") {
+        } else if (normalizedRole === "PATIENT" || normalizedRole === "SCHOLAR") {
             if (typeof patient_id !== "string" || patient_id.length === 0) {
                 return NextResponse.json(
                     { error: "Patient ID is required" },
@@ -88,7 +88,18 @@ async function handler(req: Request) {
                 }),
             ]);
 
-            userRecord = studentRecord || employeeRecord;
+            const isScholarLogin = normalizedRole === "SCHOLAR";
+            if (isScholarLogin) {
+                if (!studentRecord?.is_working_scholar) {
+                    return NextResponse.json(
+                        { error: "Working scholar access required" },
+                        { status: 403 }
+                    );
+                }
+                userRecord = studentRecord;
+            } else {
+                userRecord = studentRecord || employeeRecord;
+            }
         } else {
             return NextResponse.json(
                 { error: "Unsupported role" },
@@ -114,7 +125,7 @@ async function handler(req: Request) {
         return NextResponse.json({
             success: true,
             fullName: `${userRecord.fname} ${userRecord.lname}`,
-            role: userRecord.user.role,
+            role: normalizedRole === "SCHOLAR" ? "SCHOLAR" : userRecord.user.role,
             user_id: userRecord.user.user_id,
         });
     } catch (error) {

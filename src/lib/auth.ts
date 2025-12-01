@@ -52,7 +52,7 @@ type FoundUser = {
     password: string;
     role: Role;
     status: AccountStatus;
-    student: { fname: string; lname: string } | null;
+    student: { fname: string; lname: string; is_working_scholar?: boolean } | null;
     employee: { fname: string; lname: string } | null;
 };
 
@@ -74,10 +74,15 @@ export const authOptions: NextAuthOptions = {
                 const id = String(credentials.id || "").trim();
                 const password = String(credentials.password || "");
                 const roleStr = String(credentials.role || "").toUpperCase();
-                if (!Object.values(Role).includes(roleStr as Role)) {
+                const isScholarLogin = roleStr === "SCHOLAR";
+                const isKnownRole = Object.values(Role).includes(roleStr as Role);
+
+                if (!isKnownRole && !isScholarLogin) {
                     throw new Error("Invalid role provided.");
                 }
-                const role = roleStr as Role;
+
+                // Scholar logins piggyback on PATIENT accounts with the working scholar flag
+                const role = isScholarLogin ? Role.PATIENT : (roleStr as Role);
 
                 // Find user (indexed query)
                 const user: FoundUser | null = await withDb(() =>
@@ -90,13 +95,18 @@ export const authOptions: NextAuthOptions = {
                                 { student: { is: { student_id: id } } },
                                 { employee: { is: { employee_id: id } } },
                             ],
+                            ...(isScholarLogin
+                                ? { student: { is: { is_working_scholar: true } } }
+                                : {}),
                         },
                         select: {
                             user_id: true,
                             password: true,
                             role: true,
                             status: true,
-                            student: { select: { fname: true, lname: true } },
+                            student: {
+                                select: { fname: true, lname: true, is_working_scholar: true },
+                            },
                             employee: { select: { fname: true, lname: true } },
                         },
                     })
@@ -109,6 +119,11 @@ export const authOptions: NextAuthOptions = {
                 // Password verification (non-blocking)
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) throw new Error("Invalid password.");
+
+                // For scholar logins, enforce working scholar flag
+                if (isScholarLogin && !user.student?.is_working_scholar) {
+                    throw new Error("Working scholar access required.");
+                }
 
                 // Return user payload
                 return {

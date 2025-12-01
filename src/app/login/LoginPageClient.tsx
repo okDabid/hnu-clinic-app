@@ -101,6 +101,7 @@ export default function LoginPageClient() {
 
         if (role === "doctor" || role === "nurse") payload.id = String(formData.get("employee_id") ?? "");
         else if (role === "patient") payload.id = String(formData.get("patient_id") ?? "");
+        else if (role === "scholar") payload.id = String(formData.get("scholar_id") ?? "");
 
         try {
             setLoadingRole(role);
@@ -128,6 +129,9 @@ export default function LoginPageClient() {
                     break;
                 case "PATIENT":
                     router.push("/patient");
+                    break;
+                case "SCHOLAR":
+                    router.push("/scholar");
                     break;
                 default:
                     router.push("/login");
@@ -367,7 +371,7 @@ export default function LoginPageClient() {
                             </div>
 
                             <Tabs defaultValue="doctor" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3 gap-2 rounded-xl bg-primary/10 p-1 text-sm">
+                                <TabsList className="grid w-full grid-cols-4 gap-2 rounded-xl bg-primary/10 p-1 text-sm">
                                     <TabsTrigger
                                         className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary"
                                         value="doctor"
@@ -382,6 +386,12 @@ export default function LoginPageClient() {
                                     </TabsTrigger>
                                     <TabsTrigger
                                         className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary"
+                                        value="scholar"
+                                    >
+                                        Scholar
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-primary"
                                         value="patient"
                                     >
                                         Patient
@@ -393,6 +403,9 @@ export default function LoginPageClient() {
                                 </TabsContent>
                                 <TabsContent value="nurse" className="mt-6">
                                     {renderForm("nurse", "Nurse", "employee_id", "Employee ID")}
+                                </TabsContent>
+                                <TabsContent value="scholar" className="mt-6">
+                                    {renderForm("scholar", "Scholar", "scholar_id", "Student ID")}
                                 </TabsContent>
                                 <TabsContent value="patient" className="mt-6">
                                     {renderForm("patient", "Patient", "patient_id", "Student ID or Employee ID")}
