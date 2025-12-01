@@ -270,61 +270,52 @@ export default function DoctorPatientsPage() {
                             <div className="space-y-1">
                                 <CardTitle className="text-xl text-primary">Patient directory</CardTitle>
                                 <p className="text-sm text-muted-foreground">
-                                    Filter student and employee details before handing off to nurses or doctors.
+                                    Filter clinic records and open charts directly for quick bedside coordination.
                                 </p>
                             </div>
-                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-primary">Patient type</Label>
-                                    <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                        <SelectTrigger className="rounded-xl border-primary/30">
-                                            <SelectValue placeholder="All types" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="All">All</SelectItem>
-                                            <SelectItem value="Student">Students</SelectItem>
-                                            <SelectItem value="Employee">Employees</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                            <div className="space-y-1 md:w-72">
+                                <Label className="text-sm font-semibold text-primary">Search Records</Label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search by name or ID"
+                                        value={search}
+                                        onChange={(event) => setSearch(event.target.value)}
+                                        className="h-9 w-full pl-10 pr-4"
+                                    />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-primary">Account status</Label>
-                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                        <SelectTrigger className="rounded-xl border-primary/30">
-                                            <SelectValue placeholder="Status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="All">All</SelectItem>
-                                            <SelectItem value="Active">Active</SelectItem>
-                                            <SelectItem value="Inactive">Inactive</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-primary">Appointment link</Label>
-                                    <Select value={appointmentFilter} onValueChange={setAppointmentFilter}>
-                                        <SelectTrigger className="rounded-xl border-primary/30">
-                                            <SelectValue placeholder="Appointments" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="All">All</SelectItem>
-                                            <SelectItem value="With">With appointment</SelectItem>
-                                            <SelectItem value="Without">No appointment</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-primary">Search records</Label>
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search by name or ID"
-                                            value={search}
-                                            onChange={(event) => setSearch(event.target.value)}
-                                            className="rounded-xl border-primary/30 pl-9"
-                                        />
-                                    </div>
-                                </div>
+                            </div>
+                            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+                                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder="All types" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Types</SelectItem>
+                                        <SelectItem value="Student">Students</SelectItem>
+                                        <SelectItem value="Employee">Employees</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder="Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Status</SelectItem>
+                                        <SelectItem value="Active">Active</SelectItem>
+                                        <SelectItem value="Inactive">Inactive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select value={appointmentFilter} onValueChange={setAppointmentFilter}>
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder="Appointments" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="All">All Appointments</SelectItem>
+                                        <SelectItem value="With">With appointment</SelectItem>
+                                        <SelectItem value="Without">No appointment</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </CardHeader>
                         <CardContent className="pt-4">
