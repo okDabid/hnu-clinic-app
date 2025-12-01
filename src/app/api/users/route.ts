@@ -9,32 +9,44 @@ import { handleAuthError, requireRole } from "@/lib/authorization";
 type ValidGender = "Male" | "Female";
 type PatientType = "student" | "employee";
 
-function normalizeRole(roleInput: unknown): Role | null {
+const normalizeRole = (roleInput: unknown): Role | null => {
     const normalized = String(roleInput ?? "").toUpperCase();
     return Object.values(Role).includes(normalized as Role)
         ? (normalized as Role)
         : null;
-}
+};
 
-function normalizeGender(value: unknown): ValidGender | null {
+const normalizeGender = (value: unknown): ValidGender | null => {
     if (value === "Male" || value === "Female") return value;
     return null;
-}
+};
 
-function parseDate(value: unknown): Date | null {
+const parseDate = (value: unknown): Date | null => {
     const date = new Date(String(value ?? ""));
     return Number.isNaN(date.getTime()) ? null : date;
-}
+};
 
-function normalizePatientType(value: unknown): PatientType | null {
+const normalizePatientType = (value: unknown): PatientType | null => {
     if (value === "student" || value === "employee") return value;
     return null;
-}
+};
 
-function normalizeId(value: unknown) {
+const normalizeId = (value: unknown) => {
     const trimmed = String(value ?? "").trim();
     return trimmed || null;
-}
+};
+
+const getIdVariants = (identifier: string) => {
+    const baseId = identifier.split("-")[0];
+    const withBase = Boolean(baseId);
+
+    return {
+        exact: identifier,
+        baseId,
+        baseIdFilter: withBase ? baseId : undefined,
+        prefixedVariant: withBase ? `${baseId}-` : undefined,
+    };
+};
 
 function buildIdentifiers(options: {
     role: Role;
@@ -65,12 +77,21 @@ async function checkExistingProfile(options: {
     profileType: PatientType | "student";
     profileId: string;
 }): Promise<{ exists: boolean; error?: string }> {
-    const baseId = options.profileId.split("-")[0];
+    const variants = getIdVariants(options.profileId);
 
     if (options.profileType === "student") {
-        const existingStudent = await prisma.student.findUnique({
-            where: { student_id: options.profileId },
+        const existingStudent = await prisma.student.findFirst({
+            where: {
+                OR: [
+                    { student_id: variants.exact },
+                    variants.baseIdFilter ? { student_id: variants.baseIdFilter } : undefined,
+                    variants.prefixedVariant
+                        ? { student_id: { startsWith: variants.prefixedVariant } }
+                        : undefined,
+                ].filter(Boolean) as object[],
+            },
         });
+
         if (existingStudent) {
             return {
                 exists: true,
@@ -81,12 +102,15 @@ async function checkExistingProfile(options: {
         const existingEmployee = await prisma.employee.findFirst({
             where: {
                 OR: [
-                    { employee_id: options.profileId },
-                    { employee_id: baseId },
-                    { employee_id: { startsWith: `${baseId}-` } },
-                ],
+                    { employee_id: variants.exact },
+                    variants.baseIdFilter ? { employee_id: variants.baseIdFilter } : undefined,
+                    variants.prefixedVariant
+                        ? { employee_id: { startsWith: variants.prefixedVariant } }
+                        : undefined,
+                ].filter(Boolean) as object[],
             },
         });
+
         if (existingEmployee) {
             return {
                 exists: true,
@@ -98,23 +122,45 @@ async function checkExistingProfile(options: {
     return { exists: false };
 }
 
-async function checkExistingAccountByProfileId(profileId: string) {
-    const baseId = profileId.split("-")[0];
+async function checkExistingAccountByProfileId(profileType: PatientType | "student", profileId: string) {
+    const variants = getIdVariants(profileId);
 
     return prisma.users.findFirst({
         where: {
             OR: [
                 {
-                    employee: {
-                        OR: [
-                            { employee_id: profileId },
-                            { employee_id: baseId },
-                            { employee_id: { startsWith: `${baseId}-` } },
-                        ],
-                    },
+                    employee:
+                        profileType === "employee"
+                            ? {
+                                OR: [
+                                    { employee_id: variants.exact },
+                                    variants.baseIdFilter
+                                        ? { employee_id: variants.baseIdFilter }
+                                        : undefined,
+                                    variants.prefixedVariant
+                                        ? { employee_id: { startsWith: variants.prefixedVariant } }
+                                        : undefined,
+                                ].filter(Boolean) as object[],
+                            }
+                            : undefined,
                 },
-                { student: { student_id: profileId } },
-            ],
+                {
+                    student:
+                        profileType === "student"
+                            ? {
+                                OR: [
+                                    { student_id: variants.exact },
+                                    variants.baseIdFilter
+                                        ? { student_id: variants.baseIdFilter }
+                                        : undefined,
+                                    variants.prefixedVariant
+                                        ? { student_id: { startsWith: variants.prefixedVariant } }
+                                        : undefined,
+                                ].filter(Boolean) as object[],
+                            }
+                            : undefined,
+                },
+            ].filter(Boolean) as object[],
         },
         select: { user_id: true, role: true },
     });
@@ -182,6 +228,7 @@ export async function POST(req: Request) {
         });
 
         const existingAccount = await checkExistingAccountByProfileId(
+            identifiers.profileType,
             identifiers.profileId
         );
         if (existingAccount) {
