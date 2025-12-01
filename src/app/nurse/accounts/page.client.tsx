@@ -165,8 +165,6 @@ export function NurseAccountsPageClient({
 
     const initializing = !(profileLoaded && usersLoaded);
 
-    const statusBadge = profile?.status ?? null;
-
     const completionFields = profile
         ? [
             profile.email,
@@ -751,22 +749,6 @@ export function NurseAccountsPageClient({
         <NurseLayout
             title="Accounts Management"
             description="Create and manage user accounts, update your profile, and control access from one workspace."
-            actions={
-                statusBadge ? (
-                    <span
-                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
-                            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
-                            : "border-rose-200 bg-rose-50/80 text-rose-600"
-                            }`}
-                    >
-                        <span
-                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
-                                }`}
-                        />
-                        Status: {statusBadge}
-                    </span>
-                ) : null
-            }
         >
             <section className="px-4 sm:px-6 py-6 sm:py-8 space-y-10 w-full max-w-6xl mx-auto">
                 {/* My Account */}

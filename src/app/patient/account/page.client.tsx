@@ -280,8 +280,6 @@ export function PatientAccountPageClient({
         ? "Please wait while we retrieve your account data."
         : "Review and update your personal, academic, and emergency contact information to keep the clinic prepared.";
 
-    const statusBadge = profile?.status ?? null;
-
     const completionFields = profile
         ? [
             profile.email,
@@ -507,22 +505,6 @@ export function PatientAccountPageClient({
         <PatientLayout
             title={layoutTitle}
             description={layoutDescription}
-            actions={
-                statusBadge ? (
-                    <span
-                        className={`hidden items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm md:inline-flex ${statusBadge === "Active"
-                            ? "border-emerald-200 bg-emerald-50/80 text-emerald-700"
-                            : "border-rose-200 bg-rose-50/80 text-rose-600"
-                            }`}
-                    >
-                        <span
-                            className={`h-2 w-2 rounded-full ${statusBadge === "Active" ? "bg-emerald-500" : "bg-rose-500"
-                                }`}
-                        />
-                        Status: {statusBadge}
-                    </span>
-                ) : null
-            }
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
                 {hydratingProfile ? (
