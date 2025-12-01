@@ -340,7 +340,7 @@ export default function LoginPageClient() {
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
                             <dt className="text-sm font-medium text-primary">Multi-role support</dt>
                             <dd className="mt-1 text-sm text-slate-600">
-                                Access tailored dashboards for doctors, nurses, and patients.
+                                Access tailored dashboards for doctors, nurses, working scholars, and patients.
                             </dd>
                         </div>
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">

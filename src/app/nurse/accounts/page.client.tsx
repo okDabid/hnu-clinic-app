@@ -660,7 +660,7 @@ export function NurseAccountsPageClient({
         }
     }
 
-    async function handleWorkingScholarToggle(user: NurseAccountUser) {
+    async function handleWorkingScholarToggle(user: NurseAccountUser, workingScholar: boolean) {
         if (user.role !== "PATIENT" || user.patientType !== "student") return;
 
         const user_id = user.accountId;
@@ -671,7 +671,7 @@ export function NurseAccountsPageClient({
             const res = await fetch("/api/nurse/accounts", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id, workingScholar: nextValue }),
+                body: JSON.stringify({ user_id, workingScholar }),
             });
 
             const data = await res.json();
@@ -684,7 +684,7 @@ export function NurseAccountsPageClient({
             setUsers((prev) =>
                 prev.map((u) =>
                     u.accountId === user_id
-                        ? { ...u, isWorkingScholar: Boolean(data.isWorkingScholar ?? nextValue) }
+                        ? { ...u, isWorkingScholar: Boolean(data.isWorkingScholar ?? workingScholar) }
                         : u
                 )
             );
@@ -1613,13 +1613,21 @@ export function NurseAccountsPageClient({
                                                             {user.role === "PATIENT" && user.patientType === "student" ? (
                                                                 <div className="flex flex-col items-center justify-center gap-2">
                                                                     <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-2">
-                                                                        <Switch
-                                                                            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                                                                            checked={user.isWorkingScholar}
-                                                                            onCheckedChange={() => handleWorkingScholarToggle(user)}
+                                                                        <Select
+                                                                            value={user.isWorkingScholar ? "true" : "false"}
+                                                                            onValueChange={(value) =>
+                                                                                handleWorkingScholarToggle(user, value === "true")
+                                                                            }
                                                                             disabled={pendingScholarIds.includes(user.accountId)}
-                                                                            aria-label="Toggle working scholar access"
-                                                                        />
+                                                                        >
+                                                                            <SelectTrigger className="h-8 w-32 rounded-full border-emerald-200 bg-white/80 text-xs font-semibold text-emerald-900 shadow-sm focus:ring-emerald-300">
+                                                                                <SelectValue />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="true">Working scholar</SelectItem>
+                                                                                <SelectItem value="false">Not a scholar</SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
                                                                         <div className="flex flex-col leading-tight">
                                                                             <span className="text-xs font-semibold text-emerald-900">Working scholar access</span>
                                                                             <span className="text-[11px] text-slate-600">Allows scholar portal sign-in</span>
