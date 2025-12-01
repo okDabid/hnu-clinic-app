@@ -86,6 +86,7 @@ import {
 // Types aligned with API
 type RoleFilterValue = "ALL" | "NURSE" | "DOCTOR" | "PATIENT";
 type StatusFilterValue = "ALL" | "Active" | "Inactive";
+type ScholarFilterValue = "ALL" | "SCHOLAR" | "NON_SCHOLAR";
 
 type CreateUserPayload = {
     role: string;
@@ -129,6 +130,7 @@ export function NurseAccountsPageClient({
     const [workingScholar, setWorkingScholar] = useState(false);
     const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("ALL");
     const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
+    const [scholarFilter, setScholarFilter] = useState<ScholarFilterValue>("ALL");
 
     const [profile, setProfile] = useState<NurseAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
@@ -345,7 +347,7 @@ export function NurseAccountsPageClient({
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [roleFilter, statusFilter]);
+    }, [roleFilter, statusFilter, scholarFilter]);
 
     useEffect(() => {
         if (profile?.gender) {
@@ -354,7 +356,7 @@ export function NurseAccountsPageClient({
     }, [profile?.gender]);
 
     const filteredUsers = useMemo(() => {
-        if (roleFilter === "ALL" && statusFilter === "ALL" && !deferredSearch) {
+        if (roleFilter === "ALL" && statusFilter === "ALL" && scholarFilter === "ALL" && !deferredSearch) {
             return users;
         }
 
@@ -372,10 +374,14 @@ export function NurseAccountsPageClient({
                 roleFilter === "PATIENT" && u.patientType === "student" && u.isWorkingScholar;
             const matchesRole = roleFilter === "ALL" || u.role === roleFilter || isScholarFilteredPatient;
             const matchesStatus = statusFilter === "ALL" || u.status === statusFilter;
+            const matchesScholar =
+                scholarFilter === "ALL" ||
+                (scholarFilter === "SCHOLAR" && u.isWorkingScholar) ||
+                (scholarFilter === "NON_SCHOLAR" && !u.isWorkingScholar);
 
-            return matchesQuery && matchesRole && matchesStatus;
+            return matchesQuery && matchesRole && matchesStatus && matchesScholar;
         });
-    }, [deferredSearch, roleFilter, statusFilter, users]);
+    }, [deferredSearch, roleFilter, scholarFilter, statusFilter, users]);
 
     // Create user
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -1523,6 +1529,19 @@ export function NurseAccountsPageClient({
                                         <SelectItem value="ALL">All statuses</SelectItem>
                                         <SelectItem value="Active">Active</SelectItem>
                                         <SelectItem value="Inactive">Inactive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select
+                                    value={scholarFilter}
+                                    onValueChange={(val) => setScholarFilter(val as ScholarFilterValue)}
+                                >
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder="All scholar statuses" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">All scholar statuses</SelectItem>
+                                        <SelectItem value="SCHOLAR">With scholar access</SelectItem>
+                                        <SelectItem value="NON_SCHOLAR">Without scholar access</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
