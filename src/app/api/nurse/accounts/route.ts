@@ -117,7 +117,7 @@ export async function POST(req: Request) {
 
         const { finalUsername } = await prisma.$transaction(async (tx) => {
             const finalUsername =
-                isStudentPatient || isScholar || isEmployeePatient || isEmployeeRole
+                isStudentPatient || isEmployeePatient || isEmployeeRole
                     ? username
                     : await ensureUniqueUsername(tx, username);
 
@@ -173,23 +173,6 @@ export async function POST(req: Request) {
                                         ? "Dentist"
                                         : null
                                 : null,
-                        ...sharedProfileData,
-                    },
-                });
-            }
-
-            if (isScholar) {
-                const department =
-                    payload.department && Object.values(Department).includes(payload.department)
-                        ? (payload.department as Department)
-                        : null;
-                await tx.student.create({
-                    data: {
-                        user_id: newUser.user_id,
-                        student_id: payload.school_id,
-                        department,
-                        program: payload.program ?? null,
-                        year_level: payload.year_level ?? null,
                         ...sharedProfileData,
                     },
                 });
