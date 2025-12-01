@@ -273,7 +273,7 @@ export default function DoctorPatientsPage() {
                                     Filter clinic records and open charts directly for quick bedside coordination.
                                 </p>
                             </div>
-                            <div className="space-y-1 md:w-72">
+                            <div className="space-y-1 md:w-72 w-full">
                                 <Label className="text-sm font-semibold text-primary">Search Records</Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
