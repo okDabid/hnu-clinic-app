@@ -59,34 +59,17 @@ export async function POST(req: Request) {
             username = payload.student_id;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
             username = payload.employee_id;
-        } else if (roleEnum === Role.SCHOLAR) {
-            username = payload.school_id;
         } else {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
 
         const isStudentPatient = roleEnum === Role.PATIENT && payload.patientType === "student";
         const isEmployeePatient = roleEnum === Role.PATIENT && payload.patientType === "employee";
-        const isScholar = roleEnum === Role.SCHOLAR;
         const isEmployeeRole = roleEnum === Role.NURSE || roleEnum === Role.DOCTOR;
 
         if (isStudentPatient) {
             const [existingStudent, existingUser] = await Promise.all([
                 prisma.student.findUnique({ where: { student_id: payload.student_id } }),
-                prisma.users.findUnique({ where: { username } }),
-            ]);
-
-            if (existingStudent || existingUser) {
-                return NextResponse.json(
-                    { error: "Student ID already exists. Please use a unique value." },
-                    { status: 400 }
-                );
-            }
-        }
-
-        if (isScholar) {
-            const [existingStudent, existingUser] = await Promise.all([
-                prisma.student.findUnique({ where: { student_id: payload.school_id } }),
                 prisma.users.findUnique({ where: { username } }),
             ]);
 
@@ -256,8 +239,6 @@ export async function GET() {
                     u.username.replace(/-\d+$/, "");
             } else if (u.role === Role.NURSE || u.role === Role.DOCTOR) {
                 displayId = u.employee?.employee_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
-            } else if (u.role === Role.SCHOLAR) {
-                displayId = u.student?.student_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
             }
 
             const fullName =

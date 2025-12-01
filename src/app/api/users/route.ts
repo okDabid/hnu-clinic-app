@@ -43,7 +43,6 @@ export async function POST(req: Request) {
 
         const employee_id: string | null = body.employee_id || null;
         const student_id: string | null = body.student_id || null;
-        const school_id: string | null = body.school_id || null;
         const patientType: "student" | "employee" | null = body.patientType || null;
 
         // Generate random password
@@ -64,9 +63,6 @@ export async function POST(req: Request) {
                 username = employee_id || `EMP-${Date.now()}`;
                 createdId = username;
             }
-        } else if (role === "SCHOLAR") {
-            username = school_id || `SCH-${Date.now()}`;
-            createdId = username;
         }
 
         // Create User first
@@ -120,19 +116,6 @@ export async function POST(req: Request) {
                 },
             });
             finalId = emp.employee_id;
-        } else if (role === "SCHOLAR") {
-            const stud = await prisma.student.create({
-                data: {
-                    user_id: user.user_id,
-                    student_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
-            });
-            finalId = stud.student_id;
         }
 
         return NextResponse.json(

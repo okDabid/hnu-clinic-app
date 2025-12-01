@@ -266,7 +266,6 @@ enum MedcertStatus {
 enum Role {
   NURSE
   DOCTOR
-  SCHOLAR
   PATIENT
 }
 

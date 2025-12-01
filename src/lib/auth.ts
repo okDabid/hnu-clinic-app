@@ -102,43 +102,6 @@ export const authOptions: NextAuthOptions = {
                     })
                 );
 
-                if (!user && role === Role.SCHOLAR) {
-                    const workingScholar = await withDb(() =>
-                        prisma.student.findFirst({
-                            where: {
-                                is_working_scholar: true,
-                                OR: [
-                                    { student_id: id },
-                                    { student_id: { startsWith: `${id}-` } },
-                                ],
-                            },
-                            select: {
-                                fname: true,
-                                lname: true,
-                                user: {
-                                    select: {
-                                        user_id: true,
-                                        password: true,
-                                        role: true,
-                                        status: true,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    if (workingScholar?.user) {
-                        user = {
-                            user_id: workingScholar.user.user_id,
-                            password: workingScholar.user.password,
-                            role: Role.SCHOLAR,
-                            status: workingScholar.user.status,
-                            student: { fname: workingScholar.fname, lname: workingScholar.lname },
-                            employee: null,
-                        };
-                    }
-                }
-
                 if (!user) throw new Error("No account found with these credentials.");
                 if (user.status === AccountStatus.Inactive)
                     throw new Error("This account is inactive. Please contact the administrator.");
