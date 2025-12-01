@@ -90,6 +90,18 @@ async function checkExistingProfile(options: {
     return { exists: false };
 }
 
+async function checkExistingAccountByProfileId(profileId: string) {
+    return prisma.users.findFirst({
+        where: {
+            OR: [
+                { employee: { employee_id: profileId } },
+                { student: { student_id: profileId } },
+            ],
+        },
+        select: { user_id: true, role: true },
+    });
+}
+
 // --------------------
 // Error Handler Helper
 // --------------------
@@ -150,6 +162,18 @@ export async function POST(req: Request) {
             studentId: student_id,
             schoolId: school_id,
         });
+
+        const existingAccount = await checkExistingAccountByProfileId(
+            identifiers.profileId
+        );
+        if (existingAccount) {
+            return NextResponse.json(
+                {
+                    error: `An account already exists for this ID under the ${existingAccount.role.toLowerCase()} role.`,
+                },
+                { status: 409 }
+            );
+        }
 
         const existingProfile = await checkExistingProfile({
             profileType: identifiers.profileType,
