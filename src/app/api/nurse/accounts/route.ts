@@ -42,15 +42,6 @@ async function ensureUniqueUsername(client: Prisma.TransactionClient, base: stri
     return candidate;
 }
 
-async function ensureUniqueEmployeeId(client: Prisma.TransactionClient, value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await client.employee.findUnique({ where: { employee_id: id } })) {
-        id = `${value}-${n++}`;
-    }
-    return id;
-}
-
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
@@ -75,7 +66,9 @@ export async function POST(req: Request) {
         }
 
         const isStudentPatient = roleEnum === Role.PATIENT && payload.patientType === "student";
+        const isEmployeePatient = roleEnum === Role.PATIENT && payload.patientType === "employee";
         const isScholar = roleEnum === Role.SCHOLAR;
+        const isEmployeeRole = roleEnum === Role.NURSE || roleEnum === Role.DOCTOR;
 
         if (isStudentPatient) {
             const [existingStudent, existingUser] = await Promise.all([
@@ -105,6 +98,20 @@ export async function POST(req: Request) {
             }
         }
 
+        if (isEmployeePatient || isEmployeeRole) {
+            const [existingEmployee, existingUser] = await Promise.all([
+                prisma.employee.findUnique({ where: { employee_id: payload.employee_id } }),
+                prisma.users.findUnique({ where: { username } }),
+            ]);
+
+            if (existingEmployee || existingUser) {
+                return NextResponse.json(
+                    { error: "Employee ID already exists. Please use a unique value." },
+                    { status: 400 }
+                );
+            }
+        }
+
         // Generate password
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
@@ -127,7 +134,9 @@ export async function POST(req: Request) {
 
         const { finalUsername } = await prisma.$transaction(async (tx) => {
             const finalUsername =
-                isStudentPatient || isScholar ? username : await ensureUniqueUsername(tx, username);
+                isStudentPatient || isScholar || isEmployeePatient || isEmployeeRole
+                    ? username
+                    : await ensureUniqueUsername(tx, username);
 
             // Create the user record
             const newUser = await tx.users.create({
@@ -159,22 +168,20 @@ export async function POST(req: Request) {
             }
 
             if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-                const uniqueEmployeeId = await ensureUniqueEmployeeId(tx, payload.employee_id);
                 await tx.employee.create({
                     data: {
                         user_id: newUser.user_id,
-                        employee_id: uniqueEmployeeId,
+                        employee_id: payload.employee_id,
                         ...sharedProfileData,
                     },
                 });
             }
 
             if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-                const uniqueEmployeeId = await ensureUniqueEmployeeId(tx, payload.employee_id);
                 await tx.employee.create({
                     data: {
                         user_id: newUser.user_id,
-                        employee_id: uniqueEmployeeId,
+                        employee_id: payload.employee_id,
                         specialization:
                             roleEnum === Role.DOCTOR
                                 ? payload.specialization === "Physician"
