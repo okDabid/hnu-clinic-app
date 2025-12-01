@@ -61,6 +61,35 @@ function buildIdentifiers(options: {
     return { username: schoolId, profileId: schoolId, profileType: "student" };
 }
 
+async function checkExistingProfile(options: {
+    profileType: PatientType | "student";
+    profileId: string;
+}): Promise<{ exists: boolean; error?: string }> {
+    if (options.profileType === "student") {
+        const existingStudent = await prisma.student.findUnique({
+            where: { student_id: options.profileId },
+        });
+        if (existingStudent) {
+            return {
+                exists: true,
+                error: "Student ID already exists. Please use a unique value.",
+            };
+        }
+    } else if (options.profileType === "employee") {
+        const existingEmployee = await prisma.employee.findUnique({
+            where: { employee_id: options.profileId },
+        });
+        if (existingEmployee) {
+            return {
+                exists: true,
+                error: "Employee ID already exists. Please use a unique value.",
+            };
+        }
+    }
+
+    return { exists: false };
+}
+
 // --------------------
 // Error Handler Helper
 // --------------------
@@ -121,6 +150,14 @@ export async function POST(req: Request) {
             studentId: student_id,
             schoolId: school_id,
         });
+
+        const existingProfile = await checkExistingProfile({
+            profileType: identifiers.profileType,
+            profileId: identifiers.profileId,
+        });
+        if (existingProfile.exists) {
+            return NextResponse.json({ error: existingProfile.error }, { status: 409 });
+        }
 
         const existingUser = await prisma.users.findUnique({
             where: { username: identifiers.username },
