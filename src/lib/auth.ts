@@ -80,7 +80,7 @@ export const authOptions: NextAuthOptions = {
                 const role = roleStr as Role;
 
                 // Find user (indexed query)
-                let user: FoundUser | null = await withDb(() =>
+                const user: FoundUser | null = await withDb(() =>
                     prisma.users.findFirst({
                         where: {
                             role,
