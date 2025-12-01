@@ -100,8 +100,8 @@ export default function LoginPageClient() {
         };
 
         if (role === "doctor" || role === "nurse") payload.id = String(formData.get("employee_id") ?? "");
-        else if (role === "scholar") payload.id = String(formData.get("school_id") ?? "");
         else if (role === "patient") payload.id = String(formData.get("patient_id") ?? "");
+        else if (role === "scholar") payload.id = String(formData.get("scholar_id") ?? "");
 
         try {
             setLoadingRole(role);
@@ -127,11 +127,11 @@ export default function LoginPageClient() {
                 case "DOCTOR":
                     router.push("/doctor");
                     break;
-                case "SCHOLAR":
-                    router.push("/scholar");
-                    break;
                 case "PATIENT":
                     router.push("/patient");
+                    break;
+                case "SCHOLAR":
+                    router.push("/scholar");
                     break;
                 default:
                     router.push("/login");
@@ -340,7 +340,7 @@ export default function LoginPageClient() {
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
                             <dt className="text-sm font-medium text-primary">Multi-role support</dt>
                             <dd className="mt-1 text-sm text-slate-600">
-                                Access tailored dashboards for doctors, nurses, scholars, and patients.
+                                Access tailored dashboards for doctors, nurses, and patients.
                             </dd>
                         </div>
                         <div className="rounded-xl bg-white/80 p-4 shadow-sm backdrop-blur">
@@ -405,7 +405,7 @@ export default function LoginPageClient() {
                                     {renderForm("nurse", "Nurse", "employee_id", "Employee ID")}
                                 </TabsContent>
                                 <TabsContent value="scholar" className="mt-6">
-                                    {renderForm("scholar", "Scholar", "school_id", "Student ID")}
+                                    {renderForm("scholar", "Scholar", "scholar_id", "Student ID")}
                                 </TabsContent>
                                 <TabsContent value="patient" className="mt-6">
                                     {renderForm("patient", "Patient", "patient_id", "Student ID or Employee ID")}

@@ -26,14 +26,15 @@ export async function PUT(req: Request) {
         // 3. Find user
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },
+            include: { student: true },
         });
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // 4. Role guard – only SCHOLAR
-        if (user.role !== Role.SCHOLAR) {
+        // 4. Role guard – only working scholars
+        if (user.role !== Role.PATIENT || !user.student?.is_working_scholar) {
             return NextResponse.json(
                 { error: "Forbidden: Not a scholar" },
                 { status: 403 }

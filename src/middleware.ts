@@ -15,7 +15,7 @@ const PUBLIC_PATH_PREFIXES = new Set([
 const ROLE_GUARDS = [
     { prefix: "/nurse", role: "NURSE" },
     { prefix: "/doctor", role: "DOCTOR" },
-    { prefix: "/scholar", role: "SCHOLAR" },
+    { prefix: "/scholar", role: "PATIENT" },
     { prefix: "/patient", role: "PATIENT" },
 ] as const;
 
@@ -116,8 +116,8 @@ export const config = {
     matcher: [
         "/nurse/:path*",
         "/doctor/:path*",
-        "/scholar/:path*",
         "/patient/:path*",
+        "/scholar/:path*",
         "/api/:path*", // secure API routes too
     ],
 };

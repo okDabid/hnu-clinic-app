@@ -52,7 +52,7 @@ type FoundUser = {
     password: string;
     role: Role;
     status: AccountStatus;
-    student: { fname: string; lname: string } | null;
+    student: { fname: string; lname: string; is_working_scholar?: boolean } | null;
     employee: { fname: string; lname: string } | null;
 };
 
@@ -74,13 +74,18 @@ export const authOptions: NextAuthOptions = {
                 const id = String(credentials.id || "").trim();
                 const password = String(credentials.password || "");
                 const roleStr = String(credentials.role || "").toUpperCase();
-                if (!Object.values(Role).includes(roleStr as Role)) {
+                const isScholarLogin = roleStr === "SCHOLAR";
+                const isKnownRole = Object.values(Role).includes(roleStr as Role);
+
+                if (!isKnownRole && !isScholarLogin) {
                     throw new Error("Invalid role provided.");
                 }
-                const role = roleStr as Role;
+
+                // Scholar logins piggyback on PATIENT accounts with the working scholar flag
+                const role = isScholarLogin ? Role.PATIENT : (roleStr as Role);
 
                 // Find user (indexed query)
-                let user: FoundUser | null = await withDb(() =>
+                const user: FoundUser | null = await withDb(() =>
                     prisma.users.findFirst({
                         where: {
                             role,
@@ -90,54 +95,22 @@ export const authOptions: NextAuthOptions = {
                                 { student: { is: { student_id: id } } },
                                 { employee: { is: { employee_id: id } } },
                             ],
+                            ...(isScholarLogin
+                                ? { student: { is: { is_working_scholar: true } } }
+                                : {}),
                         },
                         select: {
                             user_id: true,
                             password: true,
                             role: true,
                             status: true,
-                            student: { select: { fname: true, lname: true } },
+                            student: {
+                                select: { fname: true, lname: true, is_working_scholar: true },
+                            },
                             employee: { select: { fname: true, lname: true } },
                         },
                     })
                 );
-
-                if (!user && role === Role.SCHOLAR) {
-                    const workingScholar = await withDb(() =>
-                        prisma.student.findFirst({
-                            where: {
-                                is_working_scholar: true,
-                                OR: [
-                                    { student_id: id },
-                                    { student_id: { startsWith: `${id}-` } },
-                                ],
-                            },
-                            select: {
-                                fname: true,
-                                lname: true,
-                                user: {
-                                    select: {
-                                        user_id: true,
-                                        password: true,
-                                        role: true,
-                                        status: true,
-                                    },
-                                },
-                            },
-                        })
-                    );
-
-                    if (workingScholar?.user) {
-                        user = {
-                            user_id: workingScholar.user.user_id,
-                            password: workingScholar.user.password,
-                            role: Role.SCHOLAR,
-                            status: workingScholar.user.status,
-                            student: { fname: workingScholar.fname, lname: workingScholar.lname },
-                            employee: null,
-                        };
-                    }
-                }
 
                 if (!user) throw new Error("No account found with these credentials.");
                 if (user.status === AccountStatus.Inactive)
@@ -146,6 +119,11 @@ export const authOptions: NextAuthOptions = {
                 // Password verification (non-blocking)
                 const ok = await bcrypt.compare(password, user.password);
                 if (!ok) throw new Error("Invalid password.");
+
+                // For scholar logins, enforce working scholar flag
+                if (isScholarLogin && !user.student?.is_working_scholar) {
+                    throw new Error("Working scholar access required.");
+                }
 
                 // Return user payload
                 return {

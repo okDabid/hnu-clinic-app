@@ -42,15 +42,6 @@ async function ensureUniqueUsername(client: Prisma.TransactionClient, base: stri
     return candidate;
 }
 
-async function ensureUniqueEmployeeId(client: Prisma.TransactionClient, value: string): Promise<string> {
-    let id = value;
-    let n = 1;
-    while (await client.employee.findUnique({ where: { employee_id: id } })) {
-        id = `${value}-${n++}`;
-    }
-    return id;
-}
-
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
@@ -68,14 +59,13 @@ export async function POST(req: Request) {
             username = payload.student_id;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
             username = payload.employee_id;
-        } else if (roleEnum === Role.SCHOLAR) {
-            username = payload.school_id;
         } else {
             username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
         }
 
         const isStudentPatient = roleEnum === Role.PATIENT && payload.patientType === "student";
-        const isScholar = roleEnum === Role.SCHOLAR;
+        const isEmployeePatient = roleEnum === Role.PATIENT && payload.patientType === "employee";
+        const isEmployeeRole = roleEnum === Role.NURSE || roleEnum === Role.DOCTOR;
 
         if (isStudentPatient) {
             const [existingStudent, existingUser] = await Promise.all([
@@ -91,15 +81,15 @@ export async function POST(req: Request) {
             }
         }
 
-        if (isScholar) {
-            const [existingStudent, existingUser] = await Promise.all([
-                prisma.student.findUnique({ where: { student_id: payload.school_id } }),
+        if (isEmployeePatient || isEmployeeRole) {
+            const [existingEmployee, existingUser] = await Promise.all([
+                prisma.employee.findUnique({ where: { employee_id: payload.employee_id } }),
                 prisma.users.findUnique({ where: { username } }),
             ]);
 
-            if (existingStudent || existingUser) {
+            if (existingEmployee || existingUser) {
                 return NextResponse.json(
-                    { error: "Student ID already exists. Please use a unique value." },
+                    { error: "Employee ID already exists. Please use a unique value." },
                     { status: 400 }
                 );
             }
@@ -127,7 +117,9 @@ export async function POST(req: Request) {
 
         const { finalUsername } = await prisma.$transaction(async (tx) => {
             const finalUsername =
-                isStudentPatient || isScholar ? username : await ensureUniqueUsername(tx, username);
+                isStudentPatient || isEmployeePatient || isEmployeeRole
+                    ? username
+                    : await ensureUniqueUsername(tx, username);
 
             // Create the user record
             const newUser = await tx.users.create({
@@ -159,22 +151,20 @@ export async function POST(req: Request) {
             }
 
             if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-                const uniqueEmployeeId = await ensureUniqueEmployeeId(tx, payload.employee_id);
                 await tx.employee.create({
                     data: {
                         user_id: newUser.user_id,
-                        employee_id: uniqueEmployeeId,
+                        employee_id: payload.employee_id,
                         ...sharedProfileData,
                     },
                 });
             }
 
             if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-                const uniqueEmployeeId = await ensureUniqueEmployeeId(tx, payload.employee_id);
                 await tx.employee.create({
                     data: {
                         user_id: newUser.user_id,
-                        employee_id: uniqueEmployeeId,
+                        employee_id: payload.employee_id,
                         specialization:
                             roleEnum === Role.DOCTOR
                                 ? payload.specialization === "Physician"
@@ -183,23 +173,6 @@ export async function POST(req: Request) {
                                         ? "Dentist"
                                         : null
                                 : null,
-                        ...sharedProfileData,
-                    },
-                });
-            }
-
-            if (isScholar) {
-                const department =
-                    payload.department && Object.values(Department).includes(payload.department)
-                        ? (payload.department as Department)
-                        : null;
-                await tx.student.create({
-                    data: {
-                        user_id: newUser.user_id,
-                        student_id: payload.school_id,
-                        department,
-                        program: payload.program ?? null,
-                        year_level: payload.year_level ?? null,
                         ...sharedProfileData,
                     },
                 });
@@ -249,8 +222,6 @@ export async function GET() {
                     u.username.replace(/-\d+$/, "");
             } else if (u.role === Role.NURSE || u.role === Role.DOCTOR) {
                 displayId = u.employee?.employee_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
-            } else if (u.role === Role.SCHOLAR) {
-                displayId = u.student?.student_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
             }
 
             const fullName =

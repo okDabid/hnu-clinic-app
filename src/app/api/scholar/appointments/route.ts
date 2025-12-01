@@ -131,8 +131,7 @@ export async function GET(req: Request) {
         });
 
         const hasScholarAccess =
-            account?.role === Role.SCHOLAR ||
-            (account?.role === Role.PATIENT && account.student?.is_working_scholar);
+            account?.role === Role.PATIENT && account.student?.is_working_scholar;
 
         if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
@@ -252,8 +251,7 @@ async function postHandler(req: Request) {
         });
 
         const hasScholarAccess =
-            account?.role === Role.SCHOLAR ||
-            (account?.role === Role.PATIENT && account.student?.is_working_scholar);
+            account?.role === Role.PATIENT && account.student?.is_working_scholar;
 
         if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
@@ -450,8 +448,7 @@ export async function PATCH(req: Request) {
         });
 
         const hasScholarAccess =
-            account?.role === Role.SCHOLAR ||
-            (account?.role === Role.PATIENT && account.student?.is_working_scholar);
+            account?.role === Role.PATIENT && account.student?.is_working_scholar;
 
         if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });

@@ -151,7 +151,7 @@ export async function GET() {
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
         const workingScholar = user.student?.is_working_scholar ?? false;
-        const hasScholarAccess = user.role === Role.SCHOLAR || (user.role === Role.PATIENT && workingScholar);
+        const hasScholarAccess = user.role === Role.PATIENT && workingScholar;
 
         if (!hasScholarAccess) {
             return NextResponse.json({ error: "Not a scholar" }, { status: 403 });
@@ -160,7 +160,7 @@ export async function GET() {
         return NextResponse.json({
             accountId: user.user_id,
             username: user.username,
-            role: user.role === Role.SCHOLAR ? user.role : Role.SCHOLAR,
+            role: user.role,
             status: user.status,
             isWorkingScholar: workingScholar,
             profile: user.student ?? null,
@@ -193,7 +193,7 @@ export async function PUT(req: Request) {
 
         const existingProfile = user.student;
         const isWorkingScholar = existingProfile?.is_working_scholar ?? false;
-        const hasScholarAccess = user.role === Role.SCHOLAR || (user.role === Role.PATIENT && isWorkingScholar);
+        const hasScholarAccess = user.role === Role.PATIENT && isWorkingScholar;
 
         if (!hasScholarAccess)
             return NextResponse.json({ error: "Not a scholar" }, { status: 403 });

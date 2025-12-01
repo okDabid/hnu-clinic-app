@@ -47,8 +47,7 @@ export async function GET() {
         });
 
         const hasScholarAccess =
-            scholar?.role === Role.SCHOLAR ||
-            (scholar?.role === Role.PATIENT && scholar.student?.is_working_scholar);
+            scholar?.role === Role.PATIENT && scholar.student?.is_working_scholar;
 
         if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
@@ -100,8 +99,7 @@ export async function POST(req: Request) {
         });
 
         const hasScholarAccess =
-            scholar?.role === Role.SCHOLAR ||
-            (scholar?.role === Role.PATIENT && scholar.student?.is_working_scholar);
+            scholar?.role === Role.PATIENT && scholar.student?.is_working_scholar;
 
         if (!hasScholarAccess) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });

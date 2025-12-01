@@ -84,7 +84,7 @@ import {
 } from "./types";
 
 // Types aligned with API
-type RoleFilterValue = "ALL" | "SCHOLAR" | "NURSE" | "DOCTOR" | "PATIENT";
+type RoleFilterValue = "ALL" | "NURSE" | "DOCTOR" | "PATIENT";
 type StatusFilterValue = "ALL" | "Active" | "Inactive";
 
 type CreateUserPayload = {
@@ -369,7 +369,7 @@ export function NurseAccountsPageClient({
                 (lowerQuery.includes("scholar") && u.isWorkingScholar);
 
             const isScholarFilteredPatient =
-                roleFilter === "SCHOLAR" && u.role === "PATIENT" && u.patientType === "student" && u.isWorkingScholar;
+                roleFilter === "PATIENT" && u.patientType === "student" && u.isWorkingScholar;
             const matchesRole = roleFilter === "ALL" || u.role === roleFilter || isScholarFilteredPatient;
             const matchesStatus = statusFilter === "ALL" || u.status === statusFilter;
 
@@ -1510,7 +1510,6 @@ export function NurseAccountsPageClient({
                                         <SelectItem value="DOCTOR">Doctor</SelectItem>
                                         <SelectItem value="NURSE">Nurse</SelectItem>
                                         <SelectItem value="PATIENT">Patient</SelectItem>
-                                        <SelectItem value="SCHOLAR">Working Scholar</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <Select
@@ -1626,15 +1625,6 @@ export function NurseAccountsPageClient({
                                                                             <span className="text-[11px] text-slate-600">Allows scholar portal sign-in</span>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                            ) : user.role === "SCHOLAR" ? (
-                                                                <div className="flex justify-center">
-                                                                    <Badge
-                                                                        variant="secondary"
-                                                                        className="rounded-full bg-primary/10 text-primary"
-                                                                    >
-                                                                        Scholar
-                                                                    </Badge>
                                                                 </div>
                                                             ) : (
                                                                 <div className="text-center text-xs text-gray-500">—</div>
