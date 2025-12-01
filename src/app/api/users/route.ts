@@ -2,13 +2,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { Role, AccountStatus } from "@prisma/client";
+import { Role, AccountStatus, Prisma } from "@prisma/client";
 import { generateRandomPassword } from "@/lib/security";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // --------------------
 // Error Handler Helper
 // --------------------
+const errorResponse = (message: string, status = 400) =>
+    NextResponse.json({ error: message }, { status });
+
 function handleError(error: unknown, message = "Server error") {
     if (error instanceof Error) {
         console.error(error.message);
@@ -29,10 +32,7 @@ export async function POST(req: Request) {
 
         const roleInput = String(body.role ?? "").toUpperCase();
         if (!Object.values(Role).includes(roleInput as Role)) {
-            return NextResponse.json(
-                { error: "Invalid role specified" },
-                { status: 400 }
-            );
+            return errorResponse("Invalid role specified");
         }
         const role = roleInput as Role;
         const fname: string = body.fname;
@@ -46,6 +46,26 @@ export async function POST(req: Request) {
         const school_id: string | null = body.school_id || null;
         const patientType: "student" | "employee" | null = body.patientType || null;
 
+        if ((role === Role.NURSE || role === Role.DOCTOR) && !employee_id) {
+            return errorResponse("Employee ID is required for this role.");
+        }
+
+        if (role === Role.PATIENT && !patientType) {
+            return errorResponse("Patient type is required for patient accounts.");
+        }
+
+        if (role === Role.PATIENT && patientType === "student" && !student_id) {
+            return errorResponse("Student ID is required for student patients.");
+        }
+
+        if (role === Role.PATIENT && patientType === "employee" && !employee_id) {
+            return errorResponse("Employee ID is required for employee patients.");
+        }
+
+        if (role === Role.SCHOLAR && !school_id) {
+            return errorResponse("School ID is required for scholars.");
+        }
+
         // Generate random password
         const rawPassword = generateRandomPassword(12);
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
@@ -53,87 +73,98 @@ export async function POST(req: Request) {
         let username: string | null = null;
         let createdId: string | null = null;
 
-        if (role === "NURSE" || role === "DOCTOR") {
-            username = employee_id || `EMP-${Date.now()}`;
-            createdId = username;
-        } else if (role === "PATIENT") {
+        if (role === Role.NURSE || role === Role.DOCTOR) {
+            username = employee_id;
+            createdId = employee_id;
+        } else if (role === Role.PATIENT) {
             if (patientType === "student") {
-                username = student_id || `STUD-${Date.now()}`;
-                createdId = username;
+                username = student_id;
+                createdId = student_id;
+            } else if (patientType === "employee") {
+                username = employee_id;
+                createdId = employee_id;
             } else {
-                username = employee_id || `EMP-${Date.now()}`;
-                createdId = username;
+                return errorResponse("Invalid patient type specified.");
             }
-        } else if (role === "SCHOLAR") {
-            username = school_id || `SCH-${Date.now()}`;
-            createdId = username;
+        } else if (role === Role.SCHOLAR) {
+            username = school_id;
+            createdId = school_id;
         }
 
-        // Create User first
-        const user = await prisma.users.create({
-            data: {
-                username: username!,
-                password: hashedPassword,
-                role, // now typed as Role
-            },
+        if (!username || !createdId) {
+            return errorResponse("Unable to determine account identifier.");
+        }
+
+        // Prevent duplicate identifiers
+        if (
+            (role === Role.NURSE || role === Role.DOCTOR || patientType === "employee") &&
+            employee_id
+        ) {
+            const existingEmployee = await prisma.employee.findUnique({
+                where: { employee_id },
+            });
+
+            if (existingEmployee) {
+                return NextResponse.json(
+                    { error: "Employee ID already exists" },
+                    { status: 409 }
+                );
+            }
+        }
+
+        if ((role === Role.PATIENT && patientType === "student") || role === Role.SCHOLAR) {
+            const existingStudent = await prisma.student.findUnique({
+                where: { student_id: createdId },
+            });
+
+            if (existingStudent) {
+                return NextResponse.json(
+                    { error: "Student ID already exists" },
+                    { status: 409 }
+                );
+            }
+        }
+
+        // Create User and associated profile atomically
+        const { finalId } = await prisma.$transaction(async (tx) => {
+            const user = await tx.users.create({
+                data: {
+                    username,
+                    password: hashedPassword,
+                    role,
+                },
+            });
+
+            if (role === Role.NURSE || role === Role.DOCTOR || patientType === "employee") {
+                const emp = await tx.employee.create({
+                    data: {
+                        user_id: user.user_id,
+                        employee_id: createdId!,
+                        fname,
+                        mname,
+                        lname,
+                        date_of_birth,
+                        gender,
+                    },
+                });
+
+                return { finalId: emp.employee_id };
+            }
+
+            const stud = await tx.student.create({
+                data: {
+                    user_id: user.user_id,
+                    student_id: createdId!,
+                    fname,
+                    mname,
+                    lname,
+                    date_of_birth,
+                    gender,
+                },
+            });
+
+            return { finalId: stud.student_id };
         });
-
-        // Attach profile
-        let finalId = createdId;
-
-        if (role === "NURSE" || role === "DOCTOR") {
-            const emp = await prisma.employee.create({
-                data: {
-                    user_id: user.user_id,
-                    employee_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
-            });
-            finalId = emp.employee_id;
-        } else if (role === "PATIENT" && patientType === "student") {
-            const stud = await prisma.student.create({
-                data: {
-                    user_id: user.user_id,
-                    student_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
-            });
-            finalId = stud.student_id;
-        } else if (role === "PATIENT" && patientType === "employee") {
-            const emp = await prisma.employee.create({
-                data: {
-                    user_id: user.user_id,
-                    employee_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
-            });
-            finalId = emp.employee_id;
-        } else if (role === "SCHOLAR") {
-            const stud = await prisma.student.create({
-                data: {
-                    user_id: user.user_id,
-                    student_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
-            });
-            finalId = stud.student_id;
-        }
 
         return NextResponse.json(
             {
@@ -144,6 +175,16 @@ export async function POST(req: Request) {
             { status: 201 }
         );
     } catch (error: unknown) {
+        if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === "P2002"
+        ) {
+            return NextResponse.json(
+                { error: "Username or ID already exists" },
+                { status: 409 }
+            );
+        }
+
         const authResponse = handleAuthError(error);
         if (authResponse) return authResponse;
         return handleError(error, "Failed to create user");
