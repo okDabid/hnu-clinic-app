@@ -17,10 +17,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { TablePagination } from "@/components/table-pagination";
 
 import ScholarPatientsLoading from "./loading";
 import { PatientsTable } from "./patients-table";
 import { preparePatientRecords, type PreparedPatientRecord } from "./types";
+import { usePagination } from "@/hooks/use-pagination";
 
 const PatientDetailDialog = dynamic(
     () => import("./patient-detail-dialog").then((mod) => mod.PatientDetailDialog),
@@ -107,6 +109,10 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
             return record.searchText.includes(deferredSearch);
         });
     }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
+
+    const { pageItems: paginatedRecords, currentPage, pageSize, setPage } = usePagination(filteredRecords, {
+        resetDeps: [appointmentFilter, deferredSearch, statusFilter, typeFilter],
+    });
 
     const totalPatients = records.length;
     const withAppointments = useMemo(
@@ -240,9 +246,16 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                     </CardHeader>
                     <CardContent className="pt-4">
                         <PatientsTable
-                            records={filteredRecords}
+                            records={paginatedRecords}
                             loading={loading}
                             onSelect={openDetails}
+                        />
+                        <TablePagination
+                            currentPage={currentPage}
+                            totalItems={filteredRecords.length}
+                            pageSize={pageSize}
+                            loading={loading || isRefreshing}
+                            onPageChange={setPage}
                         />
                     </CardContent>
                 </Card>

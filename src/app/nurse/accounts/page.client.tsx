@@ -70,6 +70,8 @@ import type { AccountPasswordResult } from "@/components/account/account-passwor
 import { validateAndNormalizeContacts } from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 import { cn } from "@/lib/utils";
+import { usePagination } from "@/hooks/use-pagination";
+import { TablePagination } from "@/components/table-pagination";
 
 import NurseAccountsLoading from "./loading";
 import {
@@ -138,8 +140,6 @@ export function NurseAccountsPageClient({
 
     const [profileLoaded, setProfileLoaded] = useState(initialProfileLoaded);
     const [usersLoaded, setUsersLoaded] = useState(initialUsersLoaded);
-
-    const [currentPage, setCurrentPage] = useState(1);
 
     const [originalProfile, setOriginalProfile] = useState<NurseAccountProfile | null>(initialProfile);
 
@@ -346,10 +346,6 @@ export function NurseAccountsPageClient({
     }, [role]);
 
     useEffect(() => {
-        setCurrentPage(1);
-    }, [roleFilter, statusFilter, scholarFilter]);
-
-    useEffect(() => {
         if (profile?.gender) {
             setTempGender("");
         }
@@ -382,6 +378,10 @@ export function NurseAccountsPageClient({
             return matchesQuery && matchesRole && matchesStatus && matchesScholar;
         });
     }, [deferredSearch, roleFilter, scholarFilter, statusFilter, users]);
+
+    const { pageItems: paginatedUsers, currentPage, pageSize, setPage } = usePagination(filteredUsers, {
+        resetDeps: [deferredSearch, roleFilter, scholarFilter, statusFilter],
+    });
 
     // Create user
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -1497,7 +1497,7 @@ export function NurseAccountsPageClient({
                                     value={search}
                                     onChange={(e) => {
                                         setSearch(e.target.value);
-                                        setCurrentPage(1);
+                                        setPage(1);
                                     }}
                                     className="pl-8"
                                     disabled={loading || isRefreshingUsers}
@@ -1577,13 +1577,11 @@ export function NurseAccountsPageClient({
                                             </TableCell>
                                         </TableRow>
                                     ) : filteredUsers.length > 0 ? (
-                                        filteredUsers
-                                            .slice((currentPage - 1) * 8, currentPage * 8)
-                                            .map((user) => {
-                                                const isStatusUpdating = pendingStatusIds.includes(user.accountId);
-                                                return (
-                                                    <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-emerald-50/60 transition">
-                                                        <TableCell className="whitespace-nowrap text-xs sm:text-sm font-semibold text-emerald-900">{user.user_id}</TableCell>
+                                        paginatedUsers.map((user) => {
+                                            const isStatusUpdating = pendingStatusIds.includes(user.accountId);
+                                            return (
+                                                <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-emerald-50/60 transition">
+                                                    <TableCell className="whitespace-nowrap text-xs sm:text-sm font-semibold text-emerald-900">{user.user_id}</TableCell>
                                                         <TableCell className="whitespace-nowrap">
                                                             <div className="flex flex-col">
                                                                 <span className="font-medium text-gray-900">{user.role}</span>
@@ -1729,28 +1727,13 @@ export function NurseAccountsPageClient({
                             </Table>
                         </div>
 
-                        {/* Pagination */}
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-4 pt-4 border-t text-sm sm:text-base">
-                            <span className="text-muted-foreground">Page {currentPage} of {Math.ceil(filteredUsers.length / 8) || 1}</span>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    Previous
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredUsers.length / 8)))}
-                                    disabled={currentPage === Math.ceil(filteredUsers.length / 8) || filteredUsers.length === 0}
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </div>
+                        <TablePagination
+                            currentPage={currentPage}
+                            totalItems={filteredUsers.length}
+                            pageSize={pageSize}
+                            loading={isRefreshingUsers}
+                            onPageChange={setPage}
+                        />
                     </CardContent>
                 </Card>
             </section>

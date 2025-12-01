@@ -23,6 +23,7 @@ import DoctorPatientsLoading from "./loading";
 import { PatientDirectoryTable } from "@/app/nurse/records/patient-directory-table";
 import type { RecordDetailsDialogTab } from "@/app/nurse/records/patient-record-dialog";
 import type { PatientRecord } from "@/app/nurse/records/types";
+import { usePagination } from "@/hooks/use-pagination";
 
 const RecordDetailsDialog = dynamic(
     () => import("@/app/nurse/records/patient-record-dialog").then((mod) => mod.RecordDetailsDialog),
@@ -47,8 +48,6 @@ export default function DoctorPatientsPage() {
     const [activeTab, setActiveTab] = useState<RecordDetailsDialogTab>("details");
     const [updatingPatientId, setUpdatingPatientId] = useState<string | null>(null);
     const [savingNotesPatientId, setSavingNotesPatientId] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
     const [isRefreshing, startTransition] = useTransition();
 
     const deferredSearch = useDeferredValue(search.trim().toLowerCase());
@@ -108,21 +107,9 @@ export default function DoctorPatientsPage() {
         });
     }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [appointmentFilter, deferredSearch, statusFilter, typeFilter]);
-
-    useEffect(() => {
-        const maxPage = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
-        if (currentPage > maxPage) {
-            setCurrentPage(maxPage);
-        }
-    }, [currentPage, filteredRecords.length, pageSize]);
-
-    const paginatedRecords = useMemo(() => {
-        const start = (currentPage - 1) * pageSize;
-        return filteredRecords.slice(start, start + pageSize);
-    }, [currentPage, filteredRecords, pageSize]);
+    const { pageItems: paginatedRecords, currentPage, pageSize, setPage } = usePagination(filteredRecords, {
+        resetDeps: [appointmentFilter, deferredSearch, statusFilter, typeFilter],
+    });
 
     const totalPatients = records.length;
     const withAppointments = useMemo(
@@ -348,7 +335,7 @@ export default function DoctorPatientsPage() {
                                 totalRecords={filteredRecords.length}
                                 pageSize={pageSize}
                                 currentPage={currentPage}
-                                onPageChange={setCurrentPage}
+                                onPageChange={setPage}
                             />
                         </CardContent>
                     </Card>

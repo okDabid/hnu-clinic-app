@@ -3,7 +3,6 @@
 import { memo, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
     Table,
     TableBody,
@@ -22,6 +21,7 @@ import {
     formatYearLevel,
     PATIENT_STATUS_CLASSES,
 } from "@/lib/patient-format";
+import { TablePagination } from "@/components/table-pagination";
 
 import type { PatientRecord } from "./types";
 
@@ -129,10 +129,6 @@ function PatientDirectoryTableComponent({
         });
     }, [records, onOpenDetails]);
 
-    const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
-    const startIndex = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-    const endIndex = totalRecords === 0 ? 0 : Math.min(startIndex + records.length - 1, totalRecords);
-
     return (
         <div className="overflow-x-auto">
             <Table className="min-w-full text-sm">
@@ -166,35 +162,13 @@ function PatientDirectoryTableComponent({
                     )}
                 </TableBody>
             </Table>
-
-            <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                <span>
-                    Showing {startIndex}-{endIndex} of {totalRecords}
-                </span>
-                <div className="flex items-center gap-2">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={loading || currentPage <= 1}
-                        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                    >
-                        Previous
-                    </Button>
-                    <span className="text-xs">
-                        Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={loading || currentPage >= totalPages}
-                        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div>
+            <TablePagination
+                currentPage={currentPage}
+                totalItems={totalRecords}
+                pageSize={pageSize}
+                loading={loading}
+                onPageChange={onPageChange}
+            />
         </div>
     );
 }
