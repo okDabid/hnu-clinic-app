@@ -1,55 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-    Loader2,
     ShieldCheck,
     ShieldAlert,
     BarChart3,
     GraduationCap,
-    Phone,
     UserRound,
-    KeyRound,
-    HeartPulse,
-    LifeBuoy,
 } from "lucide-react";
 
 import ScholarLayout from "@/components/scholar/scholar-layout";
-import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
-import { MedicalHistoryField } from "@/components/account/medical-history-field";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
-import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import {
     parseMedicalHistory,
-    serializeMedicalHistory,
     type MedicalHistoryValue,
 } from "@/lib/medical-history";
-import { validateAndNormalizeContacts } from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 import ScholarAccountLoading from "./loading";
@@ -63,10 +33,6 @@ const departmentEnumMap: Record<string, string> = {
     LAW: "College of Law",
 };
 
-const reverseDepartmentEnumMap = Object.fromEntries(
-    Object.entries(departmentEnumMap).map(([key, val]) => [val, key])
-);
-
 const yearLevelEnumMap: Record<string, string> = {
     FIRST_YEAR: "1st Year",
     SECOND_YEAR: "2nd Year",
@@ -74,10 +40,6 @@ const yearLevelEnumMap: Record<string, string> = {
     FOURTH_YEAR: "4th Year",
     FIFTH_YEAR: "5th Year",
 };
-
-const reverseYearLevelEnumMap = Object.fromEntries(
-    Object.entries(yearLevelEnumMap).map(([key, val]) => [val, key])
-);
 
 const bloodTypeEnumMap: Record<string, string> = {
     A_POS: "A+",
@@ -89,64 +51,6 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_POS: "O+",
     O_NEG: "O-",
 };
-
-const reverseBloodTypeEnumMap = Object.fromEntries(
-    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
-);
-
-const departmentOptions = [
-    "College of Education",
-    "College of Arts and Sciences",
-    "College of Business and Accountancy",
-    "College of Engineering and Computer Studies",
-    "College of Health Sciences",
-    "College of Law",
-];
-
-const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-
-const programOptions: Record<string, string[]> = {
-    "College of Education": [
-        "BSED English",
-        "BSED Mathematics",
-        "BSED Filipino",
-        "BSED Science",
-        "BSED Social Studies",
-        "BEED",
-        "PE ED",
-        "TLED HE",
-        "SNED",
-    ],
-    "College of Arts and Sciences": [
-        "BS Psychology",
-        "BS Biology",
-        "BS Criminology",
-        "BA Communication",
-        "BA Political Science",
-    ],
-    "College of Business and Accountancy": [
-        "BS Accountancy",
-        "BS Management Accounting",
-        "BSBA Marketing Management",
-        "BSBA Financial Management",
-        "BSBA Human Resource Management",
-        "BSTM Tourism Management",
-        "BSHM Hospitality Management",
-    ],
-    "College of Engineering and Computer Studies": [
-        "BS Electronics Engineering",
-        "BS Civil Engineering",
-        "BS Information Technology",
-    ],
-    "College of Health Sciences": [
-        "BS Nursing",
-        "BS Medical Technology",
-        "BS Radiologic Technology",
-    ],
-    "College of Law": ["JD Juris Doctor"],
-};
-
-const yearLevelOptions = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
 
 type Profile = {
     user_id: string;
@@ -209,70 +113,10 @@ function normalizeProfile(
     };
 }
 
-function mapUpdatedProfile(profile: Record<string, unknown>): Partial<Profile> {
-    return {
-        fname: String(profile?.fname ?? ""),
-        mname: (profile?.mname as string | null) ?? "",
-        lname: String(profile?.lname ?? ""),
-        date_of_birth: (profile?.date_of_birth as string | undefined) ?? undefined,
-        email: (profile?.email as string | null) ?? "",
-        contactno: (profile?.contactno as string | null) ?? "",
-        address: (profile?.address as string | null) ?? "",
-        bloodtype: profile?.bloodtype
-            ? bloodTypeEnumMap[String(profile.bloodtype)] ?? String(profile.bloodtype)
-            : "",
-        allergies: (profile?.allergies as string | null) ?? "",
-        medicalHistory: parseMedicalHistory(profile?.medical_cond as string | null),
-        department: profile?.department
-            ? departmentEnumMap[String(profile.department)] ?? String(profile.department)
-            : "",
-        program: (profile?.program as string | null) ?? "",
-        year_level: profile?.year_level
-            ? yearLevelEnumMap[String(profile.year_level)] ?? String(profile.year_level)
-            : "",
-        emergencyco_name: (profile?.emergencyco_name as string | null) ?? "",
-        emergencyco_num: (profile?.emergencyco_num as string | null) ?? "",
-        emergencyco_relation: (profile?.emergencyco_relation as string | null) ?? "",
-    };
-}
-
-function formatRequestPayload(profile: Profile) {
-    const { medicalHistory, ...rest } = profile;
-
-    return {
-        ...rest,
-        mname: profile.mname?.trim() ? profile.mname : null,
-        email: profile.email?.trim() ? profile.email : null,
-        contactno: profile.contactno?.trim() ? profile.contactno : null,
-        address: profile.address?.trim() ? profile.address : null,
-        bloodtype: profile.bloodtype ? reverseBloodTypeEnumMap[profile.bloodtype] ?? null : null,
-        allergies: profile.allergies?.trim() ? profile.allergies : null,
-        medical_cond: serializeMedicalHistory(medicalHistory),
-        department: profile.department ? reverseDepartmentEnumMap[profile.department] ?? null : null,
-        program: profile.program?.trim() ? profile.program : null,
-        year_level: profile.year_level ? reverseYearLevelEnumMap[profile.year_level] ?? null : null,
-        emergencyco_name: profile.emergencyco_name?.trim() ? profile.emergencyco_name : null,
-        emergencyco_num: profile.emergencyco_num?.trim() ? profile.emergencyco_num : null,
-        emergencyco_relation: profile.emergencyco_relation?.trim() ? profile.emergencyco_relation : null,
-    };
-}
-
 export default function ScholarAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(true);
     const [initializing, setInitializing] = useState(true);
-    const [updating, setUpdating] = useState(false);
-    const [dobConfirmOpen, setDobConfirmOpen] = useState(false);
-    const [dobSaving, setDobSaving] = useState(false);
-    const [tempDOB, setTempDOB] = useState("");
-    const [tempGender, setTempGender] = useState<"Male" | "Female" | "">("");
-    const [genderConfirmOpen, setGenderConfirmOpen] = useState(false);
-    const [genderSaving, setGenderSaving] = useState(false);
-
-    const availablePrograms = useMemo(
-        () => (profile?.department ? programOptions[profile.department] ?? [] : []),
-        [profile?.department]
-    );
 
     const completionFields = profile
         ? [
@@ -385,235 +229,6 @@ export default function ScholarAccountPage() {
         void loadProfile();
     }, [loadProfile]);
 
-    const handleProfileSubmit = useCallback(
-        async (event: React.FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            if (!profile) return;
-
-            if (!profile.fname.trim() || !profile.lname.trim()) {
-                toast.error("First and last name are required.");
-                return;
-            }
-
-            const contactValidation = validateAndNormalizeContacts({
-                email: profile.email,
-                contactNumber: profile.contactno,
-                emergencyNumber: profile.emergencyco_num,
-            });
-
-            if (!contactValidation.success) {
-                toast.error(contactValidation.error);
-                return;
-            }
-
-            const updatedProfile = {
-                ...profile,
-                email: contactValidation.email,
-                contactno: contactValidation.contactNumber,
-                emergencyco_num: contactValidation.emergencyNumber,
-            };
-
-            setProfile(updatedProfile);
-
-            try {
-                setUpdating(true);
-
-                const payload = formatRequestPayload(updatedProfile);
-                const res = await fetch("/api/scholar/account/me", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ profile: payload }),
-                });
-                const data = await res.json();
-
-                if (!res.ok) {
-                    if (handleRateLimitError(res, data, "Too many profile updates. Please wait before trying again.")) {
-                        return;
-                    }
-                    throw new Error(data.error ?? "Failed to update profile");
-                }
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                toast.success("Scholar profile updated successfully!");
-                if (data.verificationEmailSent) {
-                    const targetEmail = data.profile?.email?.trim();
-                    toast.success(
-                        targetEmail
-                            ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
-                            : "A verification email was sent. Please check your inbox to confirm the address."
-                    );
-                }
-                if (data.profile) {
-                    setProfile((prev) => (prev ? { ...prev, ...mapUpdatedProfile(data.profile) } : prev));
-                }
-            } catch (error) {
-                console.error(error);
-                toast.error(error instanceof Error ? error.message : "Failed to update profile");
-            } finally {
-                setUpdating(false);
-            }
-        },
-        [profile]
-    );
-
-    const handlePasswordSubmit = useCallback(async ({
-        oldPassword,
-        newPassword,
-    }: {
-        oldPassword: string;
-        newPassword: string;
-    }): Promise<AccountPasswordResult> => {
-        try {
-            const res = await fetch("/api/scholar/account/password", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ oldPassword, newPassword }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok || data.error) {
-                return { error: data.error ?? "Failed to update password" };
-            }
-
-            return { success: data.message ?? "Password updated successfully!" };
-        } catch (error) {
-            console.error(error);
-            return { error: "Failed to update password. Please try again." };
-        }
-    }, []);
-
-    const confirmDateOfBirth = useCallback(async () => {
-        if (!profile || !tempDOB) return;
-
-        const contactValidation = validateAndNormalizeContacts({
-            email: profile.email,
-            contactNumber: profile.contactno,
-            emergencyNumber: profile.emergencyco_num,
-        });
-
-        if (!contactValidation.success) {
-            toast.error(contactValidation.error);
-            return;
-        }
-
-        const updatedProfile = {
-            ...profile,
-            email: contactValidation.email,
-            contactno: contactValidation.contactNumber,
-            emergencyco_num: contactValidation.emergencyNumber,
-            date_of_birth: tempDOB,
-        };
-
-        setProfile(updatedProfile);
-
-        try {
-            setDobSaving(true);
-            const payload = formatRequestPayload(updatedProfile);
-            const res = await fetch("/api/scholar/account/me", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ profile: payload }),
-            });
-            const data = await res.json();
-
-            if (!res.ok) {
-                if (handleRateLimitError(res, data, "Too many profile updates. Please wait before trying again.")) {
-                    return;
-                }
-                throw new Error(data.error ?? "Failed to save date of birth");
-            }
-
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            toast.success("Date of birth saved!");
-            if (data.verificationEmailSent) {
-                const targetEmail = data.profile?.email?.trim();
-                toast.success(
-                    targetEmail
-                        ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
-                        : "A verification email was sent. Please check your inbox to confirm the address."
-                );
-            }
-            setDobConfirmOpen(false);
-            setTempDOB("");
-            await loadProfile();
-        } catch (error) {
-            console.error(error);
-            toast.error(error instanceof Error ? error.message : "Failed to save date of birth");
-        } finally {
-            setDobSaving(false);
-        }
-    }, [loadProfile, profile, tempDOB]);
-
-    const confirmGender = useCallback(async () => {
-        if (!profile || !tempGender) return;
-
-        const contactValidation = validateAndNormalizeContacts({
-            email: profile.email,
-            contactNumber: profile.contactno,
-            emergencyNumber: profile.emergencyco_num,
-        });
-
-        if (!contactValidation.success) {
-            toast.error(contactValidation.error);
-            return;
-        }
-
-        const updatedProfile = {
-            ...profile,
-            email: contactValidation.email,
-            contactno: contactValidation.contactNumber,
-            emergencyco_num: contactValidation.emergencyNumber,
-            gender: tempGender,
-        };
-
-        setProfile(updatedProfile);
-
-        try {
-            setGenderSaving(true);
-            const payload = formatRequestPayload(updatedProfile);
-            const res = await fetch("/api/scholar/account/me", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ profile: payload }),
-            });
-            const data = await res.json();
-
-            if (!res.ok) {
-                if (handleRateLimitError(res, data, "Too many profile updates. Please wait before trying again.")) {
-                    return;
-                }
-                throw new Error(data.error ?? "Failed to save gender");
-            }
-
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            toast.success("Gender saved!");
-            if (data.verificationEmailSent) {
-                const targetEmail = data.profile?.email?.trim();
-                toast.success(
-                    targetEmail
-                        ? `A verification email was sent to ${targetEmail}. Please confirm it to receive clinic notifications.`
-                        : "A verification email was sent. Please check your inbox to confirm the address."
-                );
-            }
-            await loadProfile();
-        } catch (error) {
-            console.error(error);
-            toast.error(error instanceof Error ? error.message : "Failed to save gender");
-        } finally {
-            setGenderSaving(false);
-            setGenderConfirmOpen(false);
-        }
-    }, [loadProfile, profile, tempGender]);
 
     if (initializing) {
         return <ScholarAccountLoading />;
