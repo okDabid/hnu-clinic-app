@@ -6,6 +6,126 @@ import { Role, AccountStatus } from "@prisma/client";
 import { generateRandomPassword } from "@/lib/security";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 
+type ValidGender = "Male" | "Female";
+type PatientType = "student" | "employee";
+
+const normalizeRole = (roleInput: unknown): Role | null => {
+    const normalized = String(roleInput ?? "").toUpperCase();
+    return Object.values(Role).includes(normalized as Role)
+        ? (normalized as Role)
+        : null;
+};
+
+const normalizeGender = (value: unknown): ValidGender | null => {
+    if (value === "Male" || value === "Female") return value;
+    return null;
+};
+
+const parseDate = (value: unknown): Date | null => {
+    const date = new Date(String(value ?? ""));
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const normalizePatientType = (value: unknown): PatientType | null => {
+    if (value === "student" || value === "employee") return value;
+    return null;
+};
+
+const normalizeId = (value: unknown) => {
+    const trimmed = String(value ?? "").trim();
+    return trimmed || null;
+};
+
+const getBaseId = (identifier: string) => identifier.split("-")[0] ?? identifier;
+
+function buildIdentifiers(options: {
+    role: Role;
+    patientType: PatientType | null;
+    employeeId: string | null;
+    studentId: string | null;
+    schoolId: string | null;
+}): { username: string; profileId: string; profileType: PatientType | "student" } {
+    if (options.role === Role.NURSE || options.role === Role.DOCTOR) {
+        const employeeId = options.employeeId ? getBaseId(options.employeeId) : null;
+        const finalEmployeeId = employeeId ?? `EMP-${Date.now()}`;
+        return { username: finalEmployeeId, profileId: finalEmployeeId, profileType: "employee" };
+    }
+
+    if (options.role === Role.PATIENT) {
+        const profileType = options.patientType ?? "employee";
+        const profileId = profileType === "student"
+            ? options.studentId
+                ? getBaseId(options.studentId)
+                : null
+            : options.employeeId
+                ? getBaseId(options.employeeId)
+                : null;
+        const finalProfileId = profileId ?? (profileType === "student" ? `STUD-${Date.now()}` : `EMP-${Date.now()}`);
+        return { username: finalProfileId, profileId: finalProfileId, profileType };
+    }
+
+    const schoolId = options.schoolId ? getBaseId(options.schoolId) : null;
+    const finalSchoolId = schoolId ?? `SCH-${Date.now()}`;
+    return { username: finalSchoolId, profileId: finalSchoolId, profileType: "student" };
+}
+
+async function checkExistingProfile(options: {
+    profileType: PatientType | "student";
+    profileId: string;
+}): Promise<{ exists: boolean; error?: string }> {
+    const baseId = getBaseId(options.profileId);
+
+    if (options.profileType === "student") {
+        const existingStudent = await prisma.student.findFirst({
+            where: { student_id: baseId },
+        });
+
+        if (existingStudent) {
+            return {
+                exists: true,
+                error: "Student ID already exists. Please use a unique value.",
+            };
+        }
+    } else if (options.profileType === "employee") {
+        const existingEmployee = await prisma.employee.findFirst({
+            where: { employee_id: baseId },
+        });
+
+        if (existingEmployee) {
+            return {
+                exists: true,
+                error: "Employee ID already exists. Please use a unique value.",
+            };
+        }
+    }
+
+    return { exists: false };
+}
+
+async function checkExistingAccountByProfileId(profileType: PatientType | "student", profileId: string) {
+    const baseId = getBaseId(profileId);
+
+    return prisma.users.findFirst({
+        where: {
+            OR: [
+                {
+                    employee:
+                        profileType === "employee"
+                            ? { employee_id: baseId }
+                            : undefined,
+                },
+                {
+                    student:
+                        profileType === "student"
+                            ? { student_id: baseId }
+                            : undefined,
+                },
+            ].filter(Boolean) as object[],
+        },
+        select: { user_id: true, role: true },
+    });
+}
+
 // --------------------
 // Error Handler Helper
 // --------------------
@@ -26,111 +146,108 @@ export async function POST(req: Request) {
         await requireRole([Role.NURSE]);
 
         const body = await req.json();
+        const role = normalizeRole(body.role);
+        if (!role) {
+            return NextResponse.json({ error: "Invalid role specified" }, { status: 400 });
+        }
 
-        const roleInput = String(body.role ?? "").toUpperCase();
-        if (!Object.values(Role).includes(roleInput as Role)) {
+        const fname = normalizeId(body.fname);
+        const mname = normalizeId(body.mname);
+        const lname = normalizeId(body.lname);
+        const date_of_birth = parseDate(body.date_of_birth);
+        const gender = normalizeGender(body.gender);
+
+        if (!fname || !lname) {
             return NextResponse.json(
-                { error: "Invalid role specified" },
+                { error: "First and last name are required" },
                 { status: 400 }
             );
         }
-        const role = roleInput as Role;
-        const fname: string = body.fname;
-        const mname: string | null = body.mname || null;
-        const lname: string = body.lname;
-        const date_of_birth: Date = new Date(body.date_of_birth);
-        const gender: "Male" | "Female" = body.gender;
+        if (!date_of_birth) {
+            return NextResponse.json({ error: "Invalid date of birth" }, { status: 400 });
+        }
+        if (!gender) {
+            return NextResponse.json({ error: "Invalid gender" }, { status: 400 });
+        }
 
-        const employee_id: string | null = body.employee_id || null;
-        const student_id: string | null = body.student_id || null;
-        const school_id: string | null = body.school_id || null;
-        const patientType: "student" | "employee" | null = body.patientType || null;
+        const employee_id = normalizeId(body.employee_id);
+        const student_id = normalizeId(body.student_id);
+        const school_id = normalizeId(body.school_id);
+        const patientType = normalizePatientType(body.patientType);
 
-        // Generate random password
+        if (role === Role.PATIENT && !patientType) {
+            return NextResponse.json({ error: "Invalid patient type" }, { status: 400 });
+        }
+
+        const identifiers = buildIdentifiers({
+            role,
+            patientType,
+            employeeId: employee_id,
+            studentId: student_id,
+            schoolId: school_id,
+        });
+
+        const existingAccount = await checkExistingAccountByProfileId(
+            identifiers.profileType,
+            identifiers.profileId
+        );
+        if (existingAccount) {
+            return NextResponse.json(
+                {
+                    error: `An account already exists for this ID under the ${existingAccount.role.toLowerCase()} role.`,
+                },
+                { status: 409 }
+            );
+        }
+
+        const existingProfile = await checkExistingProfile({
+            profileType: identifiers.profileType,
+            profileId: identifiers.profileId,
+        });
+        if (existingProfile.exists) {
+            return NextResponse.json({ error: existingProfile.error }, { status: 409 });
+        }
+
+        const existingUser = await prisma.users.findUnique({
+            where: { username: identifiers.username },
+        });
+        if (existingUser) {
+            return NextResponse.json(
+                { error: "A user with that username already exists" },
+                { status: 409 }
+            );
+        }
+
         const rawPassword = generateRandomPassword(12);
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
-        let username: string | null = null;
-        let createdId: string | null = null;
-
-        if (role === "NURSE" || role === "DOCTOR") {
-            username = employee_id || `EMP-${Date.now()}`;
-            createdId = username;
-        } else if (role === "PATIENT") {
-            if (patientType === "student") {
-                username = student_id || `STUD-${Date.now()}`;
-                createdId = username;
-            } else {
-                username = employee_id || `EMP-${Date.now()}`;
-                createdId = username;
-            }
-        } else if (role === "SCHOLAR") {
-            username = school_id || `SCH-${Date.now()}`;
-            createdId = username;
-        }
-
-        // Create User first
         const user = await prisma.users.create({
             data: {
-                username: username!,
+                username: identifiers.username,
                 password: hashedPassword,
-                role, // now typed as Role
+                role,
             },
         });
 
-        // Attach profile
-        let finalId = createdId;
+        const profileData = {
+            user_id: user.user_id,
+            fname,
+            mname,
+            lname,
+            date_of_birth,
+            gender,
+        };
 
-        if (role === "NURSE" || role === "DOCTOR") {
+        let finalId: string | null = identifiers.profileId;
+
+        if (role === Role.NURSE || role === Role.DOCTOR || identifiers.profileType === "employee") {
             const emp = await prisma.employee.create({
-                data: {
-                    user_id: user.user_id,
-                    employee_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
+                data: { ...profileData, employee_id: identifiers.profileId },
             });
             finalId = emp.employee_id;
-        } else if (role === "PATIENT" && patientType === "student") {
+        } else {
             const stud = await prisma.student.create({
-                data: {
-                    user_id: user.user_id,
-                    student_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
-            });
-            finalId = stud.student_id;
-        } else if (role === "PATIENT" && patientType === "employee") {
-            const emp = await prisma.employee.create({
-                data: {
-                    user_id: user.user_id,
-                    employee_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
-            });
-            finalId = emp.employee_id;
-        } else if (role === "SCHOLAR") {
-            const stud = await prisma.student.create({
-                data: {
-                    user_id: user.user_id,
-                    student_id: createdId!,
-                    fname,
-                    mname,
-                    lname,
-                    date_of_birth,
-                    gender,
-                },
+                data: { ...profileData, student_id: identifiers.profileId },
             });
             finalId = stud.student_id;
         }
