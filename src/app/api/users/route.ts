@@ -122,6 +122,16 @@ export async function POST(req: Request) {
             schoolId: school_id,
         });
 
+        const existingUser = await prisma.users.findUnique({
+            where: { username: identifiers.username },
+        });
+        if (existingUser) {
+            return NextResponse.json(
+                { error: "A user with that username already exists" },
+                { status: 409 }
+            );
+        }
+
         const rawPassword = generateRandomPassword(12);
         const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
