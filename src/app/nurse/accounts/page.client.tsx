@@ -1512,7 +1512,7 @@ export function NurseAccountsPageClient({
                                         <SelectValue placeholder="All roles" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="ALL">All roles</SelectItem>
+                                        <SelectItem value="ALL">All Roles</SelectItem>
                                         <SelectItem value="DOCTOR">Doctor</SelectItem>
                                         <SelectItem value="NURSE">Nurse</SelectItem>
                                         <SelectItem value="PATIENT">Patient</SelectItem>
@@ -1526,7 +1526,7 @@ export function NurseAccountsPageClient({
                                         <SelectValue placeholder="All statuses" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="ALL">All statuses</SelectItem>
+                                        <SelectItem value="ALL">All Statuses</SelectItem>
                                         <SelectItem value="Active">Active</SelectItem>
                                         <SelectItem value="Inactive">Inactive</SelectItem>
                                     </SelectContent>
@@ -1539,7 +1539,7 @@ export function NurseAccountsPageClient({
                                         <SelectValue placeholder="All scholar statuses" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="ALL">All scholar statuses</SelectItem>
+                                        <SelectItem value="ALL">Scholar Status</SelectItem>
                                         <SelectItem value="SCHOLAR">With scholar access</SelectItem>
                                         <SelectItem value="NON_SCHOLAR">Without scholar access</SelectItem>
                                     </SelectContent>
@@ -1582,140 +1582,140 @@ export function NurseAccountsPageClient({
                                             return (
                                                 <TableRow key={`${user.accountId}-${user.role}`} className="hover:bg-emerald-50/60 transition">
                                                     <TableCell className="whitespace-nowrap text-xs sm:text-sm font-semibold text-emerald-900">{user.user_id}</TableCell>
-                                                        <TableCell className="whitespace-nowrap">
-                                                            <div className="flex flex-col">
-                                                                <span className="font-medium text-gray-900">{user.role}</span>
-                                                                {user.role === "DOCTOR" && (
-                                                                    user.specialization ? (
-                                                                        <span className="text-xs font-medium text-primary">
-                                                                            {user.specialization}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-xs italic text-gray-500">
-                                                                            No specialization
-                                                                        </span>
-                                                                    )
-                                                                )}
-                                                                {user.role === "PATIENT" && user.patientType ? (
-                                                                    <span
-                                                                        className={cn(
-                                                                            "text-xs font-medium",
-                                                                            user.patientType === "student"
-                                                                                ? "text-primary"
-                                                                                : "text-primary"
-                                                                        )}
-                                                                    >
-                                                                        {user.patientType === "student" ? "Student" : "Employee"}
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-gray-900">{user.role}</span>
+                                                            {user.role === "DOCTOR" && (
+                                                                user.specialization ? (
+                                                                    <span className="text-xs font-medium text-primary">
+                                                                        {user.specialization}
                                                                     </span>
-                                                                ) : null}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="font-semibold text-gray-900">{user.fullName}</span>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className={`px-3 py-1 ${user.status === "Active"
-                                                                    ? "bg-primary/15 text-primary border-primary/30"
-                                                                    : "bg-red-100 text-red-700 border-red-200"
-                                                                    }`}
-                                                            >
-                                                                {user.status}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {user.role === "PATIENT" && user.patientType === "student" ? (
-                                                                <div className="flex flex-col items-center justify-center gap-2">
-                                                                    <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-2">
-                                                                        <Switch
-                                                                            className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-                                                                            checked={user.isWorkingScholar}
-                                                                            onCheckedChange={() => handleWorkingScholarToggle(user)}
-                                                                            disabled={pendingScholarIds.includes(user.accountId)}
-                                                                            aria-label="Toggle working scholar access"
-                                                                        />
-                                                                        <div className="flex flex-col leading-tight">
-                                                                            <span className="text-xs font-semibold text-emerald-900">Working scholar access</span>
-                                                                            <span className="text-[11px] text-slate-600">Allows scholar portal sign-in</span>
-                                                                        </div>
+                                                                ) : (
+                                                                    <span className="text-xs italic text-gray-500">
+                                                                        No specialization
+                                                                    </span>
+                                                                )
+                                                            )}
+                                                            {user.role === "PATIENT" && user.patientType ? (
+                                                                <span
+                                                                    className={cn(
+                                                                        "text-xs font-medium",
+                                                                        user.patientType === "student"
+                                                                            ? "text-primary"
+                                                                            : "text-primary"
+                                                                    )}
+                                                                >
+                                                                    {user.patientType === "student" ? "Student" : "Employee"}
+                                                                </span>
+                                                            ) : null}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="font-semibold text-gray-900">{user.fullName}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={`px-3 py-1 ${user.status === "Active"
+                                                                ? "bg-primary/15 text-primary border-primary/30"
+                                                                : "bg-red-100 text-red-700 border-red-200"
+                                                                }`}
+                                                        >
+                                                            {user.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {user.role === "PATIENT" && user.patientType === "student" ? (
+                                                            <div className="flex flex-col items-center justify-center gap-2">
+                                                                <div className="flex items-center gap-3 rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-2">
+                                                                    <Switch
+                                                                        className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                                                                        checked={user.isWorkingScholar}
+                                                                        onCheckedChange={() => handleWorkingScholarToggle(user)}
+                                                                        disabled={pendingScholarIds.includes(user.accountId)}
+                                                                        aria-label="Toggle working scholar access"
+                                                                    />
+                                                                    <div className="flex flex-col leading-tight">
+                                                                        <span className="text-xs font-semibold text-emerald-900">Working scholar access</span>
+                                                                        <span className="text-[11px] text-slate-600">Allows scholar portal sign-in</span>
                                                                     </div>
                                                                 </div>
-                                                            ) : (
-                                                                <div className="text-center text-xs text-gray-500">—</div>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="outline"
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-center text-xs text-gray-500">—</div>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className={cn(
+                                                                        "gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors",
+                                                                        user.status === "Active"
+                                                                            ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                                                            : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                                                                    )}
+                                                                    disabled={isStatusUpdating}
+                                                                >
+                                                                    {isStatusUpdating ? (
+                                                                        <>
+                                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                                            Updating...
+                                                                        </>
+                                                                    ) : user.status === "Active" ? (
+                                                                        <>
+                                                                            <Ban className="h-4 w-4" /> Deactivate
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <CheckCircle2 className="h-4 w-4" /> Activate
+                                                                        </>
+                                                                    )}
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>
+                                                                        {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        {user.status === "Active"
+                                                                            ? "The account will be signed out and unable to access the system until reactivated."
+                                                                            : "The account will regain access to the clinic system."}
+                                                                    </AlertDialogDescription>
+                                                                    {user.role === "DOCTOR" && (
+                                                                        <p className="mt-3 rounded-lg bg-emerald-50/80 p-3 text-sm font-medium text-emerald-700">
+                                                                            {user.status === "Active"
+                                                                                ? "Deactivated doctors will no longer appear as options when patients book appointments."
+                                                                                : "Reactivated doctors will once again be available for patient appointment scheduling."}
+                                                                        </p>
+                                                                    )}
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                    <AlertDialogAction
                                                                         className={cn(
-                                                                            "gap-2 rounded-full border-2 px-4 text-sm font-semibold transition-colors",
+                                                                            "text-white focus:outline-none focus:ring-2 focus:ring-offset-2",
                                                                             user.status === "Active"
-                                                                                ? "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-                                                                                : "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                                                                                ? "bg-red-600 hover:bg-red-700 focus:ring-red-200"
+                                                                                : "bg-primary hover:bg-primary/90 focus:ring-primary"
                                                                         )}
                                                                         disabled={isStatusUpdating}
+                                                                        onClick={() => handleToggle(user.accountId, user.status)}
                                                                     >
-                                                                        {isStatusUpdating ? (
-                                                                            <>
-                                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                                                Updating...
-                                                                            </>
-                                                                        ) : user.status === "Active" ? (
-                                                                            <>
-                                                                                <Ban className="h-4 w-4" /> Deactivate
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <CheckCircle2 className="h-4 w-4" /> Activate
-                                                                            </>
-                                                                        )}
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>
-                                                                            {user.status === "Active" ? "Deactivate user?" : "Activate user?"}
-                                                                        </AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            {user.status === "Active"
-                                                                                ? "The account will be signed out and unable to access the system until reactivated."
-                                                                                : "The account will regain access to the clinic system."}
-                                                                        </AlertDialogDescription>
-                                                                        {user.role === "DOCTOR" && (
-                                                                            <p className="mt-3 rounded-lg bg-emerald-50/80 p-3 text-sm font-medium text-emerald-700">
-                                                                                {user.status === "Active"
-                                                                                    ? "Deactivated doctors will no longer appear as options when patients book appointments."
-                                                                                    : "Reactivated doctors will once again be available for patient appointment scheduling."}
-                                                                            </p>
-                                                                        )}
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                        <AlertDialogAction
-                                                                            className={cn(
-                                                                                "text-white focus:outline-none focus:ring-2 focus:ring-offset-2",
-                                                                                user.status === "Active"
-                                                                                    ? "bg-red-600 hover:bg-red-700 focus:ring-red-200"
-                                                                                    : "bg-primary hover:bg-primary/90 focus:ring-primary"
-                                                                            )}
-                                                                            disabled={isStatusUpdating}
-                                                                            onClick={() => handleToggle(user.accountId, user.status)}
-                                                                        >
-                                                                            {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                );
-                                            })
+                                                                        {user.status === "Active" ? "Confirm Deactivate" : "Confirm Activate"}
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })
                                     ) : (
                                         <TableRow>
                                             <TableCell colSpan={6} className="text-center text-gray-500 py-6">
