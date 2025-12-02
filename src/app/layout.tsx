@@ -1,3 +1,4 @@
+// @ts-ignore
 import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
