@@ -42,13 +42,10 @@ export default function PrivacyPage() {
                                         <span className="font-medium text-green-700">Account request details:</span> when you ask for clinic portal access through the homepage contact form, you provide your Holy Name University student or employee status, school or employee ID, date of birth, gender, and a campus email address where the nurse can send the credentials.
                                     </li>
                                     <li>
-                                        <span className="font-medium text-green-700">Account and health records:</span> clinic staff may add or update demographic profiles, appointment bookings, consultation notes, prescriptions, medical certificates, and other campus clinic documentation tied to your profile.
+                                        <span className="font-medium text-green-700">Account and health records:</span> clinic staff may add or update demographic profiles, appointment bookings, consultation notes, medical certificates, and other campus clinic documentation tied to your profile.
                                     </li>
                                     <li>
                                         <span className="font-medium text-green-700">Support and inquiry messages:</span> inquiries submitted through the contact form or support email include your name, email, and message so the clinic can reply. These details are emailed to the clinic inbox and are not stored in the app database.
-                                    </li>
-                                    <li>
-                                        <span className="font-medium text-green-700">System logs:</span> the platform records basic audit events (such as appointment updates and notification deliveries) to help administrators troubleshoot issues.
                                     </li>
                                 </ul>
                             </section>
@@ -76,7 +73,7 @@ export default function PrivacyPage() {
                             <section className="space-y-3">
                                 <h2 className="text-xl font-semibold text-green-700">Sharing and third parties</h2>
                                 <p>
-                                    We do not sell your information or share it with advertisers. Email notifications are sent through the clinic’s managed Gmail account and are limited to transactional messages about appointments, records, and password resets.
+                                    We do not sell your information or share it with advertisers. Email notifications are sent through the clinic’s managed Gmail account and are limited to transactional messages about appointments and password resets.
                                 </p>
                                 <p>
                                     The application is hosted on Vercel, and supporting services such as database hosting are administered by the HNU Clinic capstone team. No marketing or analytics platforms ingest your health information.
@@ -87,9 +84,6 @@ export default function PrivacyPage() {
                                 <h2 className="text-xl font-semibold text-green-700">Data retention and control</h2>
                                 <p>
                                     Health records managed inside the application follow Holy Name University clinic retention guidelines. You may request corrections or deactivation of your portal access by contacting the clinic support desk at <Link href="mailto:hnucliniccapstone@gmail.com" className="font-medium text-green-700 underline underline-offset-2">hnucliniccapstone@gmail.com</Link>.
-                                </p>
-                                <p>
-                                    To request removal of your account or associated information, contact the clinic support desk so the nursing staff can review and process the request.
                                 </p>
                             </section>
 
