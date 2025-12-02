@@ -11,11 +11,6 @@ const navigation = [
     { href: "/#contact", label: "Contact" },
 ];
 
-export const metadata = {
-    title: "Privacy Policy | HNU Clinic",
-    description: "Learn how the HNU Clinic app collects, uses, and protects information across sign-in and care workflows.",
-};
-
 export default function PrivacyPage() {
     return (
         <div className="flex min-h-screen flex-col bg-white">
