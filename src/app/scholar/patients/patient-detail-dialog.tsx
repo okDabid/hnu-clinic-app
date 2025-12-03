@@ -13,6 +13,7 @@ import {
     formatYearLevel,
 } from "@/lib/patient-format";
 import { formatMedicalHistory, parseMedicalHistory } from "@/lib/medical-history";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -28,6 +29,11 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
     if (!record) return null;
 
     const medicalHistoryText = formatMedicalHistory(parseMedicalHistory(record.medical_cond));
+    const medcert = record.latestAppointment?.consultation?.medcert;
+    const medcertStatusClasses =
+        medcert?.status === "Valid"
+            ? "border-emerald-200 bg-primary/10 text-primary"
+            : "border-slate-200 bg-slate-100 text-slate-600";
 
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => (nextOpen ? undefined : onClose())}>
@@ -166,6 +172,28 @@ function PatientDetailDialogComponent({ open, record, onClose }: PatientDetailDi
                                             "No notes provided"}
                                     </p>
                                 </div>
+                                {medcert ? (
+                                    <div className="sm:col-span-2">
+                                        <div className="flex flex-wrap items-center gap-2 text-primary">
+                                            <p className="text-xs uppercase tracking-wide">Medical certificate</p>
+                                            <Badge
+                                                variant="outline"
+                                                className={`rounded-full px-2 py-1 text-[11px] ${medcertStatusClasses}`}
+                                            >
+                                                {medcert.status}
+                                            </Badge>
+                                        </div>
+                                        <div className="mt-1 space-y-1 text-muted-foreground">
+                                            <p>
+                                                <strong>Issued on:</strong> {formatDateOnly(medcert.issueDate)}
+                                            </p>
+                                            <p>
+                                                <strong>Valid until:</strong> {formatDateOnly(medcert.validUntil)}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">Certificate ID: {medcert.id}</p>
+                                        </div>
+                                    </div>
+                                ) : null}
                             </div>
                         ) : (
                             <p className="text-muted-foreground">No appointment history attached yet.</p>
