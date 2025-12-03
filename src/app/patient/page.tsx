@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, CalendarDays, Stethoscope, User } from "lucide-react";
+import { Bell, CalendarDays, FileText, Stethoscope, User } from "lucide-react";
 
 import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
 import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
@@ -24,6 +24,13 @@ const quickActions = [
         href: "/patient/appointments",
         icon: CalendarDays,
         cta: "Plan visit",
+    },
+    {
+        title: "Download medical certificate",
+        description: "See your latest certificate status, expiry date, and download a PDF copy for school requirements.",
+        href: "/patient/medical-certificate",
+        icon: FileText,
+        cta: "View certificate",
     },
     {
         title: "Follow clinic updates",
