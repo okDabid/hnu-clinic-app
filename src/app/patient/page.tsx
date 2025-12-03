@@ -26,8 +26,8 @@ const quickActions = [
         cta: "Plan visit",
     },
     {
-        title: "Download medical certificate",
-        description: "See your latest certificate status, expiry date, and download a PDF copy for school requirements.",
+        title: "View medical certificate status",
+        description: "See your latest certificate status and expiry date as recorded by the clinic team.",
         href: "/patient/medical-certificate",
         icon: FileText,
         cta: "View certificate",

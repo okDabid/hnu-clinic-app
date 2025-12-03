@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Download, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 import PatientLayout from "@/components/patient/patient-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { formatManilaDateTime } from "@/lib/time";
 
@@ -35,7 +33,6 @@ function formatDateOnly(value?: string | null) {
 
 export default function PatientMedicalCertificatePage() {
     const [loading, setLoading] = useState(true);
-    const [downloading, setDownloading] = useState(false);
     const [certificate, setCertificate] = useState<CertificatePayload | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -73,45 +70,12 @@ export default function PatientMedicalCertificatePage() {
         loadCertificate();
     }, []);
 
-    async function handleDownload() {
-        if (!certificate) return;
-        setDownloading(true);
-        try {
-            const pdfUrl = "/api/patient/medical-certificate/pdf";
-
-            if (typeof window !== "undefined") {
-                const anchor = document.createElement("a");
-                anchor.href = pdfUrl;
-                anchor.target = "_blank";
-                anchor.rel = "noopener noreferrer";
-
-                document.body.appendChild(anchor);
-                anchor.click();
-                anchor.remove();
-
-                toast.success("Opening your certificate in a new tab...");
-                return;
-            }
-
-            const res = await fetch(pdfUrl, { cache: "no-store" });
-            if (!res.ok) {
-                toast.error("Unable to download certificate");
-                return;
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("Unable to download certificate");
-        } finally {
-            setDownloading(false);
-        }
-    }
-
     const hasCertificate = Boolean(certificate);
 
     return (
         <PatientLayout
             title="Medical certificate"
-            description="View the status of your latest medical certificate and download a copy for school requirements."
+            description="View the status of your latest medical certificate issued by the clinic."
         >
             <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
@@ -171,22 +135,10 @@ export default function PatientMedicalCertificatePage() {
                                         <p className="font-semibold">{formatDateOnly(certificate?.consultationDate)}</p>
                                     </div>
                                 </div>
-
-                                <Button
-                                    className="mt-2 w-full bg-primary text-white hover:bg-primary/90"
-                                    onClick={handleDownload}
-                                    disabled={downloading}
-                                >
-                                    {downloading ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Preparing download...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Download className="mr-2 h-4 w-4" /> Download certificate (PDF)
-                                        </>
-                                    )}
-                                </Button>
+                                <p className="mt-2 text-sm text-primary/80">
+                                    For a printed or digital copy, please contact the clinic staff so they can provide the
+                                    appropriate document.
+                                </p>
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
