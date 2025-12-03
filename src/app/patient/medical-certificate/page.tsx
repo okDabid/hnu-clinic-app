@@ -77,22 +77,27 @@ export default function PatientMedicalCertificatePage() {
         if (!certificate) return;
         setDownloading(true);
         try {
-            const res = await fetch("/api/patient/medical-certificate?format=pdf");
+            const pdfUrl = "/api/patient/medical-certificate?format=pdf";
+
+            if (typeof window !== "undefined") {
+                const anchor = document.createElement("a");
+                anchor.href = pdfUrl;
+                anchor.target = "_blank";
+                anchor.rel = "noopener noreferrer";
+
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+
+                toast.success("Opening your certificate in a new tab...");
+                return;
+            }
+
+            const res = await fetch(pdfUrl, { cache: "no-store" });
             if (!res.ok) {
                 toast.error("Unable to download certificate");
                 return;
             }
-
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = `medical-certificate-${certificate.certificateId}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            toast.success("Certificate downloaded");
         } catch (err) {
             console.error(err);
             toast.error("Unable to download certificate");
