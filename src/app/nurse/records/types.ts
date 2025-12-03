@@ -12,6 +12,12 @@ export type ConsultationSummary = {
     updatedAt: string | null;
     doctor: StaffSummary | null;
     nurse: StaffSummary | null;
+    medcert?: {
+        id: string;
+        issueDate: string | null;
+        validUntil: string | null;
+        status: string;
+    } | null;
 };
 
 export type AppointmentSummary = {

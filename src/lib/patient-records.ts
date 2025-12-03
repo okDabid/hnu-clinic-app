@@ -15,6 +15,12 @@ type ConsultationSummary = {
     updatedAt: string | null;
     doctor: StaffSummary | null;
     nurse: StaffSummary | null;
+    medcert?: {
+        id: string;
+        issueDate: string | null;
+        validUntil: string | null;
+        status: string;
+    } | null;
 };
 
 type AppointmentSummary = {
@@ -148,6 +154,16 @@ export async function fetchPatientRecords(options?: { specialization?: DoctorSpe
                             },
                         },
                     },
+                    medcerts: {
+                        select: {
+                            certificate_id: true,
+                            issue_date: true,
+                            valid_until: true,
+                            status: true,
+                        },
+                        orderBy: { issue_date: "desc" as const },
+                        take: 1,
+                    },
                 },
             },
         },
@@ -274,6 +290,12 @@ function buildAppointmentSummary(
                 username: string;
                 employee: { fname: string | null; mname: string | null; lname: string | null } | null;
             } | null;
+            medcerts?: {
+                certificate_id: string;
+                issue_date: Date | null;
+                valid_until: Date | null;
+                status: string;
+            }[] | null;
         } | null;
     }
 ): AppointmentSummary {
@@ -294,6 +316,15 @@ function buildAppointmentSummary(
                 updatedAt: appointment.consultation.updatedAt?.toISOString() ?? null,
                 doctor: buildStaffSummary(appointment.consultation.doctor),
                 nurse: buildStaffSummary(appointment.consultation.nurse),
+                medcert: appointment.consultation.medcerts?.[0]
+                    ? {
+                          id: appointment.consultation.medcerts[0].certificate_id,
+                          issueDate: appointment.consultation.medcerts[0].issue_date?.toISOString() ?? null,
+                          validUntil:
+                              appointment.consultation.medcerts[0].valid_until?.toISOString() ?? null,
+                          status: appointment.consultation.medcerts[0].status ?? "",
+                      }
+                    : null,
             }
             : null,
     };

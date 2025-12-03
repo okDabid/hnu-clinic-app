@@ -56,6 +56,11 @@ function RecordDetailsDialogComponent({
     const isUpdating = updatingPatientId === record.id;
     const isSavingNotes = savingNotesPatientId === record.id;
     const hasAppointment = Boolean(record.latestAppointment?.id);
+    const medcert = record.latestAppointment?.consultation?.medcert;
+    const medcertStatusClasses =
+        medcert?.status === "Valid"
+            ? "border-emerald-200 bg-primary/10 text-primary"
+            : "border-slate-200 bg-slate-100 text-slate-600";
     const initials = record.fullName
         .split(" ")
         .map((chunk) => chunk.charAt(0))
@@ -212,6 +217,27 @@ function RecordDetailsDialogComponent({
                                             Updated by {formatStaffName(record.latestAppointment.consultation.doctor)} on {" "}
                                             {formatManilaDateTime(record.latestAppointment.consultation.updatedAt) || "—"}
                                         </p>
+                                    </div>
+                                ) : null}
+
+                                {medcert ? (
+                                    <div className="space-y-1 rounded-md border bg-muted/40 p-3">
+                                        <div className="flex flex-wrap items-center gap-2 text-primary">
+                                            <p className="text-sm font-semibold">Medical Certificate</p>
+                                            <Badge
+                                                variant="outline"
+                                                className={`rounded-full px-2 py-1 text-[11px] ${medcertStatusClasses}`}
+                                            >
+                                                {medcert.status}
+                                            </Badge>
+                                        </div>
+                                        <p>
+                                            <strong>Issued on:</strong> {formatDateOnly(medcert.issueDate)}
+                                        </p>
+                                        <p>
+                                            <strong>Valid until:</strong> {formatDateOnly(medcert.validUntil)}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">Certificate ID: {medcert.id}</p>
                                     </div>
                                 ) : null}
                             </div>

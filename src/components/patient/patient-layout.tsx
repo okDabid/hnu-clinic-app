@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarDays, Home, User } from "lucide-react";
+import { Bell, CalendarDays, FileText, Home, User } from "lucide-react";
 
 import {
     PanelLayout,
@@ -11,6 +11,7 @@ import {
 const NAV_ITEMS = [
     { href: "/patient", label: "Dashboard", icon: Home },
     { href: "/patient/account", label: "Account", icon: User },
+    { href: "/patient/medical-certificate", label: "Medical Certificate", icon: FileText },
     { href: "/patient/appointments", label: "Appointments", icon: CalendarDays },
     { href: "/patient/notification", label: "Notifications", icon: Bell },
 ] as const satisfies readonly PanelNavItem[];
