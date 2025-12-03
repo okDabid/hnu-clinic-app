@@ -77,7 +77,7 @@ export default function PatientMedicalCertificatePage() {
         if (!certificate) return;
         setDownloading(true);
         try {
-            const pdfUrl = "/api/patient/medical-certificate?format=pdf";
+            const pdfUrl = "/api/patient/medical-certificate/pdf";
 
             if (typeof window !== "undefined") {
                 const anchor = document.createElement("a");
