@@ -3,7 +3,7 @@ import type { NextAuthOptions, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs"; // non-blocking, faster in serverless
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { Role, AccountStatus } from "@prisma/client";
 import { withDb } from "@/lib/withDb";
 

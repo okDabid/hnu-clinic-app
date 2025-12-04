@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 
 export const EMAIL_VERIFICATION_TOKEN_TYPE = "EMAIL_VERIFICATION";

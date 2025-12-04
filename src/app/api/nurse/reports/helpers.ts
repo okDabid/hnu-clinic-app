@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export const QUARTERS = [1, 2, 3, 4] as const;
 
@@ -157,8 +157,8 @@ export async function getQuarterlyReports({
         const patientType: PatientTypeKey = appointment.patient?.student
             ? "Student"
             : appointment.patient?.employee
-            ? "Employee"
-            : "Unknown";
+                ? "Employee"
+                : "Unknown";
         accumulator.patientTypeCounts[patientType] += 1;
 
         const diagnosis = normalizeDiagnosis(consultation.diagnosis);
@@ -210,8 +210,8 @@ export async function getQuarterlyReports({
     const fallbackQuarter = requestedQuarter
         ? requestedQuarter
         : requestedYear === currentYear
-        ? currentQuarter
-        : 4;
+            ? currentQuarter
+            : 4;
 
     const selectedQuarter =
         quarters.find((item) => item.quarter === fallbackQuarter) ?? quarters[0];

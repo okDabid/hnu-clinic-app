@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { manilaNow } from "@/lib/time";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;

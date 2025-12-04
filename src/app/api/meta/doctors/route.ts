@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { AccountStatus, Role } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { withDb } from "@/lib/withDb";
 import { getClientIp, withRateLimit } from "@/lib/rate-limit";
 

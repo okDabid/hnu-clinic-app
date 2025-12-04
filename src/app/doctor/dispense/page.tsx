@@ -17,7 +17,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { formatManilaDateTime } from "@/lib/time";
-import { summarizeDispenses } from "@/lib/dispense";
+import { summarizeDispenses } from "@/lib/dispense-summary";
 import { formatProfileName } from "@/lib/staff-name";
 import { DispenseHistoryRow, DispenseHistoryTable } from "@/components/dispense/dispense-history-table";
 

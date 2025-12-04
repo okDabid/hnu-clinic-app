@@ -2,7 +2,7 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { normalizeResetContact } from "@/lib/password-reset";
 import { getPasswordStrength } from "@/lib/password-strength";

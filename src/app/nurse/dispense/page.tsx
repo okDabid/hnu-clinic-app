@@ -6,7 +6,7 @@ import { NurseLayout } from "@/components/nurse/nurse-layout";
 import { DispenseHistoryTable, DispenseHistoryRow } from "@/components/dispense/dispense-history-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatManilaDateTime } from "@/lib/time";
-import { summarizeDispenses } from "@/lib/dispense";
+import { summarizeDispenses } from "@/lib/dispense-summary";
 import { formatProfileName } from "@/lib/staff-name";
 
 import NurseDispenseLoading from "./loading";

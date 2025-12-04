@@ -8,7 +8,7 @@ import { DoctorConsultationPageClient } from "./page.client";
 import { normalizeConsultationSlots, type Clinic, type SlotsResponse } from "./types";
 import { authOptions } from "@/lib/auth";
 import { archiveExpiredDutyHours } from "@/lib/duty-hours";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { Role } from "@prisma/client";
 
 function serializeSlot(slot: {
