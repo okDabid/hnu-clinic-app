@@ -114,7 +114,7 @@ export default function NurseDispensePage() {
         >
             <section className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-6xl mx-auto flex-1 flex flex-col space-y-8">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Card className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-white  to-primary/5/60 shadow-sm">
+                    <Card className="rounded-3xl border border-primary/20 bg-linear-to-br from-primary/10 via-white  to-primary/5/60 shadow-sm">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Total dispenses</CardTitle>
                         </CardHeader>
@@ -162,7 +162,7 @@ export default function NurseDispensePage() {
                     </Card>
                 </div>
 
-                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
+                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b border-primary/20/60">
                         <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
                             Dispense History
