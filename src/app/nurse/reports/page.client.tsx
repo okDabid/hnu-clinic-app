@@ -190,6 +190,21 @@ export function NurseReportsPageClient({
         return data.quarters.find((item) => item.quarter === quarter) ?? data.selectedQuarter;
     }, [data, quarter]);
 
+    const selectedQuarterTotals = useMemo(() => {
+        if (!selectedQuarter) return null;
+
+        const totalPatientMix = Object.values(selectedQuarter.patientTypeCounts).reduce(
+            (sum, value) => sum + value,
+            0
+        );
+
+        return {
+            consultations: selectedQuarter.consultations,
+            uniquePatients: selectedQuarter.uniquePatients,
+            totalPatientMix,
+        } as const;
+    }, [selectedQuarter]);
+
     const quarterChartData = useMemo(() => {
         if (!data) return [];
         return data.quarters.map((item) => ({
@@ -205,6 +220,20 @@ export function NurseReportsPageClient({
     }, [selectedQuarter]);
 
     const hasData = !!data && data.quarters.some((item) => item.consultations > 0);
+
+    const yearlyPatientMixTotals = useMemo(() => {
+        if (!data) return null;
+
+        return data.quarters.reduce(
+            (acc, item) => {
+                acc.StudentTertiary += item.patientTypeCounts.StudentTertiary ?? 0;
+                acc.StudentIbed += item.patientTypeCounts.StudentIbed ?? 0;
+                acc.Employee += item.patientTypeCounts.Employee ?? 0;
+                return acc;
+            },
+            { StudentTertiary: 0, StudentIbed: 0, Employee: 0 }
+        );
+    }, [data]);
 
     if (initializing) {
         return <NurseReportsLoading />;
@@ -371,6 +400,48 @@ export function NurseReportsPageClient({
                         <CardContent className="pt-2">
                             {hasData ? (
                                 <div className="-mx-4 px-4 pb-2 sm:mx-0 sm:px-0">
+                                    {selectedQuarter && (
+                                        <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                                            <div className="rounded-2xl border border-primary/20 bg-white/90 p-3 text-primary shadow-sm">
+                                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                    Selected quarter
+                                                </p>
+                                                <p className="text-lg font-semibold">
+                                                    {selectedQuarter.label} {data?.year ?? year}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {formatRange(
+                                                        selectedQuarter.startDate,
+                                                        selectedQuarter.endDate
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <div className="rounded-2xl border border-primary/20 bg-white/90 p-3 text-primary shadow-sm">
+                                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                    Consultations
+                                                </p>
+                                                <p className="text-2xl font-bold">
+                                                    {numberFormatter.format(
+                                                        selectedQuarterTotals?.consultations ?? 0
+                                                    )}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">Total visits recorded</p>
+                                            </div>
+                                            <div className="rounded-2xl border border-primary/20 bg-white/90 p-3 text-primary shadow-sm">
+                                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                    Unique patients
+                                                </p>
+                                                <p className="text-2xl font-bold">
+                                                    {numberFormatter.format(
+                                                        selectedQuarterTotals?.uniquePatients ?? 0
+                                                    )}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Individual patients for the period
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                     <ChartContainer
                                         config={patientTrendConfig}
                                         className="aspect-4/5 w-full sm:aspect-video sm:h-80"
@@ -428,8 +499,8 @@ export function NurseReportsPageClient({
                                             Object.keys(patientMixConfig) as PatientTypeKey[]
                                         ).map((key) => {
                                             const count = selectedQuarter.patientTypeCounts[key] ?? 0;
-                                            const total = selectedQuarter.consultations || 1;
-                                            const percentage = Math.round((count / total) * 100);
+                                            const total = selectedQuarterTotals?.totalPatientMix ?? 0;
+                                            const percentage = total ? Math.round((count / total) * 100) : 0;
                                             const config = patientMixConfig[key];
                                             return (
                                                 <div
@@ -536,6 +607,18 @@ export function NurseReportsPageClient({
                                         <TableCell>{numberFormatter.format(item.patientTypeCounts.Employee ?? 0)}</TableCell>
                                     </TableRow>
                                 ))}
+                                {data && yearlyPatientMixTotals && (
+                                    <TableRow className="font-semibold text-primary">
+                                        <TableCell>Year total</TableCell>
+                                        <TableCell>{numberFormatter.format(data.totals.consultations)}</TableCell>
+                                        <TableCell>{numberFormatter.format(data.totals.uniquePatients)}</TableCell>
+                                        <TableCell>
+                                            {numberFormatter.format(yearlyPatientMixTotals.StudentTertiary)}
+                                        </TableCell>
+                                        <TableCell>{numberFormatter.format(yearlyPatientMixTotals.StudentIbed)}</TableCell>
+                                        <TableCell>{numberFormatter.format(yearlyPatientMixTotals.Employee)}</TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
