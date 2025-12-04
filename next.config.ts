@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   env: {
     TZ: "Asia/Manila",
   },
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/adapter-pg", "pg"],
+  },
 };
 
 export default nextConfig;
