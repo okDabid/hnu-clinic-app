@@ -15,13 +15,12 @@ if (!accelerateUrl && !process.env.PRISMA_CLIENT_ENGINE_TYPE) {
 
 const prismaClientSingleton = () => {
     const log: (Prisma.LogLevel | Prisma.LogDefinition)[] = ["error", "warn"]; // keep logs lightweight in prod
-    const datasources = datasourceUrl ? { db: { url: datasourceUrl } } : undefined;
 
     if (accelerateUrl) {
         const clientOptions: Prisma.PrismaClientOptions = {
             log,
             accelerateUrl,
-            ...(datasources && { datasources }),
+            ...(datasourceUrl && { datasourceUrl }),
         };
         return new PrismaClient(clientOptions).$extends(withAccelerate());
     }
@@ -30,7 +29,7 @@ const prismaClientSingleton = () => {
     // Prisma defaulting to the client engine, which requires a data proxy/adapter.
     const clientOptions: Prisma.PrismaClientOptions = {
         log,
-        ...(datasources && { datasources }),
+        ...(datasourceUrl && { datasources: { db: { url: datasourceUrl } } }),
     };
     return new PrismaClient(clientOptions);
 };
