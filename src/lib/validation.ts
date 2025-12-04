@@ -70,12 +70,24 @@ export function normalizePhilippinePhoneInput(raw: string): string {
 export function formatPhoneInputDisplay(value?: string | null): string {
     const digits = (value ?? "").replace(/\D/g, "");
 
-    if (!digits) return "+63 ";
-    if (digits.startsWith("63")) return `+${digits}`;
-    if (digits.startsWith("0")) return `+63${digits.slice(1)}`;
-    if (digits.startsWith("9")) return `+63${digits}`;
+    if (!digits) return "";
 
-    return `+${digits}`;
+    let subscriber = digits;
+
+    if (subscriber.startsWith("63")) {
+        subscriber = subscriber.slice(2);
+    }
+
+    if (!subscriber.startsWith("0")) {
+        subscriber = `0${subscriber}`;
+    }
+
+    subscriber = subscriber.slice(0, 11);
+
+    if (subscriber.length <= 4) return subscriber;
+    if (subscriber.length <= 7) return `${subscriber.slice(0, 4)} ${subscriber.slice(4)}`;
+
+    return `${subscriber.slice(0, 4)} ${subscriber.slice(4, 7)} ${subscriber.slice(7)}`;
 }
 
 /**

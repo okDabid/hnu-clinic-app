@@ -1,33 +1,55 @@
 .rip-root {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #d1e5dd;
-  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
   background: #fff;
+  overflow: hidden;
+  min-height: 44px;
 }
 
 .rip-root:focus-within {
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  border-color: #94a3b8;
 }
 
 .rip-flag {
-  font-size: 0.9rem;
-  color: #064e3b;
-  min-width: 72px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  color: #0f172a;
+  font-size: 0.95rem;
+  min-width: 110px;
+}
+
+.rip-flag-emoji {
+  font-size: 1rem;
+}
+
+.rip-dial-code {
+  font-weight: 600;
+}
+
+.rip-caret {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
 .rip-input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 0.95rem;
-  color: #065f46;
+  font-size: 1rem;
+  color: #0f172a;
   background: transparent;
+  padding: 0.55rem 0.75rem;
 }
 
 .rip-input::placeholder {
   color: #9ca3af;
+  font-weight: 400;
 }

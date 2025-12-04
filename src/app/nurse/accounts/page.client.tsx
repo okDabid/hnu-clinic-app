@@ -1095,7 +1095,7 @@ export function NurseAccountsPageClient({
                                             <PhoneInput
                                                 defaultCountry="ph"
                                                 countries={["ph"]}
-                                                placeholder="09123456789"
+                                                placeholder="0908 898 0000"
                                                 value={formatPhoneInputDisplay(profile.contactno)}
                                                 onChange={(value) =>
                                                     setProfile({
@@ -1182,7 +1182,7 @@ export function NurseAccountsPageClient({
                                             <PhoneInput
                                                 defaultCountry="ph"
                                                 countries={["ph"]}
-                                                placeholder="09123456789"
+                                                placeholder="0908 898 0000"
                                                 value={formatPhoneInputDisplay(profile.emergencyco_num)}
                                                 onChange={(value) =>
                                                     setProfile({
