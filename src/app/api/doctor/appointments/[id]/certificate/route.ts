@@ -291,11 +291,7 @@ export async function GET(
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: { width: 1280, height: 720 },
-      executablePath: isLocal
-        ? process.platform === "win32"
-          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-          : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        : await chromium.executablePath(),
+      executablePath: await getExecutablePath(),
       headless: true,
     });
 

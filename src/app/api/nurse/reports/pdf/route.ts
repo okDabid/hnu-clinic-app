@@ -524,7 +524,7 @@ async function getHandler(request: RateLimitedRequest) {
 
         browser = await puppeteer.launch({
             args: chromium.args,
-            executablePath: await chromium.executablePath(),
+            executablePath: await getExecutablePath(),
             headless: true,
         });
 
