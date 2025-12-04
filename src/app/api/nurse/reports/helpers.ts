@@ -57,32 +57,23 @@ type ReportQuery = {
     currentDate?: Date;
 };
 
-const BASIC_EDUCATION_YEAR_LEVELS: YearLevel[] = [
-    YearLevel.KINDERGARTEN_1,
-    YearLevel.KINDERGARTEN_2,
-    YearLevel.GRADE_1,
-    YearLevel.GRADE_2,
-    YearLevel.GRADE_3,
-    YearLevel.GRADE_4,
-    YearLevel.GRADE_5,
-    YearLevel.GRADE_6,
-    YearLevel.GRADE_7,
-    YearLevel.GRADE_8,
-    YearLevel.GRADE_9,
-    YearLevel.GRADE_10,
-    YearLevel.GRADE_11,
-    YearLevel.GRADE_12,
+const TERTIARY_YEAR_LEVELS: YearLevel[] = [
+    YearLevel.FIRST_YEAR,
+    YearLevel.SECOND_YEAR,
+    YearLevel.THIRD_YEAR,
+    YearLevel.FOURTH_YEAR,
+    YearLevel.FIFTH_YEAR,
 ];
 
-function isBasicEducationStudent({
+function isTertiaryStudent({
     department,
     year_level,
 }: {
     department?: Department | null;
     year_level?: YearLevel | null;
 }) {
-    if (department === Department.BASIC_EDUCATION) return true;
-    return year_level ? BASIC_EDUCATION_YEAR_LEVELS.includes(year_level) : false;
+    if (department) return department !== Department.BASIC_EDUCATION;
+    return year_level ? TERTIARY_YEAR_LEVELS.includes(year_level) : false;
 }
 
 function createAccumulator(): QuarterAccumulator {
@@ -191,9 +182,9 @@ export async function getQuarterlyReports({
         }
 
         const patientType: PatientTypeKey = appointment.patient?.student
-            ? isBasicEducationStudent(appointment.patient.student)
-                ? "StudentIbed"
-                : "StudentTertiary"
+            ? isTertiaryStudent(appointment.patient.student)
+                ? "StudentTertiary"
+                : "StudentIbed"
             : "Employee";
 
         accumulator.patientTypeCounts[patientType] += 1;
