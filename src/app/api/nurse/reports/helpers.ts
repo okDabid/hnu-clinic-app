@@ -1,3 +1,5 @@
+import { Department, YearLevel } from "@prisma/client";
+
 import prisma from "@/lib/prisma";
 
 export const QUARTERS = [1, 2, 3, 4] as const;
@@ -11,7 +13,7 @@ export const QUARTER_LABELS = {
 
 export type QuarterNumber = (typeof QUARTERS)[number];
 
-type PatientTypeKey = "Student" | "Employee" | "Unknown";
+type PatientTypeKey = "StudentTertiary" | "StudentIbed" | "Employee";
 
 type PatientTypeCounts = Record<PatientTypeKey, number>;
 
@@ -55,11 +57,30 @@ type ReportQuery = {
     currentDate?: Date;
 };
 
+const TERTIARY_YEAR_LEVELS: YearLevel[] = [
+    YearLevel.FIRST_YEAR,
+    YearLevel.SECOND_YEAR,
+    YearLevel.THIRD_YEAR,
+    YearLevel.FOURTH_YEAR,
+    YearLevel.FIFTH_YEAR,
+];
+
+function isTertiaryStudent({
+    department,
+    year_level,
+}: {
+    department?: Department | null;
+    year_level?: YearLevel | null;
+}) {
+    if (department) return department !== Department.BASIC_EDUCATION;
+    return year_level ? TERTIARY_YEAR_LEVELS.includes(year_level) : false;
+}
+
 function createAccumulator(): QuarterAccumulator {
     return {
         consultations: 0,
         patientIds: new Set(),
-        patientTypeCounts: { Student: 0, Employee: 0, Unknown: 0 },
+        patientTypeCounts: { StudentTertiary: 0, StudentIbed: 0, Employee: 0 },
         diagnosisCounts: new Map(),
     };
 }
@@ -120,7 +141,13 @@ export async function getQuarterlyReports({
                     patient_user_id: true,
                     patient: {
                         select: {
-                            student: { select: { stud_user_id: true } },
+                            student: {
+                                select: {
+                                    stud_user_id: true,
+                                    department: true,
+                                    year_level: true,
+                                },
+                            },
                             employee: { select: { emp_id: true } },
                         },
                     },
@@ -155,10 +182,11 @@ export async function getQuarterlyReports({
         }
 
         const patientType: PatientTypeKey = appointment.patient?.student
-            ? "Student"
-            : appointment.patient?.employee
-                ? "Employee"
-                : "Unknown";
+            ? isTertiaryStudent(appointment.patient.student)
+                ? "StudentTertiary"
+                : "StudentIbed"
+            : "Employee";
+
         accumulator.patientTypeCounts[patientType] += 1;
 
         const diagnosis = normalizeDiagnosis(consultation.diagnosis);
