@@ -4,7 +4,7 @@ import { Role } from "@prisma/client";
 
 import { authOptions } from "@/lib/auth";
 import { listDispenses, recordDispense, DispenseError } from "@/lib/dispense";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 function buildMedicineOptions(medicines: Array<{
     med_id: string;

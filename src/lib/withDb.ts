@@ -1,5 +1,5 @@
 // src/lib/withDb.ts
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 /**
  * Runs a Prisma operation safely, reconnecting only when needed.

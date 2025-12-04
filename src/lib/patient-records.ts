@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { AppointmentStatus, DoctorSpecialization } from "@prisma/client";
 
 type StaffSummary = {
@@ -103,10 +103,10 @@ export async function fetchPatientRecords(options?: { specialization?: DoctorSpe
             status: { in: [AppointmentStatus.Pending, AppointmentStatus.Approved, AppointmentStatus.Completed] },
             ...(specialization
                 ? {
-                      doctor: {
-                          employee: { specialization },
-                      },
-                  }
+                    doctor: {
+                        employee: { specialization },
+                    },
+                }
                 : {}),
         },
         orderBy: [
@@ -318,12 +318,12 @@ function buildAppointmentSummary(
                 nurse: buildStaffSummary(appointment.consultation.nurse),
                 medcert: appointment.consultation.medcerts?.[0]
                     ? {
-                          id: appointment.consultation.medcerts[0].certificate_id,
-                          issueDate: appointment.consultation.medcerts[0].issue_date?.toISOString() ?? null,
-                          validUntil:
-                              appointment.consultation.medcerts[0].valid_until?.toISOString() ?? null,
-                          status: appointment.consultation.medcerts[0].status ?? "",
-                      }
+                        id: appointment.consultation.medcerts[0].certificate_id,
+                        issueDate: appointment.consultation.medcerts[0].issue_date?.toISOString() ?? null,
+                        validUntil:
+                            appointment.consultation.medcerts[0].valid_until?.toISOString() ?? null,
+                        status: appointment.consultation.medcerts[0].status ?? "",
+                    }
                     : null,
             }
             : null,

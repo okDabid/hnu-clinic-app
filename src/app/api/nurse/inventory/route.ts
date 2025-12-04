@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { MedCategory, MedType, DosageUnit, Role } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 

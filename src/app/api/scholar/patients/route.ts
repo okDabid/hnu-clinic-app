@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { Role } from "@prisma/client";
 
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { fetchPatientRecords } from "@/lib/patient-records";
 
 function matchesSearch(value: string | null | undefined, search: string) {

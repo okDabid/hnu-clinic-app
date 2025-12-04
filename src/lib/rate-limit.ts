@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export type RateLimitedRequest = Request | NextRequest;
 

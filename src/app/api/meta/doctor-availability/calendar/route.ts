@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { endOfManilaDay, PH_TIME_ZONE, startOfManilaDay } from "@/lib/time";
 import { withDb } from "@/lib/withDb";
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { MedcertStatus, Role } from "@prisma/client";
 import { manilaNow, formatManilaDateTime } from "@/lib/time";
 import { parseMedicalHistory } from "@/lib/medical-history";
@@ -192,13 +192,13 @@ export async function resolvePatientCertificate(): Promise<
     const doctorEmployee = appointment.doctor.employee;
     const doctorName = doctorEmployee
         ? titleCase(
-              [doctorEmployee.fname, doctorEmployee.mname, doctorEmployee.lname]
-                  .filter(Boolean)
-                  .join(" ") || appointment.doctor.username
-          )
+            [doctorEmployee.fname, doctorEmployee.mname, doctorEmployee.lname]
+                .filter(Boolean)
+                .join(" ") || appointment.doctor.username
+        )
         : appointment.doctor.username.startsWith("Dr.")
-          ? appointment.doctor.username
-          : `Dr. ${appointment.doctor.username}`;
+            ? appointment.doctor.username
+            : `Dr. ${appointment.doctor.username}`;
 
     const issueDateDisplay = formatDateLong(medcert.issue_date);
     const consultationDate =

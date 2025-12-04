@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Role } from "@prisma/client";
 
 import { handleAuthError, requireRole } from "@/lib/authorization";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { formatManilaISODate, manilaNow, startOfManilaDay } from "@/lib/time";
 
 const MONTH_PARAM_PATTERN = /^\d{4}-\d{2}$/;

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { withDb } from "@/lib/withDb";
 import { archiveExpiredDutyHours } from "@/lib/duty-hours";
 import { startOfManilaDay, endOfManilaDay } from "@/lib/time";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { manilaNow } from "@/lib/time";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { Role } from "@prisma/client";

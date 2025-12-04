@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { EMAIL_VERIFICATION_TOKEN_TYPE } from "@/lib/email-verification";
 import { ipKey, withRateLimit } from "@/lib/rate-limit";
 import type { RateLimitedRequest } from "@/lib/rate-limit";

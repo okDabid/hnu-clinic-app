@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { manilaNow } from "@/lib/time";
 
 export type DispenseWithRelations = Awaited<ReturnType<typeof listDispenses>>[number];
