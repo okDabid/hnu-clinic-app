@@ -65,7 +65,7 @@ export function normalizePhilippinePhoneInput(raw: string): string {
 }
 
 /**
- * Formats stored 09XXXXXXXXX numbers for the phone input display with the +63 dial code.
+ * Formats stored 09XXXXXXXXX numbers for the phone input display without extra spacing or dial code.
  */
 export function formatPhoneInputDisplay(value?: string | null): string {
     const digits = (value ?? "").replace(/\D/g, "");
@@ -82,12 +82,7 @@ export function formatPhoneInputDisplay(value?: string | null): string {
         subscriber = `0${subscriber}`;
     }
 
-    subscriber = subscriber.slice(0, 11);
-
-    if (subscriber.length <= 4) return subscriber;
-    if (subscriber.length <= 7) return `${subscriber.slice(0, 4)} ${subscriber.slice(4)}`;
-
-    return `${subscriber.slice(0, 4)} ${subscriber.slice(4, 7)} ${subscriber.slice(7)}`;
+    return subscriber.slice(0, 11);
 }
 
 /**

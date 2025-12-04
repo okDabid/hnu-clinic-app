@@ -3,7 +3,7 @@
 import React, { forwardRef } from "react";
 import "./style.css";
 
-const SPACING_REGEX = /\D/g;
+const DIGIT_REGEX = /\D/g;
 
 function buildDialData(countryCode) {
     if (countryCode === "ph") {
@@ -29,12 +29,7 @@ function deriveSubscriberDigits(raw = "") {
 }
 
 function formatSubscriberForDisplay(subscriber) {
-    if (!subscriber) return "";
-
-    if (subscriber.length <= 4) return subscriber;
-    if (subscriber.length <= 7) return `${subscriber.slice(0, 4)} ${subscriber.slice(4)}`;
-
-    return `${subscriber.slice(0, 4)} ${subscriber.slice(4, 7)} ${subscriber.slice(7)}`;
+    return subscriber;
 }
 
 export const PhoneInput = forwardRef(function PhoneInput(
@@ -55,7 +50,7 @@ export const PhoneInput = forwardRef(function PhoneInput(
     const dialData = buildDialData(defaultCountry || countries?.[0] || "");
 
     const handleChange = (event) => {
-        const rawDigits = event.target.value.replace(SPACING_REGEX, "");
+        const rawDigits = event.target.value.replace(DIGIT_REGEX, "");
         const subscriberDigits = deriveSubscriberDigits(rawDigits);
         const subscriberIntl = subscriberDigits.startsWith("0") ? subscriberDigits.slice(1) : subscriberDigits;
         const emitted = forceDialCode && dialData.dialCode ? `${dialData.dialCode}${subscriberIntl}` : subscriberDigits;
@@ -66,10 +61,6 @@ export const PhoneInput = forwardRef(function PhoneInput(
     const resolvedValue = (() => {
         const subscriber = deriveSubscriberDigits(String(value ?? ""));
         const formatted = formatSubscriberForDisplay(subscriber);
-
-        if (forceDialCode && dialData.dialCode) {
-            return `${dialData.dialCode} ${formatted}`.trim();
-        }
 
         return formatted;
     })();
@@ -82,7 +73,6 @@ export const PhoneInput = forwardRef(function PhoneInput(
                 "div",
                 { className: "rip-flag" },
                 React.createElement("span", { className: "rip-flag-emoji" }, "🇵🇭"),
-                React.createElement("span", { className: "rip-dial-code" }, dialData.dialCode),
                 React.createElement("span", { className: "rip-caret" }, "▾")
             ),
             React.createElement("input", {

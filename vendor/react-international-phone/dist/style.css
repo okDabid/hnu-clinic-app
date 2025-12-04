@@ -16,26 +16,22 @@
 .rip-flag {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 0.75rem;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.65rem;
   background: #f9fafb;
   border-right: 1px solid #e5e7eb;
   color: #0f172a;
-  font-size: 0.95rem;
-  min-width: 110px;
+  font-size: 1rem;
+  min-width: 64px;
 }
 
 .rip-flag-emoji {
-  font-size: 1rem;
-}
-
-.rip-dial-code {
-  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .rip-caret {
-  margin-left: auto;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #6b7280;
 }
 
