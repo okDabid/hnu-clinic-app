@@ -743,7 +743,6 @@ export default function DoctorAccountPage() {
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
                                             <PhoneInput
                                                 defaultCountry="ph"
-                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
                                                 value={formatPhoneInputDisplay(profile.contactno)}
                                                 onChange={(value) =>
@@ -830,7 +829,6 @@ export default function DoctorAccountPage() {
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
                                             <PhoneInput
                                                 defaultCountry="ph"
-                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
                                                 value={formatPhoneInputDisplay(profile.emergencyco_num)}
                                                 onChange={(value) =>

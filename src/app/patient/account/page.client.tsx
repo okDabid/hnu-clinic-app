@@ -946,10 +946,8 @@ export function PatientAccountPageClient({
                                                 Contact number
                                             </Label>
                                             <PhoneInput
-                                                id="contact-number"
                                                 name="contactNumber"
                                                 defaultCountry="ph"
-                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
                                                 value={formatPhoneInputDisplay(profile.contactno)}
                                                 onChange={(value) =>
@@ -1191,10 +1189,8 @@ export function PatientAccountPageClient({
                                                 Contact number
                                             </Label>
                                             <PhoneInput
-                                                id="emergency-contact-number"
                                                 name="emergencyContactNumber"
                                                 defaultCountry="ph"
-                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
                                                 value={formatPhoneInputDisplay(profile.emergencyco_num)}
                                                 onChange={(value) =>
