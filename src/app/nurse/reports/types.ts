@@ -1,4 +1,4 @@
-export type PatientTypeKey = "Student" | "Employee" | "Unknown";
+export type PatientTypeKey = "StudentTertiary" | "StudentIbed" | "Employee";
 
 export type DiagnosisCount = {
     diagnosis: string;

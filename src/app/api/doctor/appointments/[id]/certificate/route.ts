@@ -54,7 +54,7 @@ export async function GET(
       default:
         return "/usr/bin/google-chrome";
     }
-  }
+  };
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
@@ -290,12 +290,8 @@ export async function GET(
 
     const browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: { width: 1280, height: 720 },
-      executablePath: isLocal
-        ? process.platform === "win32"
-          ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
-          : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        : await chromium.executablePath(),
+      defaultViewport: null,
+      executablePath: await getExecutablePath(),
       headless: true,
     });
 
@@ -329,7 +325,7 @@ export async function GET(
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
-          "Content-Disposition": `inline;  filename="${filename}"`,
+          "Content-Disposition": `inline; filename="${filename}"`,
           "Cache-Control": "no-store",
         },
       });

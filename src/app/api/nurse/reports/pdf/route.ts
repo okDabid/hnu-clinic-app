@@ -119,9 +119,9 @@ function renderDiagnosisList(diagnoses: QuarterReport["diagnosisCounts"]) {
 
 function renderPatientMixTable(counts: QuarterReport["patientTypeCounts"]) {
     const entries = [
-        { label: "Students", value: counts.Student ?? 0 },
+        { label: "Tertiary students", value: counts.StudentTertiary ?? 0 },
+        { label: "IBED students", value: counts.StudentIbed ?? 0 },
         { label: "Employees", value: counts.Employee ?? 0 },
-        { label: "Unspecified", value: counts.Unknown ?? 0 },
     ];
 
     const total = entries.reduce((sum, entry) => sum + entry.value, 0);
@@ -149,9 +149,9 @@ function createReportHtml(report: ReportsResponse) {
     const coverageRange = formatDateRange(quarter.startDate, quarter.endDate);
     const quarterHeading = `${quarter.label} ${report.year}`;
 
-    const studentCount = quarter.patientTypeCounts.Student ?? 0;
+    const tertiaryCount = quarter.patientTypeCounts.StudentTertiary ?? 0;
+    const ibedCount = quarter.patientTypeCounts.StudentIbed ?? 0;
     const employeeCount = quarter.patientTypeCounts.Employee ?? 0;
-    const unspecifiedCount = quarter.patientTypeCounts.Unknown ?? 0;
 
     const patientMixTable = renderPatientMixTable(quarter.patientTypeCounts);
     const diagnosesList = renderDiagnosisList(quarter.diagnosisCounts);
@@ -433,19 +433,19 @@ function createReportHtml(report: ReportsResponse) {
                         <p class="caption">Individuals who visited the clinic at least once.</p>
                     </div>
                     <div class="metric-card">
-                        <span class="label">Students</span>
-                        <span class="value">${formatNumber(studentCount)}</span>
-                        <p class="caption">Consultations from the student population.</p>
+                        <span class="label">Tertiary students</span>
+                        <span class="value">${formatNumber(tertiaryCount)}</span>
+                        <p class="caption">Visits from college-level students.</p>
+                    </div>
+                    <div class="metric-card">
+                        <span class="label">IBED students</span>
+                        <span class="value">${formatNumber(ibedCount)}</span>
+                        <p class="caption">Consultations from basic education learners.</p>
                     </div>
                     <div class="metric-card">
                         <span class="label">Employees</span>
                         <span class="value">${formatNumber(employeeCount)}</span>
                         <p class="caption">Consultations from faculty and staff.</p>
-                    </div>
-                    <div class="metric-card">
-                        <span class="label">Unspecified</span>
-                        <span class="value">${formatNumber(unspecifiedCount)}</span>
-                        <p class="caption">Encounters without an affiliation on record.</p>
                     </div>
                 </section>
                 <section>
@@ -524,7 +524,7 @@ async function getHandler(request: RateLimitedRequest) {
 
         browser = await puppeteer.launch({
             args: chromium.args,
-            executablePath: await chromium.executablePath(),
+            executablePath: await getExecutablePath(),
             headless: true,
         });
 
