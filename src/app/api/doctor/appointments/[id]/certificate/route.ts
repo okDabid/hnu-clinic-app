@@ -290,9 +290,9 @@ export async function GET(
 
     const browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
+      defaultViewport: null,
       executablePath: await getExecutablePath(),
-      headless: chromium.headless,
+      headless: true,
     });
 
     try {

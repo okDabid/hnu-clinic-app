@@ -524,9 +524,8 @@ async function getHandler(request: RateLimitedRequest) {
 
         browser = await puppeteer.launch({
             args: chromium.args,
-            defaultViewport: chromium.defaultViewport,
             executablePath: await getExecutablePath(),
-            headless: chromium.headless,
+            headless: true,
         });
 
         const page = await browser.newPage();
