@@ -16,8 +16,11 @@ const prismaClientSingleton = () => {
         }).$extends(withAccelerate());
     }
 
+    // Explicitly use the native engine when Accelerate is not configured to avoid
+    // Prisma defaulting to the client engine, which requires an adapter or accelerateUrl.
     return new PrismaClient({
         log,
+        engineType: "library",
     });
 };
 
