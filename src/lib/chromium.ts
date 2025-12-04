@@ -56,9 +56,11 @@ export async function resolveChromiumExecutablePath() {
 }
 
 export function chromiumLaunchOptions() {
+    const defaultViewport = (chromium as { defaultViewport?: unknown }).defaultViewport ?? null;
+
     return {
         args: chromium.args,
-        defaultViewport: chromium.defaultViewport ?? null,
+        defaultViewport,
         headless: chromium.headless ?? true,
         ignoreHTTPSErrors: true,
     } as const;
