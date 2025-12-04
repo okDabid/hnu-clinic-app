@@ -457,6 +457,22 @@ export default function DoctorAppointmentsPage() {
                 return;
             }
 
+            const pdfUrl = `/api/doctor/appointments/${appointment.id}/certificate`;
+
+            if (typeof window !== "undefined") {
+                const anchor = document.createElement("a");
+                anchor.href = pdfUrl;
+                anchor.target = "_blank";
+                anchor.rel = "noopener noreferrer";
+
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+
+                toast.success("Certificate opened in a new tab");
+                return;
+            }
+
             const blob = await res.blob();
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
