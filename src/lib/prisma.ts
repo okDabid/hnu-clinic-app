@@ -12,12 +12,11 @@ const prismaClientSingleton = () => {
     if (accelerateUrl) {
         return new PrismaClient({
             log,
-            accelerateUrl,
         }).$extends(withAccelerate());
     }
 
     // Explicitly use the native engine when Accelerate is not configured to avoid
-    // Prisma defaulting to the client engine, which requires an adapter or accelerateUrl.
+    // Prisma defaulting to the client engine, which requires a data proxy/adapter.
     return new PrismaClient({
         log,
     });
