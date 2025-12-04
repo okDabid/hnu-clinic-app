@@ -1,16 +1,18 @@
 .rip-root {
   display: flex;
   align-items: center;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  background: #fff;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md, 0.375rem);
+  background: transparent;
   overflow: hidden;
-  min-height: 44px;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  transition: color 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .rip-root:focus-within {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
-  border-color: #94a3b8;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 45%, transparent);
+  border-color: var(--ring);
 }
 
 .rip-flag {
@@ -18,12 +20,13 @@
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.55rem 0.65rem;
-  background: #f9fafb;
-  border-right: 1px solid #e5e7eb;
-  color: #0f172a;
-  font-size: 1rem;
-  min-width: 64px;
+  padding: 0 0.6rem;
+  background: var(--muted);
+  border-right: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: 0.95rem;
+  min-width: 56px;
+  height: 100%;
 }
 
 .rip-flag-emoji {
@@ -40,12 +43,13 @@
   border: none;
   outline: none;
   font-size: 1rem;
-  color: #0f172a;
+  color: var(--foreground);
   background: transparent;
-  padding: 0.55rem 0.75rem;
+  padding: 0 0.75rem;
+  height: 100%;
 }
 
 .rip-input::placeholder {
-  color: #9ca3af;
+  color: var(--muted-foreground);
   font-weight: 400;
 }
