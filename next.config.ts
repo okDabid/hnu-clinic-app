@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+
+  serverExternalPackages: ["@sparticuz/chromium"],
+
   experimental: {
-    serverComponentsExternalPackages: ["@sparticuz/chromium"],
+
   },
   outputFileTracingIncludes: {
     "/api/doctor/appointments/[id]/certificate": [
@@ -10,6 +13,7 @@ const nextConfig: NextConfig = {
     ],
     "/api/nurse/reports/pdf": ["./node_modules/@sparticuz/chromium/**/*"],
   },
+
   allowedDevOrigins: [
     "http://192.168.254.104:3000",
     "http://localhost:3000",
