@@ -54,7 +54,7 @@ export async function GET(
       default:
         return "/usr/bin/google-chrome";
     }
-  }
+  };
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
@@ -290,9 +290,9 @@ export async function GET(
 
     const browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: { width: 1280, height: 720 },
+      defaultViewport: chromium.defaultViewport,
       executablePath: await getExecutablePath(),
-      headless: true,
+      headless: chromium.headless,
     });
 
     try {
