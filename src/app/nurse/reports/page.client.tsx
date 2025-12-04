@@ -86,9 +86,9 @@ const patientTrendConfig = {
 } as const;
 
 const patientMixConfig = {
-    Student: { label: "Student", color: "#0d9488" },
-    Employee: { label: "Employee", color: "#2563eb" },
-    Unknown: { label: "Unspecified", color: "#94a3b8" },
+    StudentTertiary: { label: "Tertiary students", color: "#0d9488" },
+    StudentIbed: { label: "IBED students", color: "#22c55e" },
+    Employee: { label: "Employees", color: "#2563eb" },
 } as const satisfies Record<PatientTypeKey, { label: string; color: string }>;
 
 const numberFormatter = new Intl.NumberFormat("en-PH");
@@ -417,7 +417,7 @@ export function NurseReportsPageClient({
                                 <PieChart className="h-5 w-5" /> Patient mix
                             </CardTitle>
                             <CardDescription>
-                                Distribution of student and employee visits across the selected quarter.
+                                Distribution of tertiary, IBED, and employee visits for the selected quarter.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -459,7 +459,7 @@ export function NurseReportsPageClient({
                                 </>
                             ) : (
                                 <p className="text-sm text-muted-foreground">
-                                    Select a quarter to see how student and employee visits compare.
+                                    Select a quarter to see how tertiary, IBED, and employee visits compare.
                                 </p>
                             )}
                         </CardContent>
@@ -520,9 +520,9 @@ export function NurseReportsPageClient({
                                     <TableHead>Quarter</TableHead>
                                     <TableHead>Consultations</TableHead>
                                     <TableHead>Unique patients</TableHead>
-                                    <TableHead>Students</TableHead>
+                                    <TableHead>Tertiary</TableHead>
+                                    <TableHead>IBED</TableHead>
                                     <TableHead>Employees</TableHead>
-                                    <TableHead>Unspecified</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -531,9 +531,9 @@ export function NurseReportsPageClient({
                                         <TableCell className="font-semibold text-primary">{item.label}</TableCell>
                                         <TableCell>{numberFormatter.format(item.consultations)}</TableCell>
                                         <TableCell>{numberFormatter.format(item.uniquePatients)}</TableCell>
-                                        <TableCell>{numberFormatter.format(item.patientTypeCounts.Student ?? 0)}</TableCell>
+                                        <TableCell>{numberFormatter.format(item.patientTypeCounts.StudentTertiary ?? 0)}</TableCell>
+                                        <TableCell>{numberFormatter.format(item.patientTypeCounts.StudentIbed ?? 0)}</TableCell>
                                         <TableCell>{numberFormatter.format(item.patientTypeCounts.Employee ?? 0)}</TableCell>
-                                        <TableCell>{numberFormatter.format(item.patientTypeCounts.Unknown ?? 0)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

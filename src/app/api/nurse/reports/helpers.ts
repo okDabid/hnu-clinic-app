@@ -1,3 +1,5 @@
+import { Department, YearLevel } from "@prisma/client";
+
 import prisma from "@/lib/prisma";
 
 export const QUARTERS = [1, 2, 3, 4] as const;
@@ -11,7 +13,7 @@ export const QUARTER_LABELS = {
 
 export type QuarterNumber = (typeof QUARTERS)[number];
 
-type PatientTypeKey = "Student" | "Employee" | "Unknown";
+type PatientTypeKey = "StudentTertiary" | "StudentIbed" | "Employee";
 
 type PatientTypeCounts = Record<PatientTypeKey, number>;
 
@@ -55,11 +57,39 @@ type ReportQuery = {
     currentDate?: Date;
 };
 
+const BASIC_EDUCATION_YEAR_LEVELS: YearLevel[] = [
+    YearLevel.KINDERGARTEN_1,
+    YearLevel.KINDERGARTEN_2,
+    YearLevel.GRADE_1,
+    YearLevel.GRADE_2,
+    YearLevel.GRADE_3,
+    YearLevel.GRADE_4,
+    YearLevel.GRADE_5,
+    YearLevel.GRADE_6,
+    YearLevel.GRADE_7,
+    YearLevel.GRADE_8,
+    YearLevel.GRADE_9,
+    YearLevel.GRADE_10,
+    YearLevel.GRADE_11,
+    YearLevel.GRADE_12,
+];
+
+function isBasicEducationStudent({
+    department,
+    year_level,
+}: {
+    department?: Department | null;
+    year_level?: YearLevel | null;
+}) {
+    if (department === Department.BASIC_EDUCATION) return true;
+    return year_level ? BASIC_EDUCATION_YEAR_LEVELS.includes(year_level) : false;
+}
+
 function createAccumulator(): QuarterAccumulator {
     return {
         consultations: 0,
         patientIds: new Set(),
-        patientTypeCounts: { Student: 0, Employee: 0, Unknown: 0 },
+        patientTypeCounts: { StudentTertiary: 0, StudentIbed: 0, Employee: 0 },
         diagnosisCounts: new Map(),
     };
 }
@@ -120,7 +150,13 @@ export async function getQuarterlyReports({
                     patient_user_id: true,
                     patient: {
                         select: {
-                            student: { select: { stud_user_id: true } },
+                            student: {
+                                select: {
+                                    stud_user_id: true,
+                                    department: true,
+                                    year_level: true,
+                                },
+                            },
                             employee: { select: { emp_id: true } },
                         },
                     },
@@ -155,10 +191,11 @@ export async function getQuarterlyReports({
         }
 
         const patientType: PatientTypeKey = appointment.patient?.student
-            ? "Student"
-            : appointment.patient?.employee
-                ? "Employee"
-                : "Unknown";
+            ? isBasicEducationStudent(appointment.patient.student)
+                ? "StudentIbed"
+                : "StudentTertiary"
+            : "Employee";
+
         accumulator.patientTypeCounts[patientType] += 1;
 
         const diagnosis = normalizeDiagnosis(consultation.diagnosis);
