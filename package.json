@@ -62,7 +62,7 @@
     "react-hook-form": "^7.68.0",
     "react-icons": "^5.5.0",
     "react-resizable-panels": "^3.0.6",
-    "recharts": "^3.5.1",
+    "recharts": "^2.15.4",
     "sonner": "^2.0.7",
     "swr": "^2.3.7",
     "tailwind-merge": "^3.4.0",
@@ -89,6 +89,7 @@
     "typescript": "^5"
   },
   "overrides": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "react-is": "^19.0.0-rc-69d4b800-20241021"
   }
 }
