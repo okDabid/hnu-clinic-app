@@ -23,6 +23,7 @@ import {
   slugify,
   titleCase,
 } from "@/lib/medical-certificate";
+import { chromiumLaunchOptions, resolveChromiumExecutablePath } from "@/lib/chromium";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,30 +32,6 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const isLocal = !process.env.AWS_REGION && !process.env.VERCEL;
-  const getExecutablePath = async () => {
-    if (process.env.CHROME_EXECUTABLE_PATH) {
-      return process.env.CHROME_EXECUTABLE_PATH;
-    }
-
-    const chromiumPath = await chromium.executablePath();
-    if (chromiumPath) {
-      return chromiumPath;
-    }
-
-    if (!isLocal) {
-      throw new Error("Unable to resolve chromium executable path");
-    }
-
-    switch (process.platform) {
-      case "win32":
-        return "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-      case "darwin":
-        return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-      default:
-        return "/usr/bin/google-chrome";
-    }
-  };
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
@@ -289,10 +266,9 @@ export async function GET(
     const html = renderCertificateHtml(context);
 
     const browser = await puppeteer.launch({
-      args: chromium.args,
+      ...chromiumLaunchOptions(),
       defaultViewport: null,
-      executablePath: await getExecutablePath(),
-      headless: true,
+      executablePath: await resolveChromiumExecutablePath(),
     });
 
     try {
