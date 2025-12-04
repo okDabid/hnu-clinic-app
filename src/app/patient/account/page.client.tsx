@@ -46,8 +46,13 @@ import { MedicalHistoryField } from "@/components/account/medical-history-field"
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import { validateAndNormalizeContacts } from "@/lib/validation";
+import {
+    formatPhoneInputDisplay,
+    normalizePhilippinePhoneInput,
+    validateAndNormalizeContacts,
+} from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
+import { PhoneInput } from "react-international-phone";
 
 import PatientAccountLoading from "./loading";
 import {
@@ -940,13 +945,22 @@ export function PatientAccountPageClient({
                                             <Label htmlFor="contact-number" className="text-sm font-medium text-emerald-900">
                                                 Contact number
                                             </Label>
-                                            <Input
+                                            <PhoneInput
                                                 id="contact-number"
                                                 name="contactNumber"
-                                                type="tel"
-                                                placeholder="09XXXXXXXXX"
-                                                value={profile.contactno || ""}
-                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                                defaultCountry="ph"
+                                                countries={["ph"]}
+                                                placeholder="09123456789"
+                                                value={formatPhoneInputDisplay(profile.contactno)}
+                                                onChange={(value) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        contactno: normalizePhilippinePhoneInput(value),
+                                                    })
+                                                }
+                                                className="w-full"
+                                                inputClassName="text-emerald-900"
+                                                forceDialCode
                                             />
                                         </div>
                                     </div>
@@ -1176,12 +1190,22 @@ export function PatientAccountPageClient({
                                             >
                                                 Contact number
                                             </Label>
-                                            <Input
+                                            <PhoneInput
                                                 id="emergency-contact-number"
                                                 name="emergencyContactNumber"
-                                                value={profile.emergencyco_num || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
-                                                placeholder="09XXXXXXXXX"
+                                                defaultCountry="ph"
+                                                countries={["ph"]}
+                                                placeholder="09123456789"
+                                                value={formatPhoneInputDisplay(profile.emergencyco_num)}
+                                                onChange={(value) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        emergencyco_num: normalizePhilippinePhoneInput(value),
+                                                    })
+                                                }
+                                                className="w-full"
+                                                inputClassName="text-emerald-900"
+                                                forceDialCode
                                             />
                                         </div>
                                         <div className="space-y-2">
