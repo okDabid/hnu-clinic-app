@@ -582,6 +582,8 @@ export function NurseReportsPageClient({
                         </CardTitle>
                         <CardDescription>
                             Consultation volume, unique patients, and illness distribution for each quarter.
+                            Unique patients count distinct individuals so you can spot repeat visits within the
+                            same quarter.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="overflow-x-auto">
@@ -621,6 +623,10 @@ export function NurseReportsPageClient({
                                 )}
                             </TableBody>
                         </Table>
+                        <p className="mt-3 text-xs text-muted-foreground">
+                            Compare consultations and unique patients to understand how many repeat visits
+                            occurred during each quarter.
+                        </p>
                     </CardContent>
                 </Card>
             </section>
