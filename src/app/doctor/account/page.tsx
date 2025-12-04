@@ -32,8 +32,13 @@ import {
     serializeMedicalHistory,
     type MedicalHistoryValue,
 } from "@/lib/medical-history";
-import { validateAndNormalizeContacts } from "@/lib/validation";
+import {
+    formatPhoneInputDisplay,
+    normalizePhilippinePhoneInput,
+    validateAndNormalizeContacts,
+} from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
+import { PhoneInput } from "react-international-phone";
 
 import DoctorAccountLoading from "./loading";
 
@@ -736,11 +741,20 @@ export default function DoctorAccountPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <Input
-                                                type="tel"
+                                            <PhoneInput
+                                                defaultCountry="ph"
+                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
-                                                value={profile.contactno || ""}
-                                                onChange={(e) => setProfile({ ...profile, contactno: e.target.value })}
+                                                value={formatPhoneInputDisplay(profile.contactno)}
+                                                onChange={(value) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        contactno: normalizePhilippinePhoneInput(value),
+                                                    })
+                                                }
+                                                className="w-full"
+                                                inputClassName="text-emerald-900"
+                                                forceDialCode
                                             />
                                         </div>
                                     </div>
@@ -814,10 +828,20 @@ export default function DoctorAccountPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <Input
-                                                value={profile.emergencyco_num || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_num: e.target.value })}
+                                            <PhoneInput
+                                                defaultCountry="ph"
+                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
+                                                value={formatPhoneInputDisplay(profile.emergencyco_num)}
+                                                onChange={(value) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        emergencyco_num: normalizePhilippinePhoneInput(value),
+                                                    })
+                                                }
+                                                className="w-full"
+                                                inputClassName="text-emerald-900"
+                                                forceDialCode
                                             />
                                         </div>
                                         <div className="space-y-2">

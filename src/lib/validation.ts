@@ -43,6 +43,49 @@ type ContactValidationError = {
 export type ContactValidationResult = ContactValidationSuccess | ContactValidationError;
 
 /**
+ * Converts any Philippine phone input (with or without +63) into the 09XXXXXXXXX local format.
+ */
+export function normalizePhilippinePhoneInput(raw: string): string {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return "";
+
+    let subscriber = digits;
+
+    if (subscriber.startsWith("63")) {
+        subscriber = subscriber.slice(2);
+    }
+
+    if (subscriber.startsWith("0")) {
+        subscriber = subscriber.slice(1);
+    }
+
+    subscriber = subscriber.slice(0, 10);
+
+    return subscriber ? `0${subscriber}` : "";
+}
+
+/**
+ * Formats stored 09XXXXXXXXX numbers for the phone input display without extra spacing or dial code.
+ */
+export function formatPhoneInputDisplay(value?: string | null): string {
+    const digits = (value ?? "").replace(/\D/g, "");
+
+    if (!digits) return "";
+
+    let subscriber = digits;
+
+    if (subscriber.startsWith("63")) {
+        subscriber = subscriber.slice(2);
+    }
+
+    if (!subscriber.startsWith("0")) {
+        subscriber = `0${subscriber}`;
+    }
+
+    return subscriber.slice(0, 11);
+}
+
+/**
  * Validates and normalizes email and contact numbers for profile forms.
  */
 export function validateAndNormalizeContacts(input: ContactValidationInput): ContactValidationResult {

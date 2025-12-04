@@ -67,11 +67,16 @@ import { MedicalHistoryField } from "@/components/account/medical-history-field"
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import { validateAndNormalizeContacts } from "@/lib/validation";
+import {
+    formatPhoneInputDisplay,
+    normalizePhilippinePhoneInput,
+    validateAndNormalizeContacts,
+} from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 import { cn } from "@/lib/utils";
 import { usePagination } from "@/hooks/use-pagination";
 import { TablePagination } from "@/components/table-pagination";
+import { PhoneInput } from "react-international-phone";
 
 import NurseAccountsLoading from "./loading";
 import {
@@ -1087,11 +1092,20 @@ export function NurseAccountsPageClient({
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <Input
-                                                type="tel"
+                                            <PhoneInput
+                                                defaultCountry="ph"
+                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
-                                                value={profile.contactno || ""}
-                                                onChange={(event) => setProfile({ ...profile, contactno: event.target.value })}
+                                                value={formatPhoneInputDisplay(profile.contactno)}
+                                                onChange={(value) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        contactno: normalizePhilippinePhoneInput(value),
+                                                    })
+                                                }
+                                                className="w-full"
+                                                inputClassName="text-emerald-900"
+                                                forceDialCode
                                             />
                                         </div>
                                     </div>
@@ -1165,10 +1179,20 @@ export function NurseAccountsPageClient({
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <Input
-                                                value={profile.emergencyco_num || ""}
-                                                onChange={(event) => setProfile({ ...profile, emergencyco_num: event.target.value })}
+                                            <PhoneInput
+                                                defaultCountry="ph"
+                                                countries={["ph"]}
                                                 placeholder="09XXXXXXXXX"
+                                                value={formatPhoneInputDisplay(profile.emergencyco_num)}
+                                                onChange={(value) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        emergencyco_num: normalizePhilippinePhoneInput(value),
+                                                    })
+                                                }
+                                                className="w-full"
+                                                inputClassName="text-emerald-900"
+                                                forceDialCode
                                             />
                                         </div>
                                         <div className="space-y-2">

@@ -1,0 +1,12 @@
+{
+  "name": "react-international-phone",
+  "version": "0.0.0-local",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": ["dist/style.css"],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  }
+}
