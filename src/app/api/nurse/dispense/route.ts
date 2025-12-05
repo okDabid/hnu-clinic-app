@@ -25,10 +25,22 @@ export async function GET() {
 
         const now = new Date();
 
+        const physicians = await prisma.users.findMany({
+            where: {
+                role: Role.DOCTOR,
+                employee: { specialization: "Physician" },
+            },
+            select: { user_id: true },
+        });
+
+        const physicianIds = physicians.map((p) => p.user_id);
+
         const [dispenses, consultations, medicines] = await Promise.all([
             listDispenses(),
             prisma.consultation.findMany({
-                where: { nurse_user_id: session.user.id },
+                where: {
+                    doctor_user_id: { in: physicianIds },
+                },
                 include: {
                     appointment: {
                         include: {
