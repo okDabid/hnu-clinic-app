@@ -12,12 +12,6 @@ import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
 import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
 import { NurseLayout } from "@/components/nurse/nurse-layout";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
 import { useDashboardUser } from "@/hooks/use-dashboard-user";
 
 const quickActions = [
@@ -61,9 +55,10 @@ export default function NurseDashboardPage() {
                 heading={`Good day, Nurse ${firstName}`}
                 description="Keep the clinic running smoothly with instant visibility into schedules, stock levels, and patient coordination. Use the quick tools below to support the care team."
             />
-            <div className="grid gap-5 lg:grid-cols-[2fr_1.2fr]">
+            <div className="grid gap-6 xl:gap-8 lg:grid-cols-[3fr_1fr]">
                 <QuickActionsGrid
                     actions={quickActions}
+                    className="xl:grid-cols-4"
                     highlight={{
                         title: "Operations insights",
                         icon: BarChart3,

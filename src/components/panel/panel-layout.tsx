@@ -125,13 +125,19 @@ export function PanelLayout({
                         href={item.href}
                         className={cn(
                             "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors",
-                            "hover:bg-primary/10 hover:text-primary",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
-                            isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground"
+                            isActive
+                                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
                         )}
                         onClick={() => setMobileOpen(false)}
                     >
-                        <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-primary")} />
+                        <Icon
+                            className={cn(
+                                "h-5 w-5",
+                                isActive ? "text-primary-foreground" : "text-primary"
+                            )}
+                        />
                         <span className="whitespace-nowrap">{item.label}</span>
                     </Link>
                 );
@@ -166,10 +172,6 @@ export function PanelLayout({
                                 hideArrow
                                 className="flex items-center gap-3 border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
                             >
-                                <Avatar className="h-8 w-8 border border-primary/10 bg-primary/5">
-                                    <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                                    <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
-                                </Avatar>
                                 <div className="space-y-0.5">
                                     <p className="text-sm font-semibold leading-none">{fullName}</p>
                                     <p className="text-xs text-muted-foreground">Signed in</p>
@@ -189,9 +191,11 @@ export function PanelLayout({
                                                 <Link
                                                     href={item.href}
                                                     className={cn(
-                                                        "flex h-12 w-12 items-center justify-center rounded-2xl text-primary transition",
-                                                        "hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
-                                                        isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : ""
+                                                        "flex h-12 w-12 items-center justify-center rounded-2xl transition",
+                                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                                                        isActive
+                                                            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                                            : "text-primary hover:bg-primary/10"
                                                     )}
                                                     aria-label={item.label}
                                                 >

@@ -20,7 +20,7 @@ export function DashboardWelcome({
     return (
         <section
             className={cn(
-                "rounded-3xl border border-primary/20 bg-gradient-to-r from-primary/10 via-white to-primary/5 p-6 shadow-sm",
+                "rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 p-6 shadow-sm",
                 className,
             )}
         >
