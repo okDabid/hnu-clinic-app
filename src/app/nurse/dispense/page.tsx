@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
 import { DispenseHistoryTable, DispenseHistoryRow } from "@/components/dispense/dispense-history-table";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { formatManilaDateTime } from "@/lib/time";
 import { summarizeDispenses } from "@/lib/dispense-summary";
 import { formatProfileName } from "@/lib/staff-name";
@@ -12,7 +24,7 @@ import { formatProfileName } from "@/lib/staff-name";
 import NurseDispenseLoading from "./loading";
 
 // Extend Dispense type to include batch usage
-type Dispense = {
+type DispenseRecord = {
     dispense_id: string;
     quantity: number;
     createdAt: string;
@@ -30,8 +42,9 @@ type Dispense = {
     } | null;
     walk_in_id_number: string | null;
     walk_in_contact: string | null;
-    walk_in_notes: string | null;
+        walk_in_notes: string | null;
     scholar: {
+        user_id: string;
         username: string;
         student: { fname: string | null; mname: string | null; lname: string | null } | null;
         employee: { fname: string | null; mname: string | null; lname: string | null } | null;
@@ -46,14 +59,47 @@ type Dispense = {
     }[];
 };
 
-export default function NurseDispensePage() {
-    const [dispenses, setDispenses] = useState<Dispense[]>([]);
-    const [initializing, setInitializing] = useState(true);
+type ConsultationOption = {
+    consultation_id: string;
+    patientName: string;
+    clinicName: string;
+    appointmentDate: string | null;
+    consultedAt: string | null;
+};
 
-    const { total, consultations, walkIns, latestDispense, totalQuantity } = useMemo(
-        () => summarizeDispenses(dispenses),
-        [dispenses]
-    );
+type MedicineOption = {
+    med_id: string;
+    item_name: string;
+    clinicName: string;
+    quantity: number;
+};
+
+type DispenseResponse = {
+    dispenses: DispenseRecord[];
+    consultations: ConsultationOption[];
+    medicines: MedicineOption[];
+    error?: string;
+};
+
+function formatDateTime(value: string | null | undefined, options?: Intl.DateTimeFormatOptions) {
+    const formatted = formatManilaDateTime(value, options);
+    return formatted || "—";
+}
+
+export default function NurseDispensePage() {
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const [dispenses, setDispenses] = useState<DispenseRecord[]>([]);
+    const [consultations, setConsultations] = useState<ConsultationOption[]>([]);
+    const [medicines, setMedicines] = useState<MedicineOption[]>([]);
+    const [initializing, setInitializing] = useState(true);
+    const [form, setForm] = useState({
+        consultation_id: "",
+        med_id: "",
+        quantity: "",
+    });
+
+    const summary = useMemo(() => summarizeDispenses(dispenses), [dispenses]);
 
     const tableRows = useMemo<DispenseHistoryRow[]>(
         () =>
@@ -84,18 +130,87 @@ export default function NurseDispensePage() {
         [dispenses]
     );
 
+    const selectedMedicine = useMemo(
+        () => medicines.find((med) => med.med_id === form.med_id) || null,
+        [medicines, form.med_id]
+    );
+
     async function loadDispenses() {
         try {
+            setLoading(true);
             const res = await fetch("/api/nurse/dispense", { cache: "no-store" });
+            const data: DispenseResponse = await res.json();
+
             if (!res.ok) {
-                throw new Error("Failed to load dispense records");
+                toast.error(data?.error || "Failed to load dispense data");
+                return;
             }
-            const data = await res.json();
-            setDispenses(Array.isArray(data) ? data : []);
+
+            setDispenses(data.dispenses || []);
+            setConsultations(data.consultations || []);
+            setMedicines(data.medicines || []);
         } catch (error) {
             console.error(error);
+            toast.error("Failed to load dispense data");
         } finally {
+            setLoading(false);
             setInitializing(false);
+        }
+    }
+
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+
+        if (!form.consultation_id || !form.med_id || !form.quantity) {
+            toast.error("Please complete all fields");
+            return;
+        }
+
+        const quantity = Number(form.quantity);
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            toast.error("Quantity must be a positive number");
+            return;
+        }
+
+        if (selectedMedicine && quantity > selectedMedicine.quantity) {
+            toast.error("Quantity exceeds current stock");
+            return;
+        }
+
+        try {
+            setSubmitting(true);
+            const res = await fetch("/api/nurse/dispense", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    consultation_id: form.consultation_id,
+                    med_id: form.med_id,
+                    quantity,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast.error(data?.error || "Failed to record dispense");
+                return;
+            }
+
+            setDispenses((prev) => [data as DispenseRecord, ...prev]);
+            setMedicines((prev) =>
+                prev.map((med) =>
+                    med.med_id === form.med_id
+                        ? { ...med, quantity: Math.max(0, med.quantity - quantity) }
+                        : med
+                )
+            );
+            setForm({ consultation_id: "", med_id: "", quantity: "" });
+            toast.success("Dispense recorded successfully");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to record dispense");
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -111,6 +226,14 @@ export default function NurseDispensePage() {
         <NurseLayout
             title="Dispense Records"
             description="Monitor dispensed medicines and review batch usage for accurate stock tracking."
+            actions={
+                <Button
+                    className="rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
+                    onClick={() => setForm({ consultation_id: "", med_id: "", quantity: "" })}
+                >
+                    Reset form
+                </Button>
+            }
         >
             <section className="mx-auto w-full max-w-5xl space-y-8">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -119,9 +242,11 @@ export default function NurseDispensePage() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Total dispenses</CardTitle>
                         </CardHeader>
                         <CardContent className="pb-6">
-                            <p className="text-3xl font-bold text-primary">{total}</p>
+                            <p className="text-3xl font-bold text-primary">{summary.total}</p>
                             <p className="mt-2 text-xs text-muted-foreground">
-                                {totalQuantity > 0 ? `${totalQuantity} total items issued` : "No medicines dispensed yet."}
+                                {summary.totalQuantity > 0
+                                    ? `${summary.totalQuantity} total items issued`
+                                    : "No medicines dispensed yet."}
                             </p>
                         </CardContent>
                     </Card>
@@ -130,7 +255,7 @@ export default function NurseDispensePage() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Consultations served</CardTitle>
                         </CardHeader>
                         <CardContent className="pb-6">
-                            <p className="text-3xl font-bold text-primary">{consultations}</p>
+                            <p className="text-3xl font-bold text-primary">{summary.consultations}</p>
                             <p className="mt-2 text-xs text-muted-foreground">
                                 Dispenses linked to consultations handled by the clinic team.
                             </p>
@@ -141,7 +266,7 @@ export default function NurseDispensePage() {
                             <CardTitle className="text-sm font-medium text-muted-foreground">Walk-ins assisted</CardTitle>
                         </CardHeader>
                         <CardContent className="pb-6">
-                            <p className="text-3xl font-bold text-primary">{walkIns}</p>
+                            <p className="text-3xl font-bold text-primary">{summary.walkIns}</p>
                             <p className="mt-2 text-xs text-muted-foreground">
                                 Walk-ins coordinated with scholars for medicine requests.
                             </p>
@@ -153,7 +278,7 @@ export default function NurseDispensePage() {
                         </CardHeader>
                         <CardContent className="pb-6">
                             <p className="text-lg font-semibold text-primary">
-                                {latestDispense ? formatManilaDateTime(latestDispense) : "Awaiting first record"}
+                                {summary.latestDispense ? formatManilaDateTime(summary.latestDispense) : "Awaiting first record"}
                             </p>
                             <p className="mt-2 text-xs text-muted-foreground">
                                 Timestamps are adjusted to Manila local time.
@@ -162,6 +287,127 @@ export default function NurseDispensePage() {
                     </Card>
                 </div>
 
+                <Card className="rounded-3xl border border-primary/20 bg-white/85 shadow-sm">
+                    <CardHeader className="space-y-1 border-b border-primary/20">
+                        <CardTitle className="text-lg font-semibold text-primary sm:text-xl">
+                            Record a dispense
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Link the dispensed medicine to a consultation to keep the inventory and patient record aligned.
+                        </p>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                        <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
+                            <div className="space-y-2 sm:col-span-2">
+                                <Label className="font-medium text-primary">Consultation</Label>
+                                <Select
+                                    value={form.consultation_id}
+                                    onValueChange={(value) =>
+                                        setForm((prev) => ({ ...prev, consultation_id: value }))
+                                    }
+                                >
+                                    <SelectTrigger className="w-full min-h-[90px] rounded-xl border border-primary/25 bg-white/80 px-4 py-3 text-base leading-relaxed whitespace-normal text-left focus:ring-2 focus:ring-primary/50">
+                                        <SelectValue placeholder="Select consultation" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {consultations.length > 0 ? (
+                                            consultations.map((consultation) => (
+                                                <SelectItem
+                                                    key={consultation.consultation_id}
+                                                    value={consultation.consultation_id}
+                                                >
+                                                    <div className="flex flex-col text-left">
+                                                        <span className="font-medium">
+                                                            {consultation.patientName}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {consultation.clinicName} · Appointment: {formatDateTime(consultation.appointmentDate)}
+                                                        </span>
+                                                        {consultation.consultedAt && (
+                                                            <span className="text-xs text-muted-foreground">
+                                                                Consultation recorded: {formatDateTime(consultation.consultedAt)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            <SelectItem value="no_consultation" disabled>
+                                                No consultations available
+                                            </SelectItem>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="font-medium text-primary">Medicine</Label>
+                                <Select
+                                    value={form.med_id}
+                                    onValueChange={(value) => setForm((prev) => ({ ...prev, med_id: value }))}
+                                >
+                                    <SelectTrigger className="w-full rounded-xl border border-primary/25 bg-white/80">
+                                        <SelectValue placeholder="Select medicine" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {medicines.length > 0 ? (
+                                            medicines.map((medicine) => (
+                                                <SelectItem key={medicine.med_id} value={medicine.med_id}>
+                                                    <div className="flex flex-col text-left">
+                                                        <span className="font-medium">{medicine.item_name}</span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {medicine.clinicName} · Stock: {medicine.quantity}
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            <SelectItem value="no_medicine" disabled>
+                                                No medicines available
+                                            </SelectItem>
+                                        )}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="font-medium text-primary">Quantity</Label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={form.quantity}
+                                    onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))}
+                                    placeholder="Enter quantity"
+                                    required
+                                    className="rounded-xl border border-primary/25 bg-white/80 focus-visible:ring-primary"
+                                />
+                                {selectedMedicine ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        Available stock: {selectedMedicine.quantity}
+                                    </p>
+                                ) : null}
+                            </div>
+
+                            <div className="sm:col-span-2 flex justify-end">
+                                <Button
+                                    type="submit"
+                                    className="rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90"
+                                    disabled={submitting}
+                                >
+                                    {submitting ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        "Record Dispense"
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
+
                 <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b border-primary/20/60">
                         <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
@@ -169,7 +415,7 @@ export default function NurseDispensePage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col pt-4">
-                        <DispenseHistoryTable rows={tableRows} />
+                        <DispenseHistoryTable rows={tableRows} loading={loading} />
                     </CardContent>
                 </Card>
             </section>

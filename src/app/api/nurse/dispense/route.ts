@@ -1,14 +1,97 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 import { listDispenses, recordDispense, DispenseError } from "@/lib/dispense";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { Role } from "@prisma/client";
 
+function formatPatientName(patient: {
+    username: string;
+    student?: { fname: string | null; lname: string | null } | null;
+    employee?: { fname: string | null; lname: string | null } | null;
+}) {
+    const studentName = patient.student?.fname && patient.student?.lname
+        ? `${patient.student.fname} ${patient.student.lname}`
+        : null;
+    const employeeName = patient.employee?.fname && patient.employee?.lname
+        ? `${patient.employee.fname} ${patient.employee.lname}`
+        : null;
+
+    return studentName || employeeName || patient.username;
+}
+
 export async function GET() {
     try {
-        await requireRole([Role.NURSE]);
+        const session = await requireRole([Role.NURSE]);
 
-        const dispenses = await listDispenses();
-        return NextResponse.json(dispenses);
+        const now = new Date();
+
+        const [dispenses, consultations, medicines] = await Promise.all([
+            listDispenses(),
+            prisma.consultation.findMany({
+                where: { nurse_user_id: session.user.id },
+                include: {
+                    appointment: {
+                        include: {
+                            patient: {
+                                select: {
+                                    username: true,
+                                    student: { select: { fname: true, lname: true } },
+                                    employee: { select: { fname: true, lname: true } },
+                                },
+                            },
+                            clinic: { select: { clinic_name: true } },
+                        },
+                    },
+                },
+                orderBy: { createdAt: "desc" },
+            }),
+            prisma.medInventory.findMany({
+                include: {
+                    clinic: { select: { clinic_name: true } },
+                    replenishments: {
+                        where: {
+                            remaining_qty: { gt: 0 },
+                            expiry_date: { gte: now },
+                        },
+                    },
+                },
+                orderBy: { item_name: "asc" },
+            }),
+        ]);
+
+        const consultationOptions = consultations
+            .filter((c) => c.appointment?.patient && c.appointment?.clinic)
+            .map((c) => ({
+                consultation_id: c.consultation_id,
+                patientName: formatPatientName(c.appointment!.patient),
+                clinicName: c.appointment!.clinic.clinic_name,
+                appointmentDate: c.appointment?.appointment_timestart
+                    ? c.appointment.appointment_timestart.toISOString()
+                    : null,
+                consultedAt: c.createdAt?.toISOString() ?? null,
+            }));
+
+        const medicineOptions = medicines
+            .map((m) => {
+                const availableQty = m.replenishments.reduce(
+                    (total, batch) => total + batch.remaining_qty,
+                    0
+                );
+
+                return {
+                    med_id: m.med_id,
+                    item_name: m.item_name,
+                    clinicName: m.clinic.clinic_name,
+                    quantity: availableQty,
+                };
+            })
+            .filter((m) => m.quantity > 0);
+
+        return NextResponse.json({
+            dispenses,
+            consultations: consultationOptions,
+            medicines: medicineOptions,
+        });
     } catch (err) {
         const authResponse = handleAuthError(err);
         if (authResponse) return authResponse;
