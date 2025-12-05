@@ -147,7 +147,7 @@ export function PanelLayout({
 
     return (
         <div className="relative flex min-h-screen bg-white">
-            <aside className="sticky left-0 top-0 hidden h-screen w-16 flex-col items-center border-r border-primary/10 bg-white py-6 lg:flex">
+            <aside className="sticky left-0 top-0 hidden h-screen w-16 flex-col items-center border-r border-primary/10 bg-white py-6 lg:flex shadow-md">
                 <TooltipProvider delayDuration={75}>
                     <div className="relative flex h-full w-full flex-col items-center gap-6 px-3">
                         <div className="flex h-12 w-12 items-center justify-center">
