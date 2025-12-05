@@ -161,9 +161,18 @@ export function PanelLayout({
                                     <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
                                 </Avatar>
                             </TooltipTrigger>
-                            <TooltipContent side="right" className="border-primary/10 bg-white text-primary shadow-sm">
-                                <p className="text-sm font-semibold leading-none">{fullName}</p>
-                                <p className="text-xs text-muted-foreground">Signed in</p>
+                            <TooltipContent
+                                side="right"
+                                className="flex items-center gap-3 border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
+                            >
+                                <Avatar className="h-8 w-8 border border-primary/10 bg-primary/5">
+                                    <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                                    <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-0.5">
+                                    <p className="text-sm font-semibold leading-none">{fullName}</p>
+                                    <p className="text-xs text-muted-foreground">Signed in</p>
+                                </div>
                             </TooltipContent>
                         </Tooltip>
 
@@ -188,7 +197,19 @@ export function PanelLayout({
                                                     <Icon className="h-5 w-5" />
                                                 </Link>
                                             </TooltipTrigger>
-                                            <TooltipContent side="right" className="border-primary/10 bg-white text-primary shadow-sm">
+                                            <TooltipContent
+                                                side="right"
+                                                className="flex items-center gap-3 border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
+                                            >
+                                                <span
+                                                    className={cn(
+                                                        "flex h-8 w-8 items-center justify-center rounded-full border border-primary/10",
+                                                        isActive ? "bg-primary text-primary-foreground" : "bg-primary/5 text-primary"
+                                                    )}
+                                                    aria-hidden
+                                                >
+                                                    <Icon className="h-4 w-4" />
+                                                </span>
                                                 <p className="text-sm font-semibold leading-none">{item.label}</p>
                                             </TooltipContent>
                                         </Tooltip>
@@ -209,7 +230,13 @@ export function PanelLayout({
                                     {isLoggingOut ? "…" : <LogOut className="h-5 w-5" />}
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="right" className="border-primary/10 bg-white text-primary shadow-sm">
+                            <TooltipContent
+                                side="right"
+                                className="flex items-center gap-3 border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
+                            >
+                                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-primary/10 bg-primary/5 text-primary">
+                                    <LogOut className="h-4 w-4" />
+                                </span>
                                 <p className="text-sm font-semibold leading-none">Logout</p>
                             </TooltipContent>
                         </Tooltip>
