@@ -17,6 +17,12 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export type PanelNavItem = {
@@ -136,56 +142,79 @@ export function PanelLayout({
     return (
         <div className="relative flex min-h-screen bg-white">
             <aside className="sticky left-0 top-0 hidden h-screen w-16 flex-col items-center border-r border-primary/10 bg-white py-6 lg:flex">
-                <div className="relative flex h-full w-full flex-col items-center gap-6 px-3">
-                    <div className="flex h-12 w-12 items-center justify-center">
-                        <Image
-                            src="/clinic-illustration.svg"
-                            alt="HNU Clinic Health Record & Appointment System emblem"
-                            width={44}
-                            height={44}
-                            className="h-9 w-9 object-contain"
-                        />
+                <TooltipProvider delayDuration={75}>
+                    <div className="relative flex h-full w-full flex-col items-center gap-6 px-3">
+                        <div className="flex h-12 w-12 items-center justify-center">
+                            <Image
+                                src="/clinic-illustration.svg"
+                                alt="HNU Clinic Health Record & Appointment System emblem"
+                                width={44}
+                                height={44}
+                                className="h-9 w-9 object-contain"
+                            />
+                        </div>
+
+                        <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                                <Avatar className="h-12 w-12 border border-primary/15">
+                                    <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                                    <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                                </Avatar>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="border-primary/10 bg-white text-primary shadow-sm">
+                                <p className="text-sm font-semibold leading-none">{fullName}</p>
+                                <p className="text-xs text-muted-foreground">Signed in</p>
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <div className="flex-1 space-y-2 overflow-y-auto pb-4">
+                            <nav className="flex flex-col items-center gap-3">
+                                {navItems.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = isActiveNav(item.href);
+
+                                    return (
+                                        <Tooltip key={item.href} delayDuration={0}>
+                                            <TooltipTrigger asChild>
+                                                <Link
+                                                    href={item.href}
+                                                    className={cn(
+                                                        "flex h-12 w-12 items-center justify-center rounded-2xl text-primary transition",
+                                                        "hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                                                        isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : ""
+                                                    )}
+                                                    aria-label={item.label}
+                                                >
+                                                    <Icon className="h-5 w-5" />
+                                                </Link>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="right" className="border-primary/10 bg-white text-primary shadow-sm">
+                                                <p className="text-sm font-semibold leading-none">{item.label}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    );
+                                })}
+                            </nav>
+                        </div>
+
+                        <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="flex h-12 w-12 items-center justify-center rounded-2xl text-primary hover:bg-primary/10"
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                    aria-label="Logout"
+                                >
+                                    {isLoggingOut ? "…" : <LogOut className="h-5 w-5" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="border-primary/10 bg-white text-primary shadow-sm">
+                                <p className="text-sm font-semibold leading-none">Logout</p>
+                            </TooltipContent>
+                        </Tooltip>
                     </div>
-
-                    <Avatar className="h-12 w-12 border border-primary/15">
-                        <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                        <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 space-y-2 overflow-y-auto pb-4">
-                        <nav className="flex flex-col items-center gap-3">
-                            {navItems.map((item) => {
-                                const Icon = item.icon;
-                                const isActive = isActiveNav(item.href);
-
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        className={cn(
-                                            "flex h-12 w-12 items-center justify-center rounded-2xl text-primary transition",
-                                            "hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
-                                            isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : ""
-                                        )}
-                                        aria-label={item.label}
-                                    >
-                                        <Icon className="h-5 w-5" />
-                                    </Link>
-                                );
-                            })}
-                        </nav>
-                    </div>
-
-                    <Button
-                        variant="ghost"
-                        className="flex h-12 w-12 items-center justify-center rounded-2xl text-primary hover:bg-primary/10"
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                        aria-label="Logout"
-                    >
-                        {isLoggingOut ? "…" : <LogOut className="h-5 w-5" />}
-                    </Button>
-                </div>
+                </TooltipProvider>
             </aside>
 
             <div className="flex min-h-screen flex-1 flex-col px-4 pb-8 pt-6 md:px-6 lg:px-10">
