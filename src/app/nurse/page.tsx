@@ -44,6 +44,25 @@ const quickActions = [
     },
 ];
 
+const coordinationSteps = [
+    "Review pending appointments each morning and pre-stage charts and equipment for the care team.",
+    "Document every dispensing and inventory update as it happens to keep audit logs accurate.",
+    "Share schedule changes with doctors early so they can adjust consultations and follow-ups.",
+];
+
+const documentationLinks = [
+    {
+        label: "Open dispensing log",
+        href: "/nurse/dispense",
+        description: "Capture dispensing actions in real time to maintain an accurate ledger.",
+    },
+    {
+        label: "View clinic schedule",
+        href: "/nurse/clinic",
+        description: "Prepare rooms and resources ahead of busy clinic blocks.",
+    },
+];
+
 export default function NurseDashboardPage() {
     const { firstName } = useDashboardUser("Nurse");
 
@@ -74,24 +93,39 @@ export default function NurseDashboardPage() {
                 }}
             />
 
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+            <section className="grid gap-6 xl:grid-cols-2">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-lg text-primary">How to keep clinic flow steady</CardTitle>
                     </CardHeader>
+                    <CardContent className="space-y-4 text-sm text-muted-foreground">
+                        <ul className="space-y-3">
+                            {coordinationSteps.map((step) => (
+                                <li key={step} className="flex items-start gap-3 rounded-2xl bg-primary/5 p-3">
+                                    <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                                    <span>{step}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg text-primary">Documentation shortcuts</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <p>
-                            Review pending appointments each morning and pre-stage the necessary charts and equipment so care teams can begin on time.
-                        </p>
-                        <p>
-                            Document every dispensing and inventory update as it happens. Accurate logs keep compliance effortless during audits.
-                        </p>
-                        <Button asChild variant="outline" className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary/10">
-                            <Link href="/nurse/dispense">Open dispensing log</Link>
-                        </Button>
-                        <Button asChild variant="ghost" className="w-full rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
-                            <Link href="/nurse/clinic">View clinic schedule</Link>
-                        </Button>
+                        {documentationLinks.map(({ label, href, description }) => (
+                            <div key={label} className="space-y-2 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                                <div className="flex items-center justify-between gap-3">
+                                    <p className="font-semibold text-primary">{label}</p>
+                                    <Button asChild variant="link" className="h-auto p-0 text-sm font-semibold text-primary">
+                                        <Link href={href}>Open</Link>
+                                    </Button>
+                                </div>
+                                <p>{description}</p>
+                            </div>
+                        ))}
                     </CardContent>
                 </Card>
             </section>

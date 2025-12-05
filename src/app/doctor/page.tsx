@@ -98,7 +98,7 @@ export default function DoctorDashboardPage() {
                 }}
             />
 
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+            <section className="grid gap-6 xl:grid-cols-2">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-lg text-primary">Operational checklist</CardTitle>
