@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { SessionProvider, useSession, signOut } from "next-auth/react";
 import { Toaster, toast } from "sonner";
 
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
+
 /**
  * Monitors the session and signs out users whose accounts become inactive.
  */
@@ -65,10 +68,13 @@ export default function Providers({ children }: { children: ReactNode }) {
     }, []);
 
     return (
-        <SessionProvider>
-            {children}
-            <Toaster richColors position="top-center" />
-            <SessionWatcher /> {/* runs globally */}
-        </SessionProvider>
+        <ThemeProvider>
+            <SessionProvider>
+                {children}
+                <ThemeToggle className="fixed bottom-6 right-6 z-50" />
+                <Toaster richColors position="top-center" />
+                <SessionWatcher /> {/* runs globally */}
+            </SessionProvider>
+        </ThemeProvider>
     );
 }
