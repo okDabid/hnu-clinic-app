@@ -136,7 +136,7 @@ export default function PatientMedicalCertificatePage() {
                                     </div>
                                 </div>
                                 <p className="mt-2 text-sm text-primary/80">
-                                    For a printed or digital copy, please contact the clinic staff so they can provide the
+                                    For a printed, please contact the clinic staff so they can provide the
                                     appropriate document.
                                 </p>
                             </div>
@@ -157,7 +157,7 @@ export default function PatientMedicalCertificatePage() {
                         <CardTitle className="text-lg text-primary">How validity works</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <p>Your medical certificate stays valid for one year unless marked expired by the clinic.</p>
+                        <p>Your medical certificate stays valid for one year.</p>
                         <p>
                             If your certificate has expired, schedule a follow-up appointment with a physician so they can
                             review your records and issue a new one.
