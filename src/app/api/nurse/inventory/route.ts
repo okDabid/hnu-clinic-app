@@ -216,6 +216,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Quantity must be greater than 0" }, { status: 400 });
         }
 
+        if (strength !== undefined && Number(strength) < 0) {
+            return NextResponse.json({ error: "Strength cannot be negative" }, { status: 400 });
+        }
+
         const expiryDate = new Date(expiry);
         if (isNaN(expiryDate.getTime()) || expiryDate < new Date()) {
             return NextResponse.json({ error: "Expiry date must be valid and in the future" }, { status: 400 });
