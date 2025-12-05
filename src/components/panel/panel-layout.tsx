@@ -152,7 +152,12 @@ export function PanelLayout({
                     )}
                 >
                     <div className="flex h-full flex-col">
-                        <div className={cn("flex items-center gap-3 pb-6", isCollapsed ? "justify-center" : "justify-start")">
+                        <div
+                            className={cn(
+                                "flex items-center gap-3 pb-6",
+                                isCollapsed ? "justify-center" : "justify-start"
+                            )}
+                        >
                             <span className="relative inline-flex h-11 w-11 items-center justify-center">
                                 <Image
                                     src="/clinic-illustration.svg"
