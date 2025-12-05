@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LogOut, Menu, type LucideIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Menu, type LucideIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,7 @@ export function PanelLayout({
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const fullName = session?.user?.name ?? defaultName;
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     const avatarFallback = useMemo(() => {
         const [first = "", second = ""] = fullName.split(" ");
@@ -102,8 +103,8 @@ export function PanelLayout({
         }
     }
 
-    const navLinks = (
-        <nav className="flex flex-col gap-1">
+    const navLinks = (collapsed: boolean) => (
+        <nav className="flex flex-col gap-1.5">
             {navItems.map((item) => {
                 const Icon = item.icon;
                 const activeMatcher = isNavItemActive ?? ((href: string, current: string) => current === href);
@@ -114,15 +115,25 @@ export function PanelLayout({
                         key={item.href}
                         href={item.href}
                         className={cn(
-                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors",
+                            "flex items-center gap-3 rounded-xl py-2 text-sm font-semibold transition-colors",
                             "hover:bg-primary/10 hover:text-primary",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-primary/10",
+                            collapsed ? "justify-center px-2.5" : "justify-start px-3",
                             isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground"
                         )}
                         onClick={() => setMobileOpen(false)}
+                        title={item.label}
+                        aria-label={item.label}
                     >
-                        <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-primary")} />
-                        <span>{item.label}</span>
+                        <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary-foreground" : "text-primary")} />
+                        <span
+                            className={cn(
+                                "truncate text-left transition-[max-width,opacity] duration-200",
+                                collapsed ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100"
+                            )}
+                        >
+                            {item.label}
+                        </span>
                     </Link>
                 );
             })}
@@ -132,59 +143,106 @@ export function PanelLayout({
     return (
         <div className="relative min-h-screen bg-linear-to-br from-primary/10 via-white to-primary/5">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(34,197,94,0.12),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(34,197,94,0.1),transparent_25%)]" aria-hidden />
-            <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
-                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-primary/15 bg-white/90 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
-                    <div className="flex h-full flex-col overflow-hidden">
-                        <div className="flex items-center gap-3 pb-6">
-                            <span className="relative inline-flex h-11 w-11 items-center justify-center">
+            <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 lg:flex-row lg:gap-8 lg:px-8">
+                <aside
+                    className={cn(
+                        "hidden rounded-3xl border border-primary/15 bg-white/90 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)] lg:shrink-0 lg:flex-col lg:overflow-hidden",
+                        "transition-[width,padding] duration-300 ease-in-out",
+                        isCollapsed ? "w-20 px-3" : "w-72 px-6"
+                    )}
+                >
+                    <div className="flex h-full flex-col gap-4 pb-6 pt-6">
+                        <div
+                            className={cn(
+                                "flex items-center gap-3 rounded-2xl bg-primary/5 px-3 py-3",
+                                isCollapsed ? "justify-center" : "justify-start"
+                            )}
+                        >
+                            <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm shadow-primary/10">
                                 <Image
                                     src="/clinic-illustration.svg"
                                     alt="HNU Clinic Health Record & Appointment System emblem"
-                                    width={44}
-                                    height={44}
-                                    className="h-9 w-9 object-contain"
+                                    width={48}
+                                    height={48}
+                                    className="h-10 w-10 object-contain"
                                 />
                             </span>
-                            <div className="flex flex-col leading-tight text-left">
+                            <div
+                                className={cn(
+                                    "flex flex-col leading-tight text-left transition-[max-width,opacity] duration-200",
+                                    isCollapsed ? "max-w-0 opacity-0" : "max-w-[14rem] opacity-100"
+                                )}
+                            >
                                 <span className="text-sm font-semibold text-primary">HNU Clinic</span>
                                 <span className="text-xs font-medium text-primary/80">
                                     Health Record &amp; Appointment System
                                 </span>
                             </div>
                         </div>
-                        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
-                            <Avatar className="h-12 w-12 border border-primary/15">
+                        <div
+                            className={cn(
+                                "flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 px-3 py-3 shadow-sm",
+                                isCollapsed ? "justify-center" : "justify-start"
+                            )}
+                        >
+                            <Avatar className="h-11 w-11 border border-primary/15">
                                 <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
                                 <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
                             </Avatar>
-                            <div>
+                            <div
+                                className={cn(
+                                    "transition-[max-width,opacity] duration-200",
+                                    isCollapsed ? "max-w-0 opacity-0" : "max-w-[14rem] opacity-100"
+                                )}
+                            >
                                 <p className="text-xs text-primary/80">Signed in as</p>
                                 <p className="text-sm font-semibold text-primary">{fullName}</p>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto pr-2">
-                            {navLinks}
+                        <div className="flex-1 overflow-y-auto pr-1" aria-label={`${panelLabel} navigation`}>
+                            <div className="rounded-2xl bg-primary/5 px-2 py-2">{navLinks(isCollapsed)}</div>
                         </div>
-                        <Separator className="my-6" />
-                        <Button
-                            variant="default"
-                            className="mt-auto w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-primary/90"
-                            onClick={handleLogout}
-                            disabled={isLoggingOut}
-                        >
-                            {isLoggingOut ? (
-                                "Signing out..."
-                            ) : (
-                                <>
-                                    <LogOut className="h-4 w-4" />
-                                    Logout
-                                </>
-                            )}
-                        </Button>
+                        <div className="space-y-3">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="w-full justify-center rounded-xl border-primary/20 text-primary hover:bg-primary/10"
+                                onClick={() => setIsCollapsed((prev) => !prev)}
+                                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                            >
+                                {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                            </Button>
+                            <Separator className="bg-primary/10" />
+                            <Button
+                                variant="default"
+                                className={cn(
+                                    "w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-primary/90",
+                                    isCollapsed ? "justify-center px-0" : "justify-start"
+                                )}
+                                onClick={handleLogout}
+                                disabled={isLoggingOut}
+                            >
+                                {isLoggingOut ? (
+                                    "Signing out..."
+                                ) : (
+                                    <>
+                                        <LogOut className="h-4 w-4" />
+                                        <span
+                                            className={cn(
+                                                "truncate transition-[max-width,opacity] duration-200",
+                                                isCollapsed ? "max-w-0 opacity-0" : "max-w-[10rem] opacity-100"
+                                            )}
+                                        >
+                                            Logout
+                                        </span>
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 </aside>
 
-                <div className="flex flex-1 flex-col">
+                <div className="flex flex-1 flex-col pb-10">
                     <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white/85 px-4 py-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/65 md:px-6">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div className="space-y-3">
@@ -214,7 +272,24 @@ export function PanelLayout({
                                                 {sheetTitle}
                                             </SheetTitle>
                                         </SheetHeader>
-                                        <div className="flex h-full flex-col gap-6 overflow-y-auto px-6 py-6">
+                                        <div className="flex h-full flex-col gap-5 overflow-y-auto px-6 py-6">
+                                            <div className="flex items-center gap-3 rounded-2xl bg-primary/5 px-4 py-3">
+                                                <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm shadow-primary/10">
+                                                    <Image
+                                                        src="/clinic-illustration.svg"
+                                                        alt="HNU Clinic Health Record & Appointment System emblem"
+                                                        width={44}
+                                                        height={44}
+                                                        className="h-9 w-9 object-contain"
+                                                    />
+                                                </span>
+                                                <div className="leading-tight">
+                                                    <p className="text-sm font-semibold text-primary">HNU Clinic</p>
+                                                    <p className="text-xs font-medium text-primary/80">
+                                                        Health Record &amp; Appointment System
+                                                    </p>
+                                                </div>
+                                            </div>
                                             <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
                                                 <Avatar className="h-11 w-11 border border-primary/15">
                                                     <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
@@ -225,7 +300,7 @@ export function PanelLayout({
                                                     <p className="text-sm font-semibold text-primary">{fullName}</p>
                                                 </div>
                                             </div>
-                                            {navLinks}
+                                            <div className="rounded-2xl bg-primary/5 px-2 py-2">{navLinks(false)}</div>
                                             <Button
                                                 variant="default"
                                                 className="w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
