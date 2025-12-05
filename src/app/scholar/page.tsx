@@ -3,68 +3,13 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import {
-    CalendarDays,
-    ClipboardList,
-    FileSpreadsheet,
-    NotebookPen,
-    Users2,
-} from "lucide-react";
 
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { scholarDashboardContent } from "@/lib/dashboard-content";
 
-const workflowHighlights = [
-    {
-        title: "Coordinate appointments",
-        description:
-            "Review upcoming visits, arrange queues, and update the board when there are walk-ins or cancellations.",
-        href: "/scholar/appointments",
-        icon: CalendarDays,
-        cta: "Open appointment hub",
-    },
-    {
-        title: "Assist patient intake",
-        description:
-            "Search student profiles, confirm eligibility, and share the latest notes with the nursing team.",
-        href: "/scholar/patients",
-        icon: Users2,
-        cta: "View patient list",
-    },
-    {
-        title: "Maintain scholar records",
-        description:
-            "Keep your contact and emergency details updated so the clinic can reach you during campus operations.",
-        href: "/scholar/account",
-        icon: ClipboardList,
-        cta: "Manage account",
-    },
-] as const;
-
-const supportChecklist = [
-    "Confirm the day’s appointment roster at least one hour before clinic opening.",
-    "Log every walk-in case in the shared tracker so nurses can assign the next available slot.",
-    "Escalate urgent symptoms directly to the nurse channel to alert the medical team immediately.",
-];
-
-const documentationTips = [
-    {
-        label: "Schedule walk-ins",
-        description: "Document walk-in for visibility across the clinic.",
-        href: "/scholar/appointments",
-    },
-    {
-        label: "Sync patient information",
-        description: "Verify program, year level, and contact details during intake.",
-        href: "/scholar/patients",
-    },
-    {
-        label: "Refresh personal records",
-        description: "Review your profile and confirm that emergency contacts are current.",
-        href: "/scholar/account",
-    },
-] as const;
+const { workflowHighlights, supportChecklist, documentationTips, coordinationIcon: NotebookPen, checklistIcon: FileSpreadsheet } = scholarDashboardContent;
 
 export default function ScholarDashboardPage() {
     const { data: session } = useSession();

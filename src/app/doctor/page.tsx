@@ -1,70 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import {
-    CalendarDays,
-    ClipboardList,
-    Pill,
-    Stethoscope,
-    UserCog,
-    Clock4,
-} from "lucide-react";
+import { Stethoscope } from "lucide-react";
 
 import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
 import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
+import { BulletListCard } from "@/components/dashboard/bullet-list-card";
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboardUser } from "@/hooks/use-dashboard-user";
+import { doctorDashboardContent } from "@/lib/dashboard-content";
 
-const managementAreas = [
-    {
-        title: "Account management",
-        description:
-            "Update your profile, change credentials, and review administrative access details to stay compliant.",
-        href: "/doctor/account",
-        icon: UserCog,
-        cta: "Review account",
-    },
-    {
-        title: "Consultation hours",
-        description:
-            "Configure clinics, adjust availability, and publish upcoming consultation windows for students and staff.",
-        href: "/doctor/consultation",
-        icon: Clock4,
-        cta: "Manage schedule",
-    },
-    {
-        title: "Appointment oversight",
-        description:
-            "Approve requests, document visit outcomes, and coordinate reschedules with the clinic care team.",
-        href: "/doctor/appointments",
-        icon: CalendarDays,
-        cta: "View appointments",
-    },
-    {
-        title: "Medicine dispensing",
-        description:
-            "Record dispensed medicines, verify inventory balances, and ensure prescriptions are properly documented.",
-        href: "/doctor/dispense",
-        icon: Pill,
-        cta: "Log dispense",
-    },
-    {
-        title: "Patient insights",
-        description:
-            "Review patient records, access latest consultations, and prepare for follow-up care.",
-        href: "/doctor/patients",
-        icon: ClipboardList,
-        cta: "Open registry",
-    },
-];
-
-const operationalHighlights = [
-    "Coordinate with the nursing team before updating consultation slots to prevent scheduling conflicts.",
-    "All appointment adjustments notify the patient automatically—include clear notes for reschedules or cancellations.",
-    "Document dispensed medicines within the same day to keep the inventory ledger accurate.",
-];
+const { managementAreas, operationalHighlights } = doctorDashboardContent;
 
 export default function DoctorDashboardPage() {
     const { firstName } = useDashboardUser("Doctor");
@@ -99,21 +47,7 @@ export default function DoctorDashboardPage() {
             />
 
             <section className="flex flex-row items-start justify-between gap-3">
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">Operational checklist</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <ul className="space-y-2">
-                            {operationalHighlights.map((item) => (
-                                <li key={item} className="flex items-start gap-2 rounded-2xl bg-primary/10 p-3">
-                                    <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-                                    <span>{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
+                <BulletListCard title="Operational checklist" items={operationalHighlights} />
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-lg text-primary">Resources</CardTitle>
