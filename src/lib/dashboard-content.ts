@@ -157,6 +157,10 @@ export const scholarDashboardContent = {
             cta: "Manage account",
         },
     ] as const,
+    coordinationInsights: [
+        "Share status updates in the clinic chat when appointment queues change so the medical team can adjust their rounds.",
+        "Keep intake forms organized before handoff—complete profiles help nurses and doctors focus on care instead of paperwork.",
+    ],
     supportChecklist: [
         "Confirm the day’s appointment roster at least one hour before clinic opening.",
         "Log every walk-in case in the shared tracker so nurses can assign the next available slot.",
