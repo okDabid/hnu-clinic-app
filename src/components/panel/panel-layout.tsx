@@ -80,7 +80,7 @@ export function PanelLayout({
 
     if (status === "loading") {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-primary/10 via-white to-primary/5 p-6" aria-busy>
+            <div className="flex min-h-screen items-center justify-center bg-white p-6" aria-busy>
                 <p className="text-sm font-medium text-muted-foreground">Verifying your session…</p>
             </div>
         );
@@ -114,14 +114,14 @@ export function PanelLayout({
                         key={item.href}
                         href={item.href}
                         className={cn(
-                            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition-colors",
+                            "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors",
                             "hover:bg-primary/10 hover:text-primary",
-                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-primary/10",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
                             isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground"
                         )}
                         onClick={() => setMobileOpen(false)}
                     >
-                        <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-primary")} />
+                        <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-primary")} />
                         <span>{item.label}</span>
                     </Link>
                 );
@@ -130,45 +130,66 @@ export function PanelLayout({
     );
 
     return (
-        <div className="relative min-h-screen bg-linear-to-br from-primary/10 via-white to-primary/5">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_20%,rgba(34,197,94,0.12),transparent_30%),radial-gradient(circle_at_90%_10%,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_20%_80%,rgba(34,197,94,0.1),transparent_25%)]" aria-hidden />
-            <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 md:flex-row md:gap-8 md:px-6 lg:px-8">
-                <aside className="hidden w-72 shrink-0 flex-col rounded-3xl border border-primary/15 bg-white/90 p-6 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/70 lg:sticky lg:top-6 lg:flex lg:max-h-[calc(100vh-3rem)]">
-                    <div className="flex h-full flex-col overflow-hidden">
-                        <div className="flex items-center gap-3 pb-6">
-                            <span className="relative inline-flex h-11 w-11 items-center justify-center">
-                                <Image
-                                    src="/clinic-illustration.svg"
-                                    alt="HNU Clinic Health Record & Appointment System emblem"
-                                    width={44}
-                                    height={44}
-                                    className="h-9 w-9 object-contain"
-                                />
-                            </span>
-                            <div className="flex flex-col leading-tight text-left">
-                                <span className="text-sm font-semibold text-primary">HNU Clinic</span>
-                                <span className="text-xs font-medium text-primary/80">
-                                    Health Record &amp; Appointment System
-                                </span>
-                            </div>
+        <div className="relative flex min-h-screen bg-white">
+            <aside className="group/aside sticky left-0 top-0 hidden h-screen w-16 flex-col border-r border-primary/10 bg-white py-6 transition-[width] duration-300 ease-in-out hover:w-64 lg:flex">
+                <div className="flex h-full flex-col">
+                    <div className="flex items-center gap-3 px-4 pb-6">
+                        <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/5">
+                            <Image
+                                src="/clinic-illustration.svg"
+                                alt="HNU Clinic Health Record & Appointment System emblem"
+                                width={44}
+                                height={44}
+                                className="h-9 w-9 object-contain"
+                            />
+                        </span>
+                        <div className="hidden flex-col leading-tight text-left transition-opacity duration-200 group-hover/aside:flex">
+                            <span className="text-sm font-semibold text-primary">HNU Clinic</span>
+                            <span className="text-xs font-medium text-primary/80">Health Record &amp; Appointment System</span>
                         </div>
-                        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
-                            <Avatar className="h-12 w-12 border border-primary/15">
-                                <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                                <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="text-xs text-primary/80">Signed in as</p>
-                                <p className="text-sm font-semibold text-primary">{fullName}</p>
-                            </div>
+                    </div>
+                    <div className="mb-6 flex items-center gap-3 px-4">
+                        <Avatar className="h-12 w-12 border border-primary/15">
+                            <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                            <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                        </Avatar>
+                        <div className="hidden min-w-0 flex-1 transition-opacity duration-200 group-hover/aside:block">
+                            <p className="truncate text-xs text-primary/80">Signed in as</p>
+                            <p className="truncate text-sm font-semibold text-primary">{fullName}</p>
                         </div>
-                        <div className="flex-1 overflow-y-auto pr-2">
-                            {navLinks}
-                        </div>
-                        <Separator className="my-6" />
+                    </div>
+                    <div className="flex-1 space-y-4 overflow-y-auto px-2 pb-4">
+                        <Separator className="hidden group-hover/aside:block" />
+                        <nav className="flex flex-col gap-1">
+                            {navItems.map((item) => {
+                                const Icon = item.icon;
+                                const activeMatcher = isNavItemActive ?? ((href: string, current: string) => current === href);
+                                const isActive = activeMatcher(item.href, pathname);
+
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={cn(
+                                            "group/nav flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors",
+                                            "hover:bg-primary/10 hover:text-primary",
+                                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                                            isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground"
+                                        )}
+                                        onClick={() => setMobileOpen(false)}
+                                    >
+                                        <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-primary")} />
+                                        <span className="hidden whitespace-nowrap group-hover/aside:inline">{item.label}</span>
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+                    </div>
+                    <div className="mt-auto space-y-4 px-2 pb-2">
+                        <Separator className="hidden group-hover/aside:block" />
                         <Button
                             variant="default"
-                            className="mt-auto w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 hover:bg-primary/90"
+                            className="w-full gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
                             onClick={handleLogout}
                             disabled={isLoggingOut}
                         >
@@ -177,18 +198,19 @@ export function PanelLayout({
                             ) : (
                                 <>
                                     <LogOut className="h-4 w-4" />
-                                    Logout
+                                    <span className="hidden group-hover/aside:inline">Logout</span>
                                 </>
                             )}
                         </Button>
                     </div>
-                </aside>
+                </div>
+            </aside>
 
-                <div className="flex flex-1 flex-col">
-                    <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white/85 px-4 py-4 shadow-sm backdrop-blur supports-backdrop-filter:bg-white/65 md:px-6">
-                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div className="space-y-3">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
+            <div className="flex min-h-screen flex-1 flex-col px-4 pb-8 pt-6 md:px-6 lg:px-10">
+                <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white px-4 py-4 shadow-sm md:px-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="space-y-3">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
                                 <h2 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h2>
                                 {description ? (
                                     <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
@@ -207,7 +229,7 @@ export function PanelLayout({
                                             <Menu className="h-5 w-5" />
                                         </Button>
                                     </SheetTrigger>
-                                    <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-primary/15 bg-linear-to-b from-white to-primary/5 p-0">
+                                    <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-primary/15 bg-white p-0">
                                         <SheetHeader className="border-b border-primary/15 bg-white/80 p-6">
                                             <SheetTitle className="flex items-center gap-3 text-lg text-primary">
                                                 <Menu className="h-5 w-5" />
