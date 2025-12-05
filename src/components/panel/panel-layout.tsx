@@ -102,12 +102,16 @@ export function PanelLayout({
         }
     }
 
+    const isActiveNav = (href: string) => {
+        const matcher = isNavItemActive ?? ((itemHref: string, current: string) => current === itemHref);
+        return matcher(href, pathname);
+    };
+
     const navLinks = (
         <nav className="flex flex-col gap-1">
             {navItems.map((item) => {
                 const Icon = item.icon;
-                const activeMatcher = isNavItemActive ?? ((href: string, current: string) => current === href);
-                const isActive = activeMatcher(item.href, pathname);
+                const isActive = isActiveNav(item.href);
 
                 return (
                     <Link
@@ -122,7 +126,7 @@ export function PanelLayout({
                         onClick={() => setMobileOpen(false)}
                     >
                         <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-primary")} />
-                        <span>{item.label}</span>
+                        <span className="whitespace-nowrap">{item.label}</span>
                     </Link>
                 );
             })}
@@ -131,80 +135,130 @@ export function PanelLayout({
 
     return (
         <div className="relative flex min-h-screen bg-white">
-            <aside className="group/aside sticky left-0 top-0 hidden h-screen w-16 flex-col border-r border-primary/10 bg-white py-6 transition-[width] duration-300 ease-in-out hover:w-64 lg:flex">
-                <div className="flex h-full flex-col">
-                    <div className="flex items-center gap-3 px-4 pb-6">
-                        <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/5">
-                            <Image
-                                src="/clinic-illustration.svg"
-                                alt="HNU Clinic Health Record & Appointment System emblem"
-                                width={44}
-                                height={44}
-                                className="h-9 w-9 object-contain"
-                            />
-                        </span>
-                        <div className="hidden flex-col leading-tight text-left transition-opacity duration-200 group-hover/aside:flex">
-                            <span className="text-sm font-semibold text-primary">HNU Clinic</span>
-                            <span className="text-xs font-medium text-primary/80">Health Record &amp; Appointment System</span>
-                        </div>
+            <aside className="group/aside sticky left-0 top-0 hidden h-screen w-16 flex-col items-center border-r border-primary/10 bg-white py-6 lg:flex">
+                <div className="relative flex h-full w-full flex-col items-center gap-6 px-3">
+                    <div className="flex h-12 w-12 items-center justify-center">
+                        <Image
+                            src="/clinic-illustration.svg"
+                            alt="HNU Clinic Health Record & Appointment System emblem"
+                            width={44}
+                            height={44}
+                            className="h-9 w-9 object-contain"
+                        />
                     </div>
 
-                    <div className="mb-6 flex items-center gap-3 px-4">
-                        <Avatar className="h-12 w-12 border border-primary/15">
-                            <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                            <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
-                        </Avatar>
-                        <div className="hidden min-w-0 flex-1 transition-opacity duration-200 group-hover/aside:block">
-                            <p className="truncate text-xs text-primary/80">Signed in as</p>
-                            <p className="truncate text-sm font-semibold text-primary">{fullName}</p>
-                        </div>
-                    </div>
+                    <Avatar className="h-12 w-12 border border-primary/15">
+                        <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                        <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                    </Avatar>
 
-                    <div className="flex-1 space-y-4 overflow-y-auto px-2 pb-4">
-                        <Separator className="hidden group-hover/aside:block" />
-                        <nav className="flex flex-col gap-1">
+                    <div className="flex-1 space-y-2 overflow-y-auto pb-4">
+                        <nav className="flex flex-col items-center gap-3">
                             {navItems.map((item) => {
                                 const Icon = item.icon;
-                                const activeMatcher = isNavItemActive ?? ((href: string, current: string) => current === href);
-                                const isActive = activeMatcher(item.href, pathname);
+                                const isActive = isActiveNav(item.href);
 
                                 return (
                                     <Link
                                         key={item.href}
                                         href={item.href}
                                         className={cn(
-                                            "group/nav flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors",
-                                            "hover:bg-primary/10 hover:text-primary",
-                                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
-                                            isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground"
+                                            "flex h-12 w-12 items-center justify-center rounded-2xl text-primary transition",
+                                            "hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                                            isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : ""
                                         )}
-                                        onClick={() => setMobileOpen(false)}
+                                        aria-label={item.label}
                                     >
-                                        <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-primary")} />
-                                        <span className="hidden whitespace-nowrap group-hover/aside:inline">{item.label}</span>
+                                        <Icon className="h-5 w-5" />
                                     </Link>
                                 );
                             })}
                         </nav>
                     </div>
 
-                    <div className="mt-auto space-y-4 px-2 pb-2">
-                        <Separator className="hidden group-hover/aside:block" />
-                        <Button
-                            variant="default"
-                            className="w-full gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
-                            onClick={handleLogout}
-                            disabled={isLoggingOut}
-                        >
-                            {isLoggingOut ? (
-                                "Signing out..."
-                            ) : (
-                                <>
-                                    <LogOut className="h-4 w-4" />
-                                    <span className="hidden group-hover/aside:inline">Logout</span>
-                                </>
-                            )}
-                        </Button>
+                    <Button
+                        variant="ghost"
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl text-primary hover:bg-primary/10"
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        aria-label="Logout"
+                    >
+                        {isLoggingOut ? "…" : <LogOut className="h-5 w-5" />}
+                    </Button>
+
+                    <div className="pointer-events-none absolute left-full top-0 z-20 h-full w-64 -translate-x-3 opacity-0 transition-all duration-200 ease-out group-hover/aside:pointer-events-auto group-hover/aside:translate-x-0 group-hover/aside:opacity-100">
+                        <div className="flex h-full flex-col rounded-3xl border border-primary/10 bg-white px-4 py-6 shadow-xl">
+                            <div className="mb-6 flex items-center gap-3">
+                                <Image
+                                    src="/clinic-illustration.svg"
+                                    alt="HNU Clinic Health Record & Appointment System emblem"
+                                    width={44}
+                                    height={44}
+                                    className="h-9 w-9 object-contain"
+                                />
+                                <div className="flex min-w-0 flex-col leading-tight text-left">
+                                    <span className="truncate text-sm font-semibold text-primary">HNU Clinic</span>
+                                    <span className="truncate text-xs font-medium text-primary/80">Health Record &amp; Appointment System</span>
+                                </div>
+                            </div>
+
+                            <div className="mb-6 flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-3">
+                                <Avatar className="h-11 w-11 border border-primary/15">
+                                    <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                                    <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                    <p className="truncate text-xs text-primary/80">Signed in as</p>
+                                    <p className="truncate text-sm font-semibold text-primary">{fullName}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 space-y-4 overflow-y-auto pb-4">
+                                <Separator />
+                                <nav className="flex flex-col gap-1">
+                                    {navItems.map((item) => {
+                                        const Icon = item.icon;
+                                        const isActive = isActiveNav(item.href);
+
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                className={cn(
+                                                    "group/nav flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors",
+                                                    "hover:bg-primary/10 hover:text-primary",
+                                                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                                                    isActive ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" : "text-muted-foreground"
+                                                )}
+                                                onClick={() => setMobileOpen(false)}
+                                            >
+                                                <Icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-primary")} />
+                                                <span className="whitespace-nowrap">{item.label}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </nav>
+                            </div>
+
+                            <div className="mt-auto space-y-4">
+                                <Separator />
+                                <Button
+                                    variant="default"
+                                    className="w-full gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                >
+                                    {isLoggingOut ? (
+                                        "Signing out..."
+                                    ) : (
+                                        <>
+                                            <LogOut className="h-4 w-4" />
+                                            Logout
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </aside>
