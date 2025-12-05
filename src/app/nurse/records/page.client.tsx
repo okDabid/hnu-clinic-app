@@ -233,8 +233,8 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
                 </Button>
             }
         >
-            <div className="space-y-6">
-                <section className="mx-auto w-full max-w-6xl space-y-8 px-4 sm:px-6">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
+                <section className="space-y-8">
                     <div className="grid gap-4 md:grid-cols-3">
                         <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between">

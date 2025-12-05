@@ -586,7 +586,7 @@ export default function DoctorAppointmentsPage() {
                 </Button>
             }
         >
-            <div className="flex flex-col gap-6">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 <section className="grid gap-4 md:grid-cols-3">
                     <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
