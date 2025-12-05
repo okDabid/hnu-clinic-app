@@ -311,9 +311,10 @@ export function NurseReportsPageClient({
                 </div>
             }
         >
-            <section className="mx-auto w-full max-w-5xl space-y-6 px-4 sm:px-6 pb-10">
-                <Card className="rounded-3xl border-transparent bg-white/80 shadow-sm md:border-primary/20">
-                    <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="mx-auto w-full max-w-5xl space-y-6 px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
+                <section className="space-y-6">
+                    <Card className="rounded-3xl border-transparent bg-white/80 shadow-sm md:border-primary/20">
+                        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div>
                             <CardTitle className="text-xl font-semibold text-primary">
                                 Report filters
@@ -380,7 +381,7 @@ export function NurseReportsPageClient({
                             {error}
                         </CardContent>
                     ) : null}
-                </Card>
+                    </Card>
 
                 <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
                     <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
@@ -629,7 +630,8 @@ export function NurseReportsPageClient({
                         </p>
                     </CardContent>
                 </Card>
-            </section>
+                </section>
+            </div>
         </NurseLayout>
     );
 }

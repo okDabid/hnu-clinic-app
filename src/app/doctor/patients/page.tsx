@@ -224,7 +224,7 @@ export default function DoctorPatientsPage() {
                 </Button>
             }
         >
-            <div className="mx-auto w-full max-w-5xl space-y-8 px-4 sm:px-6 py-2">
+            <div className="mx-auto w-full max-w-5xl space-y-8 px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
                 <section className="space-y-8">
                     <div className="grid gap-4 md:grid-cols-3">
                         <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">

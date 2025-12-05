@@ -112,8 +112,8 @@ export default function NurseDispensePage() {
             title="Dispense Records"
             description="Monitor dispensed medicines and review batch usage for accurate stock tracking."
         >
-            <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 sm:px-6">
-                <section className="flex flex-1 flex-col space-y-8 py-6 sm:py-8">
+            <div className="mx-auto w-full max-w-5xl space-y-8 px-4 pb-10 pt-6 sm:px-6 sm:pt-8">
+                <section className="space-y-8">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <Card className="rounded-3xl border border-primary/20 bg-linear-to-br from-primary/10 via-white  to-primary/5/60 shadow-sm">
                         <CardHeader className="pb-2">
