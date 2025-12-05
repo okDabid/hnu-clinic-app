@@ -311,7 +311,7 @@ export function NurseReportsPageClient({
                 </div>
             }
         >
-            <section className="space-y-6">
+            <section className="space-y-6 w-full max-w-6xl mx-auto min-w-0">
                 <Card className="rounded-3xl border-transparent bg-white/80 shadow-sm md:border-primary/20">
                     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div>
