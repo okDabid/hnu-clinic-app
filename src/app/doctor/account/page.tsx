@@ -378,7 +378,7 @@ export default function DoctorAccountPage() {
             title="Account Management"
             description="Keep your clinic profile accurate, secure, and ready for seamless coordination."
         >
-            <div className="mx-auto w-full max-w-4xl space-y-8">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 {profileLoading ? (
                     <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-6 text-center shadow-sm backdrop-blur">
                         <div className="flex flex-col items-center gap-3 text-emerald-700">

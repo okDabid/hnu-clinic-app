@@ -246,7 +246,7 @@ export function NurseReportsPageClient({
             title="Quarterly Reports"
             description="Generate patient and illness insights for any quarter to prepare compliance-ready summaries."
             actions={
-                <div className="flex items-center gap-2">
+                <div className="mx-auto w-full max-w-5xl space-y-8">
                     <Button
                         size="sm"
                         className="rounded-xl bg-primary text-white hover:bg-primary/90"

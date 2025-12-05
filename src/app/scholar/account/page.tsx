@@ -249,7 +249,7 @@ export default function ScholarAccountPage() {
                     </div>
                 }
             >
-                <div className="mx-auto w-full max-w-3xl space-y-6">
+                <div className="mx-auto w-full max-w-5xl space-y-8">
                     <Card className="rounded-[28px] border border-emerald-100/70 bg-white/95 px-6 py-8 shadow-sm backdrop-blur">
                         <div className="space-y-2 text-center text-emerald-900">
                             <p className="text-base font-semibold">We couldn’t load your profile.</p>

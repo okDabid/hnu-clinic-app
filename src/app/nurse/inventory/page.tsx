@@ -218,7 +218,7 @@ export default function NurseInventoryPage() {
             title="Inventory Management"
             description="Monitor clinic stocks, update batch details, and keep replenishments on track."
         >
-            <section className="relative px-4 sm:px-6 pt-6 sm:pt-10 pb-12 space-y-10 w-full max-w-7xl mx-auto flex-1 flex flex-col min-w-0">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-linear-to-br from-primary/10 via-white to-white blur-3xl opacity-60" />
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-2xl border border-primary/20 bg-white px-5 py-4 shadow-sm  shadow-primary/20/40">
@@ -299,7 +299,7 @@ export default function NurseInventoryPage() {
                             <div className="flex w-full justify-start sm:w-auto lg:justify-end">
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button className="h-11 w-full rounded-xl bg-primary/100 px-5 text-sm font-semibold text-white shadow-sm shadow-primary/30 transition hover:-translate-y-px hover:bg-primary focus-visible:ring-primary/80 sm:w-auto">
+                                        <Button className="h-11 w-full rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm shadow-primary/30 transition hover:-translate-y-px hover:bg-primary focus-visible:ring-primary/80 sm:w-auto">
                                             <Plus className="h-4 w-4" />
                                             <span className="ml-1.5">Add Stock</span>
                                         </Button>

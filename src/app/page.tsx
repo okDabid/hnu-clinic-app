@@ -61,7 +61,7 @@ export default function HomePage() {
         <div className="flex min-h-screen flex-col bg-linear-to-b from-primary/10 via-white to-primary/5">
             <SiteHeader navigation={navigation} />
 
-            <main className="flex-1">
+            <main className="mx-auto w-full max-w-5xl space-y-8">
                 <section className="relative overflow-hidden">
                     <div className="absolute inset-0 -z-10 bg-linear-to-br from-primary/15 via-white to-primary/5" />
                     <div className="absolute inset-y-0 right-0 -z-10 h-full w-full md:w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(22,163,74,0.15),transparent_60%)]" />

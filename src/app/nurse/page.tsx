@@ -61,40 +61,19 @@ export default function NurseDashboardPage() {
                 heading={`Good day, Nurse ${firstName}`}
                 description="Keep the clinic running smoothly with instant visibility into schedules, stock levels, and patient coordination. Use the quick tools below to support the care team."
             />
-
-            <QuickActionsGrid
-                actions={quickActions}
-                highlight={{
-                    title: "Operations insights",
-                    icon: BarChart3,
-                    description: [
-                        "Align on clinic traffic peaks early to balance resources and shorten wait times for students and staff.",
-                        "Keep communication logs updated so physicians can review triage actions and respond to follow-up needs quickly.",
-                    ],
-                }}
-            />
-
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">How to keep clinic flow steady</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <p>
-                            Review pending appointments each morning and pre-stage the necessary charts and equipment so care teams can begin on time.
-                        </p>
-                        <p>
-                            Document every dispensing and inventory update as it happens. Accurate logs keep compliance effortless during audits.
-                        </p>
-                        <Button asChild variant="outline" className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary/10">
-                            <Link href="/nurse/dispense">Open dispensing log</Link>
-                        </Button>
-                        <Button asChild variant="ghost" className="w-full rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
-                            <Link href="/nurse/clinic">View clinic schedule</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </section>
+            <div className="grid gap-5 lg:grid-cols-[2fr_1.2fr]">
+                <QuickActionsGrid
+                    actions={quickActions}
+                    highlight={{
+                        title: "Operations insights",
+                        icon: BarChart3,
+                        description: [
+                            "Align on clinic traffic peaks early to balance resources and shorten wait times for students and staff.",
+                            "Keep communication logs updated so physicians can review triage actions and respond to follow-up needs quickly.",
+                        ],
+                    }}
+                />
+            </div>
         </NurseLayout>
     );
 }

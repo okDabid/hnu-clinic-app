@@ -77,7 +77,7 @@ export default function PatientMedicalCertificatePage() {
             title="Medical certificate"
             description="View the status of your latest medical certificate issued by the clinic."
         >
-            <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-xl text-primary">
