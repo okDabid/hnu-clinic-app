@@ -345,7 +345,7 @@ export default function NurseClinicPage() {
             title="Clinic Management"
             description="Maintain clinic locations, contact information, and update details for campus services."
         >
-            <section className="px-4 sm:px-6 py-6 sm:py-10 space-y-6 max-w-6xl mx-auto w-full flex-1">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
                     <CardHeader className="border-b">
                         <div className="flex justify-between items-center flex-wrap gap-3">

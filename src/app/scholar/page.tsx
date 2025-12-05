@@ -143,9 +143,6 @@ export default function ScholarDashboardPage() {
                         </p>
                     </CardContent>
                 </Card>
-            </section>
-
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-lg text-primary">Checklist for smooth clinic flow</CardTitle>

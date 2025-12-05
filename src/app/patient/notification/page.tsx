@@ -96,8 +96,8 @@ export default function PatientNotificationPage() {
                 </div>
             }
         >
-            <div className="space-y-8">
-                <Card className="rounded-3xl border-primary/20 bg-gradient-to-r from-primary/10 via-white to-primary/5 shadow-sm">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
+                <Card className="rounded-3xl border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                     <CardHeader className="space-y-2 text-center">
                         <CardTitle className="text-3xl font-semibold text-primary">Stay informed, stay prepared</CardTitle>
                         <p className="text-sm text-muted-foreground">

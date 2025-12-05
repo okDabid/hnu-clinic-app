@@ -235,16 +235,16 @@ export function PanelLayout({
                 </TooltipProvider>
             </aside>
 
-            <div className="flex min-h-screen flex-1 flex-col px-4 pb-8 pt-6 md:px-6 lg:px-10">
+            <div className="flex min-h-screen flex-1 min-w-0 flex-col px-4 pb-8 pt-6 md:px-6 lg:px-10">
                 <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white px-4 py-4 shadow-sm md:px-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="space-y-3">
+                    <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between">
+                        <div className="space-y-3 min-w-0">
                             <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
                             <h2 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h2>
                             {description ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
                         </div>
 
-                        <div className="flex items-center gap-3 self-start md:self-auto">
+                        <div className="flex w-full flex-wrap items-center gap-3 self-start md:w-auto md:self-auto">
                             {actions}
                             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                                 <SheetTrigger asChild>

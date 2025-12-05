@@ -333,7 +333,7 @@ export function DoctorConsultationPageClient({
                         </span>
                         <div className="flex items-center gap-1">
                             {activeCount > 0 ? (
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary/100" aria-hidden="true" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
                             ) : null}
                             {onLeave ? (
                                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
@@ -726,7 +726,7 @@ export function DoctorConsultationPageClient({
             title="Consultation availability"
             description="Manage your duty hours, adjust clinic assignments, and publish new consultation slots."
         >
-            <div className="space-y-6">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 {/* Consultation Section */}
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
                     <Card className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 shadow-sm">
@@ -1004,7 +1004,7 @@ export function DoctorConsultationPageClient({
                                     </Collapsible>
                                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground sm:gap-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="h-2.5 w-2.5 rounded-full bg-primary/100" />
+                                            <span className="h-2.5 w-2.5 rounded-full bg-primary" />
                                             <span>Active slots</span>
                                         </div>
                                         <div className="flex items-center gap-2">
