@@ -9,7 +9,7 @@ export default function NurseReportsLoading() {
             description="Generate patient and illness insights for any quarter to prepare compliance-ready summaries."
             actions={<Skeleton className="h-9 w-36 rounded-xl" />}
         >
-            <section className="space-y-6">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="rounded-3xl border-transparent bg-white/80 shadow-sm md:border-primary/20">
                     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                         <div className="space-y-2">

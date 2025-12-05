@@ -9,7 +9,7 @@ export default function PatientAppointmentsLoading() {
             description="Plan and manage your clinic visits — from booking a slot to tracking approvals and changes."
             actions={<Skeleton className="hidden h-9 w-60 rounded-2xl md:flex" />}
         >
-            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] 2xl:gap-8">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <div className="space-y-6">
                     <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="space-y-2">

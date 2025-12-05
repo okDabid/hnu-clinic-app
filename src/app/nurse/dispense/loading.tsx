@@ -9,6 +9,23 @@ export default function NurseDispenseLoading() {
             description="Monitor dispensed medicines and review batch usage for accurate stock tracking."
         >
             <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-8 px-4 py-6 sm:px-6 sm:py-8">
+                <div className="grid gap-4 md:grid-cols-4">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                        <Card
+                            key={index}
+                            className="rounded-3xl border-primary/20 bg-white/90 shadow-sm"
+                        >
+                            <CardHeader className="space-y-2">
+                                <Skeleton className="h-4 w-1/2" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-4 w-1/2" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
                 <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="border-b border-primary/20">
                         <Skeleton className="h-6 w-48" />

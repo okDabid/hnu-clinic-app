@@ -9,7 +9,7 @@ export default function ScholarDispenseLoading() {
             description="Log medicines provided to community walk-ins and highlight the scholars assisting them."
             actions={<Skeleton className="h-10 w-28 rounded-xl" />}
         >
-            <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 sm:px-6">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                     <CardHeader className="space-y-2 border-b border-primary/20">
                         <Skeleton className="h-5 w-1/3" />

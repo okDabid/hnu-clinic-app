@@ -9,8 +9,8 @@ export default function PatientNotificationLoading() {
             description="Stay on top of appointment approvals, updates, and reminders for your clinic visits."
             actions={<Skeleton className="hidden h-8 w-40 rounded-xl md:flex" />}
         >
-            <div className="space-y-8">
-                <Card className="rounded-3xl border-primary/20 bg-gradient-to-r from-primary/10 via-white to-primary/5 shadow-sm">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
+                <Card className="rounded-3xl border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                     <CardHeader className="space-y-2 text-center">
                         <Skeleton className="mx-auto h-8 w-64" />
                         <Skeleton className="mx-auto h-4 w-72" />

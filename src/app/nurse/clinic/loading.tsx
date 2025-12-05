@@ -8,7 +8,7 @@ export default function NurseClinicLoading() {
             title="Clinic Management"
             description="Maintain clinic locations, contact information, and update details for campus services."
         >
-            <section className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6 sm:py-10">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="flex flex-col gap-3 border-b sm:flex-row sm:items-center sm:justify-between">
                         <Skeleton className="h-6 w-40" />

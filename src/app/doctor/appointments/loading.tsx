@@ -9,7 +9,7 @@ export default function DoctorAppointmentsLoading() {
             description="Oversee consultation requests, confirm schedules, and coordinate adjustments with patients."
             actions={<Skeleton className="h-10 w-32 rounded-xl" />}
         >
-            <div className="flex flex-col gap-6">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 <section className="grid gap-4 md:grid-cols-3">
                     {Array.from({ length: 3 }).map((_, index) => (
                         <Card

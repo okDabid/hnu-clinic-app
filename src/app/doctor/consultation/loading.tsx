@@ -8,7 +8,7 @@ export default function DoctorConsultationLoading() {
             title="Consultation availability"
             description="Manage your duty hours, adjust clinic assignments, and publish new consultation slots."
         >
-            <div className="space-y-6">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
                     <Card className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                         <CardHeader className="space-y-2">

@@ -9,7 +9,7 @@ export default function PatientAccountLoading() {
             description="Please wait while we retrieve your account data."
             actions={<Skeleton className="hidden h-8 w-36 rounded-xl md:block" />}
         >
-            <div className="space-y-6">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="rounded-3xl border-primary/20 bg-white/90 p-8 text-center shadow-sm">
                     <div className="flex flex-col items-center gap-3 text-primary">
                         <Skeleton className="h-6 w-6 rounded-full" />

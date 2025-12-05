@@ -9,6 +9,22 @@ export default function NurseInventoryLoading() {
             description="Monitor clinic stocks, update batch details, and keep replenishments on track."
         >
             <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-10 px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
+                <div className="grid gap-4 md:grid-cols-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <Card
+                            key={index}
+                            className="rounded-3xl border-primary/20 bg-white/90 shadow-sm"
+                        >
+                            <CardHeader className="space-y-2">
+                                <Skeleton className="h-4 w-2/3" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-10 w-20" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
                 <Card className="flex flex-1 flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <Skeleton className="h-6 w-40" />

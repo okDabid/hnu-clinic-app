@@ -8,7 +8,23 @@ export default function DoctorAccountLoading() {
             title="Account Management"
             description="Keep your clinic profile accurate, secure, and ready for seamless coordination."
         >
-            <div className="mx-auto w-full max-w-4xl space-y-10">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
+                <div className="grid gap-4 md:grid-cols-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <Card
+                            key={index}
+                            className="rounded-3xl border-primary/20 bg-white/90 shadow-sm"
+                        >
+                            <CardHeader className="space-y-2">
+                                <Skeleton className="h-4 w-2/3" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-10 w-20" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader className="space-y-3">
                         <Skeleton className="h-5 w-1/4" />

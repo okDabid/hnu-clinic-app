@@ -8,7 +8,7 @@ export default function ScholarAccountLoading() {
             title="Account Management"
             description="Review your personal information, keep emergency contacts current, and manage your clinic credentials."
         >
-            <section className="space-y-6">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="rounded-3xl border border-primary/20 bg-white/80 shadow-sm">
                     <CardContent className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
                         <Skeleton className="h-5 w-5 rounded-full" />

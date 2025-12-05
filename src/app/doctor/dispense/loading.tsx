@@ -11,12 +11,23 @@ export default function DoctorDispenseLoading() {
         >
             <div className="space-y-6">
                 <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
-                    <Card className="rounded-3xl border border-primary/20 bg-gradient-to-r from-primary/10 via-white to-primary/5 shadow-sm">
-                        <CardHeader className="space-y-2">
-                            <Skeleton className="h-4 w-1/3" />
-                            <Skeleton className="h-4 w-1/2" />
-                        </CardHeader>
-                    </Card>
+                    <div className="grid gap-4 md:grid-cols-4">
+                        {Array.from({ length: 4 }).map((_, index) => (
+                            <Card
+                                key={index}
+                                className="rounded-3xl border-primary/20 bg-white/90 shadow-sm"
+                            >
+                                <CardHeader className="space-y-2">
+                                    <Skeleton className="h-4 w-1/2" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                </CardHeader>
+                                <CardContent>
+                                    <Skeleton className="h-4 w-1/2" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
                     <Card className="rounded-3xl border border-primary/20 bg-white/85 shadow-sm">
                         <CardHeader className="space-y-2 border-b border-primary/20">
                             <Skeleton className="h-5 w-1/3" />

@@ -379,7 +379,7 @@ export default function ScholarDispensePage() {
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving
                                         </>
                                     ) : (
-                                        "Record walk-in dispense"
+                                        "Record dispense"
                                     )}
                                 </Button>
                             </div>
