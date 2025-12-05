@@ -765,7 +765,10 @@ export function NurseAccountsPageClient({
                 {/* My Account */}
                 {profile ? (
                     <div className="space-y-8">
-                        <AccountSummaryGrid items={summaryItems} />
+                        <AccountSummaryGrid
+                            items={summaryItems}
+                            className="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+                        />
                         <AccountCard
                             title="My Account"
                             description="Review and update your clinic profile details, emergency contacts, and credentials."
