@@ -163,6 +163,7 @@ export function PanelLayout({
                             </TooltipTrigger>
                             <TooltipContent
                                 side="right"
+                                hideArrow
                                 className="flex items-center gap-3 border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
                             >
                                 <Avatar className="h-8 w-8 border border-primary/10 bg-primary/5">
@@ -199,6 +200,7 @@ export function PanelLayout({
                                             </TooltipTrigger>
                                             <TooltipContent
                                                 side="right"
+                                                hideArrow
                                                 className="rounded-xl border border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
                                             >
                                                 <p className="text-sm font-semibold leading-none">{item.label}</p>
@@ -223,6 +225,7 @@ export function PanelLayout({
                             </TooltipTrigger>
                             <TooltipContent
                                 side="right"
+                                hideArrow
                                 className="rounded-xl border border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
                             >
                                 <p className="text-sm font-semibold leading-none">Logout</p>
