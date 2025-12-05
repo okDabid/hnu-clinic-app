@@ -218,34 +218,35 @@ export default function NurseInventoryPage() {
             title="Inventory Management"
             description="Monitor clinic stocks, update batch details, and keep replenishments on track."
         >
-            <section className="relative px-4 sm:px-6 pt-6 sm:pt-10 pb-12 space-y-10 w-full max-w-7xl mx-auto flex-1 flex flex-col">
-                <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-linear-to-br from-primary/10 via-white to-white blur-3xl opacity-60" />
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-primary/20 bg-white px-5 py-4 shadow-sm  shadow-primary/20/40">
-                        <div className="flex items-center justify-between text-sm text-primary">
-                            <span>Total Items</span>
-                            <PackageSearch className="h-4 w-4" />
+            <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
+                <section className="relative flex flex-1 flex-col space-y-10 pt-6 sm:pt-10 pb-12">
+                    <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-linear-to-br from-primary/10 via-white to-white blur-3xl opacity-60" />
+                    <div className="grid gap-4 sm:grid-cols-3">
+                        <div className="rounded-2xl border border-primary/20 bg-white px-5 py-4 shadow-sm  shadow-primary/20/40">
+                            <div className="flex items-center justify-between text-sm text-primary">
+                                <span>Total Items</span>
+                                <PackageSearch className="h-4 w-4" />
+                            </div>
+                            <p className="mt-2 text-2xl font-semibold text-primary">{items.length}</p>
+                            <p className="text-xs text-slate-600">Across all clinics</p>
                         </div>
-                        <p className="mt-2 text-2xl font-semibold text-primary">{items.length}</p>
-                        <p className="text-xs text-slate-600">Across all clinics</p>
-                    </div>
-                    <div className="rounded-2xl border border-amber-100 bg-white px-5 py-4 shadow-sm shadow-amber-100/40">
-                        <div className="flex items-center justify-between text-sm text-amber-700">
-                            <span>Expiring Soon</span>
-                            <ShieldAlert className="h-4 w-4" />
+                        <div className="rounded-2xl border border-amber-100 bg-white px-5 py-4 shadow-sm shadow-amber-100/40">
+                            <div className="flex items-center justify-between text-sm text-amber-700">
+                                <span>Expiring Soon</span>
+                                <ShieldAlert className="h-4 w-4" />
+                            </div>
+                            <p className="mt-2 text-2xl font-semibold text-amber-900">{expiringSoonCount}</p>
+                            <p className="text-xs text-amber-600/80">Batches need attention</p>
                         </div>
-                        <p className="mt-2 text-2xl font-semibold text-amber-900">{expiringSoonCount}</p>
-                        <p className="text-xs text-amber-600/80">Batches need attention</p>
-                    </div>
-                    <div className="rounded-2xl border border-rose-100 bg-white px-5 py-4 shadow-sm shadow-rose-100/50">
-                        <div className="flex items-center justify-between text-sm text-rose-700">
-                            <span>Archived Units</span>
-                            <Archive className="h-4 w-4" />
+                        <div className="rounded-2xl border border-rose-100 bg-white px-5 py-4 shadow-sm shadow-rose-100/50">
+                            <div className="flex items-center justify-between text-sm text-rose-700">
+                                <span>Archived Units</span>
+                                <Archive className="h-4 w-4" />
+                            </div>
+                            <p className="mt-2 text-2xl font-semibold text-rose-900">{expiredCount}</p>
+                            <p className="text-xs text-rose-600/80">Expired or archived batches</p>
                         </div>
-                        <p className="mt-2 text-2xl font-semibold text-rose-900">{expiredCount}</p>
-                        <p className="text-xs text-rose-600/80">Expired or archived batches</p>
                     </div>
-                </div>
 
                 <Card className="flex-1 flex flex-col rounded-3xl border border-primary/20 bg-white shadow-lg  shadow-primary/20/40">
                     <CardHeader className="flex flex-col gap-6 border-b border-primary/20/60 bg-linear-to-br from-white  via-primary/10/40 to-white/90 pb-6 pt-6 sm:pt-7 backdrop-blur-sm rounded-t-3xl">
@@ -630,7 +631,8 @@ export default function NurseInventoryPage() {
                         </div>
                     </CardContent>
                 </Card>
-            </section>
+                </section>
+            </div>
         </NurseLayout>
     );
 }

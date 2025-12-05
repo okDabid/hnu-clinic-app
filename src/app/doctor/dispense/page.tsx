@@ -236,8 +236,8 @@ export default function DoctorDispensePage() {
                 </Button>
             }
         >
-            <div className="space-y-6">
-                <section className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
+            <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:px-6">
+                <section className="space-y-6">
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <Card className="rounded-3xl border border-primary/20 bg-linear-to-br from-primary/10 via-white to-primary/5 shadow-sm">
                             <CardHeader className="pb-2">
