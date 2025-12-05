@@ -235,80 +235,82 @@ export function PanelLayout({
                 </TooltipProvider>
             </aside>
 
-            <div className="flex min-h-screen flex-1 flex-col px-4 pb-8 pt-6 md:px-6 lg:px-10">
-                <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white px-4 py-4 shadow-sm md:px-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="space-y-3">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
-                            <h2 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h2>
-                            {description ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
-                        </div>
+            <div className="flex min-h-screen flex-1 justify-center bg-white">
+                <div className="flex w-full max-w-6xl flex-col px-4 pb-10 pt-6 md:px-6 lg:px-10">
+                    <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white px-4 py-4 shadow-sm backdrop-blur md:px-6">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            <div className="space-y-3">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
+                                <h2 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h2>
+                                {description ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
+                            </div>
 
-                        <div className="flex items-center gap-3 self-start md:self-auto">
-                            {actions}
-                            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                                <SheetTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="rounded-xl border-primary/20 text-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
-                                        aria-label={sheetAriaLabel}
-                                    >
-                                        <Menu className="h-5 w-5" />
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-primary/15 bg-white p-0">
-                                    <SheetHeader className="border-b border-primary/15 bg-white/80 p-6">
-                                        <SheetTitle className="flex items-center gap-3 text-lg text-primary">
-                                            <Menu className="h-5 w-5" />
-                                            {sheetTitle}
-                                        </SheetTitle>
-                                    </SheetHeader>
-                                    <div className="flex h-full flex-col gap-6 overflow-y-auto px-6 py-6">
-                                        <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
-                                            <Avatar className="h-11 w-11 border border-primary/15">
-                                                <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                                                <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="text-xs text-primary/80">Signed in as</p>
-                                                <p className="text-sm font-semibold text-primary">{fullName}</p>
-                                            </div>
-                                        </div>
-
-                                        {navLinks}
-
+                            <div className="flex items-center gap-3 self-start md:self-auto">
+                                {actions}
+                                <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                                    <SheetTrigger asChild>
                                         <Button
-                                            variant="default"
-                                            className="w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-                                            onClick={handleLogout}
-                                            disabled={isLoggingOut}
+                                            variant="outline"
+                                            size="icon"
+                                            className="rounded-xl border-primary/20 text-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
+                                            aria-label={sheetAriaLabel}
                                         >
-                                            {isLoggingOut ? (
-                                                "Signing out..."
-                                            ) : (
-                                                <>
-                                                    <LogOut className="h-4 w-4" />
-                                                    Logout
-                                                </>
-                                            )}
+                                            <Menu className="h-5 w-5" />
                                         </Button>
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
+                                    </SheetTrigger>
+                                    <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-primary/15 bg-white p-0">
+                                        <SheetHeader className="border-b border-primary/15 bg-white/80 p-6">
+                                            <SheetTitle className="flex items-center gap-3 text-lg text-primary">
+                                                <Menu className="h-5 w-5" />
+                                                {sheetTitle}
+                                            </SheetTitle>
+                                        </SheetHeader>
+                                        <div className="flex h-full flex-col gap-6 overflow-y-auto px-6 py-6">
+                                            <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                                                <Avatar className="h-11 w-11 border border-primary/15">
+                                                    <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                                                    <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="text-xs text-primary/80">Signed in as</p>
+                                                    <p className="text-sm font-semibold text-primary">{fullName}</p>
+                                                </div>
+                                            </div>
+
+                                            {navLinks}
+
+                                            <Button
+                                                variant="default"
+                                                className="w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                                                onClick={handleLogout}
+                                                disabled={isLoggingOut}
+                                            >
+                                                {isLoggingOut ? (
+                                                    "Signing out..."
+                                                ) : (
+                                                    <>
+                                                        <LogOut className="h-4 w-4" />
+                                                        Logout
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
                         </div>
-                    </div>
-                </header>
+                    </header>
 
-                <main className="flex-1 space-y-6">{children}</main>
+                    <main className="flex-1 space-y-6">{children}</main>
 
-                <footer className="mt-10 rounded-3xl border border-primary/15 bg-white/80 px-6 py-4 text-center text-sm text-muted-foreground shadow-sm backdrop-blur">
-                    {footerNote ?? (
-                        <>
-                            © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System – {panelLabel}
-                        </>
-                    )}
-                </footer>
+                    <footer className="mt-10 rounded-3xl border border-primary/15 bg-white/80 px-6 py-4 text-center text-sm text-muted-foreground shadow-sm backdrop-blur">
+                        {footerNote ?? (
+                            <>
+                                © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System – {panelLabel}
+                            </>
+                        )}
+                    </footer>
+                </div>
             </div>
         </div>
     );
