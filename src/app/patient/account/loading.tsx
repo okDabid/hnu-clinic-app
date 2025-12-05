@@ -10,12 +10,22 @@ export default function PatientAccountLoading() {
             actions={<Skeleton className="hidden h-8 w-36 rounded-xl md:block" />}
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
-                <Card className="rounded-3xl border-primary/20 bg-white/90 p-8 text-center shadow-sm">
-                    <div className="flex flex-col items-center gap-3 text-primary">
-                        <Skeleton className="h-6 w-6 rounded-full" />
-                        <Skeleton className="h-4 w-48" />
-                    </div>
-                </Card>
+                <div className="grid gap-4 md:grid-cols-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                        <Card
+                            key={index}
+                            className="rounded-3xl border-primary/20 bg-white/90 shadow-sm"
+                        >
+                            <CardHeader className="space-y-2">
+                                <Skeleton className="h-4 w-2/3" />
+                                <Skeleton className="h-4 w-1/2" />
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-10 w-20" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
 
                 <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                     <CardHeader className="space-y-2">
