@@ -97,7 +97,7 @@ export default function ScholarDashboardPage() {
                 </div>
             </section>
 
-            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:auto-rows-fr">
                 {workflowHighlights.map(({ title, description, href, icon: Icon, cta }) => (
                     <Card
                         key={title}
@@ -145,7 +145,7 @@ export default function ScholarDashboardPage() {
                 </Card>
             </section>
 
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+            <section className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[1.4fr_1fr]">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-lg text-primary">Checklist for smooth clinic flow</CardTitle>

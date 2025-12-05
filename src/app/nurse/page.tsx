@@ -74,7 +74,7 @@ export default function NurseDashboardPage() {
                 }}
             />
 
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+            <section className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[1.4fr_1fr]">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-lg text-primary">How to keep clinic flow steady</CardTitle>

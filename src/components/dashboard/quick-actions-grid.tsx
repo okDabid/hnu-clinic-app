@@ -30,7 +30,12 @@ export function QuickActionsGrid({ actions, highlight, className }: QuickActions
     const { title, icon: HighlightIcon, description: highlightDescription, className: highlightClassName } = highlight;
 
     return (
-        <section className={cn("grid gap-5 md:grid-cols-2 xl:grid-cols-3", className)}>
+        <section
+            className={cn(
+                "grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:auto-rows-fr",
+                className
+            )}
+        >
             {actions.map(({ title: actionTitle, description, href, icon: Icon, cta }) => (
                 <Card
                     key={actionTitle}
