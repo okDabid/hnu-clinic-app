@@ -863,7 +863,7 @@ export default function PatientAppointmentsPage() {
                 </div>
             }
         >
-            <section className="mx-auto w-full max-w-6xl space-y-6 rounded-3xl border border-emerald-100/80 bg-gradient-to-b from-emerald-50/70 to-white px-4 py-6 shadow-sm sm:px-6 sm:py-8 2xl:space-y-8">
+            <section className="mx-auto w-full max-w-5xl space-y-6 2xl:space-y-8">
                 <Card className="rounded-3xl border-primary/25 bg-white/95 shadow-sm">
                     <CardHeader className="space-y-1 border-b border-primary/15 pb-5">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

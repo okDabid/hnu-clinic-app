@@ -761,7 +761,7 @@ export function NurseAccountsPageClient({
             title="Accounts Management"
             description="Create and manage user accounts, update your profile, and control access from one workspace."
         >
-            <section className="mx-auto flex w-full max-w-6xl flex-col space-y-10 rounded-3xl border border-emerald-100/80 bg-gradient-to-b from-emerald-50/70 to-white px-4 py-6 shadow-sm sm:px-6 sm:py-8">
+            <section className="mx-auto w-full max-w-5xl space-y-10">
                 {/* My Account */}
                 {profile ? (
                     <div className="space-y-8">
