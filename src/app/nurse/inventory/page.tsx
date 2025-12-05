@@ -218,7 +218,7 @@ export default function NurseInventoryPage() {
             title="Inventory Management"
             description="Monitor clinic stocks, update batch details, and keep replenishments on track."
         >
-            <section className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-10 px-4 pt-6 pb-12 sm:px-6 sm:pt-10">
+            <section className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-10 rounded-3xl border border-emerald-100/80 bg-gradient-to-b from-emerald-50/70 to-white px-4 pt-6 pb-12 shadow-sm sm:px-6 sm:pt-10">
                 <div className="absolute inset-x-0 -top-10 -z-10 h-72 bg-linear-to-br from-primary/10 via-white to-white blur-3xl opacity-60" />
                 <div className="grid gap-4 sm:grid-cols-3">
                     <div className="rounded-2xl border border-primary/20 bg-white px-5 py-4 shadow-sm  shadow-primary/20/40">

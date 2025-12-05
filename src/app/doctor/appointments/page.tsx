@@ -586,7 +586,7 @@ export default function DoctorAppointmentsPage() {
                 </Button>
             }
         >
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 sm:px-6">
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 rounded-3xl border border-emerald-100/80 bg-gradient-to-b from-emerald-50/70 to-white px-4 py-6 shadow-sm sm:px-6 sm:py-8">
                 <section className="grid gap-4 md:grid-cols-3">
                     <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between">
