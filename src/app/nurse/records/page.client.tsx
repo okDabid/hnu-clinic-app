@@ -233,7 +233,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
                 </Button>
             }
         >
-            <div className="mx-auto w-full max-w-5xl space-y-8 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-5xl space-y-8">
                 <section className="space-y-8">
                     <div className="grid gap-4 md:grid-cols-3">
                         <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
