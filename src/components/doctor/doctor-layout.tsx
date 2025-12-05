@@ -20,7 +20,7 @@ const NAV_ITEMS = [
     { href: "/doctor/account", label: "Account", icon: User },
     { href: "/doctor/consultation", label: "Consultation", icon: Stethoscope },
     { href: "/doctor/appointments", label: "Appointments", icon: CalendarDays },
-    { href: "/doctor/dispense", label: "Dispensing", icon: Pill },
+    { href: "/doctor/dispense", label: "Dispense", icon: Pill },
     { href: "/doctor/patients", label: "Patients", icon: ClipboardList },
 ] as const satisfies readonly PanelNavItem[];
 
