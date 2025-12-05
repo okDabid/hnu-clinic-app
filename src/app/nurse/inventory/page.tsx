@@ -321,14 +321,33 @@ export default function NurseInventoryPage() {
                                                 const form = e.currentTarget as HTMLFormElement;
                                                 setSavingStock(true);
 
+                                                const quantity = Number(
+                                                    (form.elements.namedItem("quantity") as HTMLInputElement).value
+                                                );
+                                                const strengthRaw = (form.elements.namedItem("strength") as HTMLInputElement)
+                                                    .value;
+                                                const strength = strengthRaw === "" ? undefined : parseFloat(strengthRaw);
+
+                                                if (!Number.isFinite(quantity) || quantity < 1) {
+                                                    toast.error("Quantity must be at least 1");
+                                                    setSavingStock(false);
+                                                    return;
+                                                }
+
+                                                if (strength !== undefined && (!Number.isFinite(strength) || strength < 0)) {
+                                                    toast.error("Strength cannot be negative");
+                                                    setSavingStock(false);
+                                                    return;
+                                                }
+
                                                 const body = {
                                                     clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
                                                     item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value,
-                                                    quantity: Number((form.elements.namedItem("quantity") as HTMLInputElement).value),
+                                                    quantity,
                                                     expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
                                                     category: (form.elements.namedItem("category") as HTMLSelectElement).value,
                                                     item_type: (form.elements.namedItem("item_type") as HTMLSelectElement).value,
-                                                    strength: parseFloat((form.elements.namedItem("strength") as HTMLInputElement).value),
+                                                    strength,
                                                     unit: (form.elements.namedItem("unit") as HTMLSelectElement).value,
                                                 };
 
@@ -381,6 +400,7 @@ export default function NurseInventoryPage() {
                                                         type="number"
                                                         name="quantity"
                                                         required
+                                                        min={1}
                                                         className="h-10 rounded-xl border border-primary/20 bg-white text-sm focus-visible:ring-primary"
                                                     />
                                                 </div>
@@ -434,6 +454,7 @@ export default function NurseInventoryPage() {
                                                         step="0.01"
                                                         name="strength"
                                                         placeholder="e.g., 500"
+                                                        min={0}
                                                         className="h-10 rounded-xl border border-primary/20 bg-white text-sm focus-visible:ring-primary"
                                                     />
                                                 </div>
