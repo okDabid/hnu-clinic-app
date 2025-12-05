@@ -761,7 +761,8 @@ export function NurseAccountsPageClient({
             title="Accounts Management"
             description="Create and manage user accounts, update your profile, and control access from one workspace."
         >
-            <section className="px-4 sm:px-6 py-6 sm:py-8 space-y-10 w-full max-w-6xl mx-auto">
+            <div className="mx-auto w-full max-w-5xl space-y-10 px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
+                <section className="space-y-10">
                 {/* My Account */}
                 {profile ? (
                     <div className="space-y-8">
@@ -1758,7 +1759,8 @@ export function NurseAccountsPageClient({
                         />
                     </CardContent>
                 </Card>
-            </section>
+                </section>
+            </div>
         </NurseLayout>
     );
 
