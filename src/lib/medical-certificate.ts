@@ -319,9 +319,18 @@ export function renderCertificateHtml(context: CertificateContext) {
         position: relative;
       }
 
+      .checkbox.checked .box {
+        background: #111827;
+        color: #ffffff;
+      }
+        
       .checkbox.checked .box::after {
         content: "✔";
         position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 12px;
         line-height: 1;
       }
