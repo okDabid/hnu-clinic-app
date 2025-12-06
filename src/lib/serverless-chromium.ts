@@ -8,6 +8,14 @@ import {
 const isProd =
   process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
 
+// Extend the type definition for places where we need extra properties
+type ChromiumWithExtras = typeof chromium & {
+  headless?: boolean;
+  env?: NodeJS.ProcessEnv;
+};
+
+const chromiumWithExtras = chromium as ChromiumWithExtras;
+
 export async function getChromiumLaunchOptions(
   overrides: LaunchOptions = {},
 ): Promise<LaunchOptions> {
@@ -20,8 +28,8 @@ export async function getChromiumLaunchOptions(
   }
 
   const executablePath =
-    (await chromium.executablePath()) ||
     process.env.PLAYWRIGHT_EXECUTABLE_PATH ||
+    (await chromium.executablePath()) ||
     undefined;
 
   if (!executablePath) {
@@ -30,18 +38,19 @@ export async function getChromiumLaunchOptions(
     );
   }
 
-  const baseArgs = new Set([...(chromium.args ?? []), "--no-sandbox"]);
+  const baseArgs = [...(chromium.args ?? []), "--no-sandbox"];
   const mergedArgs = [
     ...baseArgs,
     ...((overrides.args as string[] | undefined) ?? []),
   ];
 
-  const { args: _ignored, ...restOverrides } = overrides;
+  const { args: _ignored, env: overrideEnv, ...restOverrides } = overrides;
 
   return {
     executablePath,
     args: mergedArgs,
-    headless: true,
+    headless: chromiumWithExtras.headless ?? true,
+    env: { ...(chromiumWithExtras.env ?? {}), ...(overrideEnv ?? {}) },
     ...restOverrides,
   };
 }
