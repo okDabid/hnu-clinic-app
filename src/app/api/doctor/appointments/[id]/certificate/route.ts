@@ -12,7 +12,8 @@ import {
   Role,
 } from "@prisma/client";
 import { formatManilaDateTime, manilaNow } from "@/lib/time";
-import { parseMedicalHistory } from "@/lib/medical-history";
+import type { MedicalHistoryValue } from "@/lib/medical-history";
+import { resolveValidMedicalHistory } from "./medical-history";
 import {
   buildConditionList,
   CertificateContext,
@@ -229,7 +230,22 @@ export async function GET(
       data: { status: MedcertStatus.Expired },
     });
 
-    const medicalHistory = parseMedicalHistory(studentProfile.medical_cond);
+    const latestMedicalHistory = await prisma.student.findUnique({
+      where: { user_id: appointment.patient_user_id },
+      select: { medical_cond: true },
+    });
+
+    let medicalHistory: MedicalHistoryValue;
+    try {
+      medicalHistory = resolveValidMedicalHistory(
+        latestMedicalHistory?.medical_cond ?? studentProfile.medical_cond
+      );
+    } catch {
+      return NextResponse.json(
+        { error: "Student medical history is missing or invalid." },
+        { status: 400 }
+      );
+    }
     const age = computeAge(studentProfile.date_of_birth, now);
     const sex = studentProfile.gender ? titleCase(studentProfile.gender) : "";
     const program = titleCase(studentProfile.program);
