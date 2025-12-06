@@ -322,7 +322,7 @@ export function renderCertificateHtml(context: CertificateContext) {
       
 
       .checkbox.checked .box::after {
-        content: "✔";
+        content: "🗹";
         position: absolute;
         inset: 0;
         display: flex;
