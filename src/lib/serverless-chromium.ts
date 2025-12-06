@@ -17,7 +17,7 @@ export async function getChromiumLaunchOptions(): Promise<LaunchOptions> {
   return {
     args: Array.from(args),
     executablePath,
-    headless: chromium.headless ?? true,
+    headless: true,
   } satisfies LaunchOptions;
 }
 
