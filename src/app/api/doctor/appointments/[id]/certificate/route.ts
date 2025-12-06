@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+{/*import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
@@ -340,3 +340,4 @@ export async function GET(
     );
   }
 }
+*/}

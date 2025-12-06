@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+{/*import { NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer-core";
 import { handleAuthError, requireRole } from "@/lib/authorization";
@@ -573,3 +573,4 @@ export const GET = withRateLimit(
     },
     getHandler
 );
+*/}
