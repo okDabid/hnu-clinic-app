@@ -320,7 +320,7 @@ export function renderCertificateHtml(context: CertificateContext) {
       }
 
       .checkbox.checked .box {
-        background: #111827;
+        background: #50C878;
         color: #50C878;
       }
 
