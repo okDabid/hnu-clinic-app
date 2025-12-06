@@ -38,7 +38,7 @@ export type NurseAccountProfileApi = {
         address?: string | null;
         bloodtype?: string | null;
         allergies?: string | null;
-        medical_cond?: string | null;
+        medical_cond?: string | string[] | null;
         emergencyco_name?: string | null;
         emergencyco_num?: string | null;
         emergencyco_relation?: string | null;
@@ -166,7 +166,7 @@ export function normalizeNurseAccountProfile(
         address: response.profile?.address || "",
         bloodtype: bloodTypeValue,
         allergies: response.profile?.allergies || "",
-        medicalHistory: parseMedicalHistory(response.profile?.medical_cond || ""),
+        medicalHistory: parseMedicalHistory(response.profile?.medical_cond),
         emergencyco_name: response.profile?.emergencyco_name || "",
         emergencyco_num: response.profile?.emergencyco_num || "",
         emergencyco_relation: response.profile?.emergencyco_relation || "",
@@ -175,6 +175,6 @@ export function normalizeNurseAccountProfile(
 
 export function serializeNurseMedicalHistory(
     value: MedicalHistoryValue
-): string | null {
+): (readonly string[]) | null {
     return serializeMedicalHistory(value);
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { parseMedicalHistory } from "@/lib/medical-history";
 import {
     Role,
     Gender,
@@ -127,6 +128,19 @@ function normalizeStringOrNull(value: unknown): string | null | undefined {
     return undefined;
 }
 
+function normalizeMedicalConditions(
+    value: unknown
+):
+    | Prisma.StudentUpdatemedical_condInput
+    | Prisma.EmployeeUpdatemedical_condInput
+    | undefined {
+    if (value === undefined) return undefined;
+
+    const conditions = parseMedicalHistory(value as string | string[] | null).conditions;
+
+    return { set: conditions };
+}
+
 // ---------------- UPDATE INPUT BUILDERS ----------------
 function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUpdateInput {
     const data: Prisma.StudentUpdateInput = {};
@@ -156,7 +170,7 @@ function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUp
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
-    const medicalCond = normalizeStringOrNull(raw.medical_cond);
+    const medicalCond = normalizeMedicalConditions(raw.medical_cond);
     if (medicalCond !== undefined) data.medical_cond = medicalCond;
     if (typeof raw.emergencyco_name === "string")
         data.emergencyco_name = raw.emergencyco_name;
@@ -208,7 +222,7 @@ function buildEmployeeUpdateInput(
     const allergies = stringField("allergies");
     if (allergies !== undefined) data.allergies = allergies;
 
-    const medicalCond = normalizeStringOrNull(raw.medical_cond);
+    const medicalCond = normalizeMedicalConditions(raw.medical_cond);
     if (medicalCond !== undefined) data.medical_cond = medicalCond;
 
     const emergencyName = stringField("emergencyco_name");

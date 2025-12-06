@@ -55,7 +55,7 @@ model Student {
   contactno            String?       @unique
   address              String?
   allergies            String?
-  medical_cond         String?
+  medical_cond         MedicalHistoryCondition[] @default([])
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?
@@ -81,7 +81,7 @@ model Employee {
   contactno            String?               @unique
   address              String?
   allergies            String?
-  medical_cond         String?
+  medical_cond         MedicalHistoryCondition[] @default([])
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?

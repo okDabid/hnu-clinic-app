@@ -51,7 +51,7 @@ export type PatientRecordEntry = {
     address?: string | null;
     bloodtype?: string | null;
     allergies?: string | null;
-    medical_cond?: string | null;
+    medical_cond?: string | string[] | null;
     emergency?: {
         name?: string | null;
         num?: string | null;
@@ -217,7 +217,7 @@ export async function fetchPatientRecords(options?: { specialization?: DoctorSpe
             address: student.address,
             bloodtype: student.bloodtype,
             allergies: student.allergies,
-            medical_cond: student.medical_cond,
+    medical_cond: student.medical_cond,
             emergency: {
                 name: student.emergencyco_name,
                 num: student.emergencyco_num,
@@ -246,7 +246,7 @@ export async function fetchPatientRecords(options?: { specialization?: DoctorSpe
             address: employee.address,
             bloodtype: employee.bloodtype,
             allergies: employee.allergies,
-            medical_cond: employee.medical_cond,
+    medical_cond: employee.medical_cond,
             emergency: {
                 name: employee.emergencyco_name,
                 num: employee.emergencyco_num,

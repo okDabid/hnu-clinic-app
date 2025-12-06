@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { parseMedicalHistory } from "@/lib/medical-history";
 import { Role, Gender, Prisma, BloodType } from "@prisma/client";
 import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -52,6 +53,16 @@ function normalizeStringOrNull(value: unknown): string | null | undefined {
     return undefined;
 }
 
+function normalizeMedicalConditions(
+    value: unknown
+): Prisma.EmployeeUpdatemedical_condInput | undefined {
+    if (value === undefined) return undefined;
+
+    const conditions = parseMedicalHistory(value as string | string[] | null).conditions;
+
+    return { set: conditions };
+}
+
 function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.EmployeeUpdateInput {
     const data: Prisma.EmployeeUpdateInput = {};
 
@@ -67,7 +78,7 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (typeof raw.contactno === "string") data.contactno = raw.contactno;
     if (typeof raw.address === "string") data.address = raw.address;
     if (typeof raw.allergies === "string") data.allergies = raw.allergies;
-    const medicalCond = normalizeStringOrNull(raw.medical_cond);
+    const medicalCond = normalizeMedicalConditions(raw.medical_cond);
     if (medicalCond !== undefined) data.medical_cond = medicalCond;
     if (typeof raw.emergencyco_name === "string") data.emergencyco_name = raw.emergencyco_name;
     if (typeof raw.emergencyco_num === "string") data.emergencyco_num = raw.emergencyco_num;

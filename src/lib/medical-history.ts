@@ -61,9 +61,15 @@ function parseJsonLenient(raw: string): unknown | null {
     return null;
 }
 
-export function parseMedicalHistory(raw?: string | null): MedicalHistoryValue {
+export function parseMedicalHistory(
+    raw?: string | MedicalHistoryOption[] | null
+): MedicalHistoryValue {
     if (!raw) {
         return { conditions: [], other: "" };
+    }
+
+    if (Array.isArray(raw)) {
+        return { conditions: normalizeOptions(raw), other: "" };
     }
 
     const parsed = parseJsonLenient(raw);
@@ -117,7 +123,9 @@ export function parseMedicalHistory(raw?: string | null): MedicalHistoryValue {
     };
 }
 
-export function serializeMedicalHistory(value: MedicalHistoryValue | null | undefined): string | null {
+export function serializeMedicalHistory(
+    value: MedicalHistoryValue | null | undefined
+): MedicalHistoryOption[] | null {
     if (!value) {
         return null;
     }
@@ -129,10 +137,7 @@ export function serializeMedicalHistory(value: MedicalHistoryValue | null | unde
         return null;
     }
 
-    return JSON.stringify({
-        conditions,
-        other,
-    });
+    return conditions;
 }
 
 export function formatMedicalHistory(value: MedicalHistoryValue | null | undefined): string {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
+import { parseMedicalHistory } from "@/lib/medical-history";
 import { Prisma, BloodType, Department, Role, AccountStatus } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 
@@ -99,6 +100,8 @@ export async function POST(req: Request) {
         const plainPassword = generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
+        const medicalConditions = parseMedicalHistory(payload.medical_cond).conditions;
+
         // Shared fields
         const sharedProfileData = {
             fname: payload.fname,
@@ -107,7 +110,7 @@ export async function POST(req: Request) {
             bloodtype: bloodTypeMap[payload.bloodtype] || null,
             address: payload.address ?? null,
             allergies: payload.allergies ?? null,
-            medical_cond: payload.medical_cond ?? null,
+            medical_cond: { set: medicalConditions },
             emergencyco_name: payload.emergencyco_name ?? null,
             emergencyco_num: payload.emergencyco_num ?? null,
             emergencyco_relation: payload.emergencyco_relation ?? null,
