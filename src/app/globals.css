@@ -76,8 +76,8 @@
   --sidebar-accent-foreground: hsl(154 38% 32%);
   --sidebar-border: hsl(154 35% 88%);
   --sidebar-ring: hsl(154 65% 45%);
-  --font-display: var(--font-poppins);
   --font-sans: var(--font-inter);
+  --font-display: var(--font-poppins);
 }
 
 .dark {

@@ -1,33 +1,76 @@
 import chromium from "@sparticuz/chromium";
-import { chromium as playwrightChromium, type LaunchOptions } from "playwright-core";
+import {
+  chromium as playwrightChromium,
+  type Browser,
+  type LaunchOptions,
+} from "playwright-core";
 
-export async function getChromiumLaunchOptions(): Promise<LaunchOptions> {
-  const executablePath = (await chromium.executablePath())
-    || process.env.PLAYWRIGHT_EXECUTABLE_PATH
-    || undefined;
+const isProd =
+  process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+
+type ChromiumWithExtras = typeof chromium & {
+  headless?: boolean;
+  env?: NodeJS.ProcessEnv;
+};
+
+const chromiumWithExtras = chromium as ChromiumWithExtras;
+
+export async function getChromiumLaunchOptions(
+  overrides: LaunchOptions = {},
+): Promise<LaunchOptions> {
+  if (!isProd) {
+    const { args: _ignoredArgs, ...rest } = overrides;
+    return {
+      headless: true,
+      ...rest,
+    };
+  }
+
+  const executablePath =
+    process.env.PLAYWRIGHT_EXECUTABLE_PATH ||
+    (await chromium.executablePath()) ||
+    undefined;
 
   if (!executablePath) {
     throw new Error(
-      "Chromium executable not found. Set PLAYWRIGHT_EXECUTABLE_PATH or ensure @sparticuz/chromium can download a binary."
+      "Chromium executable not found. Set PLAYWRIGHT_EXECUTABLE_PATH or ensure @sparticuz/chromium can download a binary.",
     );
   }
 
-  const args = new Set([...(chromium.args ?? []), "--no-sandbox"]);
+  const baseArgs = [...(chromium.args ?? []), "--no-sandbox"];
+  const mergedArgs = [
+    ...baseArgs,
+    ...((overrides.args as string[] | undefined) ?? []),
+  ];
+
+  const { args: _ignored, env: overrideEnv, ...restOverrides } = overrides;
 
   return {
-    args: Array.from(args),
     executablePath,
-    headless: true,
-  } satisfies LaunchOptions;
+    args: mergedArgs,
+    headless: chromiumWithExtras.headless ?? true,
+    // Use process.env + overrides to avoid any weirdness from chromium.env
+    env: { ...(process.env as NodeJS.ProcessEnv), ...(overrideEnv ?? {}) },
+    ...restOverrides,
+  };
 }
 
-export async function launchServerlessChromium(overrides: LaunchOptions = {}) {
-  const baseOptions = await getChromiumLaunchOptions();
-  const mergedArgs = [...(baseOptions.args ?? []), ...(overrides.args ?? [])];
+export async function launchServerlessChromium(
+  overrides: LaunchOptions = {},
+): Promise<Browser> {
+  try {
+    if (!isProd) {
+      const { args: _ignoredArgs, ...rest } = overrides;
+      return await playwrightChromium.launch({
+        headless: true,
+        ...rest,
+      });
+    }
 
-  return playwrightChromium.launch({
-    ...baseOptions,
-    ...overrides,
-    args: mergedArgs,
-  });
+    const options = await getChromiumLaunchOptions(overrides);
+    return await playwrightChromium.launch(options);
+  } catch (err) {
+    console.error("[PDF] Failed to launch serverless Chromium", err);
+    throw err;
+  }
 }
