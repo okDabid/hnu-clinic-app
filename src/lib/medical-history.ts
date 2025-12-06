@@ -94,7 +94,7 @@ export function parseMedicalHistory(raw?: unknown): MedicalHistoryValue {
 
         const other =
             !Array.isArray(value) && typeof (value as { other?: unknown })?.other === "string"
-                ? sanitizeFreeText((value as { other?: string }).other)
+                ? sanitizeFreeText((value as { other?: string }).other ?? "")
                 : "";
 
         if (conditions.length > 0 || other.length > 0) {
