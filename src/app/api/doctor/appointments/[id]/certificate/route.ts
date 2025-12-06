@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { chromium } from "playwright";
+import { launchServerlessChromium } from "@/lib/serverless-chromium";
 
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -263,7 +263,7 @@ export async function GET(
 
     const html = renderCertificateHtml(context);
 
-    const browser = await chromium.launch({ headless: true });
+    const browser = await launchServerlessChromium();
 
     try {
       const page = await browser.newPage();

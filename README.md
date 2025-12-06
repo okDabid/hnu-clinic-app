@@ -80,8 +80,13 @@ prisma/
 
 Create a `.env` file with the variables above before running the app.
 
+### PDF generation prerequisites
+- PDF routes use `@sparticuz/chromium` and `playwright-core` to run headless Chromium in serverless environments.
+- On local machines or non-Vercel hosts, set `PLAYWRIGHT_EXECUTABLE_PATH` to a Chromium/Chrome binary if the packaged one is unavailable.
+- Ensure system libraries for headless Chrome are installed (e.g., `libnss3`, `libatk-bridge2.0-0`, `libxcomposite1`, `libxrandr2`, `libgbm1`, `libasound2`, `fonts-noto-color-emoji`, and other common Chromium dependencies). Missing libraries can lead to `Failed to generate ... PDF` errors during deployment.
+
 ## 📦 NPM Scripts
-| Script | Description 
+| Script | Description
 | --- | --- |
 | `npm run dev` | Start the Next.js development server. |
 | `npm run build` | Create an optimized production build. |

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { chromium } from "playwright";
+import { launchServerlessChromium } from "@/lib/serverless-chromium";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { Role } from "@prisma/client";
 import {
@@ -454,7 +454,7 @@ function createReportHtml(report: ReportsResponse) {
 }
 
 async function getHandler(request: RateLimitedRequest) {
-    let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
+    let browser: Awaited<ReturnType<typeof launchServerlessChromium>> | null = null;
 
     try {
         const session = await requireRole([Role.NURSE]);
@@ -495,7 +495,7 @@ async function getHandler(request: RateLimitedRequest) {
 
         const report = await getQuarterlyReports({ year, quarter });
 
-        browser = await chromium.launch({ headless: true });
+        browser = await launchServerlessChromium();
 
         const page = await browser.newPage();
         const html = createReportHtml(report);
