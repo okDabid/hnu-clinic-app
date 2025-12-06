@@ -248,6 +248,17 @@ model MedCert {
   patient           Users         @relation("PatientCertificates", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
 }
 
+enum MedicalHistoryCondition {
+  Asthma
+  Hypertension
+  Cancer
+  Epilepsy
+  Diabetes
+  HeartDisease @map("Heart Disease")
+  KidneyDisease @map("Kidney Disease")
+  NervousMentalDisorder @map("Nervous/Mental Disorder")
+}
+
 enum Gender {
   Male
   Female

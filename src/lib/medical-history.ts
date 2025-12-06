@@ -1,15 +1,17 @@
-export const MEDICAL_HISTORY_OPTIONS = [
-    "Asthma",
-    "Hypertension",
-    "Cancer",
-    "Epilepsy",
-    "Diabetes",
-    "Heart Disease",
-    "Kidney Disease",
-    "Nervous/Mental Disorder",
-] as const;
+import { MedicalHistoryCondition } from "../../prisma/generated/enums";
 
-export type MedicalHistoryOption = (typeof MEDICAL_HISTORY_OPTIONS)[number];
+export const MEDICAL_HISTORY_OPTIONS = [
+    MedicalHistoryCondition.Asthma,
+    MedicalHistoryCondition.Hypertension,
+    MedicalHistoryCondition.Cancer,
+    MedicalHistoryCondition.Epilepsy,
+    MedicalHistoryCondition.Diabetes,
+    MedicalHistoryCondition.HeartDisease,
+    MedicalHistoryCondition.KidneyDisease,
+    MedicalHistoryCondition.NervousMentalDisorder,
+] as const satisfies readonly MedicalHistoryCondition[];
+
+export type MedicalHistoryOption = MedicalHistoryCondition;
 
 export type MedicalHistoryValue = {
     conditions: MedicalHistoryOption[];
@@ -42,25 +44,50 @@ function normalizeOptions(options: unknown): MedicalHistoryOption[] {
     return normalized;
 }
 
+function parseJsonLenient(raw: string): unknown | null {
+    const attempts = [raw];
+    if (raw.includes("'")) {
+        attempts.push(raw.replace(/'/g, '"'));
+    }
+
+    for (const candidate of attempts) {
+        try {
+            return JSON.parse(candidate);
+        } catch {
+            // continue trying remaining candidates
+        }
+    }
+
+    return null;
+}
+
 export function parseMedicalHistory(raw?: string | null): MedicalHistoryValue {
     if (!raw) {
         return { conditions: [], other: "" };
     }
 
-    try {
-        const parsed = JSON.parse(raw) as {
-            conditions?: unknown;
-            other?: unknown;
-        };
-        const conditions = normalizeOptions(parsed.conditions);
-        const other =
-            typeof parsed.other === "string" ? sanitizeFreeText(parsed.other) : "";
-        return {
-            conditions,
-            other,
-        };
-    } catch {
-        // fall through to legacy parsing
+    const parsed = parseJsonLenient(raw);
+
+    if (parsed) {
+        // Legacy payload stored as a plain JSON array, e.g. ["Asthma", "Diabetes"]
+        if (Array.isArray(parsed)) {
+            return {
+                conditions: normalizeOptions(parsed),
+                other: "",
+            };
+        }
+
+        if (typeof parsed === "object") {
+            const { conditions, other } = (parsed ?? {}) as {
+                conditions?: unknown;
+                other?: unknown;
+            };
+
+            return {
+                conditions: normalizeOptions(conditions),
+                other: typeof other === "string" ? sanitizeFreeText(other) : "",
+            };
+        }
     }
 
     const segments = raw

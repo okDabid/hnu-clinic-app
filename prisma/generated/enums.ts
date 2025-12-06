@@ -33,6 +33,20 @@ export const MedcertStatus = {
 export type MedcertStatus = (typeof MedcertStatus)[keyof typeof MedcertStatus]
 
 
+export const MedicalHistoryCondition = {
+  Asthma: 'Asthma',
+  Hypertension: 'Hypertension',
+  Cancer: 'Cancer',
+  Epilepsy: 'Epilepsy',
+  Diabetes: 'Diabetes',
+  HeartDisease: 'Heart Disease',
+  KidneyDisease: 'Kidney Disease',
+  NervousMentalDisorder: 'Nervous/Mental Disorder'
+} as const
+
+export type MedicalHistoryCondition = (typeof MedicalHistoryCondition)[keyof typeof MedicalHistoryCondition]
+
+
 export const Role = {
   NURSE: 'NURSE',
   DOCTOR: 'DOCTOR',
