@@ -8,7 +8,6 @@ import {
 const isProd =
   process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
 
-// Extend the type definition for places where we need extra properties
 type ChromiumWithExtras = typeof chromium & {
   headless?: boolean;
   env?: NodeJS.ProcessEnv;
@@ -50,7 +49,8 @@ export async function getChromiumLaunchOptions(
     executablePath,
     args: mergedArgs,
     headless: chromiumWithExtras.headless ?? true,
-    env: { ...(chromiumWithExtras.env ?? {}), ...(overrideEnv ?? {}) },
+    // Use process.env + overrides to avoid any weirdness from chromium.env
+    env: { ...(process.env as NodeJS.ProcessEnv), ...(overrideEnv ?? {}) },
     ...restOverrides,
   };
 }
@@ -58,14 +58,19 @@ export async function getChromiumLaunchOptions(
 export async function launchServerlessChromium(
   overrides: LaunchOptions = {},
 ): Promise<Browser> {
-  if (!isProd) {
-    const { args: _ignoredArgs, ...rest } = overrides;
-    return playwrightChromium.launch({
-      headless: true,
-      ...rest,
-    });
-  }
+  try {
+    if (!isProd) {
+      const { args: _ignoredArgs, ...rest } = overrides;
+      return await playwrightChromium.launch({
+        headless: true,
+        ...rest,
+      });
+    }
 
-  const options = await getChromiumLaunchOptions(overrides);
-  return playwrightChromium.launch(options);
+    const options = await getChromiumLaunchOptions(overrides);
+    return await playwrightChromium.launch(options);
+  } catch (err) {
+    console.error("[PDF] Failed to launch serverless Chromium", err);
+    throw err;
+  }
 }
