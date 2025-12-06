@@ -48,13 +48,23 @@ export function parseMedicalHistory(raw?: string | null): MedicalHistoryValue {
     }
 
     try {
-        const parsed = JSON.parse(raw) as {
-            conditions?: unknown;
-            other?: unknown;
-        };
-        const conditions = normalizeOptions(parsed.conditions);
-        const other =
-            typeof parsed.other === "string" ? sanitizeFreeText(parsed.other) : "";
+        const parsed = JSON.parse(raw) as
+            | {
+                  conditions?: unknown;
+                  other?: unknown;
+              }
+            | unknown[];
+
+        const conditions = Array.isArray(parsed)
+            ? normalizeOptions(parsed)
+            : normalizeOptions(parsed.conditions);
+
+        const other = Array.isArray(parsed)
+            ? ""
+            : typeof parsed.other === "string"
+                ? sanitizeFreeText(parsed.other)
+                : "";
+
         return {
             conditions,
             other,
