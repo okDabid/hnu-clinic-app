@@ -131,8 +131,8 @@ function normalizeStringOrNull(value: unknown): string | null | undefined {
 function normalizeMedicalConditions(
     value: unknown
 ):
-    | Prisma.StudentUpdatemedical_condInput
-    | Prisma.EmployeeUpdatemedical_condInput
+    | Prisma.StudentUpdateInput["medical_cond"]
+    | Prisma.EmployeeUpdateInput["medical_cond"]
     | undefined {
     if (value === undefined) return undefined;
 

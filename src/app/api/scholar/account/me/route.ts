@@ -100,7 +100,7 @@ function normalizeStringOrNull(value: unknown): string | null | undefined {
 
 function normalizeMedicalConditions(
     value: unknown
-): Prisma.StudentUpdatemedical_condInput | undefined {
+): Prisma.StudentUpdateInput["medical_cond"] | undefined {
     if (value === undefined) return undefined;
 
     const conditions = parseMedicalHistory(value as string | string[] | null).conditions;
