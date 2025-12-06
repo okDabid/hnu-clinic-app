@@ -1,178 +1,170 @@
 import {
-    MEDICAL_HISTORY_OPTIONS,
-    hasMedicalCondition,
-    type MedicalHistoryValue,
+  MEDICAL_HISTORY_OPTIONS,
+  hasMedicalCondition,
+  type MedicalHistoryValue,
 } from "@/lib/medical-history";
 
 export type CertificateContext = {
-    certificateId: string;
-    certificateType: "medical" | "dental";
-    issueDate: Date;
-    validUntil: Date;
-    issueDateDisplay: string;
-    patientName: string;
-    patientType: string;
-    age: string;
-    sex: string;
-    address: string;
-    program: string;
-    department: string;
-    yearLevel: string;
-    clinicName: string;
-    consultationDate: string;
-    diagnosis: string;
-    findings: string;
-    reason: string;
-    allergies: string[];
-    medicalHistory: MedicalHistoryValue;
-    doctorName: string;
-    doctorTitle: string;
-    licenseNumber: string;
-    ptrNumber: string;
+  certificateId: string;
+  issueDate: Date;
+  validUntil: Date;
+  issueDateDisplay: string;
+  patientName: string;
+  patientType: string;
+  age: string;
+  sex: string;
+  address: string;
+  program: string;
+  department: string;
+  yearLevel: string;
+  clinicName: string;
+  consultationDate: string;
+  diagnosis: string;
+  findings: string;
+  reason: string;
+  allergies: string[];
+  medicalHistory: MedicalHistoryValue;
+  doctorName: string;
+  doctorTitle: string;
+  licenseNumber: string;
+  ptrNumber: string;
 };
 
 export function escapeHtml(value: string) {
-    return value
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function titleCase(value: string | null | undefined) {
-    if (!value) return "";
-    return value
-        .toLowerCase()
-        .split(/\s+/)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+  if (!value) return "";
+  return value
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 export function humanizeEnum(value: string | null | undefined) {
-    if (!value) return "";
-    return value
-        .split("_")
-        .map((segment) =>
-            segment.length <= 3 && segment === segment.toUpperCase()
-                ? segment
-                : segment.charAt(0) + segment.slice(1).toLowerCase()
-        )
-        .join(" ");
+  if (!value) return "";
+  return value
+    .split("_")
+    .map((segment) =>
+      segment.length <= 3 && segment === segment.toUpperCase()
+        ? segment
+        : segment.charAt(0) + segment.slice(1).toLowerCase()
+    )
+    .join(" ");
 }
 
 export function computeAge(dateOfBirth?: Date | null, now: Date = new Date()) {
-    if (!dateOfBirth) return "";
-    const birth = new Date(dateOfBirth);
-    if (Number.isNaN(birth.getTime())) return "";
+  if (!dateOfBirth) return "";
+  const birth = new Date(dateOfBirth);
+  if (Number.isNaN(birth.getTime())) return "";
 
-    let age = now.getUTCFullYear() - birth.getUTCFullYear();
-    const monthDiff = now.getUTCMonth() - birth.getUTCMonth();
-    if (
-        monthDiff < 0 ||
-        (monthDiff === 0 && now.getUTCDate() < birth.getUTCDate())
-    ) {
-        age -= 1;
-    }
+  let age = now.getUTCFullYear() - birth.getUTCFullYear();
+  const monthDiff = now.getUTCMonth() - birth.getUTCMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && now.getUTCDate() < birth.getUTCDate())
+  ) {
+    age -= 1;
+  }
 
-    return age >= 0 ? String(age) : "";
+  return age >= 0 ? String(age) : "";
 }
 
 export function slugify(value: string) {
-    return value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .substring(0, 80) || "certificate";
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .substring(0, 80) || "certificate";
 }
 
 export function buildConditionList(rawConditions?: string | null) {
-    if (!rawConditions) {
-        return [] as string[];
-    }
-    return rawConditions
-        .split(/[,;\n]/)
-        .map((entry) => entry.trim())
-        .filter(Boolean);
+  if (!rawConditions) {
+    return [] as string[];
+  }
+  return rawConditions
+    .split(/[,;\n]/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 }
 
 export function formatDateLong(date: Date) {
-    return new Intl.DateTimeFormat("en-PH", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-        timeZone: "Asia/Manila",
-    }).format(date);
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "Asia/Manila",
+  }).format(date);
 }
 
 export function renderCertificateHtml(context: CertificateContext) {
-    const placeholder = (value?: string, fallback = "Not recorded") => {
-        if (value && value.trim()) {
-            return escapeHtml(value);
-        }
+  const placeholder = (value?: string, fallback = "Not recorded") => {
+    if (value && value.trim()) {
+      return escapeHtml(value);
+    }
 
-        if (fallback === "Not recorded") {
-            return "&nbsp;";
-        }
+    if (fallback === "Not recorded") {
+      return "&nbsp;";
+    }
 
-        return `<span class="placeholder">${escapeHtml(fallback)}</span>`;
-    };
+    return `<span class="placeholder">${escapeHtml(fallback)}</span>`;
+  };
 
-    const credentialValue = (value?: string) => {
-        if (value && value.trim()) {
-            return escapeHtml(value);
-        }
-        return "&nbsp;";
-    };
+  const credentialValue = (value?: string) => {
+    if (value && value.trim()) {
+      return escapeHtml(value);
+    }
+    return "&nbsp;";
+  };
 
-    const isDental = context.certificateType === "dental";
-    const heading = isDental ? "DENTAL CERTIFICATE" : "MEDICAL CERTIFICATE";
+  const heading = "MEDICAL CERTIFICATE";
 
-    const introLine = isDental
-        ? `This is to certify that <strong>${escapeHtml(
-              context.patientName
-          )}</strong>, a student of Holy Name University, underwent a dental evaluation at the Holy Name University Highschool Clinic.`
-        : `This is to certify that <strong>${escapeHtml(
-              context.patientName
-          )}</strong>, a student of Holy Name University, was examined at the Holy Name University College Clinic.`;
+  const introLine = `This is to certify that <strong>${escapeHtml(
+    context.patientName
+  )}</strong>, a student of Holy Name University, was examined at the Holy Name University College Clinic.`;
 
-    const renderCheckbox = (label: string, checked: boolean) => `
+  const renderCheckbox = (label: string, checked: boolean) => `
         <div class="checkbox${checked ? " checked" : ""}">
           <span class="box" aria-hidden="true"></span>
           <span class="text">${escapeHtml(label)}</span>
         </div>
     `;
 
-    const medicalHistoryBoxes = MEDICAL_HISTORY_OPTIONS.map((option) =>
-        renderCheckbox(option, hasMedicalCondition(context.medicalHistory, option))
-    ).join("");
+  const medicalHistoryBoxes = MEDICAL_HISTORY_OPTIONS.map((option) =>
+    renderCheckbox(option, hasMedicalCondition(context.medicalHistory, option))
+  ).join("");
 
-    const remainingMedical = context.medicalHistory.other?.trim() ?? "";
+  const remainingMedical = context.medicalHistory.other?.trim() ?? "";
 
-    const allergiesList = context.allergies
-        .map((value) => titleCase(value))
-        .join(", ");
+  const allergiesList = context.allergies
+    .map((value) => titleCase(value))
+    .join(", ");
 
-    const impression = placeholder(context.diagnosis, "Not recorded");
-    const recommendation = placeholder(
-        context.findings,
-        isDental
-            ? "No dental recommendations were provided."
-            : "No medical recommendations were provided."
-    );
+  const impression = placeholder(context.diagnosis, "Not recorded");
+  const recommendation = placeholder(
+    context.findings,
+    "No medical recommendations were provided."
+  );
 
-    const noteParts: string[] = [];
-    if (context.reason) {
-        noteParts.push(`Reason for visit: ${context.reason}.`);
-    }
-    noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
-    const notes = placeholder(
-        noteParts.map((entry) => entry.trim()).join(" "),
-        "No additional notes were recorded."
-    );
+  const noteParts: string[] = [];
+  if (context.reason) {
+    noteParts.push(`Reason for visit: ${context.reason}.`);
+  }
+  noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
+  const notes = placeholder(
+    noteParts.map((entry) => entry.trim()).join(" "),
+    "No additional notes were recorded."
+  );
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -404,7 +396,7 @@ export function renderCertificateHtml(context: CertificateContext) {
     </style>
   </head>
   <body>
-    <main class="${isDental ? "certificate dental" : "certificate medical"}">
+    <main class="certificate medical">
       <header>
         <div class="institution">Holy Name University</div>
         <div class="department">Health Services Department</div>
@@ -527,9 +519,9 @@ export function renderCertificateHtml(context: CertificateContext) {
         <div class="field-line">
           <span class="field-label">Food / Drug</span>
           <span class="underline">${placeholder(
-              allergiesList,
-              "No allergies declared"
-          )}</span>
+    allergiesList,
+    "No allergies declared"
+  )}</span>
         </div>
       </section>
 
@@ -571,8 +563,8 @@ export function renderCertificateHtml(context: CertificateContext) {
       <footer>
         <div>Valid until: ${escapeHtml(formatDateLong(context.validUntil))}</div>
         <div class="certificate-id">Certificate ID: ${escapeHtml(
-            context.certificateId
-        )}</div>
+    context.certificateId
+  )}</div>
         <div>
           This certificate is issued for any school-related activity and is valid for one (1) year from the date of issuance.
         </div>

@@ -206,7 +206,6 @@ export async function resolvePatientCertificate(): Promise<
 
     const context: CertificateContext = {
         certificateId: medcert.certificate_id,
-        certificateType: "medical",
         issueDate: medcert.issue_date,
         validUntil: medcert.valid_until,
         issueDateDisplay,
