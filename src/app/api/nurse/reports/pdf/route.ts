@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import { chromium } from "playwright";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { Role } from "@prisma/client";
 import {
@@ -28,32 +27,6 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const isLocal = !process.env.AWS_REGION && !process.env.VERCEL;
-
-async function getExecutablePath() {
-    if (process.env.CHROME_EXECUTABLE_PATH) {
-        return process.env.CHROME_EXECUTABLE_PATH;
-    }
-
-    const chromiumPath = await chromium.executablePath();
-    if (chromiumPath) {
-        return chromiumPath;
-    }
-
-    if (!isLocal) {
-        throw new Error("Unable to resolve chromium executable path");
-    }
-
-    switch (process.platform) {
-        case "win32":
-            return "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-        case "darwin":
-            return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-        default:
-            return "/usr/bin/google-chrome";
-    }
-}
 
 function escapeHtml(value: string) {
     return value.replace(/[&<>"]|'/g, (char) => {
@@ -481,7 +454,7 @@ function createReportHtml(report: ReportsResponse) {
 }
 
 async function getHandler(request: RateLimitedRequest) {
-    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+    let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
 
     try {
         const session = await requireRole([Role.NURSE]);
@@ -522,11 +495,7 @@ async function getHandler(request: RateLimitedRequest) {
 
         const report = await getQuarterlyReports({ year, quarter });
 
-        browser = await puppeteer.launch({
-            args: chromium.args,
-            executablePath: await getExecutablePath(),
-            headless: true,
-        });
+        browser = await chromium.launch({ headless: true });
 
         const page = await browser.newPage();
         const html = createReportHtml(report);

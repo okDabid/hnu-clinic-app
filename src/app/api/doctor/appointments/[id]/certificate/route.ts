@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import { chromium } from "playwright";
 
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -31,30 +30,6 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const isLocal = !process.env.AWS_REGION && !process.env.VERCEL;
-  const getExecutablePath = async () => {
-    if (process.env.CHROME_EXECUTABLE_PATH) {
-      return process.env.CHROME_EXECUTABLE_PATH;
-    }
-
-    const chromiumPath = await chromium.executablePath();
-    if (chromiumPath) {
-      return chromiumPath;
-    }
-
-    if (!isLocal) {
-      throw new Error("Unable to resolve chromium executable path");
-    }
-
-    switch (process.platform) {
-      case "win32":
-        return "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-      case "darwin":
-        return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-      default:
-        return "/usr/bin/google-chrome";
-    }
-  };
   const { id } = await context.params;
   try {
     const session = await getServerSession(authOptions);
@@ -288,16 +263,11 @@ export async function GET(
 
     const html = renderCertificateHtml(context);
 
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: null,
-      executablePath: await getExecutablePath(),
-      headless: true,
-    });
+    const browser = await chromium.launch({ headless: true });
 
     try {
       const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: "networkidle0" });
+      await page.setContent(html, { waitUntil: "networkidle" });
       await page.emulateMediaType("print");
       const pdfBuffer = await page.pdf({
         format: "A4",
