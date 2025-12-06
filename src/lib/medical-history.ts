@@ -42,62 +42,107 @@ function normalizeOptions(options: unknown): MedicalHistoryOption[] {
     return normalized;
 }
 
-export function parseMedicalHistory(raw?: string | null): MedicalHistoryValue {
+function normalizeOptionValue(option: unknown): MedicalHistoryOption | null {
+    if (typeof option !== "string") return null;
+
+    const cleaned = option.trim();
+    if (!cleaned) return null;
+
+    const match = MEDICAL_HISTORY_OPTIONS.find(
+        (candidate) => candidate.toLowerCase() === cleaned.toLowerCase()
+    );
+    return match ?? null;
+}
+
+function collectOptions(value: unknown): MedicalHistoryOption[] {
+    if (!value) return [];
+
+    const results: MedicalHistoryOption[] = [];
+
+    const addIfPresent = (candidate: unknown) => {
+        const match = normalizeOptionValue(candidate);
+        if (match && !results.includes(match)) {
+            results.push(match);
+        }
+    };
+
+    if (Array.isArray(value)) {
+        value.forEach(addIfPresent);
+        return results;
+    }
+
+    if (typeof value === "object") {
+        for (const [key, candidate] of Object.entries(value)) {
+            if (candidate) {
+                addIfPresent(key);
+            }
+        }
+    }
+
+    return results;
+}
+
+export function parseMedicalHistory(raw?: unknown): MedicalHistoryValue {
     if (!raw) {
         return { conditions: [], other: "" };
     }
 
-    try {
-        const parsed = JSON.parse(raw) as
-            | {
-                  conditions?: unknown;
-                  other?: unknown;
-              }
-            | unknown[];
+    const parseStructured = (value: unknown) => {
+        const conditions = Array.isArray(value)
+            ? collectOptions(value)
+            : collectOptions((value as { conditions?: unknown })?.conditions ?? value);
 
-        const conditions = Array.isArray(parsed)
-            ? normalizeOptions(parsed)
-            : normalizeOptions(parsed.conditions);
-
-        const other = Array.isArray(parsed)
-            ? ""
-            : typeof parsed.other === "string"
-                ? sanitizeFreeText(parsed.other)
+        const other =
+            !Array.isArray(value) && typeof (value as { other?: unknown })?.other === "string"
+                ? sanitizeFreeText((value as { other?: string }).other)
                 : "";
+
+        if (conditions.length > 0 || other.length > 0) {
+            return { conditions, other };
+        }
+        return null;
+    };
+
+    if (typeof raw === "object") {
+        const structured = parseStructured(raw);
+        if (structured) return structured;
+    }
+
+    if (typeof raw === "string") {
+        try {
+            const parsed = JSON.parse(raw);
+            const structured = parseStructured(parsed);
+            if (structured) return structured;
+        } catch {
+            // continue to legacy parsing
+        }
+
+        const segments = raw
+            .split(/[,;\n]/)
+            .map((segment) => segment.trim())
+            .filter(Boolean);
+
+        const conditions: MedicalHistoryOption[] = [];
+        const otherValues: string[] = [];
+
+        for (const segment of segments) {
+            const match = normalizeOptionValue(segment);
+            if (match) {
+                if (!conditions.includes(match)) {
+                    conditions.push(match);
+                }
+            } else {
+                otherValues.push(segment);
+            }
+        }
 
         return {
             conditions,
-            other,
+            other: sanitizeFreeText(otherValues.join(", ")),
         };
-    } catch {
-        // fall through to legacy parsing
     }
 
-    const segments = raw
-        .split(/[,;\n]/)
-        .map((segment) => segment.trim())
-        .filter(Boolean);
-
-    const conditions: MedicalHistoryOption[] = [];
-    const otherValues: string[] = [];
-
-    for (const segment of segments) {
-        const match = MEDICAL_HISTORY_OPTIONS.find(
-            (candidate) => candidate.toLowerCase() === segment.toLowerCase()
-        );
-        if (match) {
-            if (!conditions.includes(match)) {
-                conditions.push(match);
-            }
-        } else {
-            otherValues.push(segment);
-        }
-    }
-
-    return {
-        conditions,
-        other: sanitizeFreeText(otherValues.join(", ")),
-    };
+    return { conditions: [], other: "" };
 }
 
 export function serializeMedicalHistory(value: MedicalHistoryValue | null | undefined): string | null {
