@@ -136,7 +136,7 @@ export default function PatientMedicalCertificatePage() {
                                     </div>
                                 </div>
                                 <p className="mt-2 text-sm text-primary/80">
-                                    For a printed, please contact the clinic staff so they can provide the
+                                    For a printed copy, please visit the clinic where you scheduled your appointment so they can provide the
                                     appropriate document.
                                 </p>
                             </div>
