@@ -1533,7 +1533,6 @@ export const StudentScalarFieldEnum = {
   emergencyco_num: 'emergencyco_num',
   emergencyco_relation: 'emergencyco_relation',
   is_working_scholar: 'is_working_scholar',
-  status: 'status',
   department: 'department',
   year_level: 'year_level',
   bloodtype: 'bloodtype',
@@ -1560,7 +1559,6 @@ export const EmployeeScalarFieldEnum = {
   emergencyco_name: 'emergencyco_name',
   emergencyco_num: 'emergencyco_num',
   emergencyco_relation: 'emergencyco_relation',
-  status: 'status',
   bloodtype: 'bloodtype',
   email: 'email',
   specialization: 'specialization'
@@ -1660,7 +1658,7 @@ export type MedDispenseScalarFieldEnum = (typeof MedDispenseScalarFieldEnum)[key
 
 
 export const DispenseBatchScalarFieldEnum = {
-  id: 'id',
+  dibsatch_id: 'dibsatch_id',
   dispense_id: 'dispense_id',
   replenishment_id: 'replenishment_id',
   quantity_used: 'quantity_used'

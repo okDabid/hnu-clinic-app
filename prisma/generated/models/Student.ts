@@ -42,7 +42,6 @@ export type StudentMinAggregateOutputType = {
   emergencyco_num: string | null
   emergencyco_relation: string | null
   is_working_scholar: boolean | null
-  status: $Enums.AccountStatus | null
   department: $Enums.Department | null
   year_level: $Enums.YearLevel | null
   bloodtype: $Enums.BloodType | null
@@ -67,7 +66,6 @@ export type StudentMaxAggregateOutputType = {
   emergencyco_num: string | null
   emergencyco_relation: string | null
   is_working_scholar: boolean | null
-  status: $Enums.AccountStatus | null
   department: $Enums.Department | null
   year_level: $Enums.YearLevel | null
   bloodtype: $Enums.BloodType | null
@@ -92,7 +90,6 @@ export type StudentCountAggregateOutputType = {
   emergencyco_num: number
   emergencyco_relation: number
   is_working_scholar: number
-  status: number
   department: number
   year_level: number
   bloodtype: number
@@ -119,7 +116,6 @@ export type StudentMinAggregateInputType = {
   emergencyco_num?: true
   emergencyco_relation?: true
   is_working_scholar?: true
-  status?: true
   department?: true
   year_level?: true
   bloodtype?: true
@@ -144,7 +140,6 @@ export type StudentMaxAggregateInputType = {
   emergencyco_num?: true
   emergencyco_relation?: true
   is_working_scholar?: true
-  status?: true
   department?: true
   year_level?: true
   bloodtype?: true
@@ -169,7 +164,6 @@ export type StudentCountAggregateInputType = {
   emergencyco_num?: true
   emergencyco_relation?: true
   is_working_scholar?: true
-  status?: true
   department?: true
   year_level?: true
   bloodtype?: true
@@ -267,7 +261,6 @@ export type StudentGroupByOutputType = {
   emergencyco_num: string | null
   emergencyco_relation: string | null
   is_working_scholar: boolean
-  status: $Enums.AccountStatus
   department: $Enums.Department | null
   year_level: $Enums.YearLevel | null
   bloodtype: $Enums.BloodType | null
@@ -313,7 +306,6 @@ export type StudentWhereInput = {
   emergencyco_num?: Prisma.StringNullableFilter<"Student"> | string | null
   emergencyco_relation?: Prisma.StringNullableFilter<"Student"> | string | null
   is_working_scholar?: Prisma.BoolFilter<"Student"> | boolean
-  status?: Prisma.EnumAccountStatusFilter<"Student"> | $Enums.AccountStatus
   department?: Prisma.EnumDepartmentNullableFilter<"Student"> | $Enums.Department | null
   year_level?: Prisma.EnumYearLevelNullableFilter<"Student"> | $Enums.YearLevel | null
   bloodtype?: Prisma.EnumBloodTypeNullableFilter<"Student"> | $Enums.BloodType | null
@@ -339,7 +331,6 @@ export type StudentOrderByWithRelationInput = {
   emergencyco_num?: Prisma.SortOrderInput | Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrderInput | Prisma.SortOrder
   is_working_scholar?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
   year_level?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodtype?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -369,7 +360,6 @@ export type StudentWhereUniqueInput = Prisma.AtLeast<{
   emergencyco_num?: Prisma.StringNullableFilter<"Student"> | string | null
   emergencyco_relation?: Prisma.StringNullableFilter<"Student"> | string | null
   is_working_scholar?: Prisma.BoolFilter<"Student"> | boolean
-  status?: Prisma.EnumAccountStatusFilter<"Student"> | $Enums.AccountStatus
   department?: Prisma.EnumDepartmentNullableFilter<"Student"> | $Enums.Department | null
   year_level?: Prisma.EnumYearLevelNullableFilter<"Student"> | $Enums.YearLevel | null
   bloodtype?: Prisma.EnumBloodTypeNullableFilter<"Student"> | $Enums.BloodType | null
@@ -394,7 +384,6 @@ export type StudentOrderByWithAggregationInput = {
   emergencyco_num?: Prisma.SortOrderInput | Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrderInput | Prisma.SortOrder
   is_working_scholar?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   department?: Prisma.SortOrderInput | Prisma.SortOrder
   year_level?: Prisma.SortOrderInput | Prisma.SortOrder
   bloodtype?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -425,7 +414,6 @@ export type StudentScalarWhereWithAggregatesInput = {
   emergencyco_num?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   emergencyco_relation?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   is_working_scholar?: Prisma.BoolWithAggregatesFilter<"Student"> | boolean
-  status?: Prisma.EnumAccountStatusWithAggregatesFilter<"Student"> | $Enums.AccountStatus
   department?: Prisma.EnumDepartmentNullableWithAggregatesFilter<"Student"> | $Enums.Department | null
   year_level?: Prisma.EnumYearLevelNullableWithAggregatesFilter<"Student"> | $Enums.YearLevel | null
   bloodtype?: Prisma.EnumBloodTypeNullableWithAggregatesFilter<"Student"> | $Enums.BloodType | null
@@ -449,7 +437,6 @@ export type StudentCreateInput = {
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
   is_working_scholar?: boolean
-  status?: $Enums.AccountStatus
   department?: $Enums.Department | null
   year_level?: $Enums.YearLevel | null
   bloodtype?: $Enums.BloodType | null
@@ -475,7 +462,6 @@ export type StudentUncheckedCreateInput = {
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
   is_working_scholar?: boolean
-  status?: $Enums.AccountStatus
   department?: $Enums.Department | null
   year_level?: $Enums.YearLevel | null
   bloodtype?: $Enums.BloodType | null
@@ -499,7 +485,6 @@ export type StudentUpdateInput = {
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_working_scholar?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   department?: Prisma.NullableEnumDepartmentFieldUpdateOperationsInput | $Enums.Department | null
   year_level?: Prisma.NullableEnumYearLevelFieldUpdateOperationsInput | $Enums.YearLevel | null
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
@@ -525,7 +510,6 @@ export type StudentUncheckedUpdateInput = {
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_working_scholar?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   department?: Prisma.NullableEnumDepartmentFieldUpdateOperationsInput | $Enums.Department | null
   year_level?: Prisma.NullableEnumYearLevelFieldUpdateOperationsInput | $Enums.YearLevel | null
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
@@ -550,7 +534,6 @@ export type StudentCreateManyInput = {
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
   is_working_scholar?: boolean
-  status?: $Enums.AccountStatus
   department?: $Enums.Department | null
   year_level?: $Enums.YearLevel | null
   bloodtype?: $Enums.BloodType | null
@@ -574,7 +557,6 @@ export type StudentUpdateManyMutationInput = {
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_working_scholar?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   department?: Prisma.NullableEnumDepartmentFieldUpdateOperationsInput | $Enums.Department | null
   year_level?: Prisma.NullableEnumYearLevelFieldUpdateOperationsInput | $Enums.YearLevel | null
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
@@ -599,7 +581,6 @@ export type StudentUncheckedUpdateManyInput = {
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_working_scholar?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   department?: Prisma.NullableEnumDepartmentFieldUpdateOperationsInput | $Enums.Department | null
   year_level?: Prisma.NullableEnumYearLevelFieldUpdateOperationsInput | $Enums.YearLevel | null
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
@@ -629,7 +610,6 @@ export type StudentCountOrderByAggregateInput = {
   emergencyco_num?: Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrder
   is_working_scholar?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   department?: Prisma.SortOrder
   year_level?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrder
@@ -654,7 +634,6 @@ export type StudentMaxOrderByAggregateInput = {
   emergencyco_num?: Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrder
   is_working_scholar?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   department?: Prisma.SortOrder
   year_level?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrder
@@ -679,7 +658,6 @@ export type StudentMinOrderByAggregateInput = {
   emergencyco_num?: Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrder
   is_working_scholar?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   department?: Prisma.SortOrder
   year_level?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrder
@@ -763,7 +741,6 @@ export type StudentCreateWithoutUserInput = {
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
   is_working_scholar?: boolean
-  status?: $Enums.AccountStatus
   department?: $Enums.Department | null
   year_level?: $Enums.YearLevel | null
   bloodtype?: $Enums.BloodType | null
@@ -787,7 +764,6 @@ export type StudentUncheckedCreateWithoutUserInput = {
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
   is_working_scholar?: boolean
-  status?: $Enums.AccountStatus
   department?: $Enums.Department | null
   year_level?: $Enums.YearLevel | null
   bloodtype?: $Enums.BloodType | null
@@ -827,7 +803,6 @@ export type StudentUpdateWithoutUserInput = {
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_working_scholar?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   department?: Prisma.NullableEnumDepartmentFieldUpdateOperationsInput | $Enums.Department | null
   year_level?: Prisma.NullableEnumYearLevelFieldUpdateOperationsInput | $Enums.YearLevel | null
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
@@ -851,7 +826,6 @@ export type StudentUncheckedUpdateWithoutUserInput = {
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_working_scholar?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   department?: Prisma.NullableEnumDepartmentFieldUpdateOperationsInput | $Enums.Department | null
   year_level?: Prisma.NullableEnumYearLevelFieldUpdateOperationsInput | $Enums.YearLevel | null
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
@@ -878,7 +852,6 @@ export type StudentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
   is_working_scholar?: boolean
-  status?: boolean
   department?: boolean
   year_level?: boolean
   bloodtype?: boolean
@@ -904,7 +877,6 @@ export type StudentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
   is_working_scholar?: boolean
-  status?: boolean
   department?: boolean
   year_level?: boolean
   bloodtype?: boolean
@@ -930,7 +902,6 @@ export type StudentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
   is_working_scholar?: boolean
-  status?: boolean
   department?: boolean
   year_level?: boolean
   bloodtype?: boolean
@@ -956,14 +927,13 @@ export type StudentSelectScalar = {
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
   is_working_scholar?: boolean
-  status?: boolean
   department?: boolean
   year_level?: boolean
   bloodtype?: boolean
   email?: boolean
 }
 
-export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"stud_user_id" | "user_id" | "student_id" | "fname" | "mname" | "lname" | "date_of_birth" | "gender" | "program" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "is_working_scholar" | "status" | "department" | "year_level" | "bloodtype" | "email", ExtArgs["result"]["student"]>
+export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"stud_user_id" | "user_id" | "student_id" | "fname" | "mname" | "lname" | "date_of_birth" | "gender" | "program" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "is_working_scholar" | "department" | "year_level" | "bloodtype" | "email", ExtArgs["result"]["student"]>
 export type StudentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UsersDefaultArgs<ExtArgs>
 }
@@ -997,7 +967,6 @@ export type $StudentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     emergencyco_num: string | null
     emergencyco_relation: string | null
     is_working_scholar: boolean
-    status: $Enums.AccountStatus
     department: $Enums.Department | null
     year_level: $Enums.YearLevel | null
     bloodtype: $Enums.BloodType | null
@@ -1443,7 +1412,6 @@ export interface StudentFieldRefs {
   readonly emergencyco_num: Prisma.FieldRef<"Student", 'String'>
   readonly emergencyco_relation: Prisma.FieldRef<"Student", 'String'>
   readonly is_working_scholar: Prisma.FieldRef<"Student", 'Boolean'>
-  readonly status: Prisma.FieldRef<"Student", 'AccountStatus'>
   readonly department: Prisma.FieldRef<"Student", 'Department'>
   readonly year_level: Prisma.FieldRef<"Student", 'YearLevel'>
   readonly bloodtype: Prisma.FieldRef<"Student", 'BloodType'>

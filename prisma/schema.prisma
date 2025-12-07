@@ -43,29 +43,28 @@ model Users {
 }
 
 model Student {
-  stud_user_id         String        @id @default(dbgenerated("concat('STUD_', (floor((random() * (1000000)::double precision)))::integer)"))
-  user_id              String        @unique
-  student_id           String        @unique
+  stud_user_id         String      @id @default(dbgenerated("concat('STUD_', (floor((random() * (1000000)::double precision)))::integer)"))
+  user_id              String      @unique
+  student_id           String      @unique
   fname                String
   mname                String?
   lname                String
   date_of_birth        DateTime?
   gender               Gender?
   program              String?
-  contactno            String?       @unique
+  contactno            String?     @unique
   address              String?
   allergies            String?
   medical_cond         String?
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?
-  is_working_scholar   Boolean       @default(false)
-  status               AccountStatus @default(Active)
+  is_working_scholar   Boolean     @default(false)
   department           Department?
   year_level           YearLevel?
   bloodtype            BloodType?
-  email                String?       @unique
-  user                 Users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  email                String?     @unique
+  user                 Users       @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
 
 model Employee {
@@ -85,7 +84,6 @@ model Employee {
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?
-  status               AccountStatus         @default(Active)
   bloodtype            BloodType?
   email                String?               @unique
   specialization       DoctorSpecialization?
@@ -200,7 +198,7 @@ model MedDispense {
 }
 
 model DispenseBatch {
-  id               String        @id @default(dbgenerated("concat('DESBATCH_', (floor((random() * (1000000)::double precision)))::integer)"))
+  dibsatch_id      String        @id @default(dbgenerated("concat('DISBATCH_', (floor((random() * (1000000)::double precision)))::integer)"))
   dispense_id      String
   replenishment_id String
   quantity_used    Int
@@ -219,7 +217,7 @@ model RateLimitBucket {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("concat('RESET_', (floor((random() * (1000000)::double precision)))::integer)"))
   userId    String
   token     String   @unique
   expiresAt DateTime
