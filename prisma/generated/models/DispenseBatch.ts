@@ -35,21 +35,21 @@ export type DispenseBatchSumAggregateOutputType = {
 }
 
 export type DispenseBatchMinAggregateOutputType = {
-  dibsatch_id: string | null
+  id: string | null
   dispense_id: string | null
   replenishment_id: string | null
   quantity_used: number | null
 }
 
 export type DispenseBatchMaxAggregateOutputType = {
-  dibsatch_id: string | null
+  id: string | null
   dispense_id: string | null
   replenishment_id: string | null
   quantity_used: number | null
 }
 
 export type DispenseBatchCountAggregateOutputType = {
-  dibsatch_id: number
+  id: number
   dispense_id: number
   replenishment_id: number
   quantity_used: number
@@ -66,21 +66,21 @@ export type DispenseBatchSumAggregateInputType = {
 }
 
 export type DispenseBatchMinAggregateInputType = {
-  dibsatch_id?: true
+  id?: true
   dispense_id?: true
   replenishment_id?: true
   quantity_used?: true
 }
 
 export type DispenseBatchMaxAggregateInputType = {
-  dibsatch_id?: true
+  id?: true
   dispense_id?: true
   replenishment_id?: true
   quantity_used?: true
 }
 
 export type DispenseBatchCountAggregateInputType = {
-  dibsatch_id?: true
+  id?: true
   dispense_id?: true
   replenishment_id?: true
   quantity_used?: true
@@ -174,7 +174,7 @@ export type DispenseBatchGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
 }
 
 export type DispenseBatchGroupByOutputType = {
-  dibsatch_id: string
+  id: string
   dispense_id: string
   replenishment_id: string
   quantity_used: number
@@ -204,7 +204,7 @@ export type DispenseBatchWhereInput = {
   AND?: Prisma.DispenseBatchWhereInput | Prisma.DispenseBatchWhereInput[]
   OR?: Prisma.DispenseBatchWhereInput[]
   NOT?: Prisma.DispenseBatchWhereInput | Prisma.DispenseBatchWhereInput[]
-  dibsatch_id?: Prisma.StringFilter<"DispenseBatch"> | string
+  id?: Prisma.StringFilter<"DispenseBatch"> | string
   dispense_id?: Prisma.StringFilter<"DispenseBatch"> | string
   replenishment_id?: Prisma.StringFilter<"DispenseBatch"> | string
   quantity_used?: Prisma.IntFilter<"DispenseBatch"> | number
@@ -213,7 +213,7 @@ export type DispenseBatchWhereInput = {
 }
 
 export type DispenseBatchOrderByWithRelationInput = {
-  dibsatch_id?: Prisma.SortOrder
+  id?: Prisma.SortOrder
   dispense_id?: Prisma.SortOrder
   replenishment_id?: Prisma.SortOrder
   quantity_used?: Prisma.SortOrder
@@ -222,7 +222,7 @@ export type DispenseBatchOrderByWithRelationInput = {
 }
 
 export type DispenseBatchWhereUniqueInput = Prisma.AtLeast<{
-  dibsatch_id?: string
+  id?: string
   AND?: Prisma.DispenseBatchWhereInput | Prisma.DispenseBatchWhereInput[]
   OR?: Prisma.DispenseBatchWhereInput[]
   NOT?: Prisma.DispenseBatchWhereInput | Prisma.DispenseBatchWhereInput[]
@@ -231,10 +231,10 @@ export type DispenseBatchWhereUniqueInput = Prisma.AtLeast<{
   quantity_used?: Prisma.IntFilter<"DispenseBatch"> | number
   dispense?: Prisma.XOR<Prisma.MedDispenseScalarRelationFilter, Prisma.MedDispenseWhereInput>
   replenishment?: Prisma.XOR<Prisma.ReplenishmentScalarRelationFilter, Prisma.ReplenishmentWhereInput>
-}, "dibsatch_id">
+}, "id">
 
 export type DispenseBatchOrderByWithAggregationInput = {
-  dibsatch_id?: Prisma.SortOrder
+  id?: Prisma.SortOrder
   dispense_id?: Prisma.SortOrder
   replenishment_id?: Prisma.SortOrder
   quantity_used?: Prisma.SortOrder
@@ -249,54 +249,54 @@ export type DispenseBatchScalarWhereWithAggregatesInput = {
   AND?: Prisma.DispenseBatchScalarWhereWithAggregatesInput | Prisma.DispenseBatchScalarWhereWithAggregatesInput[]
   OR?: Prisma.DispenseBatchScalarWhereWithAggregatesInput[]
   NOT?: Prisma.DispenseBatchScalarWhereWithAggregatesInput | Prisma.DispenseBatchScalarWhereWithAggregatesInput[]
-  dibsatch_id?: Prisma.StringWithAggregatesFilter<"DispenseBatch"> | string
+  id?: Prisma.StringWithAggregatesFilter<"DispenseBatch"> | string
   dispense_id?: Prisma.StringWithAggregatesFilter<"DispenseBatch"> | string
   replenishment_id?: Prisma.StringWithAggregatesFilter<"DispenseBatch"> | string
   quantity_used?: Prisma.IntWithAggregatesFilter<"DispenseBatch"> | number
 }
 
 export type DispenseBatchCreateInput = {
-  dibsatch_id?: string
+  id?: string
   quantity_used: number
   dispense: Prisma.MedDispenseCreateNestedOneWithoutDispenseBatchesInput
   replenishment: Prisma.ReplenishmentCreateNestedOneWithoutDispenseBatchInput
 }
 
 export type DispenseBatchUncheckedCreateInput = {
-  dibsatch_id?: string
+  id?: string
   dispense_id: string
   replenishment_id: string
   quantity_used: number
 }
 
 export type DispenseBatchUpdateInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
   dispense?: Prisma.MedDispenseUpdateOneRequiredWithoutDispenseBatchesNestedInput
   replenishment?: Prisma.ReplenishmentUpdateOneRequiredWithoutDispenseBatchNestedInput
 }
 
 export type DispenseBatchUncheckedUpdateInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   dispense_id?: Prisma.StringFieldUpdateOperationsInput | string
   replenishment_id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type DispenseBatchCreateManyInput = {
-  dibsatch_id?: string
+  id?: string
   dispense_id: string
   replenishment_id: string
   quantity_used: number
 }
 
 export type DispenseBatchUpdateManyMutationInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type DispenseBatchUncheckedUpdateManyInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   dispense_id?: Prisma.StringFieldUpdateOperationsInput | string
   replenishment_id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
@@ -313,7 +313,7 @@ export type DispenseBatchOrderByRelationAggregateInput = {
 }
 
 export type DispenseBatchCountOrderByAggregateInput = {
-  dibsatch_id?: Prisma.SortOrder
+  id?: Prisma.SortOrder
   dispense_id?: Prisma.SortOrder
   replenishment_id?: Prisma.SortOrder
   quantity_used?: Prisma.SortOrder
@@ -324,14 +324,14 @@ export type DispenseBatchAvgOrderByAggregateInput = {
 }
 
 export type DispenseBatchMaxOrderByAggregateInput = {
-  dibsatch_id?: Prisma.SortOrder
+  id?: Prisma.SortOrder
   dispense_id?: Prisma.SortOrder
   replenishment_id?: Prisma.SortOrder
   quantity_used?: Prisma.SortOrder
 }
 
 export type DispenseBatchMinOrderByAggregateInput = {
-  dibsatch_id?: Prisma.SortOrder
+  id?: Prisma.SortOrder
   dispense_id?: Prisma.SortOrder
   replenishment_id?: Prisma.SortOrder
   quantity_used?: Prisma.SortOrder
@@ -426,13 +426,13 @@ export type DispenseBatchUncheckedUpdateManyWithoutDispenseNestedInput = {
 }
 
 export type DispenseBatchCreateWithoutReplenishmentInput = {
-  dibsatch_id?: string
+  id?: string
   quantity_used: number
   dispense: Prisma.MedDispenseCreateNestedOneWithoutDispenseBatchesInput
 }
 
 export type DispenseBatchUncheckedCreateWithoutReplenishmentInput = {
-  dibsatch_id?: string
+  id?: string
   dispense_id: string
   quantity_used: number
 }
@@ -467,20 +467,20 @@ export type DispenseBatchScalarWhereInput = {
   AND?: Prisma.DispenseBatchScalarWhereInput | Prisma.DispenseBatchScalarWhereInput[]
   OR?: Prisma.DispenseBatchScalarWhereInput[]
   NOT?: Prisma.DispenseBatchScalarWhereInput | Prisma.DispenseBatchScalarWhereInput[]
-  dibsatch_id?: Prisma.StringFilter<"DispenseBatch"> | string
+  id?: Prisma.StringFilter<"DispenseBatch"> | string
   dispense_id?: Prisma.StringFilter<"DispenseBatch"> | string
   replenishment_id?: Prisma.StringFilter<"DispenseBatch"> | string
   quantity_used?: Prisma.IntFilter<"DispenseBatch"> | number
 }
 
 export type DispenseBatchCreateWithoutDispenseInput = {
-  dibsatch_id?: string
+  id?: string
   quantity_used: number
   replenishment: Prisma.ReplenishmentCreateNestedOneWithoutDispenseBatchInput
 }
 
 export type DispenseBatchUncheckedCreateWithoutDispenseInput = {
-  dibsatch_id?: string
+  id?: string
   replenishment_id: string
   quantity_used: number
 }
@@ -512,49 +512,49 @@ export type DispenseBatchUpdateManyWithWhereWithoutDispenseInput = {
 }
 
 export type DispenseBatchCreateManyReplenishmentInput = {
-  dibsatch_id?: string
+  id?: string
   dispense_id: string
   quantity_used: number
 }
 
 export type DispenseBatchUpdateWithoutReplenishmentInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
   dispense?: Prisma.MedDispenseUpdateOneRequiredWithoutDispenseBatchesNestedInput
 }
 
 export type DispenseBatchUncheckedUpdateWithoutReplenishmentInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   dispense_id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type DispenseBatchUncheckedUpdateManyWithoutReplenishmentInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   dispense_id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type DispenseBatchCreateManyDispenseInput = {
-  dibsatch_id?: string
+  id?: string
   replenishment_id: string
   quantity_used: number
 }
 
 export type DispenseBatchUpdateWithoutDispenseInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
   replenishment?: Prisma.ReplenishmentUpdateOneRequiredWithoutDispenseBatchNestedInput
 }
 
 export type DispenseBatchUncheckedUpdateWithoutDispenseInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   replenishment_id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type DispenseBatchUncheckedUpdateManyWithoutDispenseInput = {
-  dibsatch_id?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.StringFieldUpdateOperationsInput | string
   replenishment_id?: Prisma.StringFieldUpdateOperationsInput | string
   quantity_used?: Prisma.IntFieldUpdateOperationsInput | number
 }
@@ -562,7 +562,7 @@ export type DispenseBatchUncheckedUpdateManyWithoutDispenseInput = {
 
 
 export type DispenseBatchSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  dibsatch_id?: boolean
+  id?: boolean
   dispense_id?: boolean
   replenishment_id?: boolean
   quantity_used?: boolean
@@ -571,7 +571,7 @@ export type DispenseBatchSelect<ExtArgs extends runtime.Types.Extensions.Interna
 }, ExtArgs["result"]["dispenseBatch"]>
 
 export type DispenseBatchSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  dibsatch_id?: boolean
+  id?: boolean
   dispense_id?: boolean
   replenishment_id?: boolean
   quantity_used?: boolean
@@ -580,7 +580,7 @@ export type DispenseBatchSelectCreateManyAndReturn<ExtArgs extends runtime.Types
 }, ExtArgs["result"]["dispenseBatch"]>
 
 export type DispenseBatchSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
-  dibsatch_id?: boolean
+  id?: boolean
   dispense_id?: boolean
   replenishment_id?: boolean
   quantity_used?: boolean
@@ -589,13 +589,13 @@ export type DispenseBatchSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
 }, ExtArgs["result"]["dispenseBatch"]>
 
 export type DispenseBatchSelectScalar = {
-  dibsatch_id?: boolean
+  id?: boolean
   dispense_id?: boolean
   replenishment_id?: boolean
   quantity_used?: boolean
 }
 
-export type DispenseBatchOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"dibsatch_id" | "dispense_id" | "replenishment_id" | "quantity_used", ExtArgs["result"]["dispenseBatch"]>
+export type DispenseBatchOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "dispense_id" | "replenishment_id" | "quantity_used", ExtArgs["result"]["dispenseBatch"]>
 export type DispenseBatchInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   dispense?: boolean | Prisma.MedDispenseDefaultArgs<ExtArgs>
   replenishment?: boolean | Prisma.ReplenishmentDefaultArgs<ExtArgs>
@@ -616,7 +616,7 @@ export type $DispenseBatchPayload<ExtArgs extends runtime.Types.Extensions.Inter
     replenishment: Prisma.$ReplenishmentPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
-    dibsatch_id: string
+    id: string
     dispense_id: string
     replenishment_id: string
     quantity_used: number
@@ -703,8 +703,8 @@ export interface DispenseBatchDelegate<ExtArgs extends runtime.Types.Extensions.
    * // Get first 10 DispenseBatches
    * const dispenseBatches = await prisma.dispenseBatch.findMany({ take: 10 })
    * 
-   * // Only select the `dibsatch_id`
-   * const dispenseBatchWithDibsatch_idOnly = await prisma.dispenseBatch.findMany({ select: { dibsatch_id: true } })
+   * // Only select the `id`
+   * const dispenseBatchWithIdOnly = await prisma.dispenseBatch.findMany({ select: { id: true } })
    * 
    */
   findMany<T extends DispenseBatchFindManyArgs>(args?: Prisma.SelectSubset<T, DispenseBatchFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DispenseBatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -748,9 +748,9 @@ export interface DispenseBatchDelegate<ExtArgs extends runtime.Types.Extensions.
    *   ]
    * })
    * 
-   * // Create many DispenseBatches and only return the `dibsatch_id`
-   * const dispenseBatchWithDibsatch_idOnly = await prisma.dispenseBatch.createManyAndReturn({
-   *   select: { dibsatch_id: true },
+   * // Create many DispenseBatches and only return the `id`
+   * const dispenseBatchWithIdOnly = await prisma.dispenseBatch.createManyAndReturn({
+   *   select: { id: true },
    *   data: [
    *     // ... provide data here
    *   ]
@@ -839,9 +839,9 @@ export interface DispenseBatchDelegate<ExtArgs extends runtime.Types.Extensions.
    *   ]
    * })
    * 
-   * // Update zero or more DispenseBatches and only return the `dibsatch_id`
-   * const dispenseBatchWithDibsatch_idOnly = await prisma.dispenseBatch.updateManyAndReturn({
-   *   select: { dibsatch_id: true },
+   * // Update zero or more DispenseBatches and only return the `id`
+   * const dispenseBatchWithIdOnly = await prisma.dispenseBatch.updateManyAndReturn({
+   *   select: { id: true },
    *   where: {
    *     // ... provide filter here
    *   },
@@ -1045,7 +1045,7 @@ export interface Prisma__DispenseBatchClient<T, Null = never, ExtArgs extends ru
  * Fields of the DispenseBatch model
  */
 export interface DispenseBatchFieldRefs {
-  readonly dibsatch_id: Prisma.FieldRef<"DispenseBatch", 'String'>
+  readonly id: Prisma.FieldRef<"DispenseBatch", 'String'>
   readonly dispense_id: Prisma.FieldRef<"DispenseBatch", 'String'>
   readonly replenishment_id: Prisma.FieldRef<"DispenseBatch", 'String'>
   readonly quantity_used: Prisma.FieldRef<"DispenseBatch", 'Int'>

@@ -1660,7 +1660,7 @@ export type MedDispenseScalarFieldEnum = (typeof MedDispenseScalarFieldEnum)[key
 
 
 export const DispenseBatchScalarFieldEnum = {
-  dibsatch_id: 'dibsatch_id',
+  id: 'id',
   dispense_id: 'dispense_id',
   replenishment_id: 'replenishment_id',
   quantity_used: 'quantity_used'

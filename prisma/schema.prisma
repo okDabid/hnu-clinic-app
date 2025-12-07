@@ -200,7 +200,7 @@ model MedDispense {
 }
 
 model DispenseBatch {
-  dibsatch_id      String        @id @default(dbgenerated("concat('DISBATCH_', (floor((random() * (1000000)::double precision)))::integer)"))
+  id               String        @id @default(dbgenerated("concat('DISBATCH_', (floor((random() * (1000000)::double precision)))::integer)"))
   dispense_id      String
   replenishment_id String
   quantity_used    Int
