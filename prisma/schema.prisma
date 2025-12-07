@@ -55,7 +55,7 @@ model Student {
   contactno            String?       @unique
   address              String?
   allergies            String?
-  medical_cond         String?
+  medical_cond         MedicalHistoryCondition[] @default([])
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?
@@ -81,7 +81,7 @@ model Employee {
   contactno            String?               @unique
   address              String?
   allergies            String?
-  medical_cond         String?
+  medical_cond         MedicalHistoryCondition[] @default([])
   emergencyco_name     String?
   emergencyco_num      String?
   emergencyco_relation String?
@@ -246,6 +246,17 @@ model MedCert {
   consultation      Consultation  @relation(fields: [consultation_id], references: [consultation_id], onDelete: Cascade)
   issuedBy          Users?        @relation("IssuedCertificates", fields: [issued_by_user_id], references: [user_id])
   patient           Users         @relation("PatientCertificates", fields: [patient_user_id], references: [user_id], onDelete: Cascade)
+}
+
+enum MedicalHistoryCondition {
+  Asthma
+  Hypertension
+  Cancer
+  Epilepsy
+  Diabetes
+  HeartDisease @map("Heart Disease")
+  KidneyDisease @map("Kidney Disease")
+  NervousMentalDisorder @map("Nervous/Mental Disorder")
 }
 
 enum Gender {

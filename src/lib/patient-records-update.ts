@@ -1,5 +1,7 @@
 import prisma from "@/lib/prisma";
+import { parseMedicalHistory } from "@/lib/medical-history";
 import { z } from "zod";
+import { MedicalHistoryCondition } from "@prisma/client";
 
 export const BLOOD_TYPES = [
     "A_POS",
@@ -18,7 +20,13 @@ export const patientRecordPatchSchema = z.object({
     address: z.string().optional(),
     bloodtype: z.enum(BLOOD_TYPES).nullable().optional(),
     allergies: z.string().optional(),
-    medical_cond: z.string().optional(),
+    medical_cond: z
+        .union([
+            z.string(),
+            z.array(z.nativeEnum(MedicalHistoryCondition)),
+            z.array(z.string()),
+        ])
+        .optional(),
     emergency: z
         .object({
             name: z.string().optional(),
@@ -33,12 +41,22 @@ export type PatientRecordPatchInput = z.infer<typeof patientRecordPatchSchema>;
 export async function updatePatientRecordEntry(id: string, input: PatientRecordPatchInput) {
     const { type, ...data } = input;
 
+    const medicalHistory =
+        data.medical_cond !== undefined
+            ? parseMedicalHistory(data.medical_cond).conditions
+            : undefined;
+
     const commonData = {
         contactno: data.contactno ?? undefined,
         address: data.address ?? undefined,
         bloodtype: data.bloodtype !== undefined ? { set: data.bloodtype } : undefined,
         allergies: data.allergies ?? undefined,
-        medical_cond: data.medical_cond ?? undefined,
+        medical_cond:
+            medicalHistory !== undefined
+                ? {
+                      set: medicalHistory,
+                  }
+                : undefined,
         emergencyco_name: data.emergency?.name ?? undefined,
         emergencyco_num: data.emergency?.num ?? undefined,
         emergencyco_relation: data.emergency?.relation ?? undefined,

@@ -20,7 +20,7 @@ export type PatientAccountProfileApi = {
         address?: string | null;
         bloodtype?: string | null;
         allergies?: string | null;
-        medical_cond?: string | null;
+        medical_cond?: string | string[] | null;
         gender?: string | null;
         department_office?: string | null;
         department?: string | null;
@@ -149,7 +149,7 @@ export function normalizePatientAccountProfile(
         address: raw.address || "",
         bloodtype: raw.bloodtype ? patientBloodTypeEnumMap[raw.bloodtype] || raw.bloodtype : "",
         allergies: raw.allergies || "",
-        medicalHistory: parseMedicalHistory(raw.medical_cond || ""),
+        medicalHistory: parseMedicalHistory(raw.medical_cond),
         gender: raw.gender || "",
         department_office: raw.department_office || "",
         department: normalizedDepartment,
@@ -168,6 +168,6 @@ export function normalizePatientAccountProfile(
 
 export function serializePatientMedicalHistory(
     value: MedicalHistoryValue
-): string | null {
+): (readonly string[]) | null {
     return serializeMedicalHistory(value);
 }

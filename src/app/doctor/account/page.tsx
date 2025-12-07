@@ -206,7 +206,7 @@ export default function DoctorAccountPage() {
             const { medicalHistory, ...restProfile } = updatedProfile;
             const payload = {
                 ...restProfile,
-                medical_cond: serializeMedicalHistory(medicalHistory),
+                medical_cond: serializeMedicalHistory(medicalHistory) ?? [],
                 bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
@@ -637,7 +637,7 @@ export default function DoctorAccountPage() {
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                medical_cond: serializeMedicalHistory(updatedProfile.medicalHistory),
+                                                                                medical_cond: serializeMedicalHistory(updatedProfile.medicalHistory) ?? [],
                                                                                 bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
                                                                             };
 

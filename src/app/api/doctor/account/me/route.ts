@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { parseMedicalHistory } from "@/lib/medical-history";
 import { Role, Gender, BloodType, Prisma, Employee } from "@prisma/client";
 import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -52,6 +53,16 @@ function normalizeStringOrNull(value: unknown): string | null | undefined {
     return undefined;
 }
 
+function normalizeMedicalConditions(
+    value: unknown
+): Prisma.EmployeeUpdateInput["medical_cond"] | undefined {
+    if (value === undefined) return undefined;
+
+    const conditions = parseMedicalHistory(value as string | string[] | null).conditions;
+
+    return { set: conditions };
+}
+
 function buildEmployeeUpdateInput(
     raw: Record<string, unknown>
 ): Prisma.EmployeeUpdateInput {
@@ -67,7 +78,7 @@ function buildEmployeeUpdateInput(
     data.contactno = stringField("contactno");
     data.address = stringField("address");
     data.allergies = stringField("allergies");
-    data.medical_cond = normalizeStringOrNull(raw.medical_cond);
+    data.medical_cond = normalizeMedicalConditions(raw.medical_cond);
     data.emergencyco_name = stringField("emergencyco_name");
     data.emergencyco_num = stringField("emergencyco_num");
     data.emergencyco_relation = stringField("emergencyco_relation");

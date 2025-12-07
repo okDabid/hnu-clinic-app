@@ -49,7 +49,7 @@ export type PatientRecord = {
     address?: string | null;
     bloodtype?: string | null;
     allergies?: string | null;
-    medical_cond?: string | null;
+    medical_cond?: string | string[] | null;
     emergency?: {
         name?: string | null;
         num?: string | null;

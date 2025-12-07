@@ -146,7 +146,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
         const form = event.currentTarget;
         const rawMedicalCond = (form.elements.namedItem("medical_cond") as HTMLInputElement)?.value;
         const medicalHistory = parseMedicalHistory(rawMedicalCond);
-        const serializedMedicalCond = serializeMedicalHistory(medicalHistory) ?? "";
+        const serializedMedicalCond = serializeMedicalHistory(medicalHistory) ?? [];
 
         const body = {
             type: selectedRecord.patientType,
