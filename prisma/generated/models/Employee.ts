@@ -41,6 +41,7 @@ export type EmployeeMinAggregateOutputType = {
   emergencyco_name: string | null
   emergencyco_num: string | null
   emergencyco_relation: string | null
+  status: $Enums.AccountStatus | null
   bloodtype: $Enums.BloodType | null
   email: string | null
   specialization: $Enums.DoctorSpecialization | null
@@ -63,6 +64,7 @@ export type EmployeeMaxAggregateOutputType = {
   emergencyco_name: string | null
   emergencyco_num: string | null
   emergencyco_relation: string | null
+  status: $Enums.AccountStatus | null
   bloodtype: $Enums.BloodType | null
   email: string | null
   specialization: $Enums.DoctorSpecialization | null
@@ -85,6 +87,7 @@ export type EmployeeCountAggregateOutputType = {
   emergencyco_name: number
   emergencyco_num: number
   emergencyco_relation: number
+  status: number
   bloodtype: number
   email: number
   specialization: number
@@ -109,6 +112,7 @@ export type EmployeeMinAggregateInputType = {
   emergencyco_name?: true
   emergencyco_num?: true
   emergencyco_relation?: true
+  status?: true
   bloodtype?: true
   email?: true
   specialization?: true
@@ -131,6 +135,7 @@ export type EmployeeMaxAggregateInputType = {
   emergencyco_name?: true
   emergencyco_num?: true
   emergencyco_relation?: true
+  status?: true
   bloodtype?: true
   email?: true
   specialization?: true
@@ -153,6 +158,7 @@ export type EmployeeCountAggregateInputType = {
   emergencyco_name?: true
   emergencyco_num?: true
   emergencyco_relation?: true
+  status?: true
   bloodtype?: true
   email?: true
   specialization?: true
@@ -248,6 +254,7 @@ export type EmployeeGroupByOutputType = {
   emergencyco_name: string | null
   emergencyco_num: string | null
   emergencyco_relation: string | null
+  status: $Enums.AccountStatus
   bloodtype: $Enums.BloodType | null
   email: string | null
   specialization: $Enums.DoctorSpecialization | null
@@ -291,6 +298,7 @@ export type EmployeeWhereInput = {
   emergencyco_name?: Prisma.StringNullableFilter<"Employee"> | string | null
   emergencyco_num?: Prisma.StringNullableFilter<"Employee"> | string | null
   emergencyco_relation?: Prisma.StringNullableFilter<"Employee"> | string | null
+  status?: Prisma.EnumAccountStatusFilter<"Employee"> | $Enums.AccountStatus
   bloodtype?: Prisma.EnumBloodTypeNullableFilter<"Employee"> | $Enums.BloodType | null
   email?: Prisma.StringNullableFilter<"Employee"> | string | null
   specialization?: Prisma.EnumDoctorSpecializationNullableFilter<"Employee"> | $Enums.DoctorSpecialization | null
@@ -314,6 +322,7 @@ export type EmployeeOrderByWithRelationInput = {
   emergencyco_name?: Prisma.SortOrderInput | Prisma.SortOrder
   emergencyco_num?: Prisma.SortOrderInput | Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   specialization?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -341,6 +350,7 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   emergencyco_name?: Prisma.StringNullableFilter<"Employee"> | string | null
   emergencyco_num?: Prisma.StringNullableFilter<"Employee"> | string | null
   emergencyco_relation?: Prisma.StringNullableFilter<"Employee"> | string | null
+  status?: Prisma.EnumAccountStatusFilter<"Employee"> | $Enums.AccountStatus
   bloodtype?: Prisma.EnumBloodTypeNullableFilter<"Employee"> | $Enums.BloodType | null
   specialization?: Prisma.EnumDoctorSpecializationNullableFilter<"Employee"> | $Enums.DoctorSpecialization | null
   user?: Prisma.XOR<Prisma.UsersScalarRelationFilter, Prisma.UsersWhereInput>
@@ -363,6 +373,7 @@ export type EmployeeOrderByWithAggregationInput = {
   emergencyco_name?: Prisma.SortOrderInput | Prisma.SortOrder
   emergencyco_num?: Prisma.SortOrderInput | Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrderInput | Prisma.SortOrder
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   specialization?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -391,6 +402,7 @@ export type EmployeeScalarWhereWithAggregatesInput = {
   emergencyco_name?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   emergencyco_num?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   emergencyco_relation?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
+  status?: Prisma.EnumAccountStatusWithAggregatesFilter<"Employee"> | $Enums.AccountStatus
   bloodtype?: Prisma.EnumBloodTypeNullableWithAggregatesFilter<"Employee"> | $Enums.BloodType | null
   email?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   specialization?: Prisma.EnumDoctorSpecializationNullableWithAggregatesFilter<"Employee"> | $Enums.DoctorSpecialization | null
@@ -412,6 +424,7 @@ export type EmployeeCreateInput = {
   emergencyco_name?: string | null
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
+  status?: $Enums.AccountStatus
   bloodtype?: $Enums.BloodType | null
   email?: string | null
   specialization?: $Enums.DoctorSpecialization | null
@@ -435,6 +448,7 @@ export type EmployeeUncheckedCreateInput = {
   emergencyco_name?: string | null
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
+  status?: $Enums.AccountStatus
   bloodtype?: $Enums.BloodType | null
   email?: string | null
   specialization?: $Enums.DoctorSpecialization | null
@@ -456,6 +470,7 @@ export type EmployeeUpdateInput = {
   emergencyco_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   specialization?: Prisma.NullableEnumDoctorSpecializationFieldUpdateOperationsInput | $Enums.DoctorSpecialization | null
@@ -479,6 +494,7 @@ export type EmployeeUncheckedUpdateInput = {
   emergencyco_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   specialization?: Prisma.NullableEnumDoctorSpecializationFieldUpdateOperationsInput | $Enums.DoctorSpecialization | null
@@ -501,6 +517,7 @@ export type EmployeeCreateManyInput = {
   emergencyco_name?: string | null
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
+  status?: $Enums.AccountStatus
   bloodtype?: $Enums.BloodType | null
   email?: string | null
   specialization?: $Enums.DoctorSpecialization | null
@@ -522,6 +539,7 @@ export type EmployeeUpdateManyMutationInput = {
   emergencyco_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   specialization?: Prisma.NullableEnumDoctorSpecializationFieldUpdateOperationsInput | $Enums.DoctorSpecialization | null
@@ -544,6 +562,7 @@ export type EmployeeUncheckedUpdateManyInput = {
   emergencyco_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   specialization?: Prisma.NullableEnumDoctorSpecializationFieldUpdateOperationsInput | $Enums.DoctorSpecialization | null
@@ -571,6 +590,7 @@ export type EmployeeCountOrderByAggregateInput = {
   emergencyco_name?: Prisma.SortOrder
   emergencyco_num?: Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrder
   email?: Prisma.SortOrder
   specialization?: Prisma.SortOrder
@@ -593,6 +613,7 @@ export type EmployeeMaxOrderByAggregateInput = {
   emergencyco_name?: Prisma.SortOrder
   emergencyco_num?: Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrder
   email?: Prisma.SortOrder
   specialization?: Prisma.SortOrder
@@ -615,6 +636,7 @@ export type EmployeeMinOrderByAggregateInput = {
   emergencyco_name?: Prisma.SortOrder
   emergencyco_num?: Prisma.SortOrder
   emergencyco_relation?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   bloodtype?: Prisma.SortOrder
   email?: Prisma.SortOrder
   specialization?: Prisma.SortOrder
@@ -672,6 +694,7 @@ export type EmployeeCreateWithoutUserInput = {
   emergencyco_name?: string | null
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
+  status?: $Enums.AccountStatus
   bloodtype?: $Enums.BloodType | null
   email?: string | null
   specialization?: $Enums.DoctorSpecialization | null
@@ -693,6 +716,7 @@ export type EmployeeUncheckedCreateWithoutUserInput = {
   emergencyco_name?: string | null
   emergencyco_num?: string | null
   emergencyco_relation?: string | null
+  status?: $Enums.AccountStatus
   bloodtype?: $Enums.BloodType | null
   email?: string | null
   specialization?: $Enums.DoctorSpecialization | null
@@ -730,6 +754,7 @@ export type EmployeeUpdateWithoutUserInput = {
   emergencyco_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   specialization?: Prisma.NullableEnumDoctorSpecializationFieldUpdateOperationsInput | $Enums.DoctorSpecialization | null
@@ -751,6 +776,7 @@ export type EmployeeUncheckedUpdateWithoutUserInput = {
   emergencyco_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_num?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emergencyco_relation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   bloodtype?: Prisma.NullableEnumBloodTypeFieldUpdateOperationsInput | $Enums.BloodType | null
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   specialization?: Prisma.NullableEnumDoctorSpecializationFieldUpdateOperationsInput | $Enums.DoctorSpecialization | null
@@ -775,6 +801,7 @@ export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   emergencyco_name?: boolean
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
+  status?: boolean
   bloodtype?: boolean
   email?: boolean
   specialization?: boolean
@@ -798,6 +825,7 @@ export type EmployeeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   emergencyco_name?: boolean
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
+  status?: boolean
   bloodtype?: boolean
   email?: boolean
   specialization?: boolean
@@ -821,6 +849,7 @@ export type EmployeeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   emergencyco_name?: boolean
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
+  status?: boolean
   bloodtype?: boolean
   email?: boolean
   specialization?: boolean
@@ -844,12 +873,13 @@ export type EmployeeSelectScalar = {
   emergencyco_name?: boolean
   emergencyco_num?: boolean
   emergencyco_relation?: boolean
+  status?: boolean
   bloodtype?: boolean
   email?: boolean
   specialization?: boolean
 }
 
-export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"emp_id" | "user_id" | "employee_id" | "fname" | "mname" | "lname" | "date_of_birth" | "gender" | "department_office" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "bloodtype" | "email" | "specialization", ExtArgs["result"]["employee"]>
+export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"emp_id" | "user_id" | "employee_id" | "fname" | "mname" | "lname" | "date_of_birth" | "gender" | "department_office" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "status" | "bloodtype" | "email" | "specialization", ExtArgs["result"]["employee"]>
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UsersDefaultArgs<ExtArgs>
 }
@@ -882,6 +912,7 @@ export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     emergencyco_name: string | null
     emergencyco_num: string | null
     emergencyco_relation: string | null
+    status: $Enums.AccountStatus
     bloodtype: $Enums.BloodType | null
     email: string | null
     specialization: $Enums.DoctorSpecialization | null
@@ -1325,6 +1356,7 @@ export interface EmployeeFieldRefs {
   readonly emergencyco_name: Prisma.FieldRef<"Employee", 'String'>
   readonly emergencyco_num: Prisma.FieldRef<"Employee", 'String'>
   readonly emergencyco_relation: Prisma.FieldRef<"Employee", 'String'>
+  readonly status: Prisma.FieldRef<"Employee", 'AccountStatus'>
   readonly bloodtype: Prisma.FieldRef<"Employee", 'BloodType'>
   readonly email: Prisma.FieldRef<"Employee", 'String'>
   readonly specialization: Prisma.FieldRef<"Employee", 'DoctorSpecialization'>

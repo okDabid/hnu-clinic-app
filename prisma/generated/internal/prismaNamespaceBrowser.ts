@@ -123,6 +123,7 @@ export const StudentScalarFieldEnum = {
   emergencyco_name: 'emergencyco_name',
   emergencyco_num: 'emergencyco_num',
   emergencyco_relation: 'emergencyco_relation',
+  status: 'status',
   is_working_scholar: 'is_working_scholar',
   department: 'department',
   year_level: 'year_level',
@@ -150,6 +151,7 @@ export const EmployeeScalarFieldEnum = {
   emergencyco_name: 'emergencyco_name',
   emergencyco_num: 'emergencyco_num',
   emergencyco_relation: 'emergencyco_relation',
+  status: 'status',
   bloodtype: 'bloodtype',
   email: 'email',
   specialization: 'specialization'
