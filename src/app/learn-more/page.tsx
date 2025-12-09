@@ -72,22 +72,22 @@ const techStack = [
 const developers = [
     {
         name: "David Matthew Maniwang",
-        role: "Project Lead / Backend Developer",
+        role: "Project Lead",
         img: "/profile/pic1.png",
     },
     {
         name: "Dulce Maris Ongyot",
-        role: "Database & Integration",
+        role: "Member",
         img: "/profile/pic2.png",
     },
     {
         name: "Joanamarie Ayuban Burato",
-        role: "Frontend Developer / UI Designer",
+        role: "Member",
         img: "/profile/pic3.jpg",
     },
     {
         name: "Christian Dale Ombrosa",
-        role: "Frontend Developer / UX Designer",
+        role: "Member",
         img: "/profile/pic4.png",
     },
 ];
