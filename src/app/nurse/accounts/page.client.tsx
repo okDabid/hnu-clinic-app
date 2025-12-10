@@ -174,7 +174,6 @@ export function NurseAccountsPageClient({
             profile.email,
             profile.contactno,
             profile.address,
-            profile.bloodtype,
         ]
         : [];
 
@@ -701,8 +700,6 @@ export function NurseAccountsPageClient({
         }
     }
 
-
-    const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
     const roleLabelMap: Record<string, string> = {
         NURSE: "Nurse",
         DOCTOR: "Doctor",
@@ -1061,7 +1058,7 @@ export function NurseAccountsPageClient({
                                 <AccountSection
                                     icon={Phone}
                                     title="Contact & address"
-                                    description="Make sure the clinic can reach you quickly."
+                                    description="Please complete your contact details."
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
@@ -1100,41 +1097,6 @@ export function NurseAccountsPageClient({
                                             value={profile.address || ""}
                                             onChange={(event) => setProfile({ ...profile, address: event.target.value })}
                                         />
-                                    </div>
-                                </AccountSection>
-
-                                <AccountSection
-                                    icon={HeartPulse}
-                                    title="Health details"
-                                    description="Keep critical health information up to date."
-                                >
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Blood type</Label>
-                                            <Select
-                                                value={profile.bloodtype || ""}
-                                                onValueChange={(value) => setProfile({ ...profile, bloodtype: value })}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select blood type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {bloodTypeOptions.map((type) => (
-                                                        <SelectItem key={type} value={type}>
-                                                            {type}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Allergies</Label>
-                                            <Input
-                                                value={profile.allergies || ""}
-                                                onChange={(event) => setProfile({ ...profile, allergies: event.target.value })}
-                                                placeholder="Please specify"
-                                            />
-                                        </div>
                                     </div>
                                 </AccountSection>
 
