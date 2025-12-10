@@ -75,6 +75,19 @@ type ClinicAppointmentsResponse = {
     }[];
 };
 
+type ClinicDoctor = {
+    user_id: string;
+    name: string;
+    specialization: string | null;
+};
+
+type DoctorAvailability = {
+    slots: { start: string; end: string }[];
+    loading: boolean;
+    error: string | null;
+    onLeave: boolean;
+};
+
 const STATUS_BADGE_CLASSES: Record<string, string> = {
     Pending: "border-amber-200 bg-amber-50 text-amber-700",
     Approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -100,6 +113,12 @@ export default function NurseClinicPage() {
     const [appointmentsByDate, setAppointmentsByDate] = useState<Record<string, ClinicCalendarAppointment[]>>({});
     const [calendarLoading, setCalendarLoading] = useState(false);
     const [calendarError, setCalendarError] = useState<string | null>(null);
+    const [clinicDoctors, setClinicDoctors] = useState<Record<string, ClinicDoctor[]>>({});
+    const [doctorAvailability, setDoctorAvailability] = useState<
+        Record<string, Record<string, DoctorAvailability>>
+    >({});
+    const [doctorsLoading, setDoctorsLoading] = useState(false);
+    const [doctorsError, setDoctorsError] = useState<string | null>(null);
 
     async function loadClinics() {
         try {
@@ -126,6 +145,63 @@ export default function NurseClinicPage() {
             setScheduleClinicId(clinics[0].clinic_id);
         }
     }, [clinics, scheduleClinicId]);
+
+    useEffect(() => {
+        if (clinics.length === 0) {
+            setClinicDoctors({});
+            return;
+        }
+
+        let cancelled = false;
+        setDoctorsLoading(true);
+        setDoctorsError(null);
+
+        (async () => {
+            const results: Record<string, ClinicDoctor[]> = {};
+            let encounteredError = false;
+
+            for (const clinic of clinics) {
+                try {
+                    const res = await fetch(`/api/meta/doctors?clinic_id=${clinic.clinic_id}`);
+                    const data = await res.json();
+
+                    if (!res.ok || !Array.isArray(data)) {
+                        encounteredError = true;
+                        results[clinic.clinic_id] = [];
+                        continue;
+                    }
+
+                    results[clinic.clinic_id] = data as ClinicDoctor[];
+                } catch (error) {
+                    console.error(error);
+                    encounteredError = true;
+                    results[clinic.clinic_id] = [];
+                }
+            }
+
+            if (cancelled) return;
+
+            setClinicDoctors(results);
+            setDoctorsError(
+                encounteredError ? "Some clinic directories could not be loaded." : null
+            );
+        })()
+            .catch((error) => {
+                console.error(error);
+                if (!cancelled) {
+                    setDoctorsError("Unable to load doctor directories.");
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setDoctorsLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [clinics]);
 
     const calendarMonthKey = useMemo(
         () =>
@@ -231,6 +307,109 @@ export default function NurseClinicPage() {
     const selectedAppointments = selectedDateKey
         ? appointmentsByDate[selectedDateKey] ?? []
         : [];
+
+    useEffect(() => {
+        if (!selectedDateKey || clinics.length === 0) {
+            setDoctorAvailability({});
+            return;
+        }
+
+        if (Object.keys(clinicDoctors).length === 0) {
+            setDoctorAvailability({});
+            return;
+        }
+
+        let cancelled = false;
+
+        setDoctorAvailability((prev) => {
+            const next: typeof prev = {};
+            clinics.forEach((clinic) => {
+                const doctors = clinicDoctors[clinic.clinic_id] || [];
+                next[clinic.clinic_id] = {};
+                doctors.forEach((doctor) => {
+                    const existing = prev[clinic.clinic_id]?.[doctor.user_id];
+                    next[clinic.clinic_id][doctor.user_id] = {
+                        slots: existing?.slots ?? [],
+                        loading: true,
+                        error: null,
+                        onLeave: existing?.onLeave ?? false,
+                    };
+                });
+            });
+            return next;
+        });
+
+        clinics.forEach((clinic) => {
+            const doctors = clinicDoctors[clinic.clinic_id] || [];
+            doctors.forEach((doctor) => {
+                const params = new URLSearchParams({
+                    clinic_id: clinic.clinic_id,
+                    doctor_user_id: doctor.user_id,
+                    date: selectedDateKey,
+                });
+
+                void (async () => {
+                    try {
+                        const res = await fetch(`/api/meta/doctor-availability?${params.toString()}`);
+                        const data = await res.json();
+
+                        if (cancelled) return;
+
+                        if (!res.ok) {
+                            setDoctorAvailability((prev) => ({
+                                ...prev,
+                                [clinic.clinic_id]: {
+                                    ...(prev[clinic.clinic_id] || {}),
+                                    [doctor.user_id]: {
+                                        slots: [],
+                                        loading: false,
+                                        error:
+                                            typeof data?.message === "string"
+                                                ? data.message
+                                                : data?.error || "Failed to load availability",
+                                        onLeave: false,
+                                    },
+                                },
+                            }));
+                            return;
+                        }
+
+                        setDoctorAvailability((prev) => ({
+                            ...prev,
+                            [clinic.clinic_id]: {
+                                ...(prev[clinic.clinic_id] || {}),
+                                [doctor.user_id]: {
+                                    slots: Array.isArray(data?.slots) ? data.slots : [],
+                                    loading: false,
+                                    error: null,
+                                    onLeave: Boolean(data?.onLeave),
+                                },
+                            },
+                        }));
+                    } catch (error) {
+                        console.error(error);
+                        if (cancelled) return;
+                        setDoctorAvailability((prev) => ({
+                            ...prev,
+                            [clinic.clinic_id]: {
+                                ...(prev[clinic.clinic_id] || {}),
+                                [doctor.user_id]: {
+                                    slots: [],
+                                    loading: false,
+                                    error: "Failed to load availability",
+                                    onLeave: false,
+                                },
+                            },
+                        }));
+                    }
+                })();
+            });
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedDateKey, clinics, clinicDoctors]);
 
     const highlightedDates = useMemo(
         () =>
@@ -623,6 +802,140 @@ export default function NurseClinicPage() {
                                 </div>
                             </div>
                         </div>
+                    </CardContent>
+                </Card>
+                <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
+                    <CardHeader className="border-b">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="space-y-1">
+                                <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
+                                    Doctor availability overview
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                    Availability for {selectedDateLabel} across all clinics.
+                                </p>
+                            </div>
+                            {doctorsLoading ? (
+                                <div className="flex items-center gap-2 text-sm text-primary">
+                                    <Loader2 className="h-4 w-4 animate-spin" /> Checking directories…
+                                </div>
+                            ) : null}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-6">
+                        {doctorsError ? (
+                            <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-800">
+                                {doctorsError}
+                            </div>
+                        ) : null}
+                        {clinics.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">Add clinics to view doctor availability.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {clinics.map((clinic) => {
+                                    const doctors = clinicDoctors[clinic.clinic_id] || [];
+                                    const availabilityForClinic = doctorAvailability[clinic.clinic_id] || {};
+
+                                    return (
+                                        <div
+                                            key={clinic.clinic_id}
+                                            className="rounded-2xl border border-primary/15 bg-white/80 p-4 shadow-sm"
+                                        >
+                                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                <div>
+                                                    <p className="text-base font-semibold text-slate-900">
+                                                        {clinic.clinic_name}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">{clinic.clinic_location}</p>
+                                                </div>
+                                                <p className="text-sm font-medium text-primary">
+                                                    Contact: {clinic.clinic_contactno}
+                                                </p>
+                                            </div>
+
+                                            {doctors.length === 0 ? (
+                                                <p className="mt-3 text-sm text-muted-foreground">
+                                                    No doctors listed for this clinic yet.
+                                                </p>
+                                            ) : (
+                                                <div className="mt-3 space-y-3">
+                                                    {doctors.map((doctor) => {
+                                                        const status = availabilityForClinic[doctor.user_id];
+                                                        const loading = status?.loading ?? false;
+                                                        const error = status?.error;
+                                                        const onLeave = status?.onLeave ?? false;
+                                                        const slots = status?.slots ?? [];
+
+                                                        let badgeLabel = "Checking";
+                                                        if (!selectedDateKey) {
+                                                            badgeLabel = "Select a date";
+                                                        } else if (error) {
+                                                            badgeLabel = "Error";
+                                                        } else if (onLeave) {
+                                                            badgeLabel = "On leave";
+                                                        } else if (!loading && slots.length > 0) {
+                                                            badgeLabel = "Available";
+                                                        } else if (!loading && slots.length === 0) {
+                                                            badgeLabel = "No slots";
+                                                        }
+
+                                                        const slotPreview =
+                                                            !loading && !error && !onLeave && slots.length > 0
+                                                                ? slots
+                                                                      .slice(0, 3)
+                                                                      .map((slot) => `${slot.start}–${slot.end}`)
+                                                                      .join(", ")
+                                                                : null;
+
+                                                        return (
+                                                            <div
+                                                                key={doctor.user_id}
+                                                                className="rounded-2xl border border-primary/10 bg-white/90 p-3 shadow-sm"
+                                                            >
+                                                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                                    <div>
+                                                                        <p className="text-sm font-semibold text-slate-900">
+                                                                            {doctor.name}
+                                                                        </p>
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {doctor.specialization || "Doctor"}
+                                                                        </p>
+                                                                    </div>
+                                                                    <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-semibold">
+                                                                        {loading && selectedDateKey
+                                                                            ? "Loading availability"
+                                                                            : badgeLabel}
+                                                                    </Badge>
+                                                                </div>
+                                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                                    {!selectedDateKey
+                                                                        ? "Choose a date to check availability."
+                                                                        : error
+                                                                            ? error
+                                                                            : onLeave
+                                                                                ? "On leave for this date."
+                                                                                : loading
+                                                                                    ? "Checking availability…"
+                                                                                    : slots.length > 0
+                                                                                        ? `${slots.length} available slot${slots.length === 1 ? "" : "s"}.`
+                                                                                        : "No available slots for this date."}
+                                                                </p>
+                                                                {slotPreview ? (
+                                                                    <p className="mt-1 text-xs text-emerald-700">
+                                                                        Earliest slots: {slotPreview}
+                                                                        {slots.length > 3 ? "…" : ""}
+                                                                    </p>
+                                                                ) : null}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </section>

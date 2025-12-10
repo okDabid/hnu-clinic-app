@@ -15,7 +15,6 @@ import {
     Phone,
     KeyRound,
     HeartPulse,
-    LifeBuoy,
 } from "lucide-react";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
@@ -63,7 +62,6 @@ import { Switch } from "@/components/ui/switch";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
-import { MedicalHistoryField } from "@/components/account/medical-history-field";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
@@ -82,8 +80,6 @@ import NurseAccountsLoading from "./loading";
 import {
     normalizeNurseAccountProfile,
     normalizeNurseAccountUsers,
-    nurseReverseBloodTypeEnumMap,
-    serializeNurseMedicalHistory,
     type NurseAccountProfile,
     type NurseAccountProfileApi,
     type NurseAccountUser,
@@ -177,10 +173,6 @@ export function NurseAccountsPageClient({
             profile.email,
             profile.contactno,
             profile.address,
-            profile.bloodtype,
-            profile.emergencyco_name,
-            profile.emergencyco_num,
-            profile.emergencyco_relation,
         ]
         : [];
 
@@ -220,7 +212,7 @@ export function NurseAccountsPageClient({
                 helper:
                     completionPercent >= 100
                         ? "All key contact details are filled."
-                        : "Add missing contact or emergency information.",
+                        : "Add missing contact information.",
                 progress: completionPercent,
                 accent:
                     completionPercent >= 80
@@ -532,7 +524,6 @@ export function NurseAccountsPageClient({
         const contactValidation = validateAndNormalizeContacts({
             email: profile.email,
             contactNumber: profile.contactno,
-            emergencyNumber: profile.emergencyco_num,
         });
 
         if (!contactValidation.success) {
@@ -544,7 +535,6 @@ export function NurseAccountsPageClient({
             ...profile,
             email: contactValidation.email,
             contactno: contactValidation.contactNumber,
-            emergencyco_num: contactValidation.emergencyNumber,
         };
 
         setProfile(updatedProfile);
@@ -564,11 +554,8 @@ export function NurseAccountsPageClient({
         try {
             setProfileLoading(true);
 
-            const { medicalHistory, ...restProfile } = updatedProfile;
             const payload = {
-                ...restProfile,
-                medical_cond: serializeNurseMedicalHistory(medicalHistory),
-                bloodtype: nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
+                ...updatedProfile,
             };
 
             // Prevent DOB modification if it was already set
@@ -711,8 +698,6 @@ export function NurseAccountsPageClient({
         }
     }
 
-
-    const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
     const roleLabelMap: Record<string, string> = {
         NURSE: "Nurse",
         DOCTOR: "Doctor",
@@ -768,7 +753,7 @@ export function NurseAccountsPageClient({
                         <AccountSummaryGrid items={summaryItems} />
                         <AccountCard
                             title="My Account"
-                            description="Review and update your clinic profile details, emergency contacts, and credentials."
+                            description="Review and update your clinic profile details and credentials."
                             onPasswordSubmit={handlePasswordSubmit}
                         >
                             <form onSubmit={handleProfileUpdate} className="space-y-10">
@@ -843,7 +828,6 @@ export function NurseAccountsPageClient({
                                                                         const contactValidation = validateAndNormalizeContacts({
                                                                             email: profile.email,
                                                                             contactNumber: profile.contactno,
-                                                                            emergencyNumber: profile.emergencyco_num,
                                                                         });
 
                                                                         if (!contactValidation.success) {
@@ -855,7 +839,6 @@ export function NurseAccountsPageClient({
                                                                             ...profile,
                                                                             email: contactValidation.email,
                                                                             contactno: contactValidation.contactNumber,
-                                                                            emergencyco_num: contactValidation.emergencyNumber,
                                                                             date_of_birth: tempDOB,
                                                                         };
 
@@ -866,8 +849,6 @@ export function NurseAccountsPageClient({
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                bloodtype:
-                                                                                    nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
                                                                             };
 
                                                                             const res = await fetch("/api/nurse/accounts/me", {
@@ -974,7 +955,6 @@ export function NurseAccountsPageClient({
                                                                         const contactValidation = validateAndNormalizeContacts({
                                                                             email: profile.email,
                                                                             contactNumber: profile.contactno,
-                                                                            emergencyNumber: profile.emergencyco_num,
                                                                         });
 
                                                                         if (!contactValidation.success) {
@@ -986,7 +966,6 @@ export function NurseAccountsPageClient({
                                                                             ...profile,
                                                                             email: contactValidation.email,
                                                                             contactno: contactValidation.contactNumber,
-                                                                            emergencyco_num: contactValidation.emergencyNumber,
                                                                             gender: tempGender,
                                                                         };
 
@@ -997,8 +976,6 @@ export function NurseAccountsPageClient({
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                bloodtype:
-                                                                                    nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
                                                                             };
 
                                                                             const res = await fetch("/api/nurse/accounts/me", {
@@ -1075,7 +1052,7 @@ export function NurseAccountsPageClient({
                                 <AccountSection
                                     icon={Phone}
                                     title="Contact & address"
-                                    description="Make sure the clinic can reach you quickly."
+                                    description="Please complete your contact details."
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
@@ -1114,93 +1091,6 @@ export function NurseAccountsPageClient({
                                             value={profile.address || ""}
                                             onChange={(event) => setProfile({ ...profile, address: event.target.value })}
                                         />
-                                    </div>
-                                </AccountSection>
-
-                                <AccountSection
-                                    icon={HeartPulse}
-                                    title="Medical history"
-                                    description="Supports emergency preparedness."
-                                >
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Blood type</Label>
-                                            <Select
-                                                value={profile.bloodtype || ""}
-                                                onValueChange={(value) => setProfile({ ...profile, bloodtype: value })}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select blood type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {bloodTypeOptions.map((type) => (
-                                                        <SelectItem key={type} value={type}>
-                                                            {type}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Allergies</Label>
-                                            <Input
-                                                value={profile.allergies || ""}
-                                                onChange={(event) => setProfile({ ...profile, allergies: event.target.value })}
-                                                placeholder="Please specify"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">
-                                            Medical conditions
-                                        </Label>
-                                        <MedicalHistoryField
-                                            value={profile.medicalHistory}
-                                            onChange={(value) => setProfile({ ...profile, medicalHistory: value })}
-                                            idPrefix="nurse-medical-history"
-                                        />
-                                    </div>
-                                </AccountSection>
-
-                                <AccountSection
-                                    icon={LifeBuoy}
-                                    title="Emergency contact"
-                                    description="Provide someone we can reach when urgent coordination is needed."
-                                >
-                                    <div className="grid gap-4 md:grid-cols-3">
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Contact name</Label>
-                                            <Input
-                                                value={profile.emergencyco_name || ""}
-                                                onChange={(event) => setProfile({ ...profile, emergencyco_name: event.target.value })}
-                                                placeholder="Full name of contact"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <PhoneInput
-                                                defaultCountry="ph"
-                                                placeholder="09XXXXXXXXX"
-                                                value={formatPhoneInputDisplay(profile.emergencyco_num)}
-                                                onChange={(value) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        emergencyco_num: normalizePhilippinePhoneInput(value),
-                                                    })
-                                                }
-                                                className="w-full"
-                                                inputClassName="text-emerald-900"
-                                                forceDialCode
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Relationship</Label>
-                                            <Input
-                                                value={profile.emergencyco_relation || ""}
-                                                onChange={(event) => setProfile({ ...profile, emergencyco_relation: event.target.value })}
-                                                placeholder="Contact’s relationship"
-                                            />
-                                        </div>
                                     </div>
                                 </AccountSection>
 
