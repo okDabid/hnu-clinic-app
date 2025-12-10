@@ -246,68 +246,70 @@ export function NurseReportsPageClient({
             title="Quarterly Reports"
             description="Generate patient and illness insights for any quarter to prepare compliance-ready summaries."
             actions={
-                <div className="mx-auto w-full max-w-5xl space-y-8">
-                    <Button
-                        size="sm"
-                        className="rounded-xl bg-primary text-white hover:bg-primary/90"
-                        disabled={!data || exportingPdf}
-                        onClick={async () => {
-                            if (!data) return;
-                            setExportingPdf(true);
-                            try {
-                                const params = new URLSearchParams({ year: String(data.year) });
-                                if (selectionForPdf) {
-                                    params.set("quarter", String(selectionForPdf));
-                                }
+                <div className="space-y-6">
+                    <section className="mx-auto w-full max-w-5xl space-y-8">
+                        <Button
+                            size="sm"
+                            className="rounded-xl bg-primary text-white hover:bg-primary/90"
+                            disabled={!data || exportingPdf}
+                            onClick={async () => {
+                                if (!data) return;
+                                setExportingPdf(true);
+                                try {
+                                    const params = new URLSearchParams({ year: String(data.year) });
+                                    if (selectionForPdf) {
+                                        params.set("quarter", String(selectionForPdf));
+                                    }
 
-                                const pdfUrl = `/api/nurse/reports/pdf?${params.toString()}`;
+                                    const pdfUrl = `/api/nurse/reports/pdf?${params.toString()}`;
 
-                                if (typeof window !== "undefined") {
-                                    const anchor = document.createElement("a");
-                                    anchor.href = pdfUrl;
-                                    anchor.target = "_blank";
-                                    anchor.rel = "noopener noreferrer";
+                                    if (typeof window !== "undefined") {
+                                        const anchor = document.createElement("a");
+                                        anchor.href = pdfUrl;
+                                        anchor.target = "_blank";
+                                        anchor.rel = "noopener noreferrer";
 
-                                    document.body.appendChild(anchor);
-                                    anchor.click();
-                                    anchor.remove();
+                                        document.body.appendChild(anchor);
+                                        anchor.click();
+                                        anchor.remove();
 
-                                    return;
-                                }
-
-                                const response = await fetch(pdfUrl, { cache: "no-store" });
-                                if (!response.ok) {
-                                    const body = await response.json().catch(() => null);
-                                    if (
-                                        handleRateLimitError(
-                                            response,
-                                            body,
-                                            "Too many PDF requests. Please wait before trying again."
-                                        )
-                                    ) {
                                         return;
                                     }
-                                    throw new Error(body?.error ?? "Failed to generate PDF report");
+
+                                    const response = await fetch(pdfUrl, { cache: "no-store" });
+                                    if (!response.ok) {
+                                        const body = await response.json().catch(() => null);
+                                        if (
+                                            handleRateLimitError(
+                                                response,
+                                                body,
+                                                "Too many PDF requests. Please wait before trying again."
+                                            )
+                                        ) {
+                                            return;
+                                        }
+                                        throw new Error(body?.error ?? "Failed to generate PDF report");
+                                    }
+                                } catch (pdfError) {
+                                    console.error(pdfError);
+                                    const fallbackMessage =
+                                        pdfError instanceof Error
+                                            ? pdfError.message
+                                            : "Failed to generate PDF report";
+                                    toast.error(fallbackMessage);
+                                } finally {
+                                    setExportingPdf(false);
                                 }
-                            } catch (pdfError) {
-                                console.error(pdfError);
-                                const fallbackMessage =
-                                    pdfError instanceof Error
-                                        ? pdfError.message
-                                        : "Failed to generate PDF report";
-                                toast.error(fallbackMessage);
-                            } finally {
-                                setExportingPdf(false);
-                            }
-                        }}
-                    >
-                        {exportingPdf ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <FileDown className="mr-2 h-4 w-4" />
-                        )}
-                        Generate PDF
-                    </Button>
+                            }}
+                        >
+                            {exportingPdf ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <FileDown className="mr-2 h-4 w-4" />
+                            )}
+                            Generate PDF
+                        </Button>
+                    </section>
                 </div>
             }
         >
