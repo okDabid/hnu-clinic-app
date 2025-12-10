@@ -8,7 +8,7 @@ export default function NurseDispenseLoading() {
             title="Dispense Records"
             description="Monitor dispensed medicines and review batch usage for accurate stock tracking."
         >
-            <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-8 px-4 py-6 sm:px-6 sm:py-8">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <div className="grid gap-4 md:grid-cols-4">
                     {Array.from({ length: 4 }).map((_, index) => (
                         <Card

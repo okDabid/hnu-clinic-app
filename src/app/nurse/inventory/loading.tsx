@@ -8,7 +8,7 @@ export default function NurseInventoryLoading() {
             title="Inventory Management"
             description="Monitor clinic stocks, update batch details, and keep replenishments on track."
         >
-            <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-10 px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <div className="grid gap-4 md:grid-cols-3">
                     {Array.from({ length: 3 }).map((_, index) => (
                         <Card

@@ -10,7 +10,7 @@ export default function NurseRecordsLoading() {
             actions={<Skeleton className="h-10 w-36 rounded-xl" />}
         >
             <div className="space-y-6">
-                <section className="mx-auto w-full max-w-6xl space-y-8 px-4 sm:px-6">
+                <section className="mx-auto w-full max-w-5xl space-y-8">
                     <div className="grid gap-4 md:grid-cols-3">
                         {Array.from({ length: 3 }).map((_, index) => (
                             <Card

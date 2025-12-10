@@ -233,7 +233,7 @@ export default function ScholarDispensePage() {
                 </Button>
             }
         >
-            <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 sm:px-6 min-w-0">
+            <section className="mx-auto w-full max-w-5xl space-y-8">
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <Card className="rounded-3xl border border-primary/20 bg-linear-to-br from-primary/10 via-white to-primary/5/60 shadow-sm">
                         <CardHeader className="pb-2">
