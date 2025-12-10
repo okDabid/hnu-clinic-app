@@ -12,7 +12,6 @@ import {
     UserRound,
     KeyRound,
     HeartPulse,
-    LifeBuoy,
 } from "lucide-react";
 
 import DoctorLayout from "@/components/doctor/doctor-layout";
@@ -23,15 +22,9 @@ import { Card } from "@/components/ui/card";
 import { AccountCard } from "@/components/account/account-card";
 import { AccountRefreshButton } from "@/components/account/account-refresh-button";
 import { AccountSection } from "@/components/account/account-section";
-import { MedicalHistoryField } from "@/components/account/medical-history-field";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import {
-    parseMedicalHistory,
-    serializeMedicalHistory,
-    type MedicalHistoryValue,
-} from "@/lib/medical-history";
 import {
     formatPhoneInputDisplay,
     normalizePhilippinePhoneInput,
@@ -76,10 +69,6 @@ type Profile = {
     address?: string | null;
     bloodtype?: string | null;
     allergies?: string | null;
-    medicalHistory: MedicalHistoryValue;
-    emergencyco_name?: string | null;
-    emergencyco_num?: string | null;
-    emergencyco_relation?: string | null;
 };
 
 // Blood Type Mappings
@@ -154,10 +143,6 @@ export default function DoctorAccountPage() {
                 address: data.profile?.address || "",
                 bloodtype: bloodTypeValue,
                 allergies: data.profile?.allergies || "",
-                medicalHistory: parseMedicalHistory(data.profile?.medical_cond || ""),
-                emergencyco_name: data.profile?.emergencyco_name || "",
-                emergencyco_num: data.profile?.emergencyco_num || "",
-                emergencyco_relation: data.profile?.emergencyco_relation || "",
             });
         } catch (err) {
             console.error("Failed to load profile:", err);
@@ -184,7 +169,6 @@ export default function DoctorAccountPage() {
         const contactValidation = validateAndNormalizeContacts({
             email: profile.email,
             contactNumber: profile.contactno,
-            emergencyNumber: profile.emergencyco_num,
         });
 
         if (!contactValidation.success) {
@@ -196,17 +180,14 @@ export default function DoctorAccountPage() {
             ...profile,
             email: contactValidation.email,
             contactno: contactValidation.contactNumber,
-            emergencyco_num: contactValidation.emergencyNumber,
         };
 
         setProfile(updatedProfile);
 
         try {
             setProfileLoading(true);
-            const { medicalHistory, ...restProfile } = updatedProfile;
             const payload = {
-                ...restProfile,
-                medical_cond: serializeMedicalHistory(medicalHistory),
+                ...updatedProfile,
                 bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
@@ -291,9 +272,7 @@ export default function DoctorAccountPage() {
             profile.email,
             profile.contactno,
             profile.address,
-            profile.emergencyco_name,
-            profile.emergencyco_num,
-            profile.emergencyco_relation,
+            profile.bloodtype,
         ]
         : [];
 
@@ -307,12 +286,6 @@ export default function DoctorAccountPage() {
     const completionPercent = completionFields.length
         ? Math.round((completionCount / completionFields.length) * 100)
         : 0;
-
-    const emergencyReady = Boolean(
-        profile?.emergencyco_name?.trim() &&
-        profile?.emergencyco_num?.trim() &&
-        profile?.emergencyco_relation?.trim()
-    );
 
     const medicalPrepared = Boolean(profile?.bloodtype?.trim());
 
@@ -335,7 +308,7 @@ export default function DoctorAccountPage() {
                 helper:
                     completionPercent >= 100
                         ? "All key contact details are filled."
-                        : "Add missing contact or emergency details.",
+                        : "Add missing contact information.",
                 progress: completionPercent,
                 accent:
                     completionPercent >= 80
@@ -349,12 +322,10 @@ export default function DoctorAccountPage() {
                 label: "Clinical readiness",
                 value: medicalPrepared ? profile.bloodtype ?? "" : "Add blood type",
                 helper: medicalPrepared
-                    ? `${profile.allergies?.trim() ? `Allergies: ${profile.allergies}` : "No allergies listed"
-                    }. ${emergencyReady
-                        ? `Emergency contact: ${profile.emergencyco_name || "—"}`
-                        : "Add an emergency contact for urgent coordination."
-                    }`
-                    : "Provide blood type and medical notes to aid urgent care.",
+                    ? profile.allergies?.trim()
+                        ? `Allergies: ${profile.allergies}`
+                        : "No allergies listed"
+                    : "Provide blood type to aid urgent care.",
                 accent: medicalPrepared ? "teal" : "amber",
             },
         ]
@@ -401,7 +372,7 @@ export default function DoctorAccountPage() {
                     <div className="space-y-8">
                         <AccountSummaryGrid items={summaryItems} />
                         <AccountCard
-                            description="Update your personal details, emergency contacts, and credentials to keep clinic records current."
+                            description="Update your personal details and credentials to keep clinic records current."
                             onPasswordSubmit={handlePasswordSubmit}
                         >
                             <form onSubmit={handleProfileUpdate} className="space-y-10">
@@ -481,7 +452,6 @@ export default function DoctorAccountPage() {
                                                                         const contactValidation = validateAndNormalizeContacts({
                                                                             email: profile.email,
                                                                             contactNumber: profile.contactno,
-                                                                            emergencyNumber: profile.emergencyco_num,
                                                                         });
 
                                                                         if (!contactValidation.success) {
@@ -493,7 +463,6 @@ export default function DoctorAccountPage() {
                                                                             ...profile,
                                                                             email: contactValidation.email,
                                                                             contactno: contactValidation.contactNumber,
-                                                                            emergencyco_num: contactValidation.emergencyNumber,
                                                                             date_of_birth: tempDOB,
                                                                         };
 
@@ -614,7 +583,6 @@ export default function DoctorAccountPage() {
                                                                         const contactValidation = validateAndNormalizeContacts({
                                                                             email: profile.email,
                                                                             contactNumber: profile.contactno,
-                                                                            emergencyNumber: profile.emergencyco_num,
                                                                         });
 
                                                                         if (!contactValidation.success) {
@@ -626,7 +594,6 @@ export default function DoctorAccountPage() {
                                                                             ...profile,
                                                                             email: contactValidation.email,
                                                                             contactno: contactValidation.contactNumber,
-                                                                            emergencyco_num: contactValidation.emergencyNumber,
                                                                             gender: tempGender,
                                                                         };
 
@@ -637,7 +604,6 @@ export default function DoctorAccountPage() {
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                medical_cond: serializeMedicalHistory(updatedProfile.medicalHistory),
                                                                                 bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
                                                                             };
 
@@ -768,7 +734,7 @@ export default function DoctorAccountPage() {
 
                                 <AccountSection
                                     icon={HeartPulse}
-                                    title="Medical history"
+                                    title="Health details"
                                     description="Supports faster care during clinical operations."
                                 >
                                     <div className="grid gap-4 md:grid-cols-2">
@@ -796,58 +762,6 @@ export default function DoctorAccountPage() {
                                                 value={profile.allergies || ""}
                                                 onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
                                                 placeholder="Please specify"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-sm font-medium text-emerald-900">
-                                            Medical conditions
-                                        </Label>
-                                        <MedicalHistoryField
-                                            value={profile.medicalHistory}
-                                            onChange={(value) => setProfile({ ...profile, medicalHistory: value })}
-                                            idPrefix="doctor-medical-history"
-                                        />
-                                    </div>
-                                </AccountSection>
-
-                                <AccountSection
-                                    icon={LifeBuoy}
-                                    title="Emergency contact"
-                                    description="Provide someone we can reach when urgent coordination is needed."
-                                >
-                                    <div className="grid gap-4 md:grid-cols-3">
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Contact name</Label>
-                                            <Input
-                                                value={profile.emergencyco_name || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_name: e.target.value })}
-                                                placeholder="Full name of contact"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <PhoneInput
-                                                defaultCountry="ph"
-                                                placeholder="09XXXXXXXXX"
-                                                value={formatPhoneInputDisplay(profile.emergencyco_num)}
-                                                onChange={(value) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        emergencyco_num: normalizePhilippinePhoneInput(value),
-                                                    })
-                                                }
-                                                className="w-full"
-                                                inputClassName="text-emerald-900"
-                                                forceDialCode
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Relationship</Label>
-                                            <Input
-                                                value={profile.emergencyco_relation || ""}
-                                                onChange={(e) => setProfile({ ...profile, emergencyco_relation: e.target.value })}
-                                                placeholder="Contact’s relationship"
                                             />
                                         </div>
                                     </div>
