@@ -80,7 +80,6 @@ import NurseAccountsLoading from "./loading";
 import {
     normalizeNurseAccountProfile,
     normalizeNurseAccountUsers,
-    nurseReverseBloodTypeEnumMap,
     type NurseAccountProfile,
     type NurseAccountProfileApi,
     type NurseAccountUser,
@@ -557,7 +556,6 @@ export function NurseAccountsPageClient({
 
             const payload = {
                 ...updatedProfile,
-                bloodtype: nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
             };
 
             // Prevent DOB modification if it was already set
@@ -851,8 +849,6 @@ export function NurseAccountsPageClient({
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                bloodtype:
-                                                                                    nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
                                                                             };
 
                                                                             const res = await fetch("/api/nurse/accounts/me", {
@@ -980,8 +976,6 @@ export function NurseAccountsPageClient({
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                bloodtype:
-                                                                                    nurseReverseBloodTypeEnumMap[updatedProfile?.bloodtype || ""] || null,
                                                                             };
 
                                                                             const res = await fetch("/api/nurse/accounts/me", {

@@ -11,7 +11,6 @@ import {
     Phone,
     UserRound,
     KeyRound,
-    HeartPulse,
 } from "lucide-react";
 
 import DoctorLayout from "@/components/doctor/doctor-layout";
@@ -67,25 +66,8 @@ type Profile = {
     email?: string;
     contactno?: string | null;
     address?: string | null;
-    bloodtype?: string | null;
     allergies?: string | null;
 };
-
-// Blood Type Mappings
-const bloodTypeEnumMap: Record<string, string> = {
-    A_POS: "A+",
-    A_NEG: "A-",
-    B_POS: "B+",
-    B_NEG: "B-",
-    AB_POS: "AB+",
-    AB_NEG: "AB-",
-    O_POS: "O+",
-    O_NEG: "O-",
-};
-
-const reverseBloodTypeEnumMap = Object.fromEntries(
-    Object.entries(bloodTypeEnumMap).map(([key, val]) => [val, key])
-);
 
 export default function DoctorAccountPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -122,12 +104,6 @@ export default function DoctorAccountPage() {
                 return;
             }
 
-            // Normalize blood type no matter what format the backend sends
-            const bloodTypeValue =
-                typeof data.profile?.bloodtype === "string"
-                    ? bloodTypeEnumMap[data.profile.bloodtype] || data.profile.bloodtype
-                    : "";
-
             setProfile({
                 user_id: data.accountId,
                 username: data.username,
@@ -141,7 +117,6 @@ export default function DoctorAccountPage() {
                 contactno: data.profile?.contactno || "",
                 email: data.profile?.email || "",
                 address: data.profile?.address || "",
-                bloodtype: bloodTypeValue,
                 allergies: data.profile?.allergies || "",
             });
         } catch (err) {
@@ -188,7 +163,6 @@ export default function DoctorAccountPage() {
             setProfileLoading(true);
             const payload = {
                 ...updatedProfile,
-                bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
             };
 
             const res = await fetch("/api/doctor/account/me", {
@@ -220,15 +194,9 @@ export default function DoctorAccountPage() {
                     );
                 }
 
-                // Update local state to reflect readable blood type again
                 setProfile((prev) => ({
                     ...prev!,
                     ...updatedProfile,
-                    bloodtype:
-                        updatedProfile.bloodtype ||
-                        (data.profile?.bloodtype
-                            ? bloodTypeEnumMap[data.profile.bloodtype] || prev?.bloodtype
-                            : prev?.bloodtype),
                 }));
 
             }
@@ -265,14 +233,11 @@ export default function DoctorAccountPage() {
         []
     );
 
-    const bloodTypeOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-
     const completionFields = profile
         ? [
             profile.email,
             profile.contactno,
             profile.address,
-            profile.bloodtype,
         ]
         : [];
 
@@ -287,7 +252,6 @@ export default function DoctorAccountPage() {
         ? Math.round((completionCount / completionFields.length) * 100)
         : 0;
 
-    const medicalPrepared = Boolean(profile?.bloodtype?.trim());
 
     const summaryItems: AccountSummaryItem[] = profile
         ? [
@@ -316,17 +280,6 @@ export default function DoctorAccountPage() {
                         : completionPercent >= 50
                             ? "amber"
                             : "rose",
-            },
-            {
-                icon: HeartPulse,
-                label: "Clinical readiness",
-                value: medicalPrepared ? profile.bloodtype ?? "" : "Add blood type",
-                helper: medicalPrepared
-                    ? profile.allergies?.trim()
-                        ? `Allergies: ${profile.allergies}`
-                        : "No allergies listed"
-                    : "Provide blood type to aid urgent care.",
-                accent: medicalPrepared ? "teal" : "amber",
             },
         ]
         : [];
@@ -473,10 +426,6 @@ export default function DoctorAccountPage() {
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                bloodtype:
-                                                                                    reverseBloodTypeEnumMap[
-                                                                                    updatedProfile?.bloodtype || ""
-                                                                                    ] || null,
                                                                             };
 
                                                                             const res = await fetch("/api/doctor/account/me", {
@@ -604,7 +553,6 @@ export default function DoctorAccountPage() {
                                                                             setProfileLoading(true);
                                                                             const payload = {
                                                                                 ...updatedProfile,
-                                                                                bloodtype: reverseBloodTypeEnumMap[updatedProfile.bloodtype || ""] || null,
                                                                             };
 
                                                                             const res = await fetch("/api/doctor/account/me", {
@@ -729,41 +677,6 @@ export default function DoctorAccountPage() {
                                             value={profile.address || ""}
                                             onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                                         />
-                                    </div>
-                                </AccountSection>
-
-                                <AccountSection
-                                    icon={HeartPulse}
-                                    title="Health details"
-                                    description="Supports faster care during clinical operations."
-                                >
-                                    <div className="grid gap-4 md:grid-cols-2">
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Blood type</Label>
-                                            <Select
-                                                value={profile.bloodtype || ""}
-                                                onValueChange={(val) => setProfile({ ...profile, bloodtype: val })}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select blood type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {bloodTypeOptions.map((type) => (
-                                                        <SelectItem key={type} value={type}>
-                                                            {type}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-emerald-900">Allergies</Label>
-                                            <Input
-                                                value={profile.allergies || ""}
-                                                onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
-                                                placeholder="Please specify"
-                                            />
-                                        </div>
                                     </div>
                                 </AccountSection>
 
