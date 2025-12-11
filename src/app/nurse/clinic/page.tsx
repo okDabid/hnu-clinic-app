@@ -522,7 +522,7 @@ export default function NurseClinicPage() {
     return (
         <NurseLayout
             title="Clinic Management"
-            description="Maintain clinic locations, contact information, and update details for campus services."
+            description="Maintain clinic locations and contact information."
         >
             <section className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="flex flex-col rounded-3xl border border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-px hover:shadow-md">
@@ -882,9 +882,9 @@ export default function NurseClinicPage() {
                                                         const slotPreview =
                                                             !loading && !error && !onLeave && slots.length > 0
                                                                 ? slots
-                                                                      .slice(0, 3)
-                                                                      .map((slot) => `${slot.start}–${slot.end}`)
-                                                                      .join(", ")
+                                                                    .slice(0, 3)
+                                                                    .map((slot) => `${slot.start}–${slot.end}`)
+                                                                    .join(", ")
                                                                 : null;
 
                                                         return (
