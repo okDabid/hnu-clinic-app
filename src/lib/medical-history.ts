@@ -98,14 +98,17 @@ export function serializeMedicalHistory(value: MedicalHistoryValue | null | unde
     const conditions = normalizeOptions(value.conditions);
     const other = value.other ? sanitizeFreeText(value.other) : "";
 
-    if (conditions.length === 0 && other.length === 0) {
+    const parts: string[] = [...conditions];
+
+    if (other) {
+        parts.push(other);
+    }
+
+    if (parts.length === 0) {
         return null;
     }
 
-    return JSON.stringify({
-        conditions,
-        other,
-    });
+    return parts.join(", ");
 }
 
 export function formatMedicalHistory(value: MedicalHistoryValue | null | undefined): string {

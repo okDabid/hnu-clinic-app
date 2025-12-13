@@ -10,7 +10,7 @@ export default function DoctorAccountLoading() {
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
                 <div className="grid gap-4 md:grid-cols-3">
-                    {Array.from({ length: 3 }).map((_, index) => (
+                    {Array.from({ length: 2 }).map((_, index) => (
                         <Card
                             key={index}
                             className="rounded-3xl border-primary/20 bg-white/90 shadow-sm"
