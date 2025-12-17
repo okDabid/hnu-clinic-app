@@ -320,6 +320,22 @@ async function postHandler(req: Request) {
             },
         });
 
+        const conflictingWithinClinic = await prisma.doctorAvailability.findMany({
+            where: {
+                doctor_user_id: { not: doctorId },
+                clinic_id,
+                archivedAt: null,
+                available_date: { gte: rangeStart, lte: rangeEnd },
+            },
+            select: {
+                availability_id: true,
+                doctor_user_id: true,
+                available_date: true,
+                available_timestart: true,
+                available_timeend: true,
+            },
+        });
+
         for (const candidate of candidateSlots) {
             const candidateDate = candidate.date;
             for (const existing of conflicting) {
@@ -344,6 +360,31 @@ async function postHandler(req: Request) {
                     return NextResponse.json(
                         {
                             error: `Conflict detected with an existing duty hour on ${conflictStart} from ${conflictStartTime} to ${conflictEndTime}. Adjust the time range to avoid overlaps across clinics.`,
+                        },
+                        { status: 409 },
+                    );
+                }
+            }
+
+            for (const existing of conflictingWithinClinic) {
+                const existingDate = formatManilaISODate(existing.available_date);
+                if (existingDate !== candidateDate) continue;
+
+                const hasSameRange =
+                    existing.available_timestart.getTime() === candidate.start.getTime() &&
+                    existing.available_timeend.getTime() === candidate.end.getTime();
+
+                if (hasSameRange) {
+                    const conflictStart = formatManilaISODate(existing.available_date);
+                    const conflictStartTime = toManilaTimeString(
+                        existing.available_timestart.toISOString(),
+                    );
+                    const conflictEndTime = toManilaTimeString(
+                        existing.available_timeend.toISOString(),
+                    );
+                    return NextResponse.json(
+                        {
+                            error: `Another doctor in this clinic already has duty hours from ${conflictStartTime} to ${conflictEndTime} on ${conflictStart}. Choose a different time range.`,
                         },
                         { status: 409 },
                     );
