@@ -31,6 +31,7 @@ export type StudentMinAggregateOutputType = {
   fname: string | null
   mname: string | null
   lname: string | null
+  suffix: string | null
   date_of_birth: Date | null
   gender: $Enums.Gender | null
   program: string | null
@@ -56,6 +57,7 @@ export type StudentMaxAggregateOutputType = {
   fname: string | null
   mname: string | null
   lname: string | null
+  suffix: string | null
   date_of_birth: Date | null
   gender: $Enums.Gender | null
   program: string | null
@@ -81,6 +83,7 @@ export type StudentCountAggregateOutputType = {
   fname: number
   mname: number
   lname: number
+  suffix: number
   date_of_birth: number
   gender: number
   program: number
@@ -108,6 +111,7 @@ export type StudentMinAggregateInputType = {
   fname?: true
   mname?: true
   lname?: true
+  suffix?: true
   date_of_birth?: true
   gender?: true
   program?: true
@@ -133,6 +137,7 @@ export type StudentMaxAggregateInputType = {
   fname?: true
   mname?: true
   lname?: true
+  suffix?: true
   date_of_birth?: true
   gender?: true
   program?: true
@@ -158,6 +163,7 @@ export type StudentCountAggregateInputType = {
   fname?: true
   mname?: true
   lname?: true
+  suffix?: true
   date_of_birth?: true
   gender?: true
   program?: true
@@ -256,6 +262,7 @@ export type StudentGroupByOutputType = {
   fname: string
   mname: string | null
   lname: string
+  suffix: string | null
   date_of_birth: Date | null
   gender: $Enums.Gender | null
   program: string | null
@@ -302,6 +309,7 @@ export type StudentWhereInput = {
   fname?: Prisma.StringFilter<"Student"> | string
   mname?: Prisma.StringNullableFilter<"Student"> | string | null
   lname?: Prisma.StringFilter<"Student"> | string
+  suffix?: Prisma.StringNullableFilter<"Student"> | string | null
   date_of_birth?: Prisma.DateTimeNullableFilter<"Student"> | Date | string | null
   gender?: Prisma.EnumGenderNullableFilter<"Student"> | $Enums.Gender | null
   program?: Prisma.StringNullableFilter<"Student"> | string | null
@@ -328,6 +336,7 @@ export type StudentOrderByWithRelationInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrderInput | Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrderInput | Prisma.SortOrder
   date_of_birth?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   program?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -359,6 +368,7 @@ export type StudentWhereUniqueInput = Prisma.AtLeast<{
   fname?: Prisma.StringFilter<"Student"> | string
   mname?: Prisma.StringNullableFilter<"Student"> | string | null
   lname?: Prisma.StringFilter<"Student"> | string
+  suffix?: Prisma.StringNullableFilter<"Student"> | string | null
   date_of_birth?: Prisma.DateTimeNullableFilter<"Student"> | Date | string | null
   gender?: Prisma.EnumGenderNullableFilter<"Student"> | $Enums.Gender | null
   program?: Prisma.StringNullableFilter<"Student"> | string | null
@@ -383,6 +393,7 @@ export type StudentOrderByWithAggregationInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrderInput | Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrderInput | Prisma.SortOrder
   date_of_birth?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   program?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -414,6 +425,7 @@ export type StudentScalarWhereWithAggregatesInput = {
   fname?: Prisma.StringWithAggregatesFilter<"Student"> | string
   mname?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   lname?: Prisma.StringWithAggregatesFilter<"Student"> | string
+  suffix?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
   date_of_birth?: Prisma.DateTimeNullableWithAggregatesFilter<"Student"> | Date | string | null
   gender?: Prisma.EnumGenderNullableWithAggregatesFilter<"Student"> | $Enums.Gender | null
   program?: Prisma.StringNullableWithAggregatesFilter<"Student"> | string | null
@@ -438,6 +450,7 @@ export type StudentCreateInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   program?: string | null
@@ -464,6 +477,7 @@ export type StudentUncheckedCreateInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   program?: string | null
@@ -488,6 +502,7 @@ export type StudentUpdateInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   program?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -514,6 +529,7 @@ export type StudentUncheckedUpdateInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   program?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -539,6 +555,7 @@ export type StudentCreateManyInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   program?: string | null
@@ -563,6 +580,7 @@ export type StudentUpdateManyMutationInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   program?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -588,6 +606,7 @@ export type StudentUncheckedUpdateManyInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   program?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -618,6 +637,7 @@ export type StudentCountOrderByAggregateInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrder
   date_of_birth?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   program?: Prisma.SortOrder
@@ -643,6 +663,7 @@ export type StudentMaxOrderByAggregateInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrder
   date_of_birth?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   program?: Prisma.SortOrder
@@ -668,6 +689,7 @@ export type StudentMinOrderByAggregateInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrder
   date_of_birth?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   program?: Prisma.SortOrder
@@ -752,6 +774,7 @@ export type StudentCreateWithoutUserInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   program?: string | null
@@ -776,6 +799,7 @@ export type StudentUncheckedCreateWithoutUserInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   program?: string | null
@@ -816,6 +840,7 @@ export type StudentUpdateWithoutUserInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   program?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -840,6 +865,7 @@ export type StudentUncheckedUpdateWithoutUserInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   program?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -867,6 +893,7 @@ export type StudentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   program?: boolean
@@ -893,6 +920,7 @@ export type StudentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   program?: boolean
@@ -919,6 +947,7 @@ export type StudentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   program?: boolean
@@ -945,6 +974,7 @@ export type StudentSelectScalar = {
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   program?: boolean
@@ -963,7 +993,7 @@ export type StudentSelectScalar = {
   email?: boolean
 }
 
-export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"stud_user_id" | "user_id" | "student_id" | "fname" | "mname" | "lname" | "date_of_birth" | "gender" | "program" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "status" | "is_working_scholar" | "department" | "year_level" | "bloodtype" | "email", ExtArgs["result"]["student"]>
+export type StudentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"stud_user_id" | "user_id" | "student_id" | "fname" | "mname" | "lname" | "suffix" | "date_of_birth" | "gender" | "program" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "status" | "is_working_scholar" | "department" | "year_level" | "bloodtype" | "email", ExtArgs["result"]["student"]>
 export type StudentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UsersDefaultArgs<ExtArgs>
 }
@@ -986,6 +1016,7 @@ export type $StudentPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     fname: string
     mname: string | null
     lname: string
+    suffix: string | null
     date_of_birth: Date | null
     gender: $Enums.Gender | null
     program: string | null
@@ -1432,6 +1463,7 @@ export interface StudentFieldRefs {
   readonly fname: Prisma.FieldRef<"Student", 'String'>
   readonly mname: Prisma.FieldRef<"Student", 'String'>
   readonly lname: Prisma.FieldRef<"Student", 'String'>
+  readonly suffix: Prisma.FieldRef<"Student", 'String'>
   readonly date_of_birth: Prisma.FieldRef<"Student", 'DateTime'>
   readonly gender: Prisma.FieldRef<"Student", 'Gender'>
   readonly program: Prisma.FieldRef<"Student", 'String'>
