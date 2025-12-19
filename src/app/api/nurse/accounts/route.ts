@@ -32,6 +32,17 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_NEG: "O-",
 };
 
+const namePattern = /^[A-Za-z][A-Za-z\s'-.]*$/;
+
+function isValidName(value: unknown) {
+    return typeof value === "string" && namePattern.test(value.trim());
+}
+
+function formatFullName(fname?: string | null, mname?: string | null, lname?: string | null, suffix?: string | null) {
+    const base = [fname, mname, lname].filter(Boolean).join(" ");
+    return suffix ? `${base}, ${suffix}` : base;
+}
+
 // ---------------- UNIQUE ID HELPERS ----------------
 async function ensureUniqueUsername(client: Prisma.TransactionClient, base: string): Promise<string> {
     let candidate = base;
@@ -51,6 +62,39 @@ export async function POST(req: Request) {
         const roleEnum = payload.role as Role;
         const workingScholar = Boolean(payload.workingScholar);
 
+        const fname = typeof payload.fname === "string" ? payload.fname.trim() : "";
+        const mname = typeof payload.mname === "string" ? payload.mname.trim() : "";
+        const lname = typeof payload.lname === "string" ? payload.lname.trim() : "";
+        const suffix = typeof payload.suffix === "string" ? payload.suffix.trim() : "";
+
+        if (!fname || !isValidName(fname)) {
+            return NextResponse.json(
+                { error: "First name must contain only letters, apostrophes, hyphens, or periods." },
+                { status: 400 }
+            );
+        }
+
+        if (!lname || !isValidName(lname)) {
+            return NextResponse.json(
+                { error: "Last name must contain only letters, apostrophes, hyphens, or periods." },
+                { status: 400 }
+            );
+        }
+
+        if (mname && !isValidName(mname)) {
+            return NextResponse.json(
+                { error: "Middle name must contain only letters, apostrophes, hyphens, or periods." },
+                { status: 400 }
+            );
+        }
+
+        if (suffix && !isValidName(suffix)) {
+            return NextResponse.json(
+                { error: "Suffix must contain only letters, apostrophes, hyphens, or periods." },
+                { status: 400 }
+            );
+        }
+
         // Determine username
         let username: string;
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
@@ -60,7 +104,12 @@ export async function POST(req: Request) {
         } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
             username = payload.employee_id;
         } else {
-            username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
+            const firstForUsername = fname.toLowerCase().replace(/[^a-z]/g, "");
+            const lastForUsername = lname.toLowerCase().replace(/[^a-z]/g, "");
+            const suffixForUsername = suffix ? suffix.toLowerCase().replace(/[^a-z]/g, "") : "";
+            username = [firstForUsername, lastForUsername, suffixForUsername]
+                .filter(Boolean)
+                .join(".");
         }
 
         const isStudentPatient = roleEnum === Role.PATIENT && payload.patientType === "student";
@@ -101,9 +150,10 @@ export async function POST(req: Request) {
 
         // Shared fields
         const sharedProfileData = {
-            fname: payload.fname,
-            mname: payload.mname,
-            lname: payload.lname,
+            fname,
+            mname: mname || null,
+            lname,
+            suffix: suffix || null,
             bloodtype: bloodTypeMap[payload.bloodtype] || null,
             address: payload.address ?? null,
             allergies: payload.allergies ?? null,
@@ -224,12 +274,17 @@ export async function GET() {
                 displayId = u.employee?.employee_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
             }
 
-            const fullName =
+            const studentFullName =
                 u.student?.fname && u.student?.lname
-                    ? `${u.student.fname} ${u.student.lname}`
-                    : u.employee?.fname && u.employee?.lname
-                        ? `${u.employee.fname} ${u.employee.lname}`
-                        : u.username;
+                    ? formatFullName(u.student.fname, u.student.mname, u.student.lname, u.student.suffix)
+                    : null;
+
+            const employeeFullName =
+                u.employee?.fname && u.employee?.lname
+                    ? formatFullName(u.employee.fname, u.employee.mname, u.employee.lname, u.employee.suffix)
+                    : null;
+
+            const fullName = studentFullName || employeeFullName || u.username;
 
             const bloodTypeRaw = u.student?.bloodtype || u.employee?.bloodtype || null;
             const bloodTypeDisplay = bloodTypeRaw ? bloodTypeEnumMap[bloodTypeRaw] || bloodTypeRaw : null;
@@ -244,6 +299,10 @@ export async function GET() {
                 contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,
                 specialization: u.employee?.specialization ?? null,
+                fname: u.student?.fname ?? u.employee?.fname ?? undefined,
+                mname: u.student?.mname ?? u.employee?.mname ?? undefined,
+                lname: u.student?.lname ?? u.employee?.lname ?? undefined,
+                suffix: u.student?.suffix ?? u.employee?.suffix ?? undefined,
                 patientType: u.role === Role.PATIENT ? (u.student ? "student" : "employee") : null,
                 isWorkingScholar: u.student?.is_working_scholar ?? false,
             };
