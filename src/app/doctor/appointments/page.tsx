@@ -698,11 +698,11 @@ export default function DoctorAppointmentsPage() {
                                     <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
                                         <TableHead className="min-w-40">Patient</TableHead>
                                         <TableHead className="min-w-40">Clinic</TableHead>
-                                        <TableHead className="min-w-[120px]">Date</TableHead>
-                                        <TableHead className="min-w-[120px]">Time</TableHead>
-                                        <TableHead className="min-w-[120px]">Status</TableHead>
+                                        <TableHead className="min-w-30">Date</TableHead>
+                                        <TableHead className="min-w-30">Time</TableHead>
+                                        <TableHead className="min-w-30">Status</TableHead>
                                         <TableHead className="min-w-40">Consultation</TableHead>
-                                        <TableHead className="w-[110px] text-right">Actions</TableHead>
+                                        <TableHead className="min-w-20">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -856,7 +856,7 @@ export default function DoctorAppointmentsPage() {
                 <DialogContent className="rounded-3xl sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="text-xl text-primary">
-                            {actionType === "move" ? "Move appointment" : "Cancel appointment"}
+                            {actionType === "move" ? "Reschedule appointment" : "Cancel appointment"}
                         </DialogTitle>
                         <DialogDescription className="text-sm text-muted-foreground">
                             {actionType === "move"
