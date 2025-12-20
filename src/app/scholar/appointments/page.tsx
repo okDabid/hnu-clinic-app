@@ -820,13 +820,13 @@ export default function ScholarAppointmentsPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                        <TableHead className="min-w-[120px]">Patient</TableHead>
-                                        <TableHead className="min-w-[120px]">Clinic</TableHead>
-                                        <TableHead className="min-w-[120px]">Doctor</TableHead>
-                                        <TableHead className="min-w-[120px]">Date</TableHead>
-                                        <TableHead className="min-w-[120px]">Time</TableHead>
-                                        <TableHead className="min-w-[120px]">Status</TableHead>
-                                        <TableHead className="min-w-[120px]">Service</TableHead>
+                                        <TableHead className="min-w-30">Patient</TableHead>
+                                        <TableHead className="min-w-30">Clinic</TableHead>
+                                        <TableHead className="min-w-30">Doctor</TableHead>
+                                        <TableHead className="min-w-30">Date</TableHead>
+                                        <TableHead className="min-w-30">Time</TableHead>
+                                        <TableHead className="min-w-30">Status</TableHead>
+                                        <TableHead className="min-w-30">Service</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -1228,7 +1228,7 @@ export default function ScholarAppointmentsPage() {
                                         value={createRemarks}
                                         onChange={(event) => setCreateRemarks(event.target.value)}
                                         placeholder="Optional details for the care team"
-                                        className="min-h-[90px] rounded-xl border-primary/30"
+                                        className="min-h-22.5 rounded-xl border-primary/30"
                                     />
                                     <p className="text-xs text-muted-foreground">
                                         Add context such as symptoms reported during the walk-in or follow-up instructions.

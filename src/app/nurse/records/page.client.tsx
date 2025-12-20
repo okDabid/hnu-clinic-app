@@ -46,7 +46,6 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
-    const [appointmentFilter, setAppointmentFilter] = useState("All");
     const [loadingRecords, setLoadingRecords] = useState(false);
     const [initializing, setInitializing] = useState(!initialRecords);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -90,7 +89,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
     }, [records, selectedRecord]);
 
     const filteredRecords = useMemo(() => {
-        if (!deferredSearch && statusFilter === "All" && typeFilter === "All" && appointmentFilter === "All") {
+        if (!deferredSearch && statusFilter === "All" && typeFilter === "All") {
             return records;
         }
 
@@ -106,17 +105,12 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
 
             const matchesStatus = statusFilter === "All" || record.status === statusFilter;
             const matchesType = typeFilter === "All" || record.patientType === typeFilter;
-            const matchesAppointment =
-                appointmentFilter === "All" ||
-                (appointmentFilter === "With" && record.latestAppointment) ||
-                (appointmentFilter === "Without" && !record.latestAppointment);
-
-            return matchesSearch && matchesStatus && matchesType && matchesAppointment;
+            return matchesSearch && matchesStatus && matchesType;
         });
-    }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
+    }, [deferredSearch, records, statusFilter, typeFilter]);
 
     const { pageItems: paginatedRecords, currentPage, pageSize, setPage } = usePagination(filteredRecords, {
-        resetDeps: [appointmentFilter, deferredSearch, statusFilter, typeFilter],
+        resetDeps: [deferredSearch, statusFilter, typeFilter],
     });
 
     const totalPatients = records.length;
@@ -125,7 +119,6 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
         [records]
     );
     const withoutAppointments = totalPatients - withAppointments;
-
     function openDetails(record: PatientRecord, tab: RecordDetailsDialogTab = "details") {
         setSelectedRecord(record);
         setActiveTab(tab);
@@ -325,16 +318,6 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
                                         <SelectItem value="All">All Status</SelectItem>
                                         <SelectItem value="Active">Active</SelectItem>
                                         <SelectItem value="Inactive">Inactive</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={appointmentFilter} onValueChange={setAppointmentFilter}>
-                                    <SelectTrigger className="h-10 w-full">
-                                        <SelectValue placeholder="Appointments" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="All">All Appointments</SelectItem>
-                                        <SelectItem value="With">With appointment</SelectItem>
-                                        <SelectItem value="Without">No appointment</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
