@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { customAlphabet } from "nanoid";
 import bcrypt from "bcryptjs";
-import { Prisma, BloodType, Department, Role, AccountStatus } from "@prisma/client";
+import {
+    Prisma,
+    BloodType,
+    Department,
+    Role,
+    AccountStatus,
+    AppointmentStatus,
+} from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 
 // Generate random password (8 chars)
@@ -365,6 +372,37 @@ export async function PUT(req: Request) {
 
         if (target.status === newStatus) {
             return NextResponse.json({ message: "No changes made." }, { status: 200 });
+        }
+
+        if (newStatus === AccountStatus.Inactive) {
+            const now = new Date();
+            const activeAppointmentStatuses = [
+                AppointmentStatus.Pending,
+                AppointmentStatus.Approved,
+                AppointmentStatus.Moved,
+            ];
+
+            const hasUpcomingAppointments = await prisma.appointment.findFirst({
+                where: {
+                    status: { in: activeAppointmentStatuses },
+                    appointment_timeend: { gte: now },
+                    OR: [
+                        { patient_user_id: user_id },
+                        { doctor_user_id: user_id },
+                    ],
+                },
+                select: { appointment_id: true },
+            });
+
+            if (hasUpcomingAppointments) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Account cannot be deactivated while the user has upcoming appointments. ",
+                    },
+                    { status: 400 }
+                );
+            }
         }
 
         // Update user status
