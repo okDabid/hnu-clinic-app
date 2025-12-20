@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
                         role: true,
                         username: true,
                         employee: { select: { fname: true, lname: true } },
-                        student: { select: { fname: true, lname: true } },
+                        student: { select: { fname: true, lname: true, is_working_scholar: true } },
                     },
                 },
             },
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
                 const nurse = appointment.consultation?.nurse;
                 const staffRoleLabel = nurse
                     ? "Nurse"
-                    : appointment.createdBy?.role === Role.SCHOLAR
+                    : appointment.createdBy?.student?.is_working_scholar
                         ? "Scholar"
                         : "Doctor";
 
