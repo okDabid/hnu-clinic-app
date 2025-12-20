@@ -199,7 +199,7 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                                 Filter student and employee details before handing off to nurses or doctors.
                             </p>
                         </div>
-                        <div className="space-y-1 md:w-72 w-full">
+                        <div className="space-y-1 w-full lg:flex-1">
                             <Label className="text-sm font-semibold text-primary">Search Records</Label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -211,7 +211,7 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                                 />
                             </div>
                         </div>
-                        <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+                        <div className="space-y-1 w-full lg:flex-1 lg:flex lg:items-center lg:justify-end lg:space-x-4 lg:space-y-0">
                             <Select value={typeFilter} onValueChange={setTypeFilter}>
                                 <SelectTrigger className="h-10 w-full">
                                     <SelectValue placeholder="All types" />

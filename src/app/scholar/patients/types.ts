@@ -98,5 +98,7 @@ export function preparePatientRecords(
         return [];
     }
 
-    return records.map((record) => preparePatientRecord(record));
+    return [...records]
+        .sort((a, b) => a.fullName.localeCompare(b.fullName, undefined, { sensitivity: "base" }))
+        .map((record) => preparePatientRecord(record));
 }
