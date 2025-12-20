@@ -212,11 +212,17 @@ export async function POST(req: Request) {
             );
         }
 
-        if (Number(quantity) <= 0) {
+        const normalizedQuantity = Number(quantity);
+        const normalizedStrength = strength !== undefined ? Number(strength) : null;
+        const normalizedCategory = category ? (category as MedCategory) : MedCategory.Analgesic;
+        const normalizedItemType = item_type ? (item_type as MedType) : MedType.Tablet;
+        const normalizedUnit = unit ? (unit as DosageUnit) : null;
+
+        if (normalizedQuantity <= 0) {
             return NextResponse.json({ error: "Quantity must be greater than 0" }, { status: 400 });
         }
 
-        if (strength !== undefined && Number(strength) < 0) {
+        if (normalizedStrength !== null && normalizedStrength < 0) {
             return NextResponse.json({ error: "Strength cannot be negative" }, { status: 400 });
         }
 
@@ -230,20 +236,40 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Clinic does not exist" }, { status: 404 });
         }
 
-        // Check if item already exists in this clinic (same name + category + type)
-        const existingItem = await prisma.medInventory.findFirst({
+        // Check if item already exists in this clinic (same identifying attributes)
+        const itemsWithSameName = await prisma.medInventory.findMany({
             where: { clinic_id, item_name },
         });
 
-        if (existingItem) {
+        const matchingItem = itemsWithSameName.find(
+            (item) =>
+                item.category === normalizedCategory &&
+                item.item_type === normalizedItemType &&
+                item.strength === normalizedStrength &&
+                item.unit === normalizedUnit
+        );
+
+        if (!matchingItem && itemsWithSameName.length > 0) {
+            const existing = itemsWithSameName[0];
+            return NextResponse.json(
+                {
+                    error:
+                        `An item named "${item_name}" already exists in this clinic with category ${existing.category}, type ${existing.item_type}, strength ${existing.strength ?? "N/A"}, and unit ${existing.unit ?? "N/A"}. ` +
+                        "Please create a separate inventory item for this variation.",
+                },
+                { status: 400 }
+            );
+        }
+
+        if (matchingItem) {
             const updatedItem = await prisma.medInventory.update({
-                where: { med_id: existingItem.med_id },
+                where: { med_id: matchingItem.med_id },
                 data: {
-                    quantity: { increment: Number(quantity) },
+                    quantity: { increment: normalizedQuantity },
                     replenishments: {
                         create: {
-                            quantity_added: Number(quantity),
-                            remaining_qty: Number(quantity),
+                            quantity_added: normalizedQuantity,
+                            remaining_qty: normalizedQuantity,
                             date_received: new Date(),
                             expiry_date: expiryDate,
                         },
@@ -263,15 +289,15 @@ export async function POST(req: Request) {
             data: {
                 clinic_id,
                 item_name,
-                quantity: Number(quantity),
-                category: category ? (category as MedCategory) : MedCategory.Analgesic,
-                item_type: item_type ? (item_type as MedType) : MedType.Tablet,
-                strength: strength ? Number(strength) : null,
-                unit: unit ? (unit as DosageUnit) : null,
+                quantity: normalizedQuantity,
+                category: normalizedCategory,
+                item_type: normalizedItemType,
+                strength: normalizedStrength,
+                unit: normalizedUnit,
                 replenishments: {
                     create: {
-                        quantity_added: Number(quantity),
-                        remaining_qty: Number(quantity),
+                        quantity_added: normalizedQuantity,
+                        remaining_qty: normalizedQuantity,
                         date_received: new Date(),
                         expiry_date: expiryDate,
                     },
