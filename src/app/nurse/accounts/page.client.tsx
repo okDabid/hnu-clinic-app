@@ -65,16 +65,11 @@ import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import {
-    formatPhoneInputDisplay,
-    normalizePhilippinePhoneInput,
-    validateAndNormalizeContacts,
-} from "@/lib/validation";
+import { formatPhoneInputDisplay, validateAndNormalizeContacts } from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 import { cn } from "@/lib/utils";
 import { usePagination } from "@/hooks/use-pagination";
 import { TablePagination } from "@/components/table-pagination";
-import { PhoneInput } from "react-international-phone";
 
 import NurseAccountsLoading from "./loading";
 import {
@@ -553,6 +548,33 @@ export function NurseAccountsPageClient({
             return;
         }
 
+        const fname = profile.fname.trim();
+        const lname = profile.lname.trim();
+        const mname = (profile.mname ?? "").trim();
+        const suffix = (profile.suffix ?? "").trim();
+
+        const isInvalidName = (value: string) => !namePattern.test(value);
+
+        if (!fname || isInvalidName(fname)) {
+            toast.error("First name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (mname && isInvalidName(mname)) {
+            toast.error("Middle name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (!lname || isInvalidName(lname)) {
+            toast.error("Last name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (suffix && isInvalidName(suffix)) {
+            toast.error("Suffix can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
         const contactValidation = validateAndNormalizeContacts({
             email: profile.email,
             contactNumber: profile.contactno,
@@ -565,6 +587,10 @@ export function NurseAccountsPageClient({
 
         const updatedProfile = {
             ...profile,
+            fname,
+            mname,
+            lname,
+            suffix,
             email: contactValidation.email,
             contactno: contactValidation.contactNumber,
         };
@@ -737,6 +763,23 @@ export function NurseAccountsPageClient({
     };
 
     const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
+    const PHONE_PREFIX = "09";
+
+    const extractSubscriberDigits = (value?: string | null) => {
+        const formatted = formatPhoneInputDisplay(value);
+        if (!formatted) return "";
+
+        if (formatted.startsWith(PHONE_PREFIX)) {
+            return formatted.slice(PHONE_PREFIX.length, PHONE_PREFIX.length + 9);
+        }
+
+        return formatted.replace(/\D/g, "").slice(0, 9);
+    };
+
+    const buildPhoneNumberFromSubscriber = (subscriber: string) => {
+        const digits = subscriber.replace(/\D/g, "").slice(0, 9);
+        return digits ? `${PHONE_PREFIX}${digits}` : "";
+    };
 
     const buildFullName = useCallback(
         (fname?: string | null, mname?: string | null, lname?: string | null, suffix?: string | null) => {
@@ -1075,7 +1118,7 @@ export function NurseAccountsPageClient({
                                     title="Personal information"
                                     description="Keep your name details up to date."
                                 >
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">First name</Label>
                                             <Input value={profile.fname} onChange={(event) => setProfile({ ...profile, fname: event.target.value })} />
@@ -1087,6 +1130,14 @@ export function NurseAccountsPageClient({
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Last name</Label>
                                             <Input value={profile.lname} onChange={(event) => setProfile({ ...profile, lname: event.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
+                                            <Input
+                                                value={profile.suffix || ""}
+                                                onChange={(event) => setProfile({ ...profile, suffix: event.target.value })}
+                                                placeholder="Jr., Sr., III"
+                                            />
                                         </div>
                                     </div>
                                 </AccountSection>
@@ -1111,20 +1162,25 @@ export function NurseAccountsPageClient({
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <PhoneInput
-                                                defaultCountry="ph"
-                                                placeholder="09XXXXXXXXX"
-                                                value={formatPhoneInputDisplay(profile.contactno)}
-                                                onChange={(value) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        contactno: normalizePhilippinePhoneInput(value),
-                                                    })
-                                                }
-                                                className="w-full"
-                                                inputClassName="text-emerald-900"
-                                                forceDialCode
-                                            />
+                                            <div className="flex">
+                                                <span className="flex items-center rounded-l-md border border-input bg-emerald-50 px-3 text-sm font-semibold text-emerald-800">
+                                                    {PHONE_PREFIX}
+                                                </span>
+                                                <Input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    className="rounded-l-none border-l-0"
+                                                    placeholder="XXXXXXXXX"
+                                                    value={extractSubscriberDigits(profile.contactno)}
+                                                    onChange={(event) =>
+                                                        setProfile({
+                                                            ...profile,
+                                                            contactno: buildPhoneNumberFromSubscriber(event.target.value),
+                                                        })
+                                                    }
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="space-y-2">

@@ -46,13 +46,8 @@ import { MedicalHistoryField } from "@/components/account/medical-history-field"
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import {
-    formatPhoneInputDisplay,
-    normalizePhilippinePhoneInput,
-    validateAndNormalizeContacts,
-} from "@/lib/validation";
+import { formatPhoneInputDisplay, validateAndNormalizeContacts } from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
-import { PhoneInput } from "react-international-phone";
 
 import PatientAccountLoading from "./loading";
 import {
@@ -114,6 +109,24 @@ const programOptions: Record<string, string[]> = {
         "Junior High School",
         "Senior High School",
     ],
+};
+
+const PHONE_PREFIX = "09";
+
+const extractSubscriberDigits = (value?: string | null) => {
+    const formatted = formatPhoneInputDisplay(value);
+    if (!formatted) return "";
+
+    if (formatted.startsWith(PHONE_PREFIX)) {
+        return formatted.slice(PHONE_PREFIX.length, PHONE_PREFIX.length + 9);
+    }
+
+    return formatted.replace(/\D/g, "").slice(0, 9);
+};
+
+const buildPhoneNumberFromSubscriber = (subscriber: string) => {
+    const digits = subscriber.replace(/\D/g, "").slice(0, 9);
+    return digits ? `${PHONE_PREFIX}${digits}` : "";
 };
 
 const COLLEGE_YEAR_LEVEL_OPTIONS = [
@@ -980,21 +993,27 @@ export function PatientAccountPageClient({
                                             <Label htmlFor="contact-number" className="text-sm font-medium text-emerald-900">
                                                 Contact number
                                             </Label>
-                                            <PhoneInput
-                                                name="contactNumber"
-                                                defaultCountry="ph"
-                                                placeholder="09XXXXXXXXX"
-                                                value={formatPhoneInputDisplay(profile.contactno)}
-                                                onChange={(value) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        contactno: normalizePhilippinePhoneInput(value),
-                                                    })
-                                                }
-                                                className="w-full"
-                                                inputClassName="text-emerald-900"
-                                                forceDialCode
-                                            />
+                                            <div className="flex">
+                                                <span className="flex items-center rounded-l-md border border-input bg-emerald-50 px-3 text-sm font-semibold text-emerald-800">
+                                                    {PHONE_PREFIX}
+                                                </span>
+                                                <Input
+                                                    id="contact-number"
+                                                    name="contactNumber"
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    className="rounded-l-none border-l-0"
+                                                    placeholder="XXXXXXXXX"
+                                                    value={extractSubscriberDigits(profile.contactno)}
+                                                    onChange={(event) =>
+                                                        setProfile({
+                                                            ...profile,
+                                                            contactno: buildPhoneNumberFromSubscriber(event.target.value),
+                                                        })
+                                                    }
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -1223,21 +1242,27 @@ export function PatientAccountPageClient({
                                             >
                                                 Contact number
                                             </Label>
-                                            <PhoneInput
-                                                name="emergencyContactNumber"
-                                                defaultCountry="ph"
-                                                placeholder="09XXXXXXXXX"
-                                                value={formatPhoneInputDisplay(profile.emergencyco_num)}
-                                                onChange={(value) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        emergencyco_num: normalizePhilippinePhoneInput(value),
-                                                    })
-                                                }
-                                                className="w-full"
-                                                inputClassName="text-emerald-900"
-                                                forceDialCode
-                                            />
+                                            <div className="flex">
+                                                <span className="flex items-center rounded-l-md border border-input bg-emerald-50 px-3 text-sm font-semibold text-emerald-800">
+                                                    {PHONE_PREFIX}
+                                                </span>
+                                                <Input
+                                                    id="emergency-contact-number"
+                                                    name="emergencyContactNumber"
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    className="rounded-l-none border-l-0"
+                                                    placeholder="XXXXXXXXX"
+                                                    value={extractSubscriberDigits(profile.emergencyco_num)}
+                                                    onChange={(event) =>
+                                                        setProfile({
+                                                            ...profile,
+                                                            emergencyco_num: buildPhoneNumberFromSubscriber(event.target.value),
+                                                        })
+                                                    }
+                                                />
+                                            </div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label
