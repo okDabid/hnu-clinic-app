@@ -39,6 +39,14 @@ function parseDateRange(dateParam: string | null) {
     };
 }
 
+function parseDateBoundary(dateParam: string | null, type: "start" | "end") {
+    if (!dateParam) return null;
+    const parsed = new Date(`${dateParam}T00:00:00+08:00`);
+    if (Number.isNaN(parsed.getTime())) return null;
+
+    return type === "start" ? startOfManilaDay(dateParam) : endOfManilaDay(dateParam);
+}
+
 export async function GET(req: NextRequest) {
     try {
         await requireRole([Role.NURSE]);
@@ -46,12 +54,19 @@ export async function GET(req: NextRequest) {
         const url = new URL(req.url);
         const staffRole = url.searchParams.get("staffRole");
         const dateParam = url.searchParams.get("date");
-
-        const range = parseDateRange(dateParam);
+        const fromDate = url.searchParams.get("fromDate");
+        const toDate = url.searchParams.get("toDate");
 
         const where: Prisma.AppointmentWhereInput = {};
-        if (range) {
-            where.appointment_timestart = { gte: range.start, lte: range.end };
+        const startDate = parseDateBoundary(fromDate, "start");
+        const endDate = parseDateBoundary(toDate, "end");
+        const singleRange = !startDate && !endDate ? parseDateRange(dateParam) : null;
+
+        if (startDate || endDate || singleRange) {
+            where.appointment_timestart = {
+                ...(startDate || singleRange?.start ? { gte: startDate ?? singleRange?.start } : {}),
+                ...(endDate || singleRange?.end ? { lte: endDate ?? singleRange?.end } : {}),
+            };
         }
 
         const appointments = await prisma.appointment.findMany({

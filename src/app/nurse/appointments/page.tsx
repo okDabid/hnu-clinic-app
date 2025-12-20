@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarClock, Filter, RefreshCcw } from "lucide-react";
+import { CalendarClock, CalendarDays, Filter, RefreshCcw } from "lucide-react";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
     Table,
     TableBody,
@@ -45,7 +46,8 @@ export default function NurseAppointmentsPage() {
     const [appointments, setAppointments] = useState<NurseAppointment[]>([]);
     const [loading, setLoading] = useState(false);
     const [staffRole, setStaffRole] = useState<string>("all");
-    const [date, setDate] = useState<string>("");
+    const [fromDate, setFromDate] = useState<string>("");
+    const [toDate, setToDate] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
 
     const filteredAppointments = useMemo(() => {
@@ -53,10 +55,12 @@ export default function NurseAppointmentsPage() {
         return appointments.filter((appointment) => {
             const matchesRole =
                 selectedRole === "all" || appointment.staffRole.toLowerCase() === selectedRole;
-            const matchesDate = !date || appointment.date === date;
-            return matchesRole && matchesDate;
+            if (fromDate && appointment.date < fromDate) return false;
+            if (toDate && appointment.date > toDate) return false;
+
+            return matchesRole;
         });
-    }, [appointments, date, staffRole]);
+    }, [appointments, fromDate, staffRole, toDate]);
 
     async function fetchAppointments() {
         setLoading(true);
@@ -64,7 +68,8 @@ export default function NurseAppointmentsPage() {
         try {
             const params = new URLSearchParams();
             if (staffRole && staffRole !== "all") params.set("staffRole", staffRole);
-            if (date) params.set("date", date);
+            if (fromDate) params.set("fromDate", fromDate);
+            if (toDate) params.set("toDate", toDate);
             const res = await fetch(`/api/nurse/appointments?${params.toString()}`, { cache: "no-store" });
             if (!res.ok) throw new Error("Failed to load appointments");
             const data: NurseAppointment[] = await res.json();
@@ -100,30 +105,65 @@ export default function NurseAppointmentsPage() {
         >
             <div className="space-y-6">
                 <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
-                    <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="space-y-1">
-                            <CardTitle className="text-xl text-primary">Appointment filters</CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                                Quickly narrow down bookings by staff assignment and date.
-                            </p>
-                        </div>
-                        <div className="flex w-full flex-col gap-4 md:w-auto md:flex-row md:items-end">
-                            <div className="space-y-2">
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-primary">Date</Label>
-                                <Input
-                                    type="date"
-                                    value={date}
-                                    onChange={(event) => setDate(event.target.value)}
-                                    className="h-10"
-                                />
-                            </div>
-                            <Button className="md:self-end" onClick={fetchAppointments} disabled={loading}>
-                                <CalendarClock className="mr-2 h-4 w-4" /> Apply filters
-                            </Button>
-                        </div>
+                    <CardHeader className="space-y-2">
+                        <CardTitle className="text-xl text-primary">Appointment filters</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                            Quickly narrow down bookings by staff assignment and date.
+                        </p>
                     </CardHeader>
+                    <CardContent className="pt-0">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-primary">Staff role</Label>
+                                <div className="relative">
+                                    <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Select value={staffRole} onValueChange={setStaffRole}>
+                                        <SelectTrigger className="w-full rounded-xl border-primary/30 pl-9">
+                                            <SelectValue placeholder="Select role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {STAFF_ROLES.map((role) => (
+                                                <SelectItem key={role.value} value={role.value}>
+                                                    {role.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-primary">From date</Label>
+                                <div className="relative">
+                                    <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        type="date"
+                                        value={fromDate}
+                                        max={toDate || undefined}
+                                        onChange={(event) => setFromDate(event.target.value)}
+                                        className="rounded-xl border-primary/30 pl-9"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-semibold text-primary">To date</Label>
+                                <div className="relative">
+                                    <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        type="date"
+                                        value={toDate}
+                                        min={fromDate || undefined}
+                                        onChange={(event) => setToDate(event.target.value)}
+                                        className="rounded-xl border-primary/30 pl-9"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-end">
+                                <Button className="w-full" onClick={fetchAppointments} disabled={loading}>
+                                    <CalendarClock className="mr-2 h-4 w-4" /> Apply filters
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
                 </Card>
 
                 <Card className="rounded-3xl border-primary/20 bg-white/90 shadow-sm">
