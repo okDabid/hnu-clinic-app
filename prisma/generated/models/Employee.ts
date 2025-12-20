@@ -31,6 +31,7 @@ export type EmployeeMinAggregateOutputType = {
   fname: string | null
   mname: string | null
   lname: string | null
+  suffix: string | null
   date_of_birth: Date | null
   gender: $Enums.Gender | null
   department_office: string | null
@@ -54,6 +55,7 @@ export type EmployeeMaxAggregateOutputType = {
   fname: string | null
   mname: string | null
   lname: string | null
+  suffix: string | null
   date_of_birth: Date | null
   gender: $Enums.Gender | null
   department_office: string | null
@@ -77,6 +79,7 @@ export type EmployeeCountAggregateOutputType = {
   fname: number
   mname: number
   lname: number
+  suffix: number
   date_of_birth: number
   gender: number
   department_office: number
@@ -102,6 +105,7 @@ export type EmployeeMinAggregateInputType = {
   fname?: true
   mname?: true
   lname?: true
+  suffix?: true
   date_of_birth?: true
   gender?: true
   department_office?: true
@@ -125,6 +129,7 @@ export type EmployeeMaxAggregateInputType = {
   fname?: true
   mname?: true
   lname?: true
+  suffix?: true
   date_of_birth?: true
   gender?: true
   department_office?: true
@@ -148,6 +153,7 @@ export type EmployeeCountAggregateInputType = {
   fname?: true
   mname?: true
   lname?: true
+  suffix?: true
   date_of_birth?: true
   gender?: true
   department_office?: true
@@ -244,6 +250,7 @@ export type EmployeeGroupByOutputType = {
   fname: string
   mname: string | null
   lname: string
+  suffix: string | null
   date_of_birth: Date | null
   gender: $Enums.Gender | null
   department_office: string | null
@@ -288,6 +295,7 @@ export type EmployeeWhereInput = {
   fname?: Prisma.StringFilter<"Employee"> | string
   mname?: Prisma.StringNullableFilter<"Employee"> | string | null
   lname?: Prisma.StringFilter<"Employee"> | string
+  suffix?: Prisma.StringNullableFilter<"Employee"> | string | null
   date_of_birth?: Prisma.DateTimeNullableFilter<"Employee"> | Date | string | null
   gender?: Prisma.EnumGenderNullableFilter<"Employee"> | $Enums.Gender | null
   department_office?: Prisma.StringNullableFilter<"Employee"> | string | null
@@ -312,6 +320,7 @@ export type EmployeeOrderByWithRelationInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrderInput | Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrderInput | Prisma.SortOrder
   date_of_birth?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   department_office?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -341,6 +350,7 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   fname?: Prisma.StringFilter<"Employee"> | string
   mname?: Prisma.StringNullableFilter<"Employee"> | string | null
   lname?: Prisma.StringFilter<"Employee"> | string
+  suffix?: Prisma.StringNullableFilter<"Employee"> | string | null
   date_of_birth?: Prisma.DateTimeNullableFilter<"Employee"> | Date | string | null
   gender?: Prisma.EnumGenderNullableFilter<"Employee"> | $Enums.Gender | null
   department_office?: Prisma.StringNullableFilter<"Employee"> | string | null
@@ -363,6 +373,7 @@ export type EmployeeOrderByWithAggregationInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrderInput | Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrderInput | Prisma.SortOrder
   date_of_birth?: Prisma.SortOrderInput | Prisma.SortOrder
   gender?: Prisma.SortOrderInput | Prisma.SortOrder
   department_office?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -392,6 +403,7 @@ export type EmployeeScalarWhereWithAggregatesInput = {
   fname?: Prisma.StringWithAggregatesFilter<"Employee"> | string
   mname?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   lname?: Prisma.StringWithAggregatesFilter<"Employee"> | string
+  suffix?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   date_of_birth?: Prisma.DateTimeNullableWithAggregatesFilter<"Employee"> | Date | string | null
   gender?: Prisma.EnumGenderNullableWithAggregatesFilter<"Employee"> | $Enums.Gender | null
   department_office?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
@@ -414,6 +426,7 @@ export type EmployeeCreateInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   department_office?: string | null
@@ -438,6 +451,7 @@ export type EmployeeUncheckedCreateInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   department_office?: string | null
@@ -460,6 +474,7 @@ export type EmployeeUpdateInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   department_office?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -484,6 +499,7 @@ export type EmployeeUncheckedUpdateInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   department_office?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -507,6 +523,7 @@ export type EmployeeCreateManyInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   department_office?: string | null
@@ -529,6 +546,7 @@ export type EmployeeUpdateManyMutationInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   department_office?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -552,6 +570,7 @@ export type EmployeeUncheckedUpdateManyInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   department_office?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -580,6 +599,7 @@ export type EmployeeCountOrderByAggregateInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrder
   date_of_birth?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   department_office?: Prisma.SortOrder
@@ -603,6 +623,7 @@ export type EmployeeMaxOrderByAggregateInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrder
   date_of_birth?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   department_office?: Prisma.SortOrder
@@ -626,6 +647,7 @@ export type EmployeeMinOrderByAggregateInput = {
   fname?: Prisma.SortOrder
   mname?: Prisma.SortOrder
   lname?: Prisma.SortOrder
+  suffix?: Prisma.SortOrder
   date_of_birth?: Prisma.SortOrder
   gender?: Prisma.SortOrder
   department_office?: Prisma.SortOrder
@@ -684,6 +706,7 @@ export type EmployeeCreateWithoutUserInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   department_office?: string | null
@@ -706,6 +729,7 @@ export type EmployeeUncheckedCreateWithoutUserInput = {
   fname: string
   mname?: string | null
   lname: string
+  suffix?: string | null
   date_of_birth?: Date | string | null
   gender?: $Enums.Gender | null
   department_office?: string | null
@@ -744,6 +768,7 @@ export type EmployeeUpdateWithoutUserInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   department_office?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -766,6 +791,7 @@ export type EmployeeUncheckedUpdateWithoutUserInput = {
   fname?: Prisma.StringFieldUpdateOperationsInput | string
   mname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lname?: Prisma.StringFieldUpdateOperationsInput | string
+  suffix?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_of_birth?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   gender?: Prisma.NullableEnumGenderFieldUpdateOperationsInput | $Enums.Gender | null
   department_office?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -791,6 +817,7 @@ export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   department_office?: boolean
@@ -815,6 +842,7 @@ export type EmployeeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   department_office?: boolean
@@ -839,6 +867,7 @@ export type EmployeeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   department_office?: boolean
@@ -863,6 +892,7 @@ export type EmployeeSelectScalar = {
   fname?: boolean
   mname?: boolean
   lname?: boolean
+  suffix?: boolean
   date_of_birth?: boolean
   gender?: boolean
   department_office?: boolean
@@ -879,7 +909,7 @@ export type EmployeeSelectScalar = {
   specialization?: boolean
 }
 
-export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"emp_id" | "user_id" | "employee_id" | "fname" | "mname" | "lname" | "date_of_birth" | "gender" | "department_office" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "status" | "bloodtype" | "email" | "specialization", ExtArgs["result"]["employee"]>
+export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"emp_id" | "user_id" | "employee_id" | "fname" | "mname" | "lname" | "suffix" | "date_of_birth" | "gender" | "department_office" | "contactno" | "address" | "allergies" | "medical_cond" | "emergencyco_name" | "emergencyco_num" | "emergencyco_relation" | "status" | "bloodtype" | "email" | "specialization", ExtArgs["result"]["employee"]>
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UsersDefaultArgs<ExtArgs>
 }
@@ -902,6 +932,7 @@ export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     fname: string
     mname: string | null
     lname: string
+    suffix: string | null
     date_of_birth: Date | null
     gender: $Enums.Gender | null
     department_office: string | null
@@ -1346,6 +1377,7 @@ export interface EmployeeFieldRefs {
   readonly fname: Prisma.FieldRef<"Employee", 'String'>
   readonly mname: Prisma.FieldRef<"Employee", 'String'>
   readonly lname: Prisma.FieldRef<"Employee", 'String'>
+  readonly suffix: Prisma.FieldRef<"Employee", 'String'>
   readonly date_of_birth: Prisma.FieldRef<"Employee", 'DateTime'>
   readonly gender: Prisma.FieldRef<"Employee", 'Gender'>
   readonly department_office: Prisma.FieldRef<"Employee", 'String'>
