@@ -182,6 +182,8 @@ export default function DoctorAppointmentsPage() {
     const [actionSubmitting, setActionSubmitting] = useState(false);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
     const [specialization, setSpecialization] = useState<DoctorSpecialization | null>(null);
     const [certificateLoadingId, setCertificateLoadingId] = useState<string | null>(null);
     const preferredMoveStartRef = useRef("");
@@ -310,6 +312,14 @@ export default function DoctorAppointmentsPage() {
                 }
             }
 
+            if (fromDate && appointment.date < fromDate) {
+                return false;
+            }
+
+            if (toDate && appointment.date > toDate) {
+                return false;
+            }
+
             if (!searchTerm) return true;
 
             const haystack = [
@@ -324,7 +334,7 @@ export default function DoctorAppointmentsPage() {
 
             return haystack.includes(searchTerm);
         });
-    }, [appointments, searchTerm, statusFilter]);
+    }, [appointments, searchTerm, statusFilter, fromDate, toDate]);
 
     const selectedMoveSlot = useMemo(
         () => moveSlots.find((slot) => slot.start === newTimeStart) ?? null,
@@ -660,7 +670,7 @@ export default function DoctorAppointmentsPage() {
                     contentClassName="pt-4"
                 >
                     <div className="flex flex-col gap-4">
-                        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium text-primary">Search queue</Label>
                                 <div className="relative">
@@ -675,20 +685,49 @@ export default function DoctorAppointmentsPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium text-primary">Status filter</Label>
-                                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="rounded-xl border-primary/30">
-                                        <SelectValue placeholder="All statuses" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All statuses</SelectItem>
-                                        <SelectItem value="active">Active queue</SelectItem>
-                                        {STATUS_ORDER.map((status) => (
-                                            <SelectItem key={status} value={status.toLowerCase()}>
-                                                {STATUS_LABELS[status]}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+
+                                <div className="relative">
+                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                        <SelectTrigger className="w-full rounded-xl border-primary/30">
+                                            <SelectValue placeholder="All statuses" />
+                                        </SelectTrigger>
+                                        <SelectContent className="w-full">
+                                            <SelectItem value="all">All statuses</SelectItem>
+                                            <SelectItem value="active">Active queue</SelectItem>
+                                            {STATUS_ORDER.map((status) => (
+                                                <SelectItem key={status} value={status.toLowerCase()}>
+                                                    {STATUS_LABELS[status]}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-primary">From date</Label>
+                                <div className="relative">
+                                    <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        type="date"
+                                        value={fromDate}
+                                        max={toDate || undefined}
+                                        onChange={(event) => setFromDate(event.target.value)}
+                                        className="rounded-xl border-primary/30 pl-9"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium text-primary">To date</Label>
+                                <div className="relative">
+                                    <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        type="date"
+                                        value={toDate}
+                                        min={fromDate || undefined}
+                                        onChange={(event) => setToDate(event.target.value)}
+                                        className="rounded-xl border-primary/30 pl-9"
+                                    />
+                                </div>
                             </div>
                         </div>
 
