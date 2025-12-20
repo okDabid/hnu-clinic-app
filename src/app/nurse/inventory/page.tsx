@@ -203,6 +203,22 @@ export default function NurseInventoryPage() {
             return a.clinic.clinic_name.localeCompare(b.clinic.clinic_name);
         });
 
+    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+
+    useEffect(() => {
+        if (filteredItems.length === 0) {
+            setSelectedItem(null);
+            return;
+        }
+
+        setSelectedItem((current) => {
+            if (current && filteredItems.some((item) => item.med_id === current.med_id)) {
+                return current;
+            }
+            return filteredItems[0];
+        });
+    }, [filteredItems]);
+
     const totalInventoryQuantity = items.reduce((total, item) => total + item.quantity, 0);
     const expiringSoonCount = items.reduce(
         (count, item) =>
@@ -511,88 +527,163 @@ export default function NurseInventoryPage() {
                                 <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading inventory...
                             </div>
                         ) : (
-                            <div className="overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <Table className="min-w-215">
-                                        <TableHeader className="bg-primary/10/70">
-                                            <TableRow className="text-slate-900">
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Clinic</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Name</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Category</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Item Type</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Strength</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Total Quantity</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Dispensed (All Time)</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Walk-in Dispensed</TableHead>
-                                                <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Expiry Batches</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredItems.length > 0 ? (
-                                                filteredItems.map((item) => (
-                                                    <TableRow key={item.med_id} className="transition hover:bg-primary/10/70">
-                                                        <TableCell className="text-sm font-medium text-slate-900">
-                                                            {item.clinic.clinic_name}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm text-slate-800">{item.item_name}</TableCell>
-                                                        <TableCell className="text-sm text-slate-800">{item.category}</TableCell>
-                                                        <TableCell className="text-sm text-slate-800">{item.item_type || "-"}</TableCell>
-                                                        <TableCell className="text-sm text-slate-800">
-                                                            {item.strength ? `${item.strength} ${item.unit || ""}` : "-"}
-                                                        </TableCell>
-                                                        <TableCell className="text-sm font-semibold text-primary">{item.quantity}</TableCell>
-                                                        <TableCell className="text-sm text-slate-800">{item.totalDispensed}</TableCell>
-                                                        <TableCell className="text-sm text-slate-800">{item.walkInDispensed}</TableCell>
-                                                        <TableCell>
-                                                            <div className="space-y-1">
-                                                                {item.replenishments.length > 0 ? (
-                                                                    item.replenishments.map((rep, idx) => (
-                                                                        <div
-                                                                            key={idx}
-                                                                            className="flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/10/60 px-3 py-2"
-                                                                        >
-                                                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                                                                <div className="flex flex-col">
-                                                                                    <span className="text-sm font-semibold text-primary">
-                                                                                        {new Date(rep.expiry_date).toLocaleDateString()}
-                                                                                    </span>
-                                                                                    <span className="text-xs text-primary/80">Qty left: {rep.remaining_qty}</span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <Badge
-                                                                                        variant="outline"
-                                                                                        className={`${getBadgeStyles(rep.status)} rounded-full px-3 py-0.5 text-xs font-semibold uppercase tracking-wide`}
-                                                                                    >
-                                                                                        {rep.status}
-                                                                                    </Badge>
-                                                                                    <span className="text-xs font-medium text-primary/80">
-                                                                                        {rep.daysLeft >= 0
-                                                                                            ? `(${rep.daysLeft} day${rep.daysLeft === 1 ? "" : "s"} left)`
-                                                                                            : "Expired"}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))
-                                                                ) : (
-                                                                    <div className="rounded-xl border border-dashed border-primary/30 bg-white/70 p-3 text-xs text-primary/80">
-                                                                        All batches for this item are archived or expired.
-                                                                    </div>
-                                                                )}
+                            <div className="space-y-6 px-6 pb-6">
+                                <div className="overflow-hidden rounded-2xl border border-primary/10 shadow-sm shadow-primary/10">
+                                    <div className="overflow-x-auto">
+                                        <Table className="min-w-215">
+                                            <TableHeader className="bg-primary/10/70">
+                                                <TableRow className="text-slate-900">
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Clinic</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Name</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Category</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Item Type</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Strength</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Total Quantity</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Dispensed (All Time)</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Walk-in Dispensed</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Next Expiry</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredItems.length > 0 ? (
+                                                    filteredItems.map((item) => {
+                                                        const activeBatches = item.replenishments.filter(
+                                                            (rep) => rep.status !== "Expired"
+                                                        );
+                                                        const nextBatch = activeBatches
+                                                            .slice()
+                                                            .sort(
+                                                                (a, b) =>
+                                                                    new Date(a.expiry_date).getTime() -
+                                                                    new Date(b.expiry_date).getTime()
+                                                            )[0];
 
-                                                            </div>
+                                                        return (
+                                                            <TableRow
+                                                                key={item.med_id}
+                                                                onClick={() => setSelectedItem(item)}
+                                                                className={`cursor-pointer transition hover:bg-primary/10/70 ${
+                                                                    selectedItem?.med_id === item.med_id
+                                                                        ? "border-primary/40 bg-primary/5"
+                                                                        : ""
+                                                                }`}
+                                                            >
+                                                                <TableCell className="text-sm font-medium text-slate-900">
+                                                                    {item.clinic.clinic_name}
+                                                                </TableCell>
+                                                                <TableCell className="text-sm text-slate-800">
+                                                                    <div className="flex flex-col">
+                                                                        <span className="font-semibold text-primary">{item.item_name}</span>
+                                                                        <span className="text-xs text-slate-600">Tap to view expiry batches</span>
+                                                                    </div>
+                                                                </TableCell>
+                                                                <TableCell className="text-sm text-slate-800">{item.category}</TableCell>
+                                                                <TableCell className="text-sm text-slate-800">{item.item_type || "-"}</TableCell>
+                                                                <TableCell className="text-sm text-slate-800">
+                                                                    {item.strength ? `${item.strength} ${item.unit || ""}` : "-"}
+                                                                </TableCell>
+                                                                <TableCell className="text-sm font-semibold text-primary">{item.quantity}</TableCell>
+                                                                <TableCell className="text-sm text-slate-800">{item.totalDispensed}</TableCell>
+                                                                <TableCell className="text-sm text-slate-800">{item.walkInDispensed}</TableCell>
+                                                                <TableCell className="text-sm text-slate-800">
+                                                                    {nextBatch ? (
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge
+                                                                                    variant="outline"
+                                                                                    className={`${getBadgeStyles(nextBatch.status)} rounded-full px-3 py-0.5 text-xs font-semibold uppercase tracking-wide`}
+                                                                                >
+                                                                                    {nextBatch.status}
+                                                                                </Badge>
+                                                                                <span className="text-xs font-medium text-primary/80">
+                                                                                    {nextBatch.daysLeft >= 0
+                                                                                        ? `${nextBatch.daysLeft} day${nextBatch.daysLeft === 1 ? "" : "s"} left`
+                                                                                        : "Expired"}
+                                                                                </span>
+                                                                            </div>
+                                                                            <span className="text-xs text-slate-600">
+                                                                                {new Date(nextBatch.expiry_date).toLocaleDateString()}
+                                                                            </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-xs text-slate-500">All batches archived</span>
+                                                                    )}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <TableRow>
+                                                        <TableCell colSpan={9} className="text-center text-sm text-slate-500 py-6">
+                                                            No items found. Adjust your filters to see inventory.
                                                         </TableCell>
                                                     </TableRow>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-2xl border border-primary/20 bg-white/70 p-4 shadow-sm shadow-primary/20">
+                                    <div className="flex items-center justify-between gap-3 border-b border-primary/10 pb-3">
+                                        <div>
+                                            <p className="text-sm font-semibold text-primary">Expiry Batches</p>
+                                            <p className="text-xs text-slate-600">
+                                                {selectedItem
+                                                    ? `${selectedItem.item_name} • ${selectedItem.clinic.clinic_name}`
+                                                    : "Select a medicine to view its batches"}
+                                            </p>
+                                        </div>
+                                        {selectedItem && (
+                                            <Badge variant="outline" className="rounded-full border-primary/30 bg-primary/10 text-primary">
+                                                {selectedItem.replenishments.length} active batch
+                                                {selectedItem.replenishments.length === 1 ? "" : "es"}
+                                            </Badge>
+                                        )}
+                                    </div>
+
+                                    {selectedItem ? (
+                                        <div className="mt-4 space-y-3">
+                                            {selectedItem.replenishments.length > 0 ? (
+                                                selectedItem.replenishments.map((rep, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex flex-col gap-3 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3"
+                                                    >
+                                                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-semibold text-primary">
+                                                                    Expiry: {new Date(rep.expiry_date).toLocaleDateString()}
+                                                                </span>
+                                                                <span className="text-xs text-slate-600">Remaining quantity: {rep.remaining_qty}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={`${getBadgeStyles(rep.status)} rounded-full px-3 py-0.5 text-xs font-semibold uppercase tracking-wide`}
+                                                                >
+                                                                    {rep.status}
+                                                                </Badge>
+                                                                <span className="text-xs font-medium text-primary/80">
+                                                                    {rep.daysLeft >= 0
+                                                                        ? `${rep.daysLeft} day${rep.daysLeft === 1 ? "" : "s"} left`
+                                                                        : "Expired"}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 ))
                                             ) : (
-                                                <TableRow>
-                                                    <TableCell colSpan={9} className="text-center text-sm text-slate-500 py-6">
-                                                        No items found. Adjust your filters to see inventory.
-                                                    </TableCell>
-                                                </TableRow>
+                                                <div className="rounded-xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-primary/80">
+                                                    All batches for this item are archived or expired.
+                                                </div>
                                             )}
-                                        </TableBody>
-                                    </Table>
+                                        </div>
+                                    ) : (
+                                        <div className="mt-4 rounded-xl border border-dashed border-primary/30 bg-white/70 p-4 text-sm text-primary/80">
+                                            Choose a medicine from the table to view its expiry details.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
