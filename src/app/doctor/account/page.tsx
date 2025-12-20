@@ -24,13 +24,8 @@ import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import {
-    formatPhoneInputDisplay,
-    normalizePhilippinePhoneInput,
-    validateAndNormalizeContacts,
-} from "@/lib/validation";
+import { formatPhoneInputDisplay, validateAndNormalizeContacts } from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
-import { PhoneInput } from "react-international-phone";
 
 import DoctorAccountLoading from "./loading";
 
@@ -69,6 +64,24 @@ type Profile = {
     address?: string | null;
     allergies?: string | null;
 };
+
+const PHONE_PREFIX = "09";
+
+function extractSubscriberDigits(value?: string | null) {
+    const formatted = formatPhoneInputDisplay(value);
+    if (!formatted) return "";
+
+    if (formatted.startsWith(PHONE_PREFIX)) {
+        return formatted.slice(PHONE_PREFIX.length, PHONE_PREFIX.length + 9);
+    }
+
+    return formatted.replace(/\D/g, "").slice(0, 9);
+}
+
+function buildPhoneNumberFromSubscriber(subscriber: string) {
+    const digits = subscriber.replace(/\D/g, "").slice(0, 9);
+    return digits ? `${PHONE_PREFIX}${digits}` : "";
+}
 
 export default function DoctorAccountPage() {
     const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
@@ -688,20 +701,25 @@ export default function DoctorAccountPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Contact number</Label>
-                                            <PhoneInput
-                                                defaultCountry="ph"
-                                                placeholder="09XXXXXXXXX"
-                                                value={formatPhoneInputDisplay(profile.contactno)}
-                                                onChange={(value) =>
-                                                    setProfile({
-                                                        ...profile,
-                                                        contactno: normalizePhilippinePhoneInput(value),
-                                                    })
-                                                }
-                                                className="w-full"
-                                                inputClassName="text-emerald-900"
-                                                forceDialCode
-                                            />
+                                            <div className="flex">
+                                                <span className="flex items-center rounded-l-md border border-input bg-emerald-50 px-3 text-sm font-semibold text-emerald-800">
+                                                    {PHONE_PREFIX}
+                                                </span>
+                                                <Input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    className="rounded-l-none border-l-0"
+                                                    placeholder="XXXXXXXXX"
+                                                    value={extractSubscriberDigits(profile.contactno)}
+                                                    onChange={(event) =>
+                                                        setProfile({
+                                                            ...profile,
+                                                            contactno: buildPhoneNumberFromSubscriber(event.target.value),
+                                                        })
+                                                    }
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
