@@ -60,7 +60,12 @@ export async function POST(req: Request) {
 
         const payload = await req.json();
         const roleEnum = payload.role as Role;
+        const patientType = payload.patientType as string | undefined;
         const workingScholar = Boolean(payload.workingScholar);
+
+        if (!Object.values(Role).includes(roleEnum)) {
+            return NextResponse.json({ error: "Invalid role provided." }, { status: 400 });
+        }
 
         const fname = typeof payload.fname === "string" ? payload.fname.trim() : "";
         const mname = typeof payload.mname === "string" ? payload.mname.trim() : "";
@@ -95,25 +100,54 @@ export async function POST(req: Request) {
             );
         }
 
+        if ((roleEnum === Role.PATIENT && patientType === "employee") || roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
+            if (!payload.employee_id || typeof payload.employee_id !== "string") {
+                return NextResponse.json(
+                    { error: "Employee ID is required for this account type." },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (roleEnum === Role.PATIENT && patientType === "student") {
+            if (!payload.student_id || typeof payload.student_id !== "string") {
+                return NextResponse.json(
+                    { error: "Student ID is required for student patients." },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (roleEnum === Role.PATIENT && patientType !== "student" && patientType !== "employee") {
+            return NextResponse.json({ error: "Invalid patient type." }, { status: 400 });
+        }
+
         // Determine username
         let username: string;
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
             username = payload.employee_id;
-        } else if (roleEnum === Role.PATIENT && payload.patientType === "student") {
+        } else if (roleEnum === Role.PATIENT && patientType === "student") {
             username = payload.student_id;
-        } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
+        } else if (roleEnum === Role.PATIENT && patientType === "employee") {
             username = payload.employee_id;
         } else {
             const firstForUsername = fname.toLowerCase().replace(/[^a-z]/g, "");
             const lastForUsername = lname.toLowerCase().replace(/[^a-z]/g, "");
             const suffixForUsername = suffix ? suffix.toLowerCase().replace(/[^a-z]/g, "") : "";
+
+            if (!firstForUsername && !lastForUsername && !suffixForUsername) {
+                return NextResponse.json(
+                    { error: "Please provide at least one valid name part to generate a username." },
+                    { status: 400 }
+                );
+            }
             username = [firstForUsername, lastForUsername, suffixForUsername]
                 .filter(Boolean)
                 .join(".");
         }
 
-        const isStudentPatient = roleEnum === Role.PATIENT && payload.patientType === "student";
-        const isEmployeePatient = roleEnum === Role.PATIENT && payload.patientType === "employee";
+        const isStudentPatient = roleEnum === Role.PATIENT && patientType === "student";
+        const isEmployeePatient = roleEnum === Role.PATIENT && patientType === "employee";
         const isEmployeeRole = roleEnum === Role.NURSE || roleEnum === Role.DOCTOR;
 
         if (isStudentPatient) {

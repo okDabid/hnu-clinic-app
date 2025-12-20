@@ -1071,7 +1071,7 @@ export function NurseAccountsPageClient({
                                     title="Personal information"
                                     description="Keep your name details up to date."
                                 >
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">First name</Label>
                                             <Input value={profile.fname} onChange={(event) => setProfile({ ...profile, fname: event.target.value })} />
@@ -1083,6 +1083,14 @@ export function NurseAccountsPageClient({
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Last name</Label>
                                             <Input value={profile.lname} onChange={(event) => setProfile({ ...profile, lname: event.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
+                                            <Input
+                                                value={profile.suffix || ""}
+                                                onChange={(event) => setProfile({ ...profile, suffix: event.target.value })}
+                                                placeholder="Jr., III, etc."
+                                            />
                                         </div>
                                     </div>
                                 </AccountSection>
