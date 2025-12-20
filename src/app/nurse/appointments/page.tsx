@@ -23,7 +23,6 @@ import { formatAppointmentWindow, humanizeEnumValue } from "@/lib/patient-format
 const STAFF_ROLES = [
     { label: "All staff", value: "all" },
     { label: "Doctors", value: "doctor" },
-    { label: "Nurses", value: "nurse" },
     { label: "Scholars", value: "scholar" },
 ] as const;
 
