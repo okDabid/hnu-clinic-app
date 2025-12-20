@@ -109,21 +109,6 @@ export default function NurseAppointmentsPage() {
                         </div>
                         <div className="flex w-full flex-col gap-4 md:w-auto md:flex-row md:items-end">
                             <div className="space-y-2">
-                                <Label className="text-sm font-semibold text-primary">Staff role</Label>
-                                <div className="flex items-center gap-2">
-                                    <Filter className="h-4 w-4 text-muted-foreground" />
-                                    <select
-                                        className="h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none"
-                                        value={staffRole}
-                                        onChange={(event) => setStaffRole(event.target.value)}
-                                    >
-                                        {STAFF_ROLES.map((role) => (
-                                            <option key={role.value} value={role.value}>
-                                                {role.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-sm font-semibold text-primary">Date</Label>
@@ -161,13 +146,13 @@ export default function NurseAppointmentsPage() {
                                 <Table className="min-w-full text-sm">
                                     <TableHeader>
                                         <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                            <TableHead className="min-w-[160px]">Patient</TableHead>
-                                            <TableHead className="min-w-[140px]">Type</TableHead>
-                                            <TableHead className="min-w-[200px]">Schedule</TableHead>
-                                            <TableHead className="min-w-[160px]">Clinic</TableHead>
-                                            <TableHead className="min-w-[120px]">Staff role</TableHead>
-                                            <TableHead className="min-w-[160px]">Assigned staff</TableHead>
-                                            <TableHead className="min-w-[140px]">Status</TableHead>
+                                            <TableHead className="min-w-40">Patient</TableHead>
+                                            <TableHead className="min-w-35">Type</TableHead>
+                                            <TableHead className="min-w-50">Schedule</TableHead>
+                                            <TableHead className="min-w-40">Clinic</TableHead>
+                                            <TableHead className="min-w-30">Staff role</TableHead>
+                                            <TableHead className="min-w-40">Assigned staff</TableHead>
+                                            <TableHead className="min-w-35">Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
