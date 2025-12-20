@@ -52,6 +52,11 @@ const bloodTypeEnumMap: Record<string, string> = {
     O_NEG: "O-",
 };
 
+const formatFullName = (fname?: string | null, mname?: string | null, lname?: string | null, suffix?: string | null) => {
+    const base = [fname, mname, lname].filter(Boolean).join(" ");
+    return suffix ? `${base}${base ? ", " : ""}${suffix}` : base;
+};
+
 type Profile = {
     user_id: string;
     username: string;
@@ -60,6 +65,7 @@ type Profile = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     isWorkingScholar: boolean;
     date_of_birth?: string;
     email?: string;
@@ -90,6 +96,7 @@ function normalizeProfile(
         fname: String(profile?.fname ?? ""),
         mname: (profile?.mname as string | null) ?? "",
         lname: String(profile?.lname ?? ""),
+        suffix: (profile?.suffix as string | null) ?? "",
         date_of_birth: (profile?.date_of_birth as string | undefined) ?? undefined,
         email: (profile?.email as string | null) ?? "",
         contactno: (profile?.contactno as string | null) ?? "",
@@ -303,7 +310,7 @@ export default function ScholarAccountPage() {
                             <div className="rounded-xl border p-4">
                                 <dt className="text-xs uppercase tracking-wide text-gray-500">Full name</dt>
                                 <dd className="text-sm font-semibold text-primary">
-                                    {[profile.fname, profile.mname, profile.lname].filter(Boolean).join(" ") || "—"}
+                                    {formatFullName(profile.fname, profile.mname, profile.lname, profile.suffix) || "—"}
                                 </dd>
                             </div>
                             <div className="rounded-xl border p-4">

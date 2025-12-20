@@ -63,6 +63,7 @@ function buildEmployeeUpdateInput(
     data.fname = stringField("fname");
     data.mname = stringField("mname");
     data.lname = stringField("lname");
+    data.suffix = stringField("suffix");
     data.email = stringField("email");
     data.contactno = stringField("contactno");
     data.address = stringField("address");

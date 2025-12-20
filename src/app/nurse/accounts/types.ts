@@ -11,6 +11,7 @@ export type NurseAccountsUserApi = {
     fname?: string;
     mname?: string | null;
     lname?: string;
+    suffix?: string | null;
     specialization?: "Physician" | "Dentist" | null;
     patientType?: "student" | "employee" | null;
     isWorkingScholar?: boolean;
@@ -26,6 +27,7 @@ export type NurseAccountProfileApi = {
         fname?: string;
         mname?: string | null;
         lname?: string;
+        suffix?: string | null;
         date_of_birth?: string;
         gender?: string | null;
         contactno?: string | null;
@@ -55,6 +57,7 @@ export type NurseAccountProfile = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     date_of_birth?: string;
     gender?: string | null;
     contactno?: string | null;
@@ -99,15 +102,22 @@ export function normalizeNurseAccountUsers(
         }
 
         seen.add(dedupKey);
+        const fullName =
+            user.fullName ||
+            [user.fname, user.mname, user.lname].filter(Boolean).join(" ") ||
+            "Unnamed";
+
+        const formattedFullName =
+            user.suffix && fullName !== "Unnamed"
+                ? `${fullName}, ${user.suffix}`
+                : fullName;
+
         usersData.push({
             user_id: user.user_id || user.accountId || user.id || "N/A",
             accountId,
             role,
             status: user.status || "Inactive",
-            fullName:
-                user.fullName ||
-                [user.fname, user.mname, user.lname].filter(Boolean).join(" ") ||
-                "Unnamed",
+            fullName: formattedFullName,
             specialization: user.specialization ?? null,
             patientType: (user.patientType as NurseAccountUser["patientType"]) ?? null,
             isWorkingScholar: Boolean(user.isWorkingScholar),
@@ -153,5 +163,6 @@ export function normalizeNurseAccountProfile(
         address: response.profile?.address || "",
         bloodtype: bloodTypeValue,
         allergies: response.profile?.allergies || "",
+        suffix: response.profile?.suffix || "",
     };
 }

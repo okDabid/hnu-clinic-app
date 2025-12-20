@@ -96,6 +96,7 @@ type CreateUserPayload = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     employee_id?: string | null;
     student_id?: string | null;
     patientType?: "student" | "employee" | null;
@@ -107,6 +108,16 @@ type CreateUserResponse = {
     id?: string;
     password?: string;
     error?: string;
+};
+
+const buildFullName = (
+    fname?: string,
+    mname?: string | null,
+    lname?: string,
+    suffix?: string | null
+) => {
+    const base = [fname, mname, lname].filter(Boolean).join(" ");
+    return suffix ? `${base}, ${suffix}` : base;
 };
 
 export type NurseAccountsPageClientProps = {
@@ -413,8 +424,34 @@ export function NurseAccountsPageClient({
         const fname = getTrimmedValue("fname");
         const mnameRaw = getTrimmedValue("mname");
         const lname = getTrimmedValue("lname");
+        const suffix = getTrimmedValue("suffix");
         const employeeId = getTrimmedValue("employee_id");
         const studentId = getTrimmedValue("student_id");
+
+        const namePattern = /^[A-Za-z][A-Za-z\s'-.]*$/;
+        const validateNameField = (value: string, label: string, required: boolean) => {
+            if (!value) {
+                if (required) {
+                    toast.error(`${label} is required.`, { position: "top-center" });
+                    return false;
+                }
+                return true;
+            }
+
+            if (!namePattern.test(value)) {
+                toast.error(`${label} can only include letters, apostrophes, hyphens, or periods.`, {
+                    position: "top-center",
+                });
+                return false;
+            }
+
+            return true;
+        };
+
+        if (!validateNameField(fname, "First name", true)) return;
+        if (!validateNameField(mnameRaw, "Middle name", false)) return;
+        if (!validateNameField(lname, "Last name", true)) return;
+        if (!validateNameField(suffix, "Suffix", false)) return;
 
         const isNumeric = (value: string) => /^\d+$/.test(value);
 
@@ -433,6 +470,7 @@ export function NurseAccountsPageClient({
             fname,
             mname: mnameRaw || null,
             lname,
+            suffix: suffix || null,
             employee_id:
                 role === "NURSE" ||
                     role === "DOCTOR" ||
@@ -705,7 +743,7 @@ export function NurseAccountsPageClient({
     };
 
     const pendingFullName = pendingPayload
-        ? [pendingPayload.fname, pendingPayload.mname, pendingPayload.lname].filter(Boolean).join(" ")
+        ? buildFullName(pendingPayload.fname, pendingPayload.mname, pendingPayload.lname, pendingPayload.suffix)
         : "";
 
     const pendingIdentifier = pendingPayload
@@ -1033,7 +1071,7 @@ export function NurseAccountsPageClient({
                                     title="Personal information"
                                     description="Keep your name details up to date."
                                 >
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">First name</Label>
                                             <Input value={profile.fname} onChange={(event) => setProfile({ ...profile, fname: event.target.value })} />
@@ -1045,6 +1083,14 @@ export function NurseAccountsPageClient({
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Last name</Label>
                                             <Input value={profile.lname} onChange={(event) => setProfile({ ...profile, lname: event.target.value })} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
+                                            <Input
+                                                value={profile.suffix || ""}
+                                                onChange={(event) => setProfile({ ...profile, suffix: event.target.value })}
+                                                placeholder="Jr., III, etc."
+                                            />
                                         </div>
                                     </div>
                                 </AccountSection>
@@ -1224,7 +1270,7 @@ export function NurseAccountsPageClient({
                             )}
 
                             {/* Name Fields */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <Label className="block mb-1 font-medium">First Name</Label>
                                     <Input name="fname" required />
@@ -1236,6 +1282,10 @@ export function NurseAccountsPageClient({
                                 <div>
                                     <Label className="block mb-1 font-medium">Last Name</Label>
                                     <Input name="lname" required />
+                                </div>
+                                <div>
+                                    <Label className="block mb-1 font-medium">Suffix</Label>
+                                    <Input name="suffix" placeholder="Jr., III" />
                                 </div>
                             </div>
 

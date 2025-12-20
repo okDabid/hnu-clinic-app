@@ -61,6 +61,7 @@ type Profile = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     date_of_birth?: string;
     gender?: string | null;
     email?: string;
@@ -112,6 +113,7 @@ export default function DoctorAccountPage() {
                 fname: data.profile?.fname || "",
                 mname: data.profile?.mname || "",
                 lname: data.profile?.lname || "",
+                suffix: data.profile?.suffix || "",
                 date_of_birth: data.profile?.date_of_birth || "",
                 gender: data.profile?.gender || "",
                 contactno: data.profile?.contactno || "",
@@ -630,6 +632,14 @@ export default function DoctorAccountPage() {
                                             <Input
                                                 value={profile.lname}
                                                 onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
+                                            <Input
+                                                value={profile.suffix || ""}
+                                                onChange={(e) => setProfile({ ...profile, suffix: e.target.value })}
+                                                placeholder="Jr., III, etc."
                                             />
                                         </div>
                                     </div>

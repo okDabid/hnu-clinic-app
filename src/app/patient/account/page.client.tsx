@@ -882,7 +882,7 @@ export function PatientAccountPageClient({
                                     title="Personal information"
                                     description="Keep your basic profile details current for accurate records."
                                 >
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="first-name" className="text-sm font-medium text-emerald-900">
                                                 First name
@@ -914,6 +914,18 @@ export function PatientAccountPageClient({
                                                 name="lastName"
                                                 value={profile.lname}
                                                 onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="suffix" className="text-sm font-medium text-emerald-900">
+                                                Suffix
+                                            </Label>
+                                            <Input
+                                                id="suffix"
+                                                name="suffix"
+                                                placeholder="Jr., III, etc."
+                                                value={profile.suffix || ""}
+                                                onChange={(e) => setProfile({ ...profile, suffix: e.target.value })}
                                             />
                                         </div>
                                     </div>
