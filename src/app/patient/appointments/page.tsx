@@ -1265,12 +1265,12 @@ export default function PatientAppointmentsPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                        <TableHead className="min-w-[180px]">Clinic</TableHead>
+                                        <TableHead className="min-w-45">Clinic</TableHead>
                                         <TableHead className="min-w-40">Doctor</TableHead>
-                                        <TableHead className="min-w-[120px]">Date</TableHead>
-                                        <TableHead className="min-w-[120px]">Time</TableHead>
-                                        <TableHead className="min-w-[120px]">Status</TableHead>
-                                        <TableHead className="w-[110px] text-right">Actions</TableHead>
+                                        <TableHead className="min-w-30">Date</TableHead>
+                                        <TableHead className="min-w-30">Time</TableHead>
+                                        <TableHead className="min-w-30">Status</TableHead>
+                                        <TableHead className="w-27.5 text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>

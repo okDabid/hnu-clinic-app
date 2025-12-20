@@ -863,7 +863,7 @@ export default function DoctorAppointmentsPage() {
                                                                     }}
                                                                     disabled={!canManage}
                                                                 >
-                                                                    <Move className="mr-2 h-4 w-4" /> Move appointment
+                                                                    <Move className="mr-2 h-4 w-4" /> Reschedule appointment
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuItem
                                                                     onClick={() => {
