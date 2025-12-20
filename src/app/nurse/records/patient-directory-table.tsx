@@ -13,14 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Loader2 } from "lucide-react";
 
-import {
-    formatAppointmentWindow,
-    formatDepartment,
-    formatProgram,
-    formatStaffName,
-    formatYearLevel,
-    PATIENT_STATUS_CLASSES,
-} from "@/lib/patient-format";
+import { formatDepartment, formatProgram, formatYearLevel, PATIENT_STATUS_CLASSES } from "@/lib/patient-format";
 import { TablePagination } from "@/components/table-pagination";
 
 import type { PatientRecord } from "./types";
@@ -109,21 +102,6 @@ function PatientDirectoryTableComponent({
                     <TableCell>
                         <Badge className={`rounded-full px-2 py-1 text-xs ${statusClasses}`}>{record.status}</Badge>
                     </TableCell>
-                    <TableCell className="whitespace-pre-wrap">
-                        {record.latestAppointment?.timestart ? (
-                            <div className="flex flex-col">
-                                <span>{formatAppointmentWindow(record.latestAppointment)}</span>
-                                <span className="text-xs text-muted-foreground">
-                                    Doctor: {formatStaffName(record.latestAppointment.doctor)}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                    Nurse: {formatStaffName(record.latestAppointment.consultation?.nurse)}
-                                </span>
-                            </div>
-                        ) : (
-                            <span className="text-muted-foreground">—</span>
-                        )}
-                    </TableCell>
                 </TableRow>
             );
         });
@@ -139,13 +117,12 @@ function PatientDirectoryTableComponent({
                         <TableHead className="min-w-[120px]">Type</TableHead>
                         <TableHead className="min-w-[220px]">Program / Department</TableHead>
                         <TableHead className="min-w-[120px]">Status</TableHead>
-                        <TableHead className="min-w-[220px]">Latest appointment</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {loading ? (
                         <TableRow>
-                            <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                            <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                                 <div className="flex items-center justify-center gap-2 text-sm">
                                     <Loader2 className="h-4 w-4 animate-spin" /> Loading patient records...
                                 </div>
@@ -153,7 +130,7 @@ function PatientDirectoryTableComponent({
                         </TableRow>
                     ) : rows.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                            <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                                 No patient records match your filters.
                             </TableCell>
                         </TableRow>
