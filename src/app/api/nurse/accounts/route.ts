@@ -42,6 +42,8 @@ async function ensureUniqueUsername(client: Prisma.TransactionClient, base: stri
     return candidate;
 }
 
+const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
+
 // ---------------- CREATE USER ----------------
 export async function POST(req: Request) {
     try {
@@ -50,6 +52,34 @@ export async function POST(req: Request) {
         const payload = await req.json();
         const roleEnum = payload.role as Role;
         const workingScholar = Boolean(payload.workingScholar);
+
+        const fname = typeof payload.fname === "string" ? payload.fname.trim() : "";
+        const mname = typeof payload.mname === "string" ? payload.mname.trim() : "";
+        const lname = typeof payload.lname === "string" ? payload.lname.trim() : "";
+        const suffix = typeof payload.suffix === "string" ? payload.suffix.trim() : "";
+
+        const isInvalidName = (value: string) => !namePattern.test(value);
+
+        if (!fname || !lname || isInvalidName(fname) || isInvalidName(lname)) {
+            return NextResponse.json(
+                { error: "First and last name must only include letters, spaces, apostrophes, periods, or hyphens." },
+                { status: 400 }
+            );
+        }
+
+        if (mname && isInvalidName(mname)) {
+            return NextResponse.json(
+                { error: "Middle name must only include letters, spaces, apostrophes, periods, or hyphens." },
+                { status: 400 }
+            );
+        }
+
+        if (suffix && isInvalidName(suffix)) {
+            return NextResponse.json(
+                { error: "Suffix must only include letters, spaces, apostrophes, periods, or hyphens." },
+                { status: 400 }
+            );
+        }
 
         // Determine username
         let username: string;
@@ -60,7 +90,9 @@ export async function POST(req: Request) {
         } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
             username = payload.employee_id;
         } else {
-            username = `${payload.fname.toLowerCase()}.${payload.lname.toLowerCase()}`;
+            const suffixSlug = suffix.replace(/[^a-zA-Z]/g, "").toLowerCase();
+            const baseUsername = `${fname.toLowerCase()}.${lname.toLowerCase()}`;
+            username = `${baseUsername}${suffixSlug ? `.${suffixSlug}` : ""}`;
         }
 
         const isStudentPatient = roleEnum === Role.PATIENT && payload.patientType === "student";
@@ -101,9 +133,10 @@ export async function POST(req: Request) {
 
         // Shared fields
         const sharedProfileData = {
-            fname: payload.fname,
-            mname: payload.mname,
-            lname: payload.lname,
+            fname,
+            mname: mname || null,
+            lname,
+            suffix: suffix || null,
             bloodtype: bloodTypeMap[payload.bloodtype] || null,
             address: payload.address ?? null,
             allergies: payload.allergies ?? null,
@@ -224,12 +257,17 @@ export async function GET() {
                 displayId = u.employee?.employee_id?.replace(/-\d+$/, "") ?? u.username.replace(/-\d+$/, "");
             }
 
-            const fullName =
-                u.student?.fname && u.student?.lname
-                    ? `${u.student.fname} ${u.student.lname}`
-                    : u.employee?.fname && u.employee?.lname
-                        ? `${u.employee.fname} ${u.employee.lname}`
-                        : u.username;
+            const fullName = (() => {
+                if (u.student?.fname && u.student?.lname) {
+                    const base = `${u.student.fname} ${u.student.lname}`;
+                    return `${base}${u.student.suffix ? `, ${u.student.suffix}` : ""}`;
+                }
+                if (u.employee?.fname && u.employee?.lname) {
+                    const base = `${u.employee.fname} ${u.employee.lname}`;
+                    return `${base}${u.employee.suffix ? `, ${u.employee.suffix}` : ""}`;
+                }
+                return u.username;
+            })();
 
             const bloodTypeRaw = u.student?.bloodtype || u.employee?.bloodtype || null;
             const bloodTypeDisplay = bloodTypeRaw ? bloodTypeEnumMap[bloodTypeRaw] || bloodTypeRaw : null;
@@ -240,6 +278,10 @@ export async function GET() {
                 role: u.role,
                 status: u.status,
                 fullName,
+                fname: u.student?.fname ?? u.employee?.fname ?? undefined,
+                mname: u.student?.mname ?? u.employee?.mname ?? undefined,
+                lname: u.student?.lname ?? u.employee?.lname ?? undefined,
+                suffix: u.student?.suffix ?? u.employee?.suffix ?? undefined,
                 email: u.student?.email ?? u.employee?.email ?? null,
                 contactno: u.student?.contactno ?? u.employee?.contactno ?? null,
                 bloodtype: bloodTypeDisplay,

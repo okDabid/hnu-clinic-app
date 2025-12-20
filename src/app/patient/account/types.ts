@@ -14,6 +14,7 @@ export type PatientAccountProfileApi = {
         fname?: string;
         mname?: string | null;
         lname?: string;
+        suffix?: string | null;
         date_of_birth?: string;
         email?: string;
         contactno?: string | null;
@@ -101,6 +102,7 @@ export type PatientAccountProfile = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     date_of_birth?: string;
     email?: string;
     contactno?: string | null;
@@ -143,6 +145,7 @@ export function normalizePatientAccountProfile(
         fname: raw.fname || "",
         mname: raw.mname || "",
         lname: raw.lname || "",
+        suffix: raw.suffix || "",
         date_of_birth: raw.date_of_birth || "",
         email: raw.email || "",
         contactno: raw.contactno || "",
