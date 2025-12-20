@@ -173,28 +173,35 @@ export default function NurseInventoryPage() {
     };
 
     // Apply filters
-    const filteredItems = items.filter((i) => {
-        const matchesSearch =
-            i.item_name.toLowerCase().includes(search.toLowerCase()) ||
-            i.clinic.clinic_name.toLowerCase().includes(search.toLowerCase());
+    const filteredItems = items
+        .filter((i) => {
+            const matchesSearch =
+                i.item_name.toLowerCase().includes(search.toLowerCase()) ||
+                i.clinic.clinic_name.toLowerCase().includes(search.toLowerCase());
 
-        const matchesClinic =
-            clinicFilter === "All" || i.clinic.clinic_name === clinicFilter;
+            const matchesClinic =
+                clinicFilter === "All" || i.clinic.clinic_name === clinicFilter;
 
-        const matchesStatus =
-            statusFilter === "All" ||
-            (statusFilter === "Expired" &&
-                (i.archivedReplenishments.length > 0 ||
-                    i.replenishments.some((r) => r.status === "Expired"))) ||
-            (statusFilter === "Expiring Very Soon" &&
-                i.replenishments.some((r) => r.status === "Expiring Very Soon")) ||
-            (statusFilter === "Expiring Soon" &&
-                i.replenishments.some((r) => r.status === "Expiring Soon")) ||
-            (statusFilter === "Valid" &&
-                i.replenishments.some((r) => r.status === "Valid"));
+            const matchesStatus =
+                statusFilter === "All" ||
+                (statusFilter === "Expired" &&
+                    (i.archivedReplenishments.length > 0 ||
+                        i.replenishments.some((r) => r.status === "Expired"))) ||
+                (statusFilter === "Expiring Very Soon" &&
+                    i.replenishments.some((r) => r.status === "Expiring Very Soon")) ||
+                (statusFilter === "Expiring Soon" &&
+                    i.replenishments.some((r) => r.status === "Expiring Soon")) ||
+                (statusFilter === "Valid" &&
+                    i.replenishments.some((r) => r.status === "Valid"));
 
-        return matchesSearch && matchesClinic && matchesStatus;
-    });
+            return matchesSearch && matchesClinic && matchesStatus;
+        })
+        .sort((a, b) => {
+            const nameComparison = a.item_name.localeCompare(b.item_name);
+            if (nameComparison !== 0) return nameComparison;
+
+            return a.clinic.clinic_name.localeCompare(b.clinic.clinic_name);
+        });
 
     const totalInventoryQuantity = items.reduce((total, item) => total + item.quantity, 0);
     const expiringSoonCount = items.reduce(
@@ -258,7 +265,7 @@ export default function NurseInventoryPage() {
 
                         <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-                                <div className="relative flex-1 min-w-[220px]">
+                                <div className="relative flex-1 min-w-55">
                                     <Input
                                         placeholder="Search items or clinics"
                                         value={search}
@@ -506,7 +513,7 @@ export default function NurseInventoryPage() {
                         ) : (
                             <div className="overflow-hidden">
                                 <div className="overflow-x-auto">
-                                    <Table className="min-w-[860px]">
+                                    <Table className="min-w-215">
                                         <TableHeader className="bg-primary/10/70">
                                             <TableRow className="text-slate-900">
                                                 <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Clinic</TableHead>
@@ -603,7 +610,7 @@ export default function NurseInventoryPage() {
                     <CardContent className="flex-1 flex flex-col px-0">
                         <div className="overflow-hidden">
                             <div className="overflow-x-auto">
-                                <Table className="min-w-[860px]">
+                                <Table className="min-w-215">
                                     <TableHeader className="bg-primary/10/70">
                                         <TableRow className="text-slate-900">
                                             <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Clinic</TableHead>
