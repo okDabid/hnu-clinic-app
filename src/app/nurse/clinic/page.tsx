@@ -32,7 +32,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { formatManilaISODate, formatTimeRange, PH_TIME_ZONE } from "@/lib/time";
+import { formatManilaDateTime, formatManilaISODate, formatTimeRange, manilaNow, PH_TIME_ZONE } from "@/lib/time";
 import { toast } from "sonner";
 import {
     CLINIC_CONTACT_NUMBER_LENGTH,
@@ -96,6 +96,19 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
     Cancelled: "border-rose-200 bg-rose-50 text-rose-700",
 };
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const MIN_BOOKING_LEAD_DAYS = 0;
+
+function computeMinBookingDate(): string {
+    const base = manilaNow();
+    const future = new Date(base.getTime() + MIN_BOOKING_LEAD_DAYS * DAY_IN_MS);
+    return toInputDate(future);
+}
+function toInputDate(date: Date): string {
+    const adjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+    return adjusted.toISOString().split("T")[0];
+}
+
 const ACTIVE_STATUSES = new Set(["Pending", "Approved", "Moved"]);
 
 const CONTACT_NUMBER_ERROR_MESSAGE =
@@ -104,6 +117,7 @@ const CONTACT_INPUT_PATTERN = `${PH_MOBILE_PREFIX}[0-9]{${CLINIC_CONTACT_NUMBER_
 
 export default function NurseClinicPage() {
     const [clinics, setClinics] = useState<Clinic[]>([]);
+    const [minBookingDate, setMinBookingDate] = useState(() => computeMinBookingDate());
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
     const [loading, setLoading] = useState(false);
     const [initializing, setInitializing] = useState(true);
@@ -738,6 +752,7 @@ export default function NurseClinicPage() {
                                                     setSelectedDate(date);
                                                 }
                                             }}
+                                            disabled={(day) => day < new Date(`${minBookingDate}T00:00:00+08:00`)}
                                             modifiers={{ hasAppointments: highlightedDates }}
                                             modifiersClassNames={{
                                                 hasAppointments:
