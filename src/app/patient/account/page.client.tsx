@@ -177,6 +177,7 @@ export function PatientAccountPageClient({
     initialPatientType,
     initialProfileLoaded,
 }: PatientAccountPageClientProps) {
+    const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
     const normalizedTypeValue =
         initialPatientType === "student" || initialPatientType === "employee"
             ? initialPatientType
@@ -370,6 +371,28 @@ export function PatientAccountPageClient({
         if (!profile) return;
         if (!profile.fname.trim() || !profile.lname.trim()) {
             toast.error("First and Last Name are required.");
+            return;
+        }
+
+        const isInvalidName = (value: string) => !namePattern.test(value.trim());
+
+        if (isInvalidName(profile.fname)) {
+            toast.error("First name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (profile.mname && isInvalidName(profile.mname)) {
+            toast.error("Middle name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (isInvalidName(profile.lname)) {
+            toast.error("Last name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (profile.suffix && isInvalidName(profile.suffix)) {
+            toast.error("Suffix can only include letters, spaces, apostrophes, periods, or hyphens.");
             return;
         }
         const contactValidation = validateAndNormalizeContacts({
@@ -882,7 +905,7 @@ export function PatientAccountPageClient({
                                     title="Personal information"
                                     description="Keep your basic profile details current for accurate records."
                                 >
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-4">
                                         <div className="space-y-2">
                                             <Label htmlFor="first-name" className="text-sm font-medium text-emerald-900">
                                                 First name
@@ -914,6 +937,18 @@ export function PatientAccountPageClient({
                                                 name="lastName"
                                                 value={profile.lname}
                                                 onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="suffix" className="text-sm font-medium text-emerald-900">
+                                                Suffix
+                                            </Label>
+                                            <Input
+                                                id="suffix"
+                                                name="suffix"
+                                                placeholder="Jr., Sr., III"
+                                                value={profile.suffix || ""}
+                                                onChange={(e) => setProfile({ ...profile, suffix: e.target.value })}
                                             />
                                         </div>
                                     </div>

@@ -61,6 +61,7 @@ type Profile = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     date_of_birth?: string;
     gender?: string | null;
     email?: string;
@@ -70,6 +71,7 @@ type Profile = {
 };
 
 export default function DoctorAccountPage() {
+    const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
     const [initializing, setInitializing] = useState(true);
@@ -112,6 +114,7 @@ export default function DoctorAccountPage() {
                 fname: data.profile?.fname || "",
                 mname: data.profile?.mname || "",
                 lname: data.profile?.lname || "",
+                suffix: data.profile?.suffix || "",
                 date_of_birth: data.profile?.date_of_birth || "",
                 gender: data.profile?.gender || "",
                 contactno: data.profile?.contactno || "",
@@ -138,6 +141,28 @@ export default function DoctorAccountPage() {
 
         if (!profile.fname.trim() || !profile.lname.trim()) {
             toast.error("First and Last Name are required.");
+            return;
+        }
+
+        const isInvalidName = (value: string) => !namePattern.test(value.trim());
+
+        if (isInvalidName(profile.fname)) {
+            toast.error("First name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (profile.mname && isInvalidName(profile.mname)) {
+            toast.error("Middle name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (isInvalidName(profile.lname)) {
+            toast.error("Last name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            return;
+        }
+
+        if (profile.suffix && isInvalidName(profile.suffix)) {
+            toast.error("Suffix can only include letters, spaces, apostrophes, periods, or hyphens.");
             return;
         }
 
@@ -610,7 +635,7 @@ export default function DoctorAccountPage() {
                                     title="Personal information"
                                     description="Keep your basic profile details current for accurate coordination."
                                 >
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">First name</Label>
                                             <Input
@@ -630,6 +655,14 @@ export default function DoctorAccountPage() {
                                             <Input
                                                 value={profile.lname}
                                                 onChange={(e) => setProfile({ ...profile, lname: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
+                                            <Input
+                                                value={profile.suffix || ""}
+                                                onChange={(e) => setProfile({ ...profile, suffix: e.target.value })}
+                                                placeholder="Jr., Sr., III"
                                             />
                                         </div>
                                     </div>

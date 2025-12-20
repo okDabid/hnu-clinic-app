@@ -11,6 +11,7 @@ export type NurseAccountsUserApi = {
     fname?: string;
     mname?: string | null;
     lname?: string;
+    suffix?: string | null;
     specialization?: "Physician" | "Dentist" | null;
     patientType?: "student" | "employee" | null;
     isWorkingScholar?: boolean;
@@ -26,6 +27,7 @@ export type NurseAccountProfileApi = {
         fname?: string;
         mname?: string | null;
         lname?: string;
+        suffix?: string | null;
         date_of_birth?: string;
         gender?: string | null;
         contactno?: string | null;
@@ -42,6 +44,7 @@ export type NurseAccountUser = {
     role: string;
     status: "Active" | "Inactive";
     fullName: string;
+    suffix?: string | null;
     specialization: "Physician" | "Dentist" | null;
     patientType: "student" | "employee" | null;
     isWorkingScholar: boolean;
@@ -55,6 +58,7 @@ export type NurseAccountProfile = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     date_of_birth?: string;
     gender?: string | null;
     contactno?: string | null;
@@ -106,7 +110,8 @@ export function normalizeNurseAccountUsers(
             status: user.status || "Inactive",
             fullName:
                 user.fullName ||
-                [user.fname, user.mname, user.lname].filter(Boolean).join(" ") ||
+                ([user.fname, user.mname, user.lname].filter(Boolean).join(" ") +
+                    (user.suffix ? `, ${user.suffix}` : "")) ||
                 "Unnamed",
             specialization: user.specialization ?? null,
             patientType: (user.patientType as NurseAccountUser["patientType"]) ?? null,
@@ -146,6 +151,7 @@ export function normalizeNurseAccountProfile(
         fname: response.profile?.fname || "",
         mname: response.profile?.mname || "",
         lname: response.profile?.lname || "",
+        suffix: response.profile?.suffix || "",
         date_of_birth: response.profile?.date_of_birth || "",
         gender: response.profile?.gender || "",
         contactno: response.profile?.contactno || "",

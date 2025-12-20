@@ -96,6 +96,7 @@ type CreateUserPayload = {
     fname: string;
     mname?: string | null;
     lname: string;
+    suffix?: string | null;
     employee_id?: string | null;
     student_id?: string | null;
     patientType?: "student" | "employee" | null;
@@ -413,10 +414,12 @@ export function NurseAccountsPageClient({
         const fname = getTrimmedValue("fname");
         const mnameRaw = getTrimmedValue("mname");
         const lname = getTrimmedValue("lname");
+        const suffix = getTrimmedValue("suffix");
         const employeeId = getTrimmedValue("employee_id");
         const studentId = getTrimmedValue("student_id");
 
         const isNumeric = (value: string) => /^\d+$/.test(value);
+        const isInvalidName = (value: string) => !namePattern.test(value);
 
         if (employeeId && !isNumeric(employeeId)) {
             toast.error("Employee ID must contain numbers only.", { position: "top-center" });
@@ -428,11 +431,40 @@ export function NurseAccountsPageClient({
             return;
         }
 
+        if (!fname || isInvalidName(fname)) {
+            toast.error("First name can only include letters, spaces, apostrophes, or hyphens.", {
+                position: "top-center",
+            });
+            return;
+        }
+
+        if (!lname || isInvalidName(lname)) {
+            toast.error("Last name can only include letters, spaces, apostrophes, or hyphens.", {
+                position: "top-center",
+            });
+            return;
+        }
+
+        if (mnameRaw && isInvalidName(mnameRaw)) {
+            toast.error("Middle name can only include letters, spaces, apostrophes, or hyphens.", {
+                position: "top-center",
+            });
+            return;
+        }
+
+        if (suffix && isInvalidName(suffix)) {
+            toast.error("Suffix can only include letters, spaces, apostrophes, periods, or hyphens.", {
+                position: "top-center",
+            });
+            return;
+        }
+
         const payload: CreateUserPayload = {
             role,
             fname,
             mname: mnameRaw || null,
             lname,
+            suffix: suffix || null,
             employee_id:
                 role === "NURSE" ||
                     role === "DOCTOR" ||
@@ -704,8 +736,18 @@ export function NurseAccountsPageClient({
         PATIENT: "Patient",
     };
 
+    const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
+
+    const buildFullName = useCallback(
+        (fname?: string | null, mname?: string | null, lname?: string | null, suffix?: string | null) => {
+            const base = [fname, mname, lname].filter(Boolean).join(" ");
+            return `${base}${suffix ? `, ${suffix}` : ""}`.trim();
+        },
+        []
+    );
+
     const pendingFullName = pendingPayload
-        ? [pendingPayload.fname, pendingPayload.mname, pendingPayload.lname].filter(Boolean).join(" ")
+        ? buildFullName(pendingPayload.fname, pendingPayload.mname, pendingPayload.lname, pendingPayload.suffix)
         : "";
 
     const pendingIdentifier = pendingPayload
@@ -1224,7 +1266,7 @@ export function NurseAccountsPageClient({
                             )}
 
                             {/* Name Fields */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div>
                                     <Label className="block mb-1 font-medium">First Name</Label>
                                     <Input name="fname" required />
@@ -1236,6 +1278,10 @@ export function NurseAccountsPageClient({
                                 <div>
                                     <Label className="block mb-1 font-medium">Last Name</Label>
                                     <Input name="lname" required />
+                                </div>
+                                <div>
+                                    <Label className="block mb-1 font-medium">Suffix</Label>
+                                    <Input name="suffix" placeholder="Jr., Sr., III" />
                                 </div>
                             </div>
 
