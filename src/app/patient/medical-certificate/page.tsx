@@ -85,6 +85,18 @@ export default function PatientMedicalCertificatePage() {
                 throw new Error("Failed to download template");
             }
 
+            if (typeof window !== "undefined") {
+                const anchor = document.createElement("a");
+                anchor.href = "/api/patient/medical-certificate/empty";
+                anchor.target = "_blank";
+                anchor.rel = "noopener noreferrer";
+
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                return;
+            }
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement("a");
