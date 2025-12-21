@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Loader2 } from "lucide-react";
 
 import PatientLayout from "@/components/patient/patient-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { formatManilaDateTime } from "@/lib/time";
 
 type CertificatePayload = {
@@ -35,6 +36,8 @@ export default function PatientMedicalCertificatePage() {
     const [loading, setLoading] = useState(true);
     const [certificate, setCertificate] = useState<CertificatePayload | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [downloading, setDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
 
     const statusBadge = useMemo(() => {
         if (!certificate) return null;
@@ -72,10 +75,41 @@ export default function PatientMedicalCertificatePage() {
 
     const hasCertificate = Boolean(certificate);
 
+    async function handleDownloadTemplate() {
+        try {
+            setDownloadError(null);
+            setDownloading(true);
+
+            const response = await fetch("/api/patient/medical-certificate/empty");
+            if (!response.ok) {
+                throw new Error("Failed to download template");
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "medical-certificate-template.pdf";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+            setDownloadError("We couldn't prepare a blank medical certificate right now. Please try again.");
+        } finally {
+            setDownloading(false);
+        }
+    }
+
     return (
         <PatientLayout
             title="Medical certificate"
-            description="View the status of your latest medical certificate issued by the clinic."
+            description={
+                hasCertificate
+                    ? "Review your active certificate and download a blank copy for printing."
+                    : "View the status of your latest medical certificate issued by the clinic."
+            }
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
                 <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
@@ -149,6 +183,36 @@ export default function PatientMedicalCertificatePage() {
                                 </div>
                             </div>
                         )}
+
+                        <div className="flex flex-col gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-primary">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="font-semibold text-primary">Need a blank certificate?</p>
+                                    <p className="text-primary/80">
+                                        Download an empty template you can print and have signed during your next visit.
+                                    </p>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="border-primary/20 text-primary hover:bg-primary/10"
+                                    onClick={handleDownloadTemplate}
+                                    disabled={downloading}
+                                >
+                                    {downloading ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Preparing PDF...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="mr-2 h-4 w-4" /> Download blank copy
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                            {downloadError ? (
+                                <p className="text-xs font-medium text-amber-800">{downloadError}</p>
+                            ) : null}
+                        </div>
                     </CardContent>
                 </Card>
 
