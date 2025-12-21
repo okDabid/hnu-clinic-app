@@ -28,6 +28,8 @@ export type CertificateContext = {
   doctorTitle: string;
   licenseNumber: string;
   ptrNumber: string;
+  includeCertificateId?: boolean;
+  blankTemplate?: boolean;
 };
 
 export function escapeHtml(value: string) {
@@ -106,7 +108,13 @@ export function formatDateLong(date: Date) {
 }
 
 export function renderCertificateHtml(context: CertificateContext) {
+  const { blankTemplate = false, includeCertificateId = true } = context;
+
   const placeholder = (value?: string, fallback = "Not recorded") => {
+    if (blankTemplate) {
+      return "&nbsp;";
+    }
+
     if (value && value.trim()) {
       return escapeHtml(value);
     }
@@ -119,6 +127,10 @@ export function renderCertificateHtml(context: CertificateContext) {
   };
 
   const credentialValue = (value?: string) => {
+    if (blankTemplate) {
+      return "&nbsp;";
+    }
+
     if (value && value.trim()) {
       return escapeHtml(value);
     }
@@ -155,13 +167,15 @@ export function renderCertificateHtml(context: CertificateContext) {
   );
 
   const noteParts: string[] = [];
-  if (context.reason) {
+  if (!blankTemplate && context.reason) {
     noteParts.push(`Reason for visit: ${context.reason}.`);
   }
-  noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
+  if (!blankTemplate) {
+    noteParts.push(`Consultation recorded on ${context.consultationDate}.`);
+  }
   const notes = placeholder(
     noteParts.map((entry) => entry.trim()).join(" "),
-    "No additional notes were recorded."
+    blankTemplate ? "" : "No additional notes were recorded."
   );
 
   return `<!DOCTYPE html>
@@ -571,9 +585,11 @@ export function renderCertificateHtml(context: CertificateContext) {
 
       <footer>
         <div>Valid until: ${escapeHtml(formatDateLong(context.validUntil))}</div>
-        <div class="certificate-id">Certificate ID: ${escapeHtml(
-    context.certificateId
-  )}</div>
+        ${includeCertificateId
+          ? `<div class="certificate-id">Certificate ID: ${escapeHtml(
+              context.certificateId
+            )}</div>`
+          : ""}
         <div>
           This certificate is issued for any school-related activity and is valid for one (1) year from the date of issuance.
         </div>

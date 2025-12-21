@@ -37,29 +37,31 @@ export async function GET() {
         const consultationDate = formatManilaDateTime(now) ?? issueDateDisplay;
 
         const html = renderCertificateHtml({
-            certificateId: "TBD",
+            certificateId: "",
             issueDate: now,
             validUntil: now,
             issueDateDisplay,
-            patientName: "Patient name",
-            patientType: "Student/Employee",
+            patientName: "",
+            patientType: "",
             age: "",
             sex: "",
             address: "",
             program: "",
             department: "",
             yearLevel: "",
-            clinicName: "Clinic name",
+            clinicName: "",
             consultationDate,
             diagnosis: "",
             findings: "",
             reason: "",
             allergies: [],
             medicalHistory: buildEmptyMedicalHistory(),
-            doctorName: "Attending physician",
-            doctorTitle: "Attending Physician",
+            doctorName: "",
+            doctorTitle: "",
             licenseNumber: "",
             ptrNumber: "",
+            includeCertificateId: false,
+            blankTemplate: true,
         });
 
         const browser = await launchServerlessChromium();
