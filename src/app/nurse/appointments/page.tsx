@@ -200,7 +200,7 @@ export default function NurseAppointmentsPage() {
                         {error ? (
                             <p className="text-sm text-red-600">{error}</p>
                         ) : (
-                            <div className="overflow-x-auto">
+                            <><div className="overflow-x-auto">
                                 <Table className="min-w-full text-sm">
                                     <TableHeader>
                                         <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -254,14 +254,12 @@ export default function NurseAppointmentsPage() {
                                         )}
                                     </TableBody>
                                 </Table>
-                            </div>
-                            <TablePagination
-                                currentPage={currentPage}
-                                totalItems={filteredAppointments.length}
-                                pageSize={pageSize}
-                                loading={loading}
-                                onPageChange={setCurrentPage}
-                            />
+                            </div><TablePagination
+                                    currentPage={currentPage}
+                                    totalItems={filteredAppointments.length}
+                                    pageSize={pageSize}
+                                    loading={loading}
+                                    onPageChange={setCurrentPage} /></>
                         )}
                     </CardContent>
                 </Card>
