@@ -80,20 +80,34 @@ export default function PatientMedicalCertificatePage() {
             setDownloadError(null);
             setDownloading(true);
 
-            const response = await fetch("/api/patient/medical-certificate/empty");
-            if (!response.ok) {
-                throw new Error("Failed to download template");
-            }
+            const pdfUrl = "/api/patient/medical-certificate/empty";
+            const response = await fetch(pdfUrl, { cache: "no-store" });
 
             const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+
+            if (typeof window !== "undefined") {
+                const blobUrl = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = blobUrl;
+                anchor.target = "_blank";
+                anchor.rel = "noopener noreferrer";
+
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+
+                window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+                return;
+            }
+
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
             link.download = "medical-certificate-template.pdf";
             document.body.appendChild(link);
             link.click();
             link.remove();
-            window.URL.revokeObjectURL(url);
+            URL.revokeObjectURL(url);
         } catch (err) {
             console.error(err);
             setDownloadError("We couldn't prepare a blank medical certificate right now. Please try again.");
