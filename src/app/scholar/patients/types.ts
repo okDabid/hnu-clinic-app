@@ -1,3 +1,5 @@
+import { sortByFullName } from "@/lib/sorting";
+
 export type StaffSummary = {
     id: string;
     username: string;
@@ -98,7 +100,5 @@ export function preparePatientRecords(
         return [];
     }
 
-    return [...records]
-        .sort((a, b) => a.fullName.localeCompare(b.fullName, undefined, { sensitivity: "base" }))
-        .map((record) => preparePatientRecord(record));
+    return sortByFullName(records).map((record) => preparePatientRecord(record));
 }

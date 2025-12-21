@@ -18,16 +18,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { parseMedicalHistory, serializeMedicalHistory } from "@/lib/medical-history";
+import { sortByFullName } from "@/lib/sorting";
 
 import DoctorPatientsLoading from "./loading";
 import { PatientDirectoryTable } from "@/app/nurse/records/patient-directory-table";
 import type { RecordDetailsDialogTab } from "@/app/nurse/records/patient-record-dialog";
 import type { PatientRecord } from "@/app/nurse/records/types";
 import { usePagination } from "@/hooks/use-pagination";
-
-function sortPatientsByName<T extends { fullName: string }>(records: T[]): T[] {
-    return [...records].sort((a, b) => a.fullName.localeCompare(b.fullName, undefined, { sensitivity: "base" }));
-}
 
 const RecordDetailsDialog = dynamic(
     () => import("@/app/nurse/records/patient-record-dialog").then((mod) => mod.RecordDetailsDialog),
@@ -63,7 +60,7 @@ export default function DoctorPatientsPage() {
             if (!res.ok) throw new Error("Failed to load records");
             const data: PatientRecord[] = await res.json();
             startTransition(() => {
-                setRecords(sortPatientsByName(data));
+                setRecords(sortByFullName(data));
             });
         } catch (error) {
             console.error(error);

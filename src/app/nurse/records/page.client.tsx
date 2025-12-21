@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { parseMedicalHistory, serializeMedicalHistory } from "@/lib/medical-history";
+import { sortByFullName } from "@/lib/sorting";
 
 import NurseRecordsLoading from "./loading";
 import { PatientDirectoryTable } from "./patient-directory-table";
@@ -26,9 +27,6 @@ import type { RecordDetailsDialogTab } from "./patient-record-dialog";
 import type { PatientRecord } from "./types";
 import { usePagination } from "@/hooks/use-pagination";
 
-function sortPatientsByName<T extends { fullName: string }>(records: T[]): T[] {
-    return [...records].sort((a, b) => a.fullName.localeCompare(b.fullName, undefined, { sensitivity: "base" }));
-}
 
 const RecordDetailsDialog = dynamic(
     () => import("./patient-record-dialog").then((mod) => mod.RecordDetailsDialog),
@@ -46,7 +44,7 @@ export type NurseRecordsPageClientProps = {
 
 export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClientProps) {
     const { data: session } = useSession();
-    const [records, setRecords] = useState<PatientRecord[]>(() => sortPatientsByName(initialRecords ?? []));
+    const [records, setRecords] = useState<PatientRecord[]>(() => sortByFullName(initialRecords ?? []));
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
@@ -68,7 +66,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
             if (!res.ok) throw new Error("Failed to load records");
             const data: PatientRecord[] = await res.json();
             startTransition(() => {
-                setRecords(sortPatientsByName(data));
+                setRecords(sortByFullName(data));
             });
         } catch {
             toast.error("Error loading records.");

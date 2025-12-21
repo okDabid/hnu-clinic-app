@@ -70,6 +70,7 @@ import { handleRateLimitError } from "@/lib/rate-limit-toast";
 import { cn } from "@/lib/utils";
 import { usePagination } from "@/hooks/use-pagination";
 import { TablePagination } from "@/components/table-pagination";
+import { sortByFullName } from "@/lib/sorting";
 
 import NurseAccountsLoading from "./loading";
 import {
@@ -118,7 +119,7 @@ export function NurseAccountsPageClient({
     initialUsersLoaded,
     initialProfileLoaded,
 }: NurseAccountsPageClientProps) {
-    const [users, setUsers] = useState<NurseAccountUser[]>(() => [...initialUsers]);
+    const [users, setUsers] = useState<NurseAccountUser[]>(() => sortByFullName(initialUsers));
     const [pendingStatusIds, setPendingStatusIds] = useState<string[]>([]);
     const [pendingScholarIds, setPendingScholarIds] = useState<string[]>([]);
     const [search, setSearch] = useState("");
@@ -251,9 +252,9 @@ export function NurseAccountsPageClient({
         try {
             const normalized = await fetchUsers();
             if (options?.silent) {
-                setUsers(normalized);
+                setUsers(sortByFullName(normalized));
             } else {
-                startUsersTransition(() => setUsers(normalized));
+                startUsersTransition(() => setUsers(sortByFullName(normalized)));
             }
         } catch (err) {
             console.error("Failed to load users:", err);
