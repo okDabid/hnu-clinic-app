@@ -305,7 +305,7 @@ export default function DoctorDispensePage() {
                                             setForm((prev) => ({ ...prev, consultation_id: value }))
                                         }
                                     >
-                                        <SelectTrigger className="w-full min-h-[90px] rounded-xl border border-primary/25 bg-white/80 px-4 py-3 text-base leading-relaxed whitespace-normal text-left focus:ring-2 focus:ring-primary/50">
+                                        <SelectTrigger className="w-full min-h-22.5 rounded-xl border border-primary/25 bg-white/80 px-4 py-3 text-base leading-relaxed whitespace-normal text-left focus:ring-2 focus:ring-primary/50">
                                             <SelectValue placeholder="Select consultation" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -410,8 +410,8 @@ export default function DoctorDispensePage() {
 
                     <Card className="flex-1 rounded-3xl border border-primary/20 bg-white/85 shadow-sm">
                         <CardHeader className="border-b border-primary/20">
-                            <CardTitle className="text-lg font-semibold text-primary sm:text-xl">
-                                Recent dispense records
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-primary">
+                                Dispense History
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-4">

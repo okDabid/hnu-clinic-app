@@ -42,7 +42,7 @@ type DispenseRecord = {
     } | null;
     walk_in_id_number: string | null;
     walk_in_contact: string | null;
-        walk_in_notes: string | null;
+    walk_in_notes: string | null;
     scholar: {
         user_id: string;
         username: string;
@@ -306,7 +306,7 @@ export default function NurseDispensePage() {
                                         setForm((prev) => ({ ...prev, consultation_id: value }))
                                     }
                                 >
-                                    <SelectTrigger className="w-full min-h-[90px] rounded-xl border border-primary/25 bg-white/80 px-4 py-3 text-base leading-relaxed whitespace-normal text-left focus:ring-2 focus:ring-primary/50">
+                                    <SelectTrigger className="w-full min-h-22.5 rounded-xl border border-primary/25 bg-white/80 px-4 py-3 text-base leading-relaxed whitespace-normal text-left focus:ring-2 focus:ring-primary/50">
                                         <SelectValue placeholder="Select consultation" />
                                     </SelectTrigger>
                                     <SelectContent>
