@@ -200,66 +200,69 @@ export default function NurseAppointmentsPage() {
                         {error ? (
                             <p className="text-sm text-red-600">{error}</p>
                         ) : (
-                            <><div className="overflow-x-auto">
-                                <Table className="min-w-full text-sm">
-                                    <TableHeader>
-                                        <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
-                                            <TableHead className="min-w-40">Patient</TableHead>
-                                            <TableHead className="min-w-35">Type</TableHead>
-                                            <TableHead className="min-w-50">Schedule</TableHead>
-                                            <TableHead className="min-w-40">Clinic</TableHead>
-                                            <TableHead className="min-w-30">Staff role</TableHead>
-                                            <TableHead className="min-w-40">Assigned staff</TableHead>
-                                            <TableHead className="min-w-35">Status</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {loading ? (
-                                            <TableRow>
-                                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                                    Loading appointments...
-                                                </TableCell>
+                            <>
+                                <div className="overflow-x-auto">
+                                    <Table className="min-w-full text-sm">
+                                        <TableHeader>
+                                            <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                <TableHead className="min-w-40">Patient</TableHead>
+                                                <TableHead className="min-w-35">Type</TableHead>
+                                                <TableHead className="min-w-50">Schedule</TableHead>
+                                                <TableHead className="min-w-40">Clinic</TableHead>
+                                                <TableHead className="min-w-30">Staff role</TableHead>
+                                                <TableHead className="min-w-40">Assigned staff</TableHead>
+                                                <TableHead className="min-w-35">Status</TableHead>
                                             </TableRow>
-                                        ) : filteredAppointments.length === 0 ? (
-                                            <TableRow>
-                                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                                    No appointments found for the selected filters.
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : (
-                                            paginatedAppointments.map((appointment) => (
-                                                <TableRow key={appointment.id}>
-                                                    <TableCell>{appointment.patientName}</TableCell>
-                                                    <TableCell>{appointment.patientType}</TableCell>
-                                                    <TableCell>
-                                                        {formatAppointmentWindow({
-                                                            timestart: appointment.timestart,
-                                                            timeend: appointment.timeend,
-                                                        })}
-                                                    </TableCell>
-                                                    <TableCell>{appointment.clinic}</TableCell>
-                                                    <TableCell>{appointment.staffRole}</TableCell>
-                                                    <TableCell>
-                                                        {appointment.staffRole === "Nurse"
-                                                            ? appointment.nurseName || "—"
-                                                            : appointment.doctorName}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge className="rounded-full border-primary/30 bg-primary/10 text-primary">
-                                                            {humanizeEnumValue(appointment.status)}
-                                                        </Badge>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {loading ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                                        Loading appointments...
                                                     </TableCell>
                                                 </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div><TablePagination
+                                            ) : filteredAppointments.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                                        No appointments found for the selected filters.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                paginatedAppointments.map((appointment) => (
+                                                    <TableRow key={appointment.id}>
+                                                        <TableCell>{appointment.patientName}</TableCell>
+                                                        <TableCell>{appointment.patientType}</TableCell>
+                                                        <TableCell>
+                                                            {formatAppointmentWindow({
+                                                                timestart: appointment.timestart,
+                                                                timeend: appointment.timeend,
+                                                            })}
+                                                        </TableCell>
+                                                        <TableCell>{appointment.clinic}</TableCell>
+                                                        <TableCell>{appointment.staffRole}</TableCell>
+                                                        <TableCell>
+                                                            {appointment.staffRole === "Nurse"
+                                                                ? appointment.nurseName || "—"
+                                                                : appointment.doctorName}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge className="rounded-full border-primary/30 bg-primary/10 text-primary">
+                                                                {humanizeEnumValue(appointment.status)}
+                                                            </Badge>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                                <TablePagination
                                     currentPage={currentPage}
                                     totalItems={filteredAppointments.length}
                                     pageSize={pageSize}
                                     loading={loading}
-                                    onPageChange={setCurrentPage} /></>
+                                    onPageChange={setCurrentPage} />
+                            </>
                         )}
                     </CardContent>
                 </Card>
