@@ -214,7 +214,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
 
     return (
         <NurseLayout
-            title="Patient registry"
+            title="Patient records"
             description="Coordinate patient histories, capture consultation notes, and support physicians during follow-ups."
             actions={
                 <Button

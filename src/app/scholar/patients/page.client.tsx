@@ -137,7 +137,7 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
 
     return (
         <ScholarLayout
-            title="Patient registry"
+            title="Patient records"
             description="Review student and employee profiles, confirm eligibility, and keep contact details ready for the care team."
             actions={
                 <Button

@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function DoctorPatientsLoading() {
     return (
         <DoctorLayout
-            title="Patient registry"
+            title="Patient records"
             description="Review medical records, follow up on clinic visits, and capture key notes for coordinated care."
             actions={<Skeleton className="h-10 w-36 rounded-xl" />}
         >

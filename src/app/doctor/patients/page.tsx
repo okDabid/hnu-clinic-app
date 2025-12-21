@@ -211,7 +211,7 @@ export default function DoctorPatientsPage() {
 
     return (
         <DoctorLayout
-            title="Patient registry"
+            title="Patient records"
             description="Review medical records, follow up on clinic visits, and capture key notes for coordinated care."
             actions={
                 <Button
