@@ -46,6 +46,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TablePagination } from "@/components/table-pagination";
 import { formatManilaDateTime, formatManilaISODate, formatTimeString12, manilaNow } from "@/lib/time";
 
 import DoctorAppointmentsLoading from "./loading";
@@ -184,6 +185,8 @@ export default function DoctorAppointmentsPage() {
     const [statusFilter, setStatusFilter] = useState<string>("active");
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [specialization, setSpecialization] = useState<DoctorSpecialization | null>(null);
     const [certificateLoadingId, setCertificateLoadingId] = useState<string | null>(null);
     const preferredMoveStartRef = useRef("");
@@ -335,6 +338,22 @@ export default function DoctorAppointmentsPage() {
             return haystack.includes(searchTerm);
         });
     }, [appointments, searchTerm, statusFilter, fromDate, toDate]);
+
+    const paginatedAppointments = useMemo(
+        () => filteredAppointments.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [currentPage, filteredAppointments, pageSize]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, fromDate, toDate]);
+
+    useEffect(() => {
+        const totalPages = Math.max(1, Math.ceil(filteredAppointments.length / pageSize));
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, filteredAppointments.length, pageSize]);
 
     const selectedMoveSlot = useMemo(
         () => moveSlots.find((slot) => slot.start === newTimeStart) ?? null,
@@ -760,7 +779,7 @@ export default function DoctorAppointmentsPage() {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredAppointments.map((appointment) => {
+                                        paginatedAppointments.map((appointment) => {
                                             const status = normalizeStatus(appointment.status);
                                             const statusLabel = status ? STATUS_LABELS[status] : appointment.status;
                                             const statusClasses = status
@@ -887,6 +906,13 @@ export default function DoctorAppointmentsPage() {
                                 </TableBody>
                             </Table>
                         </div>
+                        <TablePagination
+                            currentPage={currentPage}
+                            totalItems={filteredAppointments.length}
+                            pageSize={pageSize}
+                            loading={loading}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
                 </AppointmentPanel>
             </div>

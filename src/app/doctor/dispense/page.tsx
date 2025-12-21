@@ -20,6 +20,7 @@ import { formatManilaDateTime } from "@/lib/time";
 import { summarizeDispenses } from "@/lib/dispense-summary";
 import { formatProfileName } from "@/lib/staff-name";
 import { DispenseHistoryRow, DispenseHistoryTable } from "@/components/dispense/dispense-history-table";
+import { TablePagination } from "@/components/table-pagination";
 
 import DoctorDispenseLoading from "./loading";
 
@@ -92,6 +93,8 @@ export default function DoctorDispensePage() {
     const [consultations, setConsultations] = useState<ConsultationOption[]>([]);
     const [medicines, setMedicines] = useState<MedicineOption[]>([]);
     const [initializing, setInitializing] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [form, setForm] = useState({
         consultation_id: "",
         med_id: "",
@@ -128,6 +131,15 @@ export default function DoctorDispensePage() {
             })),
         [dispenses]
     );
+
+    const paginatedRows = useMemo(
+        () => tableRows.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [currentPage, pageSize, tableRows]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [dispenses]);
 
     const selectedMedicine = useMemo(
         () => medicines.find((med) => med.med_id === form.med_id) || null,
@@ -200,6 +212,7 @@ export default function DoctorDispensePage() {
             }
 
             setDispenses((prev) => [data as DispenseRecord, ...prev]);
+            setCurrentPage(1);
             setMedicines((prev) =>
                 prev.map((med) =>
                     med.med_id === form.med_id
@@ -415,7 +428,14 @@ export default function DoctorDispensePage() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-4">
-                            <DispenseHistoryTable rows={tableRows} loading={loading} />
+                            <DispenseHistoryTable rows={paginatedRows} loading={loading} />
+                            <TablePagination
+                                currentPage={currentPage}
+                                totalItems={tableRows.length}
+                                pageSize={pageSize}
+                                loading={loading}
+                                onPageChange={setCurrentPage}
+                            />
                         </CardContent>
                     </Card>
                 </section>

@@ -19,6 +19,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { formatAppointmentWindow, humanizeEnumValue } from "@/lib/patient-format";
+import { TablePagination } from "@/components/table-pagination";
 
 const STAFF_ROLES = [
     { label: "All staff", value: "all" },
@@ -48,6 +49,8 @@ export default function NurseAppointmentsPage() {
     const [fromDate, setFromDate] = useState<string>("");
     const [toDate, setToDate] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
 
     const filteredAppointments = useMemo(() => {
         const selectedRole = staffRole.toLowerCase();
@@ -60,6 +63,22 @@ export default function NurseAppointmentsPage() {
             return matchesRole;
         });
     }, [appointments, fromDate, staffRole, toDate]);
+
+    const paginatedAppointments = useMemo(
+        () => filteredAppointments.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [currentPage, filteredAppointments, pageSize]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [staffRole, fromDate, toDate]);
+
+    useEffect(() => {
+        const totalPages = Math.max(1, Math.ceil(filteredAppointments.length / pageSize));
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, filteredAppointments.length, pageSize]);
 
     async function fetchAppointments() {
         setLoading(true);
@@ -208,7 +227,7 @@ export default function NurseAppointmentsPage() {
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            filteredAppointments.map((appointment) => (
+                                            paginatedAppointments.map((appointment) => (
                                                 <TableRow key={appointment.id}>
                                                     <TableCell>{appointment.patientName}</TableCell>
                                                     <TableCell>{appointment.patientType}</TableCell>
@@ -236,6 +255,13 @@ export default function NurseAppointmentsPage() {
                                     </TableBody>
                                 </Table>
                             </div>
+                            <TablePagination
+                                currentPage={currentPage}
+                                totalItems={filteredAppointments.length}
+                                pageSize={pageSize}
+                                loading={loading}
+                                onPageChange={setCurrentPage}
+                            />
                         )}
                     </CardContent>
                 </Card>
