@@ -38,6 +38,7 @@ import {
     toManilaDateString,
 } from "@/lib/time";
 import { getServiceOptionsForSpecialization, resolveServiceType } from "@/lib/service-options";
+import { TablePagination } from "@/components/table-pagination";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 import ScholarAppointmentsLoading from "./loading";
@@ -162,6 +163,8 @@ export default function ScholarAppointmentsPage() {
     const [initializing, setInitializing] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [createSubmitting, setCreateSubmitting] = useState(false);
     const [minBookingDate, setMinBookingDate] = useState(() => computeMinBookingDate());
@@ -528,6 +531,22 @@ export default function ScholarAppointmentsPage() {
         });
     }, [appointments, searchTerm, statusFilter]);
 
+    const paginatedAppointments = useMemo(
+        () => filteredAppointments.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [currentPage, filteredAppointments, pageSize]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
+
+    useEffect(() => {
+        const totalPages = Math.max(1, Math.ceil(filteredAppointments.length / pageSize));
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, filteredAppointments.length, pageSize]);
+
     const statusCounts = useMemo(() => {
         const counts: Record<AppointmentStatus, number> = {
             Pending: 0,
@@ -845,7 +864,7 @@ export default function ScholarAppointmentsPage() {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredAppointments.map((appointment) => (
+                                        paginatedAppointments.map((appointment) => (
                                             <TableRow key={appointment.id} className="text-sm">
                                                 <TableCell className="font-medium text-primary">
                                                     <div className="flex flex-col">
@@ -881,6 +900,13 @@ export default function ScholarAppointmentsPage() {
                                 </TableBody>
                             </Table>
                         </div>
+                        <TablePagination
+                            currentPage={currentPage}
+                            totalItems={filteredAppointments.length}
+                            pageSize={pageSize}
+                            loading={loading}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
                 </AppointmentPanel>
             </div>

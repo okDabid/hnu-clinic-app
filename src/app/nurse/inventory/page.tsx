@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Archive, Loader2, PackageSearch, Plus, ShieldAlert } from "lucide-react";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
+import { TablePagination } from "@/components/table-pagination";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -84,6 +85,10 @@ export default function NurseInventoryPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [clinicFilter, setClinicFilter] = useState("All");
+    const [inventoryPage, setInventoryPage] = useState(1);
+    const [archivedPage, setArchivedPage] = useState(1);
+    const inventoryPageSize = 10;
+    const archivedPageSize = 10;
 
     // Separate loading states
     const [loadingInventory, setLoadingInventory] = useState(false);
@@ -203,6 +208,26 @@ export default function NurseInventoryPage() {
             return a.clinic.clinic_name.localeCompare(b.clinic.clinic_name);
         });
 
+    const paginatedInventory = useMemo(
+        () =>
+            filteredItems.slice(
+                (inventoryPage - 1) * inventoryPageSize,
+                inventoryPage * inventoryPageSize
+            ),
+        [filteredItems, inventoryPage, inventoryPageSize]
+    );
+
+    useEffect(() => {
+        setInventoryPage(1);
+    }, [search, statusFilter, clinicFilter]);
+
+    useEffect(() => {
+        const totalPages = Math.max(1, Math.ceil(filteredItems.length / inventoryPageSize));
+        if (inventoryPage > totalPages) {
+            setInventoryPage(totalPages);
+        }
+    }, [filteredItems.length, inventoryPage, inventoryPageSize]);
+
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
     useEffect(() => {
@@ -218,6 +243,26 @@ export default function NurseInventoryPage() {
             return filteredItems[0];
         });
     }, [filteredItems]);
+
+    const paginatedArchived = useMemo(
+        () =>
+            archivedBatches.slice(
+                (archivedPage - 1) * archivedPageSize,
+                archivedPage * archivedPageSize
+            ),
+        [archivedBatches, archivedPage, archivedPageSize]
+    );
+
+    useEffect(() => {
+        const totalPages = Math.max(1, Math.ceil(archivedBatches.length / archivedPageSize));
+        if (archivedPage > totalPages) {
+            setArchivedPage(totalPages);
+        }
+    }, [archivedBatches.length, archivedPage, archivedPageSize]);
+
+    useEffect(() => {
+        setArchivedPage(1);
+    }, [archivedBatches.length]);
 
     const totalInventoryQuantity = items.reduce((total, item) => total + item.quantity, 0);
     const expiringSoonCount = items.reduce(
@@ -546,7 +591,7 @@ export default function NurseInventoryPage() {
                                             </TableHeader>
                                             <TableBody>
                                                 {filteredItems.length > 0 ? (
-                                                    filteredItems.map((item) => {
+                                                    paginatedInventory.map((item) => {
                                                         const activeBatches = item.replenishments.filter(
                                                             (rep) => rep.status !== "Expired"
                                                         );
@@ -623,6 +668,14 @@ export default function NurseInventoryPage() {
                                         </Table>
                                     </div>
                                 </div>
+
+                                <TablePagination
+                                    currentPage={inventoryPage}
+                                    totalItems={filteredItems.length}
+                                    pageSize={inventoryPageSize}
+                                    loading={loadingInventory}
+                                    onPageChange={setInventoryPage}
+                                />
 
                                 <div className="rounded-2xl border border-primary/20 bg-white/70 p-4 shadow-sm shadow-primary/20">
                                     <div className="flex items-center justify-between gap-3 border-b border-primary/10 pb-3">
@@ -716,7 +769,7 @@ export default function NurseInventoryPage() {
                                     </TableHeader>
                                     <TableBody>
                                         {archivedBatches.length > 0 ? (
-                                            archivedBatches.map((batch) => (
+                                            paginatedArchived.map((batch) => (
                                                 <TableRow key={batch.replenishment_id} className="transition hover:bg-primary/10/70">
                                                     <TableCell className="text-sm font-medium text-slate-900">
                                                         {batch.clinic?.clinic_name ?? "-"}
@@ -746,6 +799,13 @@ export default function NurseInventoryPage() {
                                     </TableBody>
                                 </Table>
                             </div>
+                            <TablePagination
+                                currentPage={archivedPage}
+                                totalItems={archivedBatches.length}
+                                pageSize={archivedPageSize}
+                                loading={loadingInventory}
+                                onPageChange={setArchivedPage}
+                            />
                         </div>
                     </CardContent>
                 </Card>

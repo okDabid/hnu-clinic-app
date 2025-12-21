@@ -27,6 +27,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { formatManilaDateTime } from "@/lib/time";
+import { TablePagination } from "@/components/table-pagination";
 
 import ScholarDispenseLoading from "./loading";
 
@@ -91,6 +92,8 @@ export default function ScholarDispensePage() {
     const [initializing, setInitializing] = useState(true);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [form, setForm] = useState({
         idNumber: "",
         contact: "",
@@ -124,6 +127,15 @@ export default function ScholarDispensePage() {
             clinics: clinicsServed.size,
             latestDispense: latest,
         };
+    }, [dispenses]);
+
+    const paginatedDispenses = useMemo(
+        () => dispenses.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+        [currentPage, dispenses, pageSize]
+    );
+
+    useEffect(() => {
+        setCurrentPage(1);
     }, [dispenses]);
 
     async function loadData() {
@@ -395,74 +407,88 @@ export default function ScholarDispensePage() {
                     </CardHeader>
                     <CardContent className="pt-4">
                         {dispenses.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <Table className="min-w-full text-sm">
-                                    <TableHeader className="bg-primary/10 text-primary">
-                                        <TableRow>
-                                            <TableHead className="whitespace-nowrap">Clinic</TableHead>
-                                            <TableHead className="whitespace-nowrap">Walk-in ID</TableHead>
-                                            <TableHead className="whitespace-nowrap">Medicine</TableHead>
-                                            <TableHead className="whitespace-nowrap">Quantity</TableHead>
-                                            <TableHead className="whitespace-nowrap">Scholar</TableHead>
-                                            <TableHead className="whitespace-nowrap">Dispensed At</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {dispenses.map((dispense) => (
-                                            <TableRow key={dispense.dispense_id} className="transition hover:bg-primary/10">
-                                                <TableCell>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[0.7rem] font-semibold text-primary"
-                                                    >
-                                                        {dispense.med.clinic.clinic_name}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className="font-semibold text-gray-900">
-                                                            {dispense.walk_in_id_number ?? "—"}
-                                                        </span>
-                                                        {dispense.walk_in_contact ? (
-                                                            <span className="text-xs text-muted-foreground">
-                                                                Contact: {dispense.walk_in_contact}
-                                                            </span>
-                                                        ) : null}
-                                                        {dispense.walk_in_notes ? (
-                                                            <span className="text-xs text-muted-foreground">
-                                                                Notes: {dispense.walk_in_notes}
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium text-gray-900">{dispense.med.item_name}</span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {dispense.med.clinic.clinic_name}
-                                                        </span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge className="rounded-full bg-primary/10 px-3 py-1 text-[0.75rem] font-semibold text-primary">
-                                                        ×{dispense.quantity}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="text-sm font-medium text-gray-800">
-                                                        {formatScholarName(dispense.scholar)}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="text-sm text-muted-foreground">
-                                                        {formatManilaDateTime(dispense.createdAt) || "—"}
-                                                    </span>
-                                                </TableCell>
+                            <>
+                                <div className="overflow-x-auto">
+                                    <Table className="min-w-full text-sm">
+                                        <TableHeader className="bg-primary/10 text-primary">
+                                            <TableRow>
+                                                <TableHead className="whitespace-nowrap">Clinic</TableHead>
+                                                <TableHead className="whitespace-nowrap">Walk-in ID</TableHead>
+                                                <TableHead className="whitespace-nowrap">Medicine</TableHead>
+                                                <TableHead className="whitespace-nowrap">Quantity</TableHead>
+                                                <TableHead className="whitespace-nowrap">Scholar</TableHead>
+                                                <TableHead className="whitespace-nowrap">Dispensed At</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {paginatedDispenses.map((dispense) => (
+                                                <TableRow
+                                                    key={dispense.dispense_id}
+                                                    className="transition hover:bg-primary/10"
+                                                >
+                                                    <TableCell>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[0.7rem] font-semibold text-primary"
+                                                        >
+                                                            {dispense.med.clinic.clinic_name}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="font-semibold text-gray-900">
+                                                                {dispense.walk_in_id_number ?? "—"}
+                                                            </span>
+                                                            {dispense.walk_in_contact ? (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Contact: {dispense.walk_in_contact}
+                                                                </span>
+                                                            ) : null}
+                                                            {dispense.walk_in_notes ? (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Notes: {dispense.walk_in_notes}
+                                                                </span>
+                                                            ) : null}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-gray-900">
+                                                                {dispense.med.item_name}
+                                                            </span>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {dispense.med.clinic.clinic_name}
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge className="rounded-full bg-primary/10 px-3 py-1 text-[0.75rem] font-semibold text-primary">
+                                                            ×{dispense.quantity}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="text-sm font-medium text-gray-800">
+                                                            {formatScholarName(dispense.scholar)}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="text-sm text-muted-foreground">
+                                                            {formatManilaDateTime(dispense.createdAt) || "—"}
+                                                        </span>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                                <TablePagination
+                                    currentPage={currentPage}
+                                    totalItems={dispenses.length}
+                                    pageSize={pageSize}
+                                    loading={loading}
+                                    onPageChange={setCurrentPage}
+                                />
+                            </>
                         ) : (
                             <div className="py-10 text-center text-sm text-muted-foreground">
                                 No walk-in dispenses recorded yet.
