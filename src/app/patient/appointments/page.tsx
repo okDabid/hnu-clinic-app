@@ -584,6 +584,8 @@ export default function PatientAppointmentsPage() {
         () => leaveDates.map((value) => new Date(`${value}T00:00:00+08:00`)),
         [leaveDates]
     );
+    const leaveDateSet = useMemo(() => new Set(leaveDates), [leaveDates]);
+    const availableDateSet = useMemo(() => new Set(availableDates), [availableDates]);
     const selectedClinic = useMemo(
         () => clinics.find((clinic) => clinic.clinic_id === clinicId) ?? null,
         [clinics, clinicId]
@@ -989,7 +991,12 @@ export default function PatientAppointmentsPage() {
                                                         setCalendarMonth(value);
                                                     }
                                                 }}
-                                                disabled={(day) => day < new Date(`${minBookingDate}T00:00:00+08:00`)}
+                                                disabled={(day) => {
+                                                    const dayKey = formatManilaISODate(day);
+                                                    if (dayKey < minBookingDate) return true;
+                                                    if (leaveDateSet.has(dayKey)) return true;
+                                                    return !availableDateSet.has(dayKey);
+                                                }}
                                                 modifiers={{ available: availableDateObjects, leave: leaveDateObjects }}
                                                 modifiersClassNames={{
                                                     available:
@@ -1054,11 +1061,18 @@ export default function PatientAppointmentsPage() {
                                                         <button
                                                             key={`${doctorId}-${slot.start}-${slot.end}`}
                                                             type="button"
+                                                            disabled={
+                                                                onLeaveDay ||
+                                                                leaveDateSet.has(date) ||
+                                                                !availableDateSet.has(date)
+                                                            }
                                                             onClick={() => selectedDoctor && handleSlotSelection(selectedDoctor, slot)}
                                                             className={cn(
                                                                 "flex w-full flex-col items-start gap-1 rounded-2xl border px-3 py-2 text-left text-sm font-medium transition",
                                                                 "border-primary/25 bg-white text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                                                                isSelected && "border-primary bg-primary text-white hover:bg-primary/90 focus-visible:outline-primary"
+                                                                isSelected && "border-primary bg-primary text-white hover:bg-primary/90 focus-visible:outline-primary",
+                                                                (onLeaveDay || leaveDateSet.has(date) || !availableDateSet.has(date)) &&
+                                                                "cursor-not-allowed opacity-60 hover:bg-white"
                                                             )}
                                                             aria-pressed={isSelected}
                                                         >
