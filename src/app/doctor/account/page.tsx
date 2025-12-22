@@ -164,28 +164,28 @@ export default function DoctorAccountPage() {
 
         if (isInvalidName(profile.fname)) {
             toast.error(
-                "First name must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "First name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }
 
         if (profile.mname && isInvalidName(profile.mname)) {
             toast.error(
-                "Middle name must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "Middle name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }
 
         if (isInvalidName(profile.lname)) {
             toast.error(
-                "Last name must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "Last name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }
 
         if (profile.suffix && isInvalidName(profile.suffix)) {
             toast.error(
-                "Suffix must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }

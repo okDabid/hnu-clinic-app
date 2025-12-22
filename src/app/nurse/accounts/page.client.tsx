@@ -428,14 +428,14 @@ export function NurseAccountsPageClient({
         }
 
         if (!fname || isInvalidName(fname)) {
-            toast.error("First name must be at least 3 characters and can only include letters, spaces, apostrophes, or hyphens.", {
+            toast.error("First name must be at least 2 characters and can only include letters, spaces, apostrophes, or hyphens.", {
                 position: "top-center",
             });
             return;
         }
 
         if (!lname || isInvalidName(lname)) {
-            toast.error("Last name must be at least 3 characters and can only include letters, spaces, apostrophes, or hyphens.", {
+            toast.error("Last name must be at least 2 characters and can only include letters, spaces, apostrophes, or hyphens.", {
                 position: "top-center",
             });
             return;
@@ -443,7 +443,7 @@ export function NurseAccountsPageClient({
 
         if (mnameRaw && isInvalidName(mnameRaw)) {
             toast.error(
-                "Middle name must be at least 3 characters and can only include letters, spaces, apostrophes, or hyphens.",
+                "Middle name must be at least 2 characters and can only include letters, spaces, apostrophes, or hyphens.",
                 {
                     position: "top-center",
                 }
@@ -452,7 +452,7 @@ export function NurseAccountsPageClient({
         }
 
         if (suffix && isInvalidName(suffix)) {
-            toast.error("Suffix must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens.", {
+            toast.error("Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens.", {
                 position: "top-center",
             });
             return;
@@ -557,32 +557,32 @@ export function NurseAccountsPageClient({
         const mname = (profile.mname ?? "").trim();
         const suffix = (profile.suffix ?? "").trim();
 
-        const isInvalidName = (value: string) => value.length < 3 || !namePattern.test(value);
+        const isInvalidName = (value: string) => value.length < 2 || !namePattern.test(value);
 
         if (!fname || isInvalidName(fname)) {
             toast.error(
-                "First name must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "First name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }
 
         if (mname && isInvalidName(mname)) {
             toast.error(
-                "Middle name must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "Middle name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }
 
         if (!lname || isInvalidName(lname)) {
             toast.error(
-                "Last name must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "Last name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }
 
         if (suffix && isInvalidName(suffix)) {
             toast.error(
-                "Suffix must be at least 3 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+                "Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
             );
             return;
         }
