@@ -415,7 +415,7 @@ export function NurseAccountsPageClient({
         const studentId = getTrimmedValue("student_id");
 
         const isNumeric = (value: string) => /^\d+$/.test(value);
-        const isInvalidName = (value: string) => value.length < 3 || !namePattern.test(value);
+        const isInvalidName = (value: string) => value.length < 2 || !namePattern.test(value);
 
         if (employeeId && !isNumeric(employeeId)) {
             toast.error("Employee ID must contain numbers only.", { position: "top-center" });

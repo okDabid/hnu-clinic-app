@@ -159,7 +159,7 @@ export default function DoctorAccountPage() {
 
         const isInvalidName = (value: string) => {
             const trimmed = value.trim();
-            return trimmed.length < 3 || !namePattern.test(trimmed);
+            return trimmed.length < 2 || !namePattern.test(trimmed);
         };
 
         if (isInvalidName(profile.fname)) {
