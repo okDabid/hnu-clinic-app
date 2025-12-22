@@ -65,7 +65,12 @@ import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import { formatPhoneInputDisplay, validateAndNormalizeContacts } from "@/lib/validation";
+import {
+    formatPhoneInputDisplay,
+    isAllowedNameSuffix,
+    NAME_SUFFIX_OPTIONS,
+    validateAndNormalizeContacts,
+} from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 import { cn } from "@/lib/utils";
 import { usePagination } from "@/hooks/use-pagination";
@@ -128,6 +133,7 @@ export function NurseAccountsPageClient({
     const [role, setRole] = useState("");
     const [patientType, setPatientType] = useState<"student" | "employee" | "">("");
     const [workingScholar, setWorkingScholar] = useState(false);
+    const [newSuffix, setNewSuffix] = useState("");
     const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("ALL");
     const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
     const [scholarFilter, setScholarFilter] = useState<ScholarFilterValue>("ALL");
@@ -410,7 +416,7 @@ export function NurseAccountsPageClient({
         const fname = getTrimmedValue("fname");
         const mnameRaw = getTrimmedValue("mname");
         const lname = getTrimmedValue("lname");
-        const suffix = getTrimmedValue("suffix");
+        const suffix = newSuffix.trim();
         const employeeId = getTrimmedValue("employee_id");
         const studentId = getTrimmedValue("student_id");
 
@@ -451,8 +457,8 @@ export function NurseAccountsPageClient({
             return;
         }
 
-        if (suffix && isInvalidName(suffix)) {
-            toast.error("Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens.", {
+        if (!isAllowedNameSuffix(suffix)) {
+            toast.error("Please select a valid suffix option or leave it blank.", {
                 position: "top-center",
             });
             return;
@@ -530,6 +536,7 @@ export function NurseAccountsPageClient({
             setRole("");
             setPatientType("");
             setWorkingScholar(false);
+            setNewSuffix("");
             setSpecialization(null);
             setPendingPayload(null);
             setShowCreateConfirm(false);
@@ -580,12 +587,12 @@ export function NurseAccountsPageClient({
             return;
         }
 
-        if (suffix && isInvalidName(suffix)) {
-            toast.error(
-                "Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
-            );
+        if (!isAllowedNameSuffix(suffix)) {
+            toast.error("Please select a valid suffix option or leave it blank.");
             return;
         }
+
+        const normalizedSuffix = suffix || null;
 
         const contactValidation = validateAndNormalizeContacts({
             email: profile.email,
@@ -602,7 +609,7 @@ export function NurseAccountsPageClient({
             fname,
             mname,
             lname,
-            suffix,
+            suffix: normalizedSuffix,
             email: contactValidation.email,
             contactno: contactValidation.contactNumber,
         };
@@ -775,6 +782,8 @@ export function NurseAccountsPageClient({
     };
 
     const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
+    const suffixOptions = NAME_SUFFIX_OPTIONS.filter(Boolean);
+    const NO_SUFFIX_VALUE = "__none__";
     const PHONE_PREFIX = "09";
 
     const extractSubscriberDigits = (value?: string | null) => {
@@ -1145,11 +1154,27 @@ export function NurseAccountsPageClient({
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
-                                            <Input
-                                                value={profile.suffix || ""}
-                                                onChange={(event) => setProfile({ ...profile, suffix: event.target.value })}
-                                                placeholder="Jr., Sr., III"
-                                            />
+                                            <Select
+                                                value={profile.suffix ?? NO_SUFFIX_VALUE}
+                                                onValueChange={(value) =>
+                                                    setProfile({
+                                                        ...profile,
+                                                        suffix: value === NO_SUFFIX_VALUE ? null : value,
+                                                    })
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="No suffix" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value={NO_SUFFIX_VALUE}>No suffix</SelectItem>
+                                                    {suffixOptions.map((suffix) => (
+                                                        <SelectItem key={suffix} value={suffix}>
+                                                            {suffix}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
                                 </AccountSection>
@@ -1349,7 +1374,24 @@ export function NurseAccountsPageClient({
                                 </div>
                                 <div>
                                     <Label className="block mb-1 font-medium">Suffix</Label>
-                                    <Input name="suffix" placeholder="Jr., Sr., III" />
+                                    <Select
+                                        value={newSuffix || NO_SUFFIX_VALUE}
+                                        onValueChange={(value) =>
+                                            setNewSuffix(value === NO_SUFFIX_VALUE ? "" : value)
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="No suffix" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value={NO_SUFFIX_VALUE}>No suffix</SelectItem>
+                                            {suffixOptions.map((suffix) => (
+                                                <SelectItem key={suffix} value={suffix}>
+                                                    {suffix}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 

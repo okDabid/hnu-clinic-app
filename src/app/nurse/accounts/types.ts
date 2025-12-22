@@ -143,6 +143,11 @@ export function normalizeNurseAccountProfile(
         ? nurseBloodTypeEnumMap[response.profile.bloodtype] || response.profile.bloodtype
         : "";
 
+    const normalizedSuffix =
+        typeof response.profile?.suffix === "string" && response.profile.suffix.trim()
+            ? response.profile.suffix.trim()
+            : null;
+
     return {
         user_id: response.accountId || "",
         username: response.username || "",
@@ -151,7 +156,7 @@ export function normalizeNurseAccountProfile(
         fname: response.profile?.fname || "",
         mname: response.profile?.mname || "",
         lname: response.profile?.lname || "",
-        suffix: response.profile?.suffix || "",
+        suffix: normalizedSuffix,
         date_of_birth: response.profile?.date_of_birth || "",
         gender: response.profile?.gender || "",
         contactno: response.profile?.contactno || "",

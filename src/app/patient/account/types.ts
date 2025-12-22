@@ -137,6 +137,9 @@ export function normalizePatientAccountProfile(
         ? patientDepartmentEnumMap[raw.department] || ""
         : "";
 
+    const normalizedSuffix =
+        typeof raw.suffix === "string" && raw.suffix.trim() ? raw.suffix.trim() : null;
+
     const profile: PatientAccountProfile = {
         user_id: response.accountId || "",
         username: response.username || "",
@@ -145,7 +148,7 @@ export function normalizePatientAccountProfile(
         fname: raw.fname || "",
         mname: raw.mname || "",
         lname: raw.lname || "",
-        suffix: raw.suffix || "",
+        suffix: normalizedSuffix,
         date_of_birth: raw.date_of_birth || "",
         email: raw.email || "",
         contactno: raw.contactno || "",

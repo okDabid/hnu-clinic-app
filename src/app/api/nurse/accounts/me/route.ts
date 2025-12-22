@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Role, Gender, Prisma, BloodType } from "@prisma/client";
+import { isAllowedNameSuffix } from "@/lib/validation";
 import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
@@ -59,6 +60,9 @@ function buildEmployeeUpdateInput(raw: Record<string, unknown>): Prisma.Employee
     if (typeof raw.mname === "string") data.mname = raw.mname;
     if (typeof raw.lname === "string") data.lname = raw.lname;
 
+    const suffix = normalizeStringOrNull(raw.suffix);
+    if (suffix !== undefined) data.suffix = suffix;
+
     const dob = toDate(raw.date_of_birth);
     if (dob) data.date_of_birth = dob;
 
@@ -110,6 +114,10 @@ export async function GET() {
         const profile = user.employee
             ? {
                 ...user.employee,
+                suffix:
+                    typeof user.employee.suffix === "string" && user.employee.suffix.trim()
+                        ? user.employee.suffix.trim()
+                        : null,
                 email: user.employee.email || "",
                 bloodtype:
                     user.employee.bloodtype && typeof user.employee.bloodtype === "string"
@@ -144,6 +152,20 @@ export async function PUT(req: Request) {
 
         const payload = await req.json();
         const profile = (payload?.profile ?? {}) as Record<string, unknown>;
+
+        if (profile.suffix !== undefined) {
+            const normalizedSuffix =
+                typeof profile.suffix === "string" ? profile.suffix.trim() : profile.suffix;
+
+            if (!isAllowedNameSuffix(normalizedSuffix as string | null | undefined)) {
+                return NextResponse.json(
+                    { error: "Suffix must be Jr., Sr., II, III, IV, or left blank." },
+                    { status: 400 }
+                );
+            }
+
+            profile.suffix = typeof normalizedSuffix === "string" ? normalizedSuffix || null : normalizedSuffix;
+        }
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },

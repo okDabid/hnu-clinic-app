@@ -11,6 +11,7 @@ import {
     AppointmentStatus,
 } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
+import { isAllowedNameSuffix } from "@/lib/validation";
 
 // Generate random password (8 chars)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -81,9 +82,9 @@ export async function POST(req: Request) {
             );
         }
 
-        if (suffix && isInvalidName(suffix)) {
+        if (!isAllowedNameSuffix(suffix)) {
             return NextResponse.json(
-                { error: "Suffix must only include letters, spaces, apostrophes, periods, or hyphens." },
+                { error: "Suffix must be Jr., Sr., II, III, IV, or left blank." },
                 { status: 400 }
             );
         }

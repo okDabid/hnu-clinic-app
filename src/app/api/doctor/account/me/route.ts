@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Role, Gender, BloodType, Prisma, Employee } from "@prisma/client";
+import { isAllowedNameSuffix } from "@/lib/validation";
 import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
@@ -63,7 +64,9 @@ function buildEmployeeUpdateInput(
     data.fname = stringField("fname");
     data.mname = stringField("mname");
     data.lname = stringField("lname");
-    data.suffix = stringField("suffix");
+    const suffix = stringField("suffix");
+    if (suffix !== undefined) data.suffix = suffix;
+    else if (raw.suffix === null) data.suffix = null;
     data.email = stringField("email");
     data.contactno = stringField("contactno");
     data.address = stringField("address");
@@ -108,7 +111,15 @@ export async function GET() {
             role: user.role,
             status: user.status,
             specialization: user.employee?.specialization ?? null,
-            profile: user.employee ?? null,
+            profile: user.employee
+                ? {
+                    ...user.employee,
+                    suffix:
+                        typeof user.employee.suffix === "string" && user.employee.suffix.trim()
+                            ? user.employee.suffix.trim()
+                            : null,
+                }
+                : null,
         });
     } catch (err) {
         console.error("[GET /api/doctor/account/me]", err);
@@ -143,6 +154,19 @@ export async function PUT(req: Request) {
         const incomingDOB = toDate(profile.date_of_birth);
         const existingDOB = existing.date_of_birth ?? null;
         const incomingGender = isGender(profile.gender) ? profile.gender : null;
+
+        if (profile.suffix !== undefined) {
+            const suffix = typeof profile.suffix === "string" ? profile.suffix.trim() : "";
+
+            if (!isAllowedNameSuffix(suffix)) {
+                return NextResponse.json(
+                    { error: "Suffix must be Jr., Sr., II, III, IV, or left blank." },
+                    { status: 400 }
+                );
+            }
+
+            profile.suffix = suffix || null;
+        }
 
         if (existing.gender && incomingGender && existing.gender !== incomingGender) {
             return NextResponse.json(
