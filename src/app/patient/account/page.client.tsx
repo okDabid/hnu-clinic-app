@@ -197,6 +197,7 @@ export function PatientAccountPageClient({
 }: PatientAccountPageClientProps) {
     const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
     const suffixOptions = NAME_SUFFIX_OPTIONS.filter(Boolean);
+    const NO_SUFFIX_VALUE = "__none__";
     const normalizedTypeValue =
         initialPatientType === "student" || initialPatientType === "employee"
             ? initialPatientType
@@ -976,14 +977,17 @@ export function PatientAccountPageClient({
                                             <Select
                                                 value={profile.suffix ?? ""}
                                                 onValueChange={(value) =>
-                                                    setProfile({ ...profile, suffix: value || null })
+                                                    setProfile({
+                                                        ...profile,
+                                                        suffix: value === NO_SUFFIX_VALUE ? null : value,
+                                                    })
                                                 }
                                             >
                                                 <SelectTrigger id="suffix">
                                                     <SelectValue placeholder="No suffix" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">No suffix</SelectItem>
+                                                    <SelectItem value={NO_SUFFIX_VALUE}>No suffix</SelectItem>
                                                     {suffixOptions.map((suffix) => (
                                                         <SelectItem key={suffix} value={suffix}>
                                                             {suffix}

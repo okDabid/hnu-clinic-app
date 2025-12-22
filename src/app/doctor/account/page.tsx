@@ -91,6 +91,7 @@ function buildPhoneNumberFromSubscriber(subscriber: string) {
 export default function DoctorAccountPage() {
     const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
     const suffixOptions = NAME_SUFFIX_OPTIONS.filter(Boolean);
+    const NO_SUFFIX_VALUE = "__none__";
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
     const [initializing, setInitializing] = useState(true);
@@ -690,14 +691,17 @@ export default function DoctorAccountPage() {
                                             <Select
                                                 value={profile.suffix ?? ""}
                                                 onValueChange={(value) =>
-                                                    setProfile({ ...profile, suffix: value || null })
+                                                    setProfile({
+                                                        ...profile,
+                                                        suffix: value === NO_SUFFIX_VALUE ? null : value,
+                                                    })
                                                 }
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="No suffix" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">No suffix</SelectItem>
+                                                    <SelectItem value={NO_SUFFIX_VALUE}>No suffix</SelectItem>
                                                     {suffixOptions.map((suffix) => (
                                                         <SelectItem key={suffix} value={suffix}>
                                                             {suffix}

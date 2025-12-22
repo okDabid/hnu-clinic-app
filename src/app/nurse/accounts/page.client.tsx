@@ -783,6 +783,7 @@ export function NurseAccountsPageClient({
 
     const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
     const suffixOptions = NAME_SUFFIX_OPTIONS.filter(Boolean);
+    const NO_SUFFIX_VALUE = "__none__";
     const PHONE_PREFIX = "09";
 
     const extractSubscriberDigits = (value?: string | null) => {
@@ -1156,14 +1157,17 @@ export function NurseAccountsPageClient({
                                             <Select
                                                 value={profile.suffix ?? ""}
                                                 onValueChange={(value) =>
-                                                    setProfile({ ...profile, suffix: value || null })
+                                                    setProfile({
+                                                        ...profile,
+                                                        suffix: value === NO_SUFFIX_VALUE ? null : value,
+                                                    })
                                                 }
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="No suffix" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="">No suffix</SelectItem>
+                                                    <SelectItem value={NO_SUFFIX_VALUE}>No suffix</SelectItem>
                                                     {suffixOptions.map((suffix) => (
                                                         <SelectItem key={suffix} value={suffix}>
                                                             {suffix}
@@ -1370,12 +1374,17 @@ export function NurseAccountsPageClient({
                                 </div>
                                 <div>
                                     <Label className="block mb-1 font-medium">Suffix</Label>
-                                    <Select value={newSuffix} onValueChange={setNewSuffix}>
+                                    <Select
+                                        value={newSuffix}
+                                        onValueChange={(value) =>
+                                            setNewSuffix(value === NO_SUFFIX_VALUE ? "" : value)
+                                        }
+                                    >
                                         <SelectTrigger>
                                             <SelectValue placeholder="No suffix" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="">No suffix</SelectItem>
+                                            <SelectItem value={NO_SUFFIX_VALUE}>No suffix</SelectItem>
                                             {suffixOptions.map((suffix) => (
                                                 <SelectItem key={suffix} value={suffix}>
                                                     {suffix}
