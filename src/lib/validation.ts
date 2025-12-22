@@ -1,5 +1,11 @@
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_NUMBER_REGEX = /^09\d{9}$/;
+export const NAME_SUFFIX_OPTIONS = ["", "Jr.", "Sr.", "II", "III", "IV"] as const;
+
+export function isAllowedNameSuffix(value?: string | null): boolean {
+    if (value === undefined || value === null || value === "") return true;
+    return NAME_SUFFIX_OPTIONS.includes(value as (typeof NAME_SUFFIX_OPTIONS)[number]);
+}
 
 /**
  * Normalizes user-entered phone numbers to the 11-digit 09XXXXXXXXX format.

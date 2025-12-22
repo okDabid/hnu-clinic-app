@@ -12,6 +12,7 @@ import {
 } from "@prisma/client";
 import { issueEmailVerification, clearEmailVerifications } from "@/lib/email-verification";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import { isAllowedNameSuffix } from "@/lib/validation";
 
 // ---------------- ENUM HELPERS ----------------
 function mapDepartment(val?: string | null): Department | undefined {
@@ -135,6 +136,7 @@ function buildStudentUpdateInput(raw: Record<string, unknown>): Prisma.StudentUp
     if (typeof raw.mname === "string") data.mname = raw.mname;
     if (typeof raw.lname === "string") data.lname = raw.lname;
     if (typeof raw.suffix === "string") data.suffix = raw.suffix;
+    else if (raw.suffix === null) data.suffix = null;
     if (typeof raw.email === "string") data.email = raw.email;
     if (isGender(raw.gender)) data.gender = raw.gender;
     const dob = toDate(raw.date_of_birth);
@@ -188,6 +190,7 @@ function buildEmployeeUpdateInput(
 
     const suffix = stringField("suffix");
     if (suffix !== undefined) data.suffix = suffix;
+    else if (raw.suffix === null) data.suffix = null;
 
     const email = stringField("email");
     if (email !== undefined) data.email = email;
@@ -271,6 +274,19 @@ export async function PUT(req: Request) {
 
         const payload = await req.json();
         const profile = (payload?.profile ?? {}) as Record<string, unknown>;
+
+        if (profile.suffix !== undefined) {
+            const normalizedSuffix = typeof profile.suffix === "string" ? profile.suffix.trim() : profile.suffix;
+
+            if (!isAllowedNameSuffix(normalizedSuffix as string | null | undefined)) {
+                return NextResponse.json(
+                    { error: "Suffix must be Jr., Sr., II, III, IV, or left blank." },
+                    { status: 400 }
+                );
+            }
+
+            profile.suffix = typeof normalizedSuffix === "string" ? normalizedSuffix || null : normalizedSuffix;
+        }
 
         const user = await prisma.users.findUnique({
             where: { user_id: session.user.id },

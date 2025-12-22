@@ -24,7 +24,12 @@ import { AccountSection } from "@/components/account/account-section";
 import { AccountSummaryGrid } from "@/components/account/account-summary";
 import type { AccountSummaryItem } from "@/components/account/account-summary";
 import type { AccountPasswordResult } from "@/components/account/account-password-dialog";
-import { formatPhoneInputDisplay, validateAndNormalizeContacts } from "@/lib/validation";
+import {
+    formatPhoneInputDisplay,
+    isAllowedNameSuffix,
+    NAME_SUFFIX_OPTIONS,
+    validateAndNormalizeContacts,
+} from "@/lib/validation";
 import { handleRateLimitError } from "@/lib/rate-limit-toast";
 
 import DoctorAccountLoading from "./loading";
@@ -85,6 +90,7 @@ function buildPhoneNumberFromSubscriber(subscriber: string) {
 
 export default function DoctorAccountPage() {
     const namePattern = /^[A-Za-z][A-Za-z\s'\-.]*$/;
+    const suffixOptions = NAME_SUFFIX_OPTIONS.filter(Boolean);
     const [profile, setProfile] = useState<Profile | null>(null);
     const [profileLoading, setProfileLoading] = useState(false);
     const [initializing, setInitializing] = useState(true);
@@ -183,10 +189,8 @@ export default function DoctorAccountPage() {
             return;
         }
 
-        if (profile.suffix && isInvalidName(profile.suffix)) {
-            toast.error(
-                "Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
-            );
+        if (!isAllowedNameSuffix(profile.suffix)) {
+            toast.error("Please select a valid suffix option or leave it blank.");
             return;
         }
 
@@ -683,11 +687,24 @@ export default function DoctorAccountPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
-                                            <Input
-                                                value={profile.suffix || ""}
-                                                onChange={(e) => setProfile({ ...profile, suffix: e.target.value })}
-                                                placeholder="Jr., Sr., III"
-                                            />
+                                            <Select
+                                                value={profile.suffix ?? ""}
+                                                onValueChange={(value) =>
+                                                    setProfile({ ...profile, suffix: value || null })
+                                                }
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="No suffix" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="">No suffix</SelectItem>
+                                                    {suffixOptions.map((suffix) => (
+                                                        <SelectItem key={suffix} value={suffix}>
+                                                            {suffix}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
                                 </AccountSection>
