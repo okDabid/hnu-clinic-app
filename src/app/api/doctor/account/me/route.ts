@@ -111,7 +111,15 @@ export async function GET() {
             role: user.role,
             status: user.status,
             specialization: user.employee?.specialization ?? null,
-            profile: user.employee ?? null,
+            profile: user.employee
+                ? {
+                    ...user.employee,
+                    suffix:
+                        typeof user.employee.suffix === "string" && user.employee.suffix.trim()
+                            ? user.employee.suffix.trim()
+                            : null,
+                }
+                : null,
         });
     } catch (err) {
         console.error("[GET /api/doctor/account/me]", err);

@@ -126,6 +126,11 @@ export default function DoctorAccountPage() {
                 return;
             }
 
+            const normalizedSuffix =
+                typeof data.profile?.suffix === "string" && data.profile.suffix.trim()
+                    ? data.profile.suffix.trim()
+                    : null;
+
             setProfile({
                 user_id: data.accountId,
                 username: data.username,
@@ -134,7 +139,7 @@ export default function DoctorAccountPage() {
                 fname: data.profile?.fname || "",
                 mname: data.profile?.mname || "",
                 lname: data.profile?.lname || "",
-                suffix: data.profile?.suffix ?? null,
+                suffix: normalizedSuffix,
                 date_of_birth: data.profile?.date_of_birth || "",
                 gender: data.profile?.gender || "",
                 contactno: data.profile?.contactno || "",

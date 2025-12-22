@@ -254,7 +254,12 @@ export async function GET() {
             role: user.role,
             status: user.status,
             type: user.student ? "student" : user.employee ? "employee" : null,
-            profile: user.student ?? user.employee ?? null,
+            profile:
+                user.student
+                    ? { ...user.student, suffix: user.student.suffix?.trim() || null }
+                    : user.employee
+                        ? { ...user.employee, suffix: user.employee.suffix?.trim() || null }
+                        : null,
         });
     } catch (err) {
         console.error("[GET /api/patient/account/me]", err);
