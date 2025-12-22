@@ -157,25 +157,36 @@ export default function DoctorAccountPage() {
             return;
         }
 
-        const isInvalidName = (value: string) => !namePattern.test(value.trim());
+        const isInvalidName = (value: string) => {
+            const trimmed = value.trim();
+            return trimmed.length < 2 || !namePattern.test(trimmed);
+        };
 
         if (isInvalidName(profile.fname)) {
-            toast.error("First name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "First name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 
         if (profile.mname && isInvalidName(profile.mname)) {
-            toast.error("Middle name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "Middle name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 
         if (isInvalidName(profile.lname)) {
-            toast.error("Last name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "Last name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 
         if (profile.suffix && isInvalidName(profile.suffix)) {
-            toast.error("Suffix can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 

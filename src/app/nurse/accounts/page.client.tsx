@@ -415,7 +415,7 @@ export function NurseAccountsPageClient({
         const studentId = getTrimmedValue("student_id");
 
         const isNumeric = (value: string) => /^\d+$/.test(value);
-        const isInvalidName = (value: string) => !namePattern.test(value);
+        const isInvalidName = (value: string) => value.length < 2 || !namePattern.test(value);
 
         if (employeeId && !isNumeric(employeeId)) {
             toast.error("Employee ID must contain numbers only.", { position: "top-center" });
@@ -428,28 +428,31 @@ export function NurseAccountsPageClient({
         }
 
         if (!fname || isInvalidName(fname)) {
-            toast.error("First name can only include letters, spaces, apostrophes, or hyphens.", {
+            toast.error("First name must be at least 2 characters and can only include letters, spaces, apostrophes, or hyphens.", {
                 position: "top-center",
             });
             return;
         }
 
         if (!lname || isInvalidName(lname)) {
-            toast.error("Last name can only include letters, spaces, apostrophes, or hyphens.", {
+            toast.error("Last name must be at least 2 characters and can only include letters, spaces, apostrophes, or hyphens.", {
                 position: "top-center",
             });
             return;
         }
 
         if (mnameRaw && isInvalidName(mnameRaw)) {
-            toast.error("Middle name can only include letters, spaces, apostrophes, or hyphens.", {
-                position: "top-center",
-            });
+            toast.error(
+                "Middle name must be at least 2 characters and can only include letters, spaces, apostrophes, or hyphens.",
+                {
+                    position: "top-center",
+                }
+            );
             return;
         }
 
         if (suffix && isInvalidName(suffix)) {
-            toast.error("Suffix can only include letters, spaces, apostrophes, periods, or hyphens.", {
+            toast.error("Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens.", {
                 position: "top-center",
             });
             return;
@@ -554,25 +557,33 @@ export function NurseAccountsPageClient({
         const mname = (profile.mname ?? "").trim();
         const suffix = (profile.suffix ?? "").trim();
 
-        const isInvalidName = (value: string) => !namePattern.test(value);
+        const isInvalidName = (value: string) => value.length < 2 || !namePattern.test(value);
 
         if (!fname || isInvalidName(fname)) {
-            toast.error("First name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "First name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 
         if (mname && isInvalidName(mname)) {
-            toast.error("Middle name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "Middle name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 
         if (!lname || isInvalidName(lname)) {
-            toast.error("Last name can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "Last name must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 
         if (suffix && isInvalidName(suffix)) {
-            toast.error("Suffix can only include letters, spaces, apostrophes, periods, or hyphens.");
+            toast.error(
+                "Suffix must be at least 2 characters and can only include letters, spaces, apostrophes, periods, or hyphens."
+            );
             return;
         }
 
