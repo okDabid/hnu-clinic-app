@@ -145,7 +145,7 @@ export function normalizePatientAccountProfile(
         fname: raw.fname || "",
         mname: raw.mname || "",
         lname: raw.lname || "",
-        suffix: raw.suffix || "",
+        suffix: raw.suffix ?? null,
         date_of_birth: raw.date_of_birth || "",
         email: raw.email || "",
         contactno: raw.contactno || "",

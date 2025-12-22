@@ -151,7 +151,7 @@ export function normalizeNurseAccountProfile(
         fname: response.profile?.fname || "",
         mname: response.profile?.mname || "",
         lname: response.profile?.lname || "",
-        suffix: response.profile?.suffix || "",
+        suffix: response.profile?.suffix ?? null,
         date_of_birth: response.profile?.date_of_birth || "",
         gender: response.profile?.gender || "",
         contactno: response.profile?.contactno || "",

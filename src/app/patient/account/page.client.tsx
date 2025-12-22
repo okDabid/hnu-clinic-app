@@ -975,7 +975,7 @@ export function PatientAccountPageClient({
                                                 Suffix
                                             </Label>
                                             <Select
-                                                value={profile.suffix ?? ""}
+                                                value={profile.suffix ?? NO_SUFFIX_VALUE}
                                                 onValueChange={(value) =>
                                                     setProfile({
                                                         ...profile,

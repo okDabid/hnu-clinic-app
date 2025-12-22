@@ -1155,7 +1155,7 @@ export function NurseAccountsPageClient({
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
                                             <Select
-                                                value={profile.suffix ?? ""}
+                                                value={profile.suffix ?? NO_SUFFIX_VALUE}
                                                 onValueChange={(value) =>
                                                     setProfile({
                                                         ...profile,
@@ -1375,7 +1375,7 @@ export function NurseAccountsPageClient({
                                 <div>
                                     <Label className="block mb-1 font-medium">Suffix</Label>
                                     <Select
-                                        value={newSuffix}
+                                        value={newSuffix || NO_SUFFIX_VALUE}
                                         onValueChange={(value) =>
                                             setNewSuffix(value === NO_SUFFIX_VALUE ? "" : value)
                                         }

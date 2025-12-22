@@ -134,7 +134,7 @@ export default function DoctorAccountPage() {
                 fname: data.profile?.fname || "",
                 mname: data.profile?.mname || "",
                 lname: data.profile?.lname || "",
-                suffix: data.profile?.suffix || "",
+                suffix: data.profile?.suffix ?? null,
                 date_of_birth: data.profile?.date_of_birth || "",
                 gender: data.profile?.gender || "",
                 contactno: data.profile?.contactno || "",
@@ -689,7 +689,7 @@ export default function DoctorAccountPage() {
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium text-emerald-900">Suffix</Label>
                                             <Select
-                                                value={profile.suffix ?? ""}
+                                                value={profile.suffix ?? NO_SUFFIX_VALUE}
                                                 onValueChange={(value) =>
                                                     setProfile({
                                                         ...profile,
