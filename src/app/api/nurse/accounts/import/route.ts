@@ -72,6 +72,7 @@ function normalizePayload(row: Record<string, string>) {
         mname: row.mname || undefined,
         lname: row.lname,
         suffix: row.suffix || undefined,
+        password: row.password || undefined,
         patientType,
         student_id: row.student_id || undefined,
         employee_id: row.employee_id || undefined,

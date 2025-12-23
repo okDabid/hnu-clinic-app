@@ -135,8 +135,13 @@ export async function POST(req: Request) {
             }
         }
 
-        // Generate password
-        const plainPassword = generatePassword();
+        // Generate password (use provided if available)
+        const providedPassword =
+            typeof payload.password === "string" && payload.password.trim().length > 0
+                ? payload.password.trim()
+                : null;
+
+        const plainPassword = providedPassword ?? generatePassword();
         const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
         // Shared fields
