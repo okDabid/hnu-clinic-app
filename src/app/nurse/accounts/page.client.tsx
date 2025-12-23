@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import {
     Ban,
@@ -15,9 +14,7 @@ import {
     UserRound,
     Phone,
     KeyRound,
-    HeartPulse,
     Upload,
-    FileDown,
 } from "lucide-react";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
@@ -1608,13 +1605,6 @@ export function NurseAccountsPageClient({
                                 Upload a CSV exported from your roster to quickly seed nurse, doctor, or patient accounts.
                             </p>
                         </div>
-                        <Link
-                            href="/samples/nurse-account-import.csv"
-                            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80"
-                        >
-                            <FileDown className="h-4 w-4" />
-                            Download sample CSV
-                        </Link>
                     </CardHeader>
                     <CardContent className="space-y-4 pt-6">
                         <form onSubmit={handleImportAccounts} className="space-y-3">
