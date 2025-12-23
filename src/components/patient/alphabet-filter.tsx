@@ -18,7 +18,7 @@ export function AlphabetFilter({ label = "Filter by initial", value, onChange, d
     return (
         <div className="space-y-2">
             <p className="text-sm font-semibold text-primary">{label}</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-[1.5fr_repeat(26,minmax(0,1fr))] gap-2">
                 {options.map((option) => {
                     const isActive = value === option;
                     return (
