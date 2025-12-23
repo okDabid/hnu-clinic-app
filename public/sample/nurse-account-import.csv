@@ -1,0 +1,5 @@
+role,fname,mname,lname,suffix,password,patienttype,student_id,employee_id,working_scholar,department,program,year_level,specialization,email,phone,address,allergies,bloodtype,medical_cond,emergencyco_name,emergencyco_num,emergencyco_relation
+NURSE,Jamie,,Villanueva,,TempP@ss1!,,,NRS-101,,HEALTH_SCIENCES,,, ,jamie.villanueva@hnu.edu.ph,09171234567,"Clinics Building, Room 2",Latex,A+,Asthma,Pat Villanueva,09179876543,Sibling
+DOCTOR,Alex,M.,Lim,,CareDoc#2,,,DOC-202,,HEALTH_SCIENCES,,,Physician,alex.lim@hnu.edu.ph,09172345678,"Main Campus, Faculty Lane",,A-,Hypertension,Ivy Lim,09177654321,Spouse
+PATIENT,Ana,Reyes,Santos,II,SafeStu3$,student,2024-00123,,yes,HEALTH_SCIENCES,BS Nursing,THIRD_YEAR,,ana.santos@hnu.edu.ph,09173456789,"Dormitory 3, Room 12",Peanuts,O+,"Asthma, Diabetes",Liza Santos,09174567890,Mother
+PATIENT,Carlos,,Diaz,Jr.,EmpCare4!,employee,,EMP-445,false,BUSINESS_AND_ACCOUNTANCY,,,,carlos.diaz@hnu.edu.ph,09175678901,"City Heights Subdivision",,O-,Nervous/Mental Disorder,Maria Diaz,09171239876,Spouse
