@@ -1602,7 +1602,7 @@ export function NurseAccountsPageClient({
                         <div className="space-y-1">
                             <CardTitle className="text-xl sm:text-2xl font-bold text-primary">Import accounts from CSV</CardTitle>
                             <p className="text-sm text-muted-foreground">
-                                Upload a CSV exported from your roster to quickly seed nurse, doctor, or patient accounts.
+                                Upload a CSV file to quickly create nurse, doctor, or patient accounts.
                             </p>
                         </div>
                     </CardHeader>
