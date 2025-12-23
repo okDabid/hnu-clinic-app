@@ -61,6 +61,23 @@ export async function POST(req: Request) {
         const roleEnum = payload.role as Role;
         const workingScholar = Boolean(payload.workingScholar);
 
+        const employeeIdRaw = payload.employee_id;
+        const studentIdRaw = payload.student_id;
+
+        const employeeId =
+            typeof employeeIdRaw === "string"
+                ? employeeIdRaw.trim()
+                : employeeIdRaw != null
+                    ? String(employeeIdRaw).trim()
+                    : "";
+
+        const studentId =
+            typeof studentIdRaw === "string"
+                ? studentIdRaw.trim()
+                : studentIdRaw != null
+                    ? String(studentIdRaw).trim()
+                    : "";
+
         const fname = typeof payload.fname === "string" ? payload.fname.trim() : "";
         const mname = typeof payload.mname === "string" ? payload.mname.trim() : "";
         const lname = typeof payload.lname === "string" ? payload.lname.trim() : "";
@@ -92,11 +109,11 @@ export async function POST(req: Request) {
         // Determine username
         let username: string;
         if (roleEnum === Role.NURSE || roleEnum === Role.DOCTOR) {
-            username = payload.employee_id;
+            username = employeeId;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "student") {
-            username = payload.student_id;
+            username = studentId;
         } else if (roleEnum === Role.PATIENT && payload.patientType === "employee") {
-            username = payload.employee_id;
+            username = employeeId;
         } else {
             const suffixSlug = suffix.replace(/[^a-zA-Z]/g, "").toLowerCase();
             const baseUsername = `${fname.toLowerCase()}.${lname.toLowerCase()}`;
@@ -109,7 +126,7 @@ export async function POST(req: Request) {
 
         if (isStudentPatient) {
             const [existingStudent, existingUser] = await Promise.all([
-                prisma.student.findUnique({ where: { student_id: payload.student_id } }),
+                prisma.student.findUnique({ where: { student_id: studentId } }),
                 prisma.users.findUnique({ where: { username } }),
             ]);
 
@@ -123,7 +140,7 @@ export async function POST(req: Request) {
 
         if (isEmployeePatient || isEmployeeRole) {
             const [existingEmployee, existingUser] = await Promise.all([
-                prisma.employee.findUnique({ where: { employee_id: payload.employee_id } }),
+                prisma.employee.findUnique({ where: { employee_id: employeeId } }),
                 prisma.users.findUnique({ where: { username } }),
             ]);
 
@@ -186,7 +203,7 @@ export async function POST(req: Request) {
                 await tx.student.create({
                     data: {
                         user_id: newUser.user_id,
-                        student_id: payload.student_id,
+                        student_id: studentId,
                         is_working_scholar: workingScholar,
                         department,
                         program: payload.program ?? null,
@@ -200,7 +217,7 @@ export async function POST(req: Request) {
                 await tx.employee.create({
                     data: {
                         user_id: newUser.user_id,
-                        employee_id: payload.employee_id,
+                        employee_id: employeeId,
                         ...sharedProfileData,
                     },
                 });
@@ -210,7 +227,7 @@ export async function POST(req: Request) {
                 await tx.employee.create({
                     data: {
                         user_id: newUser.user_id,
-                        employee_id: payload.employee_id,
+                        employee_id: employeeId,
                         specialization:
                             roleEnum === Role.DOCTOR
                                 ? payload.specialization === "Physician"

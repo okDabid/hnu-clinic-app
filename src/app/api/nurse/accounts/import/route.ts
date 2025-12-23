@@ -66,6 +66,9 @@ function normalizeBoolean(value?: string) {
 function normalizePayload(row: Record<string, string>) {
     const patientType = row.patienttype?.toLowerCase() as "student" | "employee" | undefined;
 
+    const studentId = row.student_id !== undefined ? String(row.student_id).trim() : undefined;
+    const employeeId = row.employee_id !== undefined ? String(row.employee_id).trim() : undefined;
+
     return {
         role: row.role?.toUpperCase(),
         fname: row.fname,
@@ -74,8 +77,8 @@ function normalizePayload(row: Record<string, string>) {
         suffix: row.suffix || undefined,
         password: row.password || undefined,
         patientType,
-        student_id: row.student_id || undefined,
-        employee_id: row.employee_id || undefined,
+        student_id: studentId || undefined,
+        employee_id: employeeId || undefined,
         workingScholar: patientType === "student" ? normalizeBoolean(row.working_scholar || row.workingscholar) : false,
         department: row.department?.toUpperCase() || undefined,
         program: row.program || undefined,
