@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
     Ban,
@@ -15,6 +16,8 @@ import {
     Phone,
     KeyRound,
     HeartPulse,
+    Upload,
+    FileDown,
 } from "lucide-react";
 
 import { NurseLayout } from "@/components/nurse/nurse-layout";
@@ -159,8 +162,14 @@ export function NurseAccountsPageClient({
     const [showCreateConfirm, setShowCreateConfirm] = useState(false);
     const [createdCredentials, setCreatedCredentials] = useState<{ id: string; password: string } | null>(null);
     const [showCreateSuccess, setShowCreateSuccess] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [importResult, setImportResult] = useState<
+        | { created: number; failed: number; errors: { row: number; message: string }[] }
+        | null
+    >(null);
 
     const formRef = useRef<HTMLFormElement | null>(null);
+    const importInputRef = useRef<HTMLInputElement | null>(null);
 
     const [isRefreshingUsers, startUsersTransition] = useTransition();
     const deferredSearch = useDeferredValue(search.trim().toLowerCase());
@@ -320,6 +329,50 @@ export function NurseAccountsPageClient({
             setRefreshingProfile(false);
         }
     }, [loadProfile]);
+
+    const handleImportAccounts = useCallback(
+        async (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+
+            const file = importInputRef.current?.files?.[0];
+            if (!file) {
+                toast.error("Please choose a CSV file to import.", { position: "top-center" });
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                setImporting(true);
+                setImportResult(null);
+                const res = await fetch("/api/nurse/accounts/import", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    toast.error(data?.error ?? "Failed to import accounts from CSV.");
+                    return;
+                }
+
+                setImportResult(data);
+                toast.success(`Imported ${data.created} account(s) from CSV.`);
+                await loadUsers({ silent: true });
+            } catch (err) {
+                console.error("Failed to import accounts:", err);
+                toast.error("Unexpected error while importing accounts.");
+            } finally {
+                setImporting(false);
+                if (importInputRef.current) {
+                    importInputRef.current.value = "";
+                }
+            }
+        },
+        [importInputRef, loadUsers]
+    );
 
     useEffect(() => {
         if (!profileLoaded) {
@@ -1542,6 +1595,72 @@ export function NurseAccountsPageClient({
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
+                    </CardContent>
+                </Card>
+
+
+                {/* Import Users via CSV */}
+                <Card className="rounded-3xl border border-primary/20 bg-white/85 shadow-sm transition hover:-translate-y-px hover:shadow-md">
+                    <CardHeader className="flex flex-col gap-2 border-b sm:flex-row sm:items-center sm:justify-between">
+                        <div className="space-y-1">
+                            <CardTitle className="text-xl sm:text-2xl font-bold text-primary">Import accounts from CSV</CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Upload a CSV exported from your roster to quickly seed nurse, doctor, or patient accounts.
+                            </p>
+                        </div>
+                        <Link
+                            href="/samples/nurse-account-import.csv"
+                            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80"
+                        >
+                            <FileDown className="h-4 w-4" />
+                            Download sample CSV
+                        </Link>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-6">
+                        <form onSubmit={handleImportAccounts} className="space-y-3">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <Input ref={importInputRef} type="file" accept=".csv" disabled={importing} />
+                                <Button
+                                    type="submit"
+                                    className="flex items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-70"
+                                    disabled={importing}
+                                >
+                                    {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                                    {importing ? "Importing..." : "Import accounts"}
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Required columns: <strong>role</strong>, <strong>fname</strong>, and <strong>lname</strong>. Include
+                                <strong> patienttype</strong> plus an ID column for patients, or an <strong>employee_id</strong> for staff.
+                            </p>
+                        </form>
+
+                        {importResult ? (
+                            <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-slate-800">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800">
+                                        {importResult.created} created
+                                    </span>
+                                    <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800">
+                                        {importResult.failed} with issues
+                                    </span>
+                                </div>
+                                {importResult.errors.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-semibold text-amber-800">Rows needing attention</p>
+                                        <ul className="space-y-1 text-xs text-slate-700">
+                                            {importResult.errors.map((error) => (
+                                                <li key={`row-${error.row}`} className="rounded-lg bg-white/60 p-2 shadow-xs">
+                                                    <span className="font-semibold">Row {error.row}:</span> {error.message}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-emerald-800">All rows imported successfully.</p>
+                                )}
+                            </div>
+                        ) : null}
                     </CardContent>
                 </Card>
 
