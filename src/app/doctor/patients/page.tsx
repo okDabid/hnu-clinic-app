@@ -25,6 +25,7 @@ import { PatientDirectoryTable } from "@/app/nurse/records/patient-directory-tab
 import type { RecordDetailsDialogTab } from "@/app/nurse/records/patient-record-dialog";
 import type { PatientRecord } from "@/app/nurse/records/types";
 import { usePagination } from "@/hooks/use-pagination";
+import { AlphabetFilter } from "@/components/patient/alphabet-filter";
 
 const RecordDetailsDialog = dynamic(
     () => import("@/app/nurse/records/patient-record-dialog").then((mod) => mod.RecordDetailsDialog),
@@ -42,6 +43,7 @@ export default function DoctorPatientsPage() {
     const [statusFilter, setStatusFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
     const [appointmentFilter, setAppointmentFilter] = useState("All");
+    const [letterFilter, setLetterFilter] = useState("All");
     const [loadingRecords, setLoadingRecords] = useState(false);
     const [initializing, setInitializing] = useState(true);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -84,7 +86,13 @@ export default function DoctorPatientsPage() {
     }, [records, selectedRecord]);
 
     const filteredRecords = useMemo(() => {
-        if (!deferredSearch && statusFilter === "All" && typeFilter === "All" && appointmentFilter === "All") {
+        if (
+            !deferredSearch &&
+            statusFilter === "All" &&
+            typeFilter === "All" &&
+            appointmentFilter === "All" &&
+            letterFilter === "All"
+        ) {
             return records;
         }
 
@@ -104,12 +112,15 @@ export default function DoctorPatientsPage() {
                 (appointmentFilter === "With" && record.latestAppointment) ||
                 (appointmentFilter === "Without" && !record.latestAppointment);
 
-            return matchesSearch && matchesStatus && matchesType && matchesAppointment;
+            const matchesLetter =
+                letterFilter === "All" || record.fullName.trim().toUpperCase().startsWith(letterFilter);
+
+            return matchesSearch && matchesStatus && matchesType && matchesAppointment && matchesLetter;
         });
-    }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
+    }, [appointmentFilter, deferredSearch, letterFilter, records, statusFilter, typeFilter]);
 
     const { pageItems: paginatedRecords, currentPage, pageSize, setPage } = usePagination(filteredRecords, {
-        resetDeps: [appointmentFilter, deferredSearch, statusFilter, typeFilter],
+        resetDeps: [appointmentFilter, deferredSearch, letterFilter, statusFilter, typeFilter],
     });
 
     const totalPatients = records.length;
@@ -319,7 +330,8 @@ export default function DoctorPatientsPage() {
                                 </Select>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-4">
+                        <CardContent className="pt-4 space-y-6">
+                            <AlphabetFilter value={letterFilter} onChange={setLetterFilter} />
                             <PatientDirectoryTable
                                 records={paginatedRecords}
                                 loading={loadingRecords}
