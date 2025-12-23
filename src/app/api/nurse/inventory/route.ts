@@ -262,6 +262,36 @@ export async function POST(req: Request) {
         }
 
         if (matchingItem) {
+            const existingReplenishment = await prisma.replenishment.findFirst({
+                where: { med_id: matchingItem.med_id, expiry_date: expiryDate },
+            });
+
+            if (existingReplenishment) {
+                const [, , updatedItem] = await prisma.$transaction([
+                    prisma.medInventory.update({
+                        where: { med_id: matchingItem.med_id },
+                        data: { quantity: { increment: normalizedQuantity } },
+                    }),
+                    prisma.replenishment.update({
+                        where: { replenishment_id: existingReplenishment.replenishment_id },
+                        data: {
+                            quantity_added: { increment: normalizedQuantity },
+                            remaining_qty: { increment: normalizedQuantity },
+                            date_received: new Date(),
+                        },
+                    }),
+                    prisma.medInventory.findUnique({
+                        where: { med_id: matchingItem.med_id },
+                        include: {
+                            clinic: { select: { clinic_name: true, clinic_location: true } },
+                            replenishments: { orderBy: { expiry_date: "asc" } },
+                        },
+                    }),
+                ]);
+
+                return NextResponse.json(updatedItem);
+            }
+
             const updatedItem = await prisma.medInventory.update({
                 where: { med_id: matchingItem.med_id },
                 data: {
