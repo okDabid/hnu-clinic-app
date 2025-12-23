@@ -76,6 +76,7 @@ import { cn } from "@/lib/utils";
 import { usePagination } from "@/hooks/use-pagination";
 import { TablePagination } from "@/components/table-pagination";
 import { sortByFullName } from "@/lib/sorting";
+import { AlphabetFilter } from "@/components/patient/alphabet-filter";
 
 import NurseAccountsLoading from "./loading";
 import {
@@ -137,6 +138,7 @@ export function NurseAccountsPageClient({
     const [roleFilter, setRoleFilter] = useState<RoleFilterValue>("ALL");
     const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
     const [scholarFilter, setScholarFilter] = useState<ScholarFilterValue>("ALL");
+    const [letterFilter, setLetterFilter] = useState("All");
 
     const [profile, setProfile] = useState<NurseAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
@@ -352,7 +354,13 @@ export function NurseAccountsPageClient({
     }, [profile?.gender]);
 
     const filteredUsers = useMemo(() => {
-        if (roleFilter === "ALL" && statusFilter === "ALL" && scholarFilter === "ALL" && !deferredSearch) {
+        if (
+            roleFilter === "ALL" &&
+            statusFilter === "ALL" &&
+            scholarFilter === "ALL" &&
+            letterFilter === "All" &&
+            !deferredSearch
+        ) {
             return users;
         }
 
@@ -374,13 +382,15 @@ export function NurseAccountsPageClient({
                 scholarFilter === "ALL" ||
                 (scholarFilter === "SCHOLAR" && u.isWorkingScholar) ||
                 (scholarFilter === "NON_SCHOLAR" && !u.isWorkingScholar);
+            const matchesLetter =
+                letterFilter === "All" || u.fullName.trim().toUpperCase().startsWith(letterFilter);
 
-            return matchesQuery && matchesRole && matchesStatus && matchesScholar;
+            return matchesQuery && matchesRole && matchesStatus && matchesScholar && matchesLetter;
         });
-    }, [deferredSearch, roleFilter, scholarFilter, statusFilter, users]);
+    }, [deferredSearch, letterFilter, roleFilter, scholarFilter, statusFilter, users]);
 
     const { pageItems: paginatedUsers, currentPage, pageSize, setPage } = usePagination(filteredUsers, {
-        resetDeps: [deferredSearch, roleFilter, scholarFilter, statusFilter],
+        resetDeps: [deferredSearch, letterFilter, roleFilter, scholarFilter, statusFilter],
     });
 
     // Create user
@@ -1613,6 +1623,15 @@ export function NurseAccountsPageClient({
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <AlphabetFilter
+                                label="Filter by name initial"
+                                value={letterFilter}
+                                onChange={(val) => {
+                                    setLetterFilter(val);
+                                    setPage(1);
+                                }}
+                                disabled={loading || isRefreshingUsers}
+                            />
                         </div>
                     </CardHeader>
 

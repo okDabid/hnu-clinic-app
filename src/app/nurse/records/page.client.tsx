@@ -26,6 +26,7 @@ import { PatientDirectoryTable } from "./patient-directory-table";
 import type { RecordDetailsDialogTab } from "./patient-record-dialog";
 import type { PatientRecord } from "./types";
 import { usePagination } from "@/hooks/use-pagination";
+import { AlphabetFilter } from "@/components/patient/alphabet-filter";
 
 
 const RecordDetailsDialog = dynamic(
@@ -48,6 +49,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
+    const [letterFilter, setLetterFilter] = useState("All");
     const [loadingRecords, setLoadingRecords] = useState(false);
     const [initializing, setInitializing] = useState(!initialRecords);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -91,7 +93,7 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
     }, [records, selectedRecord]);
 
     const filteredRecords = useMemo(() => {
-        if (!deferredSearch && statusFilter === "All" && typeFilter === "All") {
+        if (!deferredSearch && statusFilter === "All" && typeFilter === "All" && letterFilter === "All") {
             return records;
         }
 
@@ -107,12 +109,14 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
 
             const matchesStatus = statusFilter === "All" || record.status === statusFilter;
             const matchesType = typeFilter === "All" || record.patientType === typeFilter;
-            return matchesSearch && matchesStatus && matchesType;
+            const matchesLetter =
+                letterFilter === "All" || record.fullName.trim().toUpperCase().startsWith(letterFilter);
+            return matchesSearch && matchesStatus && matchesType && matchesLetter;
         });
-    }, [deferredSearch, records, statusFilter, typeFilter]);
+    }, [deferredSearch, letterFilter, records, statusFilter, typeFilter]);
 
     const { pageItems: paginatedRecords, currentPage, pageSize, setPage } = usePagination(filteredRecords, {
-        resetDeps: [deferredSearch, statusFilter, typeFilter],
+        resetDeps: [deferredSearch, letterFilter, statusFilter, typeFilter],
     });
 
     const totalPatients = records.length;
@@ -324,7 +328,8 @@ export function NurseRecordsPageClient({ initialRecords }: NurseRecordsPageClien
                                 </Select>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-4">
+                        <CardContent className="pt-4 space-y-6">
+                            <AlphabetFilter value={letterFilter} onChange={setLetterFilter} />
                             <PatientDirectoryTable
                                 records={paginatedRecords}
                                 loading={loadingRecords}

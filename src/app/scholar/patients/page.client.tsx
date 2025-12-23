@@ -23,6 +23,7 @@ import ScholarPatientsLoading from "./loading";
 import { PatientsTable } from "./patients-table";
 import { preparePatientRecords, type PreparedPatientRecord } from "./types";
 import { usePagination } from "@/hooks/use-pagination";
+import { AlphabetFilter } from "@/components/patient/alphabet-filter";
 
 const PatientDetailDialog = dynamic(
     () => import("./patient-detail-dialog").then((mod) => mod.PatientDetailDialog),
@@ -47,6 +48,7 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
     const [typeFilter, setTypeFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("active");
     const [appointmentFilter, setAppointmentFilter] = useState("all");
+    const [letterFilter, setLetterFilter] = useState("All");
     const [selected, setSelected] = useState<PreparedPatientRecord | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
     const [isRefreshing, startTransition] = useTransition();
@@ -104,14 +106,21 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
             if (appointmentFilter === "with" && !record.latestAppointment) return false;
             if (appointmentFilter === "without" && record.latestAppointment) return false;
 
+            if (
+                letterFilter !== "All" &&
+                !record.fullName.trim().toUpperCase().startsWith(letterFilter)
+            ) {
+                return false;
+            }
+
             if (!deferredSearch) return true;
 
             return record.searchText.includes(deferredSearch);
         });
-    }, [appointmentFilter, deferredSearch, records, statusFilter, typeFilter]);
+    }, [appointmentFilter, deferredSearch, letterFilter, records, statusFilter, typeFilter]);
 
     const { pageItems: paginatedRecords, currentPage, pageSize, setPage } = usePagination(filteredRecords, {
-        resetDeps: [appointmentFilter, deferredSearch, statusFilter, typeFilter],
+        resetDeps: [appointmentFilter, deferredSearch, letterFilter, statusFilter, typeFilter],
     });
 
     const totalPatients = records.length;
@@ -244,7 +253,8 @@ export function ScholarPatientsPageClient({ initialRecords, initialLoaded }: Sch
                             </Select>
                         </div>
                     </CardHeader>
-                    <CardContent className="pt-4">
+                    <CardContent className="pt-4 space-y-6">
+                        <AlphabetFilter value={letterFilter} onChange={setLetterFilter} />
                         <PatientsTable
                             records={paginatedRecords}
                             loading={loading}
