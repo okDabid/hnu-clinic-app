@@ -500,7 +500,7 @@ export default function NurseInventoryPage() {
                                                 </div>
 
                                                 <div>
-                                                    <Label className="mb-1 block text-sm font-medium text-primary">Item Type</Label>
+                                                    <Label className="mb-1 block text-sm font-medium text-primary">Medicine Type</Label>
                                                     <select
                                                         name="item_type"
                                                         required
@@ -581,7 +581,7 @@ export default function NurseInventoryPage() {
                                                     <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Clinic</TableHead>
                                                     <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Name</TableHead>
                                                     <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Category</TableHead>
-                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Item Type</TableHead>
+                                                    <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Medicine Type</TableHead>
                                                     <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Strength</TableHead>
                                                     <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Total Quantity</TableHead>
                                                     <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Dispensed (All Time)</TableHead>
@@ -607,11 +607,10 @@ export default function NurseInventoryPage() {
                                                             <TableRow
                                                                 key={item.med_id}
                                                                 onClick={() => setSelectedItem(item)}
-                                                                className={`cursor-pointer transition hover:bg-primary/10/70 ${
-                                                                    selectedItem?.med_id === item.med_id
-                                                                        ? "border-primary/40 bg-primary/5"
-                                                                        : ""
-                                                                }`}
+                                                                className={`cursor-pointer transition hover:bg-primary/10/70 ${selectedItem?.med_id === item.med_id
+                                                                    ? "border-primary/40 bg-primary/5"
+                                                                    : ""
+                                                                    }`}
                                                             >
                                                                 <TableCell className="text-sm font-medium text-slate-900">
                                                                     {item.clinic.clinic_name}
@@ -760,7 +759,7 @@ export default function NurseInventoryPage() {
                                             <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Clinic</TableHead>
                                             <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Name</TableHead>
                                             <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Category</TableHead>
-                                            <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Item Type</TableHead>
+                                            <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Medicine Type</TableHead>
                                             <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Strength</TableHead>
                                             <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Quantity Archived</TableHead>
                                             <TableHead className="sticky top-0 bg-primary/10/90 backdrop-blur-sm">Expiry Date</TableHead>

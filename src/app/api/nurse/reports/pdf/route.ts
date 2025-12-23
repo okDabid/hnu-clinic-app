@@ -401,7 +401,7 @@ function createReportHtml(report: ReportsResponse) {
                         <p class="caption">Patient encounters recorded throughout the reporting period.</p>
                     </div>
                     <div class="metric-card">
-                        <span class="label">Unique patients</span>
+                        <span class="label">Walk-in patients</span>
                         <span class="value">${formatNumber(quarter.uniquePatients)}</span>
                         <p class="caption">Individuals who visited the clinic at least once.</p>
                     </div>

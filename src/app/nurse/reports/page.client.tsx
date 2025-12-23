@@ -76,7 +76,7 @@ function formatRange(start: string, end: string) {
 
 const patientTrendConfig = {
     uniquePatients: {
-        label: "Unique patients",
+        label: "Walk-in patients",
         color: "#15803d",
     },
     consultations: {
@@ -335,7 +335,7 @@ export function NurseReportsPageClient({
                                         setYear(Number(value));
                                     }}
                                 >
-                                    <SelectTrigger className="w-[140px] rounded-xl border-primary/30 bg-white/90">
+                                    <SelectTrigger className="w-35 rounded-xl border-primary/30 bg-white/90">
                                         <SelectValue placeholder="Select year" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -357,7 +357,7 @@ export function NurseReportsPageClient({
                                         setQuarter(Number(value));
                                     }}
                                 >
-                                    <SelectTrigger className="w-[140px] rounded-xl border-primary/30 bg-white/90">
+                                    <SelectTrigger className="w-35 rounded-xl border-primary/30 bg-white/90">
                                         <SelectValue placeholder="Select quarter" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -392,7 +392,7 @@ export function NurseReportsPageClient({
                                     Consultations overview
                                 </CardTitle>
                                 <CardDescription>
-                                    Quarter-by-quarter comparison of unique patients and total consultations.
+                                    Quarter-by-quarter comparison of walk-in patients and total consultations.
                                 </CardDescription>
                             </div>
                             <Badge className="flex items-center gap-2 rounded-full bg-primary/10 text-primary">
@@ -431,7 +431,7 @@ export function NurseReportsPageClient({
                                             </div>
                                             <div className="rounded-2xl border border-primary/20 bg-white/90 p-3 text-primary shadow-sm">
                                                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                                                    Unique patients
+                                                    Walk-in patients
                                                 </p>
                                                 <p className="text-2xl font-bold">
                                                     {numberFormatter.format(
@@ -583,8 +583,8 @@ export function NurseReportsPageClient({
                             Quarterly breakdown
                         </CardTitle>
                         <CardDescription>
-                            Consultation volume, unique patients, and illness distribution for each quarter.
-                            Unique patients count distinct individuals so you can spot repeat visits within the
+                            Consultation volume, walk-in patients, and illness distribution for each quarter.
+                            Walk-in patients count distinct individuals so you can spot repeat visits within the
                             same quarter.
                         </CardDescription>
                     </CardHeader>
@@ -594,7 +594,7 @@ export function NurseReportsPageClient({
                                 <TableRow>
                                     <TableHead>Quarter</TableHead>
                                     <TableHead>Consultations</TableHead>
-                                    <TableHead>Unique patients</TableHead>
+                                    <TableHead>Walk-in patients</TableHead>
                                     <TableHead>Tertiary</TableHead>
                                     <TableHead>IBED</TableHead>
                                     <TableHead>Employees</TableHead>
@@ -626,7 +626,7 @@ export function NurseReportsPageClient({
                             </TableBody>
                         </Table>
                         <p className="mt-3 text-xs text-muted-foreground">
-                            Compare consultations and unique patients to understand how many repeat visits
+                            Compare consultations and walk-in patients to understand how many repeat visits
                             occurred during each quarter.
                         </p>
                     </CardContent>
