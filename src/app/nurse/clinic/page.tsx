@@ -127,6 +127,7 @@ export default function NurseClinicPage() {
     const [appointmentsByDate, setAppointmentsByDate] = useState<Record<string, ClinicCalendarAppointment[]>>({});
     const [calendarLoading, setCalendarLoading] = useState(false);
     const [calendarError, setCalendarError] = useState<string | null>(null);
+    const [availabilityClinicId, setAvailabilityClinicId] = useState<string | null>(null);
     const [clinicDoctors, setClinicDoctors] = useState<Record<string, ClinicDoctor[]>>({});
     const [doctorAvailability, setDoctorAvailability] = useState<
         Record<string, Record<string, DoctorAvailability>>
@@ -159,6 +160,12 @@ export default function NurseClinicPage() {
             setScheduleClinicId(clinics[0].clinic_id);
         }
     }, [clinics, scheduleClinicId]);
+
+    useEffect(() => {
+        if (clinics.length > 0 && !availabilityClinicId) {
+            setAvailabilityClinicId(clinics[0].clinic_id);
+        }
+    }, [availabilityClinicId, clinics]);
 
     useEffect(() => {
         if (clinics.length === 0) {
@@ -827,7 +834,7 @@ export default function NurseClinicPage() {
                                     Doctor availability overview
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
-                                    Availability for {selectedDateLabel} across all clinics.
+                                    Availability for {selectedDateLabel}. Select a clinic to view all slots.
                                 </p>
                             </div>
                             {doctorsLoading ? (
@@ -847,108 +854,142 @@ export default function NurseClinicPage() {
                             <p className="text-sm text-muted-foreground">Add clinics to view doctor availability.</p>
                         ) : (
                             <div className="space-y-4">
-                                {clinics.map((clinic) => {
-                                    const doctors = clinicDoctors[clinic.clinic_id] || [];
-                                    const availabilityForClinic = doctorAvailability[clinic.clinic_id] || {};
-
-                                    return (
-                                        <div
+                                <div className="flex flex-wrap gap-2">
+                                    {clinics.map((clinic) => (
+                                        <Button
                                             key={clinic.clinic_id}
-                                            className="rounded-2xl border border-primary/15 bg-white/80 p-4 shadow-sm"
+                                            type="button"
+                                            variant={availabilityClinicId === clinic.clinic_id ? "default" : "outline"}
+                                            className="rounded-full"
+                                            onClick={() => setAvailabilityClinicId(clinic.clinic_id)}
                                         >
-                                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                                                <div>
-                                                    <p className="text-base font-semibold text-slate-900">
-                                                        {clinic.clinic_name}
+                                            {clinic.clinic_name}
+                                        </Button>
+                                    ))}
+                                </div>
+                                {availabilityClinicId ? (
+                                    <div className="rounded-2xl border border-primary/15 bg-white/80 p-4 shadow-sm">
+                                        {(() => {
+                                            const selectedClinic = clinics.find(
+                                                (clinic) => clinic.clinic_id === availabilityClinicId
+                                            );
+                                            if (!selectedClinic) {
+                                                return (
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Select a clinic to view availability.
                                                     </p>
-                                                    <p className="text-sm text-muted-foreground">{clinic.clinic_location}</p>
-                                                </div>
-                                                <p className="text-sm font-medium text-primary">
-                                                    Contact: {clinic.clinic_contactno}
-                                                </p>
-                                            </div>
+                                                );
+                                            }
 
-                                            {doctors.length === 0 ? (
-                                                <p className="mt-3 text-sm text-muted-foreground">
-                                                    No doctors listed for this clinic yet.
-                                                </p>
-                                            ) : (
-                                                <div className="mt-3 space-y-3">
-                                                    {doctors.map((doctor) => {
-                                                        const status = availabilityForClinic[doctor.user_id];
-                                                        const loading = status?.loading ?? false;
-                                                        const error = status?.error;
-                                                        const onLeave = status?.onLeave ?? false;
-                                                        const slots = status?.slots ?? [];
+                                            const doctors = clinicDoctors[selectedClinic.clinic_id] || [];
+                                            const availabilityForClinic =
+                                                doctorAvailability[selectedClinic.clinic_id] || {};
 
-                                                        let badgeLabel = "Checking";
-                                                        if (!selectedDateKey) {
-                                                            badgeLabel = "Select a date";
-                                                        } else if (error) {
-                                                            badgeLabel = "Error";
-                                                        } else if (onLeave) {
-                                                            badgeLabel = "On leave";
-                                                        } else if (!loading && slots.length > 0) {
-                                                            badgeLabel = "Available";
-                                                        } else if (!loading && slots.length === 0) {
-                                                            badgeLabel = "No slots";
-                                                        }
+                                            return (
+                                                <>
+                                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                        <div>
+                                                            <p className="text-base font-semibold text-slate-900">
+                                                                {selectedClinic.clinic_name}
+                                                            </p>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {selectedClinic.clinic_location}
+                                                            </p>
+                                                        </div>
+                                                        <p className="text-sm font-medium text-primary">
+                                                            Contact: {selectedClinic.clinic_contactno}
+                                                        </p>
+                                                    </div>
 
-                                                        const slotPreview =
-                                                            !loading && !error && !onLeave && slots.length > 0
-                                                                ? slots
-                                                                    .slice(0, 3)
-                                                                    .map((slot) => `${slot.start}–${slot.end}`)
-                                                                    .join(", ")
-                                                                : null;
+                                                    {doctors.length === 0 ? (
+                                                        <p className="mt-3 text-sm text-muted-foreground">
+                                                            No doctors listed for this clinic yet.
+                                                        </p>
+                                                    ) : (
+                                                        <div className="mt-3 space-y-3">
+                                                            {doctors.map((doctor) => {
+                                                                const status = availabilityForClinic[doctor.user_id];
+                                                                const loading = status?.loading ?? false;
+                                                                const error = status?.error;
+                                                                const onLeave = status?.onLeave ?? false;
+                                                                const slots = status?.slots ?? [];
 
-                                                        return (
-                                                            <div
-                                                                key={doctor.user_id}
-                                                                className="rounded-2xl border border-primary/10 bg-white/90 p-3 shadow-sm"
-                                                            >
-                                                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                                                    <div>
-                                                                        <p className="text-sm font-semibold text-slate-900">
-                                                                            {doctor.name}
+                                                                let badgeLabel = "Checking";
+                                                                if (!selectedDateKey) {
+                                                                    badgeLabel = "Select a date";
+                                                                } else if (error) {
+                                                                    badgeLabel = "Error";
+                                                                } else if (onLeave) {
+                                                                    badgeLabel = "On leave";
+                                                                } else if (!loading && slots.length > 0) {
+                                                                    badgeLabel = "Available";
+                                                                } else if (!loading && slots.length === 0) {
+                                                                    badgeLabel = "No slots";
+                                                                }
+
+                                                                return (
+                                                                    <div
+                                                                        key={doctor.user_id}
+                                                                        className="rounded-2xl border border-primary/10 bg-white/90 p-3 shadow-sm"
+                                                                    >
+                                                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                                                            <div>
+                                                                                <p className="text-sm font-semibold text-slate-900">
+                                                                                    {doctor.name}
+                                                                                </p>
+                                                                                <p className="text-xs text-muted-foreground">
+                                                                                    {doctor.specialization || "Doctor"}
+                                                                                </p>
+                                                                            </div>
+                                                                            <Badge
+                                                                                variant="outline"
+                                                                                className="rounded-full px-3 py-1 text-xs font-semibold"
+                                                                            >
+                                                                                {loading && selectedDateKey
+                                                                                    ? "Loading availability"
+                                                                                    : badgeLabel}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        <p className="mt-1 text-sm text-muted-foreground">
+                                                                            {!selectedDateKey
+                                                                                ? "Choose a date to check availability."
+                                                                                : error
+                                                                                    ? error
+                                                                                    : onLeave
+                                                                                        ? "On leave for this date."
+                                                                                        : loading
+                                                                                            ? "Checking availability…"
+                                                                                            : slots.length > 0
+                                                                                                ? `${slots.length} available slot${slots.length === 1 ? "" : "s"}.`
+                                                                                                : "No available slots for this date."}
                                                                         </p>
-                                                                        <p className="text-xs text-muted-foreground">
-                                                                            {doctor.specialization || "Doctor"}
-                                                                        </p>
+                                                                        {!loading && !error && !onLeave && slots.length > 0 ? (
+                                                                            <div className="mt-2 flex flex-wrap gap-2">
+                                                                                {slots.map((slot, index) => (
+                                                                                    <Badge
+                                                                                        key={`${slot.start}-${slot.end}-${index}`}
+                                                                                        variant="secondary"
+                                                                                        className="rounded-full px-3 py-1 text-xs"
+                                                                                    >
+                                                                                        {slot.start}–{slot.end}
+                                                                                    </Badge>
+                                                                                ))}
+                                                                            </div>
+                                                                        ) : null}
                                                                     </div>
-                                                                    <Badge variant="outline" className="rounded-full px-3 py-1 text-xs font-semibold">
-                                                                        {loading && selectedDateKey
-                                                                            ? "Loading availability"
-                                                                            : badgeLabel}
-                                                                    </Badge>
-                                                                </div>
-                                                                <p className="mt-1 text-sm text-muted-foreground">
-                                                                    {!selectedDateKey
-                                                                        ? "Choose a date to check availability."
-                                                                        : error
-                                                                            ? error
-                                                                            : onLeave
-                                                                                ? "On leave for this date."
-                                                                                : loading
-                                                                                    ? "Checking availability…"
-                                                                                    : slots.length > 0
-                                                                                        ? `${slots.length} available slot${slots.length === 1 ? "" : "s"}.`
-                                                                                        : "No available slots for this date."}
-                                                                </p>
-                                                                {slotPreview ? (
-                                                                    <p className="mt-1 text-xs text-emerald-700">
-                                                                        Earliest slots: {slotPreview}
-                                                                        {slots.length > 3 ? "…" : ""}
-                                                                    </p>
-                                                                ) : null}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">
+                                        Select a clinic to view availability.
+                                    </p>
+                                )}
                             </div>
                         )}
                     </CardContent>
