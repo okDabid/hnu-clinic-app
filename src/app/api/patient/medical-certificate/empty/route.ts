@@ -33,13 +33,15 @@ export async function GET() {
         }
 
         const now = manilaNow();
+        const validity = new Date(now);
+        validity.setUTCFullYear(validity.getUTCFullYear() + 1);
         const issueDateDisplay = formatDateLong(now);
         const consultationDate = formatManilaDateTime(now) ?? issueDateDisplay;
 
         const html = renderCertificateHtml({
             certificateId: "",
             issueDate: now,
-            validUntil: now,
+            validUntil: validity,
             issueDateDisplay,
             patientName: "",
             patientType: "",
