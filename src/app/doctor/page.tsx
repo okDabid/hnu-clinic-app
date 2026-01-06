@@ -126,7 +126,7 @@ export default function DoctorDashboardPage() {
                             <Link href="/doctor/dispense">Go to dispensing log</Link>
                         </Button>
                         <Button asChild variant="ghost" className="w-full rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
-                            <Link href="/doctor/patients">Browse patient registry</Link>
+                            <Link href="/doctor/patients">Browse  registry</Link>
                         </Button>
                     </CardContent>
                 </Card>
