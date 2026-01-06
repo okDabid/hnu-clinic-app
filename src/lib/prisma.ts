@@ -19,3 +19,12 @@ const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
 export default prisma
 if (process.env.NODE_ENV !== "production") globalThis.prismaGlobal = prisma;
+
+// Import cron runner to ensure scheduled jobs start when the server imports prisma.
+try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, import/no-extraneous-dependencies
+    require("./cron");
+} catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to start cron jobs:", err);
+}
