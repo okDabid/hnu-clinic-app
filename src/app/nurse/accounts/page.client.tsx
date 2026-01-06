@@ -139,6 +139,7 @@ export function NurseAccountsPageClient({
     const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("ALL");
     const [scholarFilter, setScholarFilter] = useState<ScholarFilterValue>("ALL");
     const [letterFilter, setLetterFilter] = useState("All");
+    const [sortOrder, setSortOrder] = useState<'AZ' | 'ZA'>("AZ");
 
     const [profile, setProfile] = useState<NurseAccountProfile | null>(initialProfile);
     const [profileLoading, setProfileLoading] = useState(false);
@@ -404,6 +405,16 @@ export function NurseAccountsPageClient({
     }, [profile?.gender]);
 
     const filteredUsers = useMemo(() => {
+        const applySort = (arr: typeof users) => {
+            const copy = [...arr];
+            if (sortOrder === "AZ") {
+                copy.sort((a, b) => a.fullName.localeCompare(b.fullName));
+            } else {
+                copy.sort((a, b) => b.fullName.localeCompare(a.fullName));
+            }
+            return copy;
+        };
+
         if (
             roleFilter === "ALL" &&
             statusFilter === "ALL" &&
@@ -411,10 +422,10 @@ export function NurseAccountsPageClient({
             letterFilter === "All" &&
             !deferredSearch
         ) {
-            return users;
+            return applySort(users);
         }
 
-        return users.filter((u) => {
+        const filtered = users.filter((u) => {
             const lowerQuery = deferredSearch;
             const matchesQuery =
                 !lowerQuery ||
@@ -437,10 +448,12 @@ export function NurseAccountsPageClient({
 
             return matchesQuery && matchesRole && matchesStatus && matchesScholar && matchesLetter;
         });
-    }, [deferredSearch, letterFilter, roleFilter, scholarFilter, statusFilter, users]);
+
+        return applySort(filtered);
+    }, [deferredSearch, letterFilter, roleFilter, scholarFilter, statusFilter, users, sortOrder]);
 
     const { pageItems: paginatedUsers, currentPage, pageSize, setPage } = usePagination(filteredUsers, {
-        resetDeps: [deferredSearch, letterFilter, roleFilter, scholarFilter, statusFilter],
+        resetDeps: [deferredSearch, letterFilter, roleFilter, scholarFilter, statusFilter, sortOrder],
     });
 
     // Create user
@@ -1729,6 +1742,21 @@ export function NurseAccountsPageClient({
                                         <SelectItem value="ALL">Scholar Status</SelectItem>
                                         <SelectItem value="SCHOLAR">With scholar access</SelectItem>
                                         <SelectItem value="NON_SCHOLAR">Without scholar access</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Select
+                                    value={sortOrder}
+                                    onValueChange={(val) => {
+                                        setSortOrder(val as 'AZ' | 'ZA');
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="h-10 w-full">
+                                        <SelectValue placeholder="Sort" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="AZ">A - Z</SelectItem>
+                                        <SelectItem value="ZA">Z - A</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

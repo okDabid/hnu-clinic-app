@@ -16,6 +16,7 @@ import {
 
 
 import { Input } from "@/components/ui/input";
+import { AlphabetFilter } from "@/components/patient/alphabet-filter";
 import {
     Table,
     TableBody,
@@ -82,7 +83,12 @@ export default function NurseInventoryPage() {
     const [categories, setCategories] = useState<string[]>([]);
     const [units, setUnits] = useState<string[]>([]);
     const [medTypes, setMedTypes] = useState<string[]>([]);
+    const [medicineOptions, setMedicineOptions] = useState<string[]>([]);
+    const [selectedMedicine, setSelectedMedicine] = useState("");
+    const [otherMedicine, setOtherMedicine] = useState("");
     const [search, setSearch] = useState("");
+    const [sortOrder, setSortOrder] = useState<'AZ' | 'ZA'>("AZ");
+    const [letterFilter, setLetterFilter] = useState("All");
     const [statusFilter, setStatusFilter] = useState("All");
     const [clinicFilter, setClinicFilter] = useState("All");
     const [inventoryPage, setInventoryPage] = useState(1);
@@ -162,6 +168,10 @@ export default function NurseInventoryPage() {
         loadEnums();
     }, []);
 
+    useEffect(() => {
+        setMedicineOptions(Array.from(new Set(items.map((i) => i.item_name))).sort());
+    }, [items]);
+
     // Status checker
     const getBadgeStyles = (status: string) => {
         switch (status) {
@@ -199,13 +209,14 @@ export default function NurseInventoryPage() {
                 (statusFilter === "Valid" &&
                     i.replenishments.some((r) => r.status === "Valid"));
 
-            return matchesSearch && matchesClinic && matchesStatus;
+            const matchesLetter =
+                letterFilter === "All" || i.item_name.trim().toUpperCase().startsWith(letterFilter);
+
+            return matchesSearch && matchesClinic && matchesStatus && matchesLetter;
         })
         .sort((a, b) => {
-            const nameComparison = a.item_name.localeCompare(b.item_name);
-            if (nameComparison !== 0) return nameComparison;
-
-            return a.clinic.clinic_name.localeCompare(b.clinic.clinic_name);
+            const nameComparison = a.item_name.localeCompare(b.item_name) || a.clinic.clinic_name.localeCompare(b.clinic.clinic_name);
+            return sortOrder === "AZ" ? nameComparison : -nameComparison;
         });
 
     const paginatedInventory = useMemo(
@@ -219,7 +230,7 @@ export default function NurseInventoryPage() {
 
     useEffect(() => {
         setInventoryPage(1);
-    }, [search, statusFilter, clinicFilter]);
+    }, [search, statusFilter, clinicFilter, letterFilter, sortOrder]);
 
     useEffect(() => {
         const totalPages = Math.max(1, Math.ceil(filteredItems.length / inventoryPageSize));
@@ -361,6 +372,17 @@ export default function NurseInventoryPage() {
                                             </option>
                                         ))}
                                     </select>
+                                    <select
+                                        value={sortOrder}
+                                        onChange={(e) => {
+                                            setSortOrder(e.target.value === 'ZA' ? 'ZA' : 'AZ');
+                                            setInventoryPage(1);
+                                        }}
+                                        className="h-11 w-full sm:w-auto rounded-xl border border-primary/20 bg-primary/10/80 px-3 text-sm font-medium text-primary shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary/70"
+                                    >
+                                        <option value="AZ">Sort: A - Z</option>
+                                        <option value="ZA">Sort: Z - A</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -408,9 +430,21 @@ export default function NurseInventoryPage() {
                                                     return;
                                                 }
 
+                                                let itemName = (form.elements.namedItem("item_name") as HTMLSelectElement).value;
+                                                if (itemName === "Other") {
+                                                    const other = (form.elements.namedItem("item_name_other") as HTMLInputElement)?.value.trim() || "";
+                                                    if (!other) {
+                                                        toast.error("Please enter the medicine name.");
+                                                        setSavingStock(false);
+                                                        return;
+                                                    }
+                                                    itemName = other;
+                                                    setMedicineOptions((prev) => (prev.includes(other) ? prev : [...prev, other].sort()));
+                                                }
+
                                                 const body = {
                                                     clinic_id: (form.elements.namedItem("clinic_id") as HTMLSelectElement).value,
-                                                    item_name: (form.elements.namedItem("item_name") as HTMLInputElement).value,
+                                                    item_name: itemName,
                                                     quantity,
                                                     expiry: (form.elements.namedItem("expiry") as HTMLInputElement).value,
                                                     category: (form.elements.namedItem("category") as HTMLSelectElement).value,
@@ -428,6 +462,8 @@ export default function NurseInventoryPage() {
                                                 if (res.ok) {
                                                     await loadInventory();
                                                     form.reset();
+                                                    setSelectedMedicine("");
+                                                    setOtherMedicine("");
                                                     toast.success("Stock added!");
                                                 } else {
                                                     toast.error("Failed to add stock");
@@ -455,11 +491,36 @@ export default function NurseInventoryPage() {
 
                                                 <div className="sm:col-span-2">
                                                     <Label className="mb-1 block text-sm font-medium text-primary">Name</Label>
-                                                    <Input
+                                                    <select
                                                         name="item_name"
                                                         required
-                                                        className="h-10 rounded-xl border border-primary/20 bg-white text-sm focus-visible:ring-primary"
-                                                    />
+                                                        value={selectedMedicine}
+                                                        onChange={(e) => {
+                                                            setSelectedMedicine(e.target.value);
+                                                            if (e.target.value !== "Other") setOtherMedicine("");
+                                                        }}
+                                                        className="h-10 w-full rounded-xl border border-primary/20 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    >
+                                                        <option value="">Select medicine</option>
+                                                        {medicineOptions.map((m) => (
+                                                            <option key={m} value={m}>
+                                                                {m}
+                                                            </option>
+                                                        ))}
+                                                        <option value="Other">Other</option>
+                                                    </select>
+
+                                                    {selectedMedicine === "Other" && (
+                                                        <div className="mt-2">
+                                                            <Input
+                                                                name="item_name_other"
+                                                                placeholder="Enter medicine name"
+                                                                value={otherMedicine}
+                                                                onChange={(e) => setOtherMedicine(e.target.value)}
+                                                                className="h-10 rounded-xl border border-primary/20 bg-white text-sm focus-visible:ring-primary"
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div>
@@ -563,6 +624,18 @@ export default function NurseInventoryPage() {
                                     </DialogContent>
                                 </Dialog>
                             </div>
+                        </div>
+
+                        <div className="mt-4 w-full">
+                            <AlphabetFilter
+                                label="Filter by name"
+                                value={letterFilter}
+                                onChange={(val) => {
+                                    setLetterFilter(val);
+                                    setInventoryPage(1);
+                                }}
+                                disabled={loadingInventory}
+                            />
                         </div>
                     </CardHeader>
 

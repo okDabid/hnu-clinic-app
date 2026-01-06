@@ -525,6 +525,30 @@ export async function PUT(req: Request) {
         const dayStart = startOfManilaDay(targetDate);
         const dayEnd = endOfManilaDay(targetDate);
 
+        // Prevent marking as on-leave if there are upcoming appointments for this slot/day
+        if (targetIsOnLeave) {
+            const upcomingAppts = await prisma.appointment.findMany({
+                where: {
+                    doctor_user_id: doctor.user_id,
+                    status: { in: ["Pending", "Approved"] },
+                    appointment_timestart: { gte: dayStart, lte: dayEnd },
+                    appointment_timeend: { gt: manilaNow() },
+                },
+                select: { appointment_timestart: true, appointment_timeend: true },
+            });
+
+            const hasOverlapWithUpcoming = upcomingAppts.some((appt) =>
+                rangesOverlap(newStart, newEnd, appt.appointment_timestart, appt.appointment_timeend),
+            );
+
+            if (hasOverlapWithUpcoming) {
+                return NextResponse.json(
+                    { error: "Cannot mark this duty hour as on leave because there are upcoming appointments scheduled for this time." },
+                    { status: 409 },
+                );
+            }
+        }
+
         const conflicts = await prisma.doctorAvailability.findMany({
             where: {
                 doctor_user_id: doctor.user_id,
