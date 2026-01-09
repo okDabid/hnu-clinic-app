@@ -246,9 +246,19 @@ export default function NurseAppointmentsPage() {
                                                                 : appointment.doctorName}
                                                         </TableCell>
                                                         <TableCell>
-                                                            <Badge className="rounded-full border-primary/30 bg-primary/10 text-primary">
-                                                                {humanizeEnumValue(appointment.status)}
-                                                            </Badge>
+                                                            {(() => {
+                                                                const st = (appointment.status || "").toLowerCase();
+                                                                const isCancelled = st === "cancelled" || st === "canceled" || st.includes("cancel");
+                                                                const badgeClass = isCancelled
+                                                                    ? "rounded-full border-red-300 bg-red-50 text-red-600"
+                                                                    : "rounded-full border-primary/30 bg-primary/10 text-primary";
+
+                                                                return (
+                                                                    <Badge className={badgeClass}>
+                                                                        {humanizeEnumValue(appointment.status)}
+                                                                    </Badge>
+                                                                );
+                                                            })()}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))
