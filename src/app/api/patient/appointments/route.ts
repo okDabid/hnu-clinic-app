@@ -123,7 +123,7 @@ async function postHandler(req: Request) {
 
         const burstLimit = await consumeRateLimit(
             `patient:appointments:create:burst:${patient_user_id}`,
-            5,
+            5, // limit of 5 requests
             60_000
         );
         if (!burstLimit.success)
@@ -134,7 +134,7 @@ async function postHandler(req: Request) {
 
         const dailyLimit = await consumeRateLimit(
             `patient:appointments:create:day:${patient_user_id}`,
-            12,
+            10, // Changed to 10 to better reflect realistic usage
             24 * 60 * 60_000
         );
         if (!dailyLimit.success)
