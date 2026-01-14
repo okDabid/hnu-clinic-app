@@ -167,7 +167,7 @@ export async function PATCH(
                     doctor_user_id: appointment.doctor_user_id,
                     clinic_id: appointment.clinic_id,
                     archivedAt: null,
-                    available_date: { gte: dayStart, lte: dayEnd },
+                    available_timestart: { gte: dayStart, lte: dayEnd },
                 },
             });
 

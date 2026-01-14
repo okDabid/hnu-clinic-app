@@ -28,7 +28,6 @@ export type DoctorAvailabilityMinAggregateOutputType = {
   availability_id: string | null
   doctor_user_id: string | null
   clinic_id: string | null
-  available_date: Date | null
   available_timestart: Date | null
   available_timeend: Date | null
   is_on_leave: boolean | null
@@ -39,7 +38,6 @@ export type DoctorAvailabilityMaxAggregateOutputType = {
   availability_id: string | null
   doctor_user_id: string | null
   clinic_id: string | null
-  available_date: Date | null
   available_timestart: Date | null
   available_timeend: Date | null
   is_on_leave: boolean | null
@@ -50,7 +48,6 @@ export type DoctorAvailabilityCountAggregateOutputType = {
   availability_id: number
   doctor_user_id: number
   clinic_id: number
-  available_date: number
   available_timestart: number
   available_timeend: number
   is_on_leave: number
@@ -63,7 +60,6 @@ export type DoctorAvailabilityMinAggregateInputType = {
   availability_id?: true
   doctor_user_id?: true
   clinic_id?: true
-  available_date?: true
   available_timestart?: true
   available_timeend?: true
   is_on_leave?: true
@@ -74,7 +70,6 @@ export type DoctorAvailabilityMaxAggregateInputType = {
   availability_id?: true
   doctor_user_id?: true
   clinic_id?: true
-  available_date?: true
   available_timestart?: true
   available_timeend?: true
   is_on_leave?: true
@@ -85,7 +80,6 @@ export type DoctorAvailabilityCountAggregateInputType = {
   availability_id?: true
   doctor_user_id?: true
   clinic_id?: true
-  available_date?: true
   available_timestart?: true
   available_timeend?: true
   is_on_leave?: true
@@ -169,7 +163,6 @@ export type DoctorAvailabilityGroupByOutputType = {
   availability_id: string
   doctor_user_id: string
   clinic_id: string
-  available_date: Date
   available_timestart: Date
   available_timeend: Date
   is_on_leave: boolean
@@ -201,7 +194,6 @@ export type DoctorAvailabilityWhereInput = {
   availability_id?: Prisma.StringFilter<"DoctorAvailability"> | string
   doctor_user_id?: Prisma.StringFilter<"DoctorAvailability"> | string
   clinic_id?: Prisma.StringFilter<"DoctorAvailability"> | string
-  available_date?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   available_timestart?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   available_timeend?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   is_on_leave?: Prisma.BoolFilter<"DoctorAvailability"> | boolean
@@ -214,7 +206,6 @@ export type DoctorAvailabilityOrderByWithRelationInput = {
   availability_id?: Prisma.SortOrder
   doctor_user_id?: Prisma.SortOrder
   clinic_id?: Prisma.SortOrder
-  available_date?: Prisma.SortOrder
   available_timestart?: Prisma.SortOrder
   available_timeend?: Prisma.SortOrder
   is_on_leave?: Prisma.SortOrder
@@ -230,7 +221,6 @@ export type DoctorAvailabilityWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.DoctorAvailabilityWhereInput | Prisma.DoctorAvailabilityWhereInput[]
   doctor_user_id?: Prisma.StringFilter<"DoctorAvailability"> | string
   clinic_id?: Prisma.StringFilter<"DoctorAvailability"> | string
-  available_date?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   available_timestart?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   available_timeend?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   is_on_leave?: Prisma.BoolFilter<"DoctorAvailability"> | boolean
@@ -243,7 +233,6 @@ export type DoctorAvailabilityOrderByWithAggregationInput = {
   availability_id?: Prisma.SortOrder
   doctor_user_id?: Prisma.SortOrder
   clinic_id?: Prisma.SortOrder
-  available_date?: Prisma.SortOrder
   available_timestart?: Prisma.SortOrder
   available_timeend?: Prisma.SortOrder
   is_on_leave?: Prisma.SortOrder
@@ -260,7 +249,6 @@ export type DoctorAvailabilityScalarWhereWithAggregatesInput = {
   availability_id?: Prisma.StringWithAggregatesFilter<"DoctorAvailability"> | string
   doctor_user_id?: Prisma.StringWithAggregatesFilter<"DoctorAvailability"> | string
   clinic_id?: Prisma.StringWithAggregatesFilter<"DoctorAvailability"> | string
-  available_date?: Prisma.DateTimeWithAggregatesFilter<"DoctorAvailability"> | Date | string
   available_timestart?: Prisma.DateTimeWithAggregatesFilter<"DoctorAvailability"> | Date | string
   available_timeend?: Prisma.DateTimeWithAggregatesFilter<"DoctorAvailability"> | Date | string
   is_on_leave?: Prisma.BoolWithAggregatesFilter<"DoctorAvailability"> | boolean
@@ -269,7 +257,6 @@ export type DoctorAvailabilityScalarWhereWithAggregatesInput = {
 
 export type DoctorAvailabilityCreateInput = {
   availability_id?: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -282,7 +269,6 @@ export type DoctorAvailabilityUncheckedCreateInput = {
   availability_id?: string
   doctor_user_id: string
   clinic_id: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -291,7 +277,6 @@ export type DoctorAvailabilityUncheckedCreateInput = {
 
 export type DoctorAvailabilityUpdateInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -304,7 +289,6 @@ export type DoctorAvailabilityUncheckedUpdateInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
   doctor_user_id?: Prisma.StringFieldUpdateOperationsInput | string
   clinic_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -315,7 +299,6 @@ export type DoctorAvailabilityCreateManyInput = {
   availability_id?: string
   doctor_user_id: string
   clinic_id: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -324,7 +307,6 @@ export type DoctorAvailabilityCreateManyInput = {
 
 export type DoctorAvailabilityUpdateManyMutationInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -335,7 +317,6 @@ export type DoctorAvailabilityUncheckedUpdateManyInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
   doctor_user_id?: Prisma.StringFieldUpdateOperationsInput | string
   clinic_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -356,7 +337,6 @@ export type DoctorAvailabilityCountOrderByAggregateInput = {
   availability_id?: Prisma.SortOrder
   doctor_user_id?: Prisma.SortOrder
   clinic_id?: Prisma.SortOrder
-  available_date?: Prisma.SortOrder
   available_timestart?: Prisma.SortOrder
   available_timeend?: Prisma.SortOrder
   is_on_leave?: Prisma.SortOrder
@@ -367,7 +347,6 @@ export type DoctorAvailabilityMaxOrderByAggregateInput = {
   availability_id?: Prisma.SortOrder
   doctor_user_id?: Prisma.SortOrder
   clinic_id?: Prisma.SortOrder
-  available_date?: Prisma.SortOrder
   available_timestart?: Prisma.SortOrder
   available_timeend?: Prisma.SortOrder
   is_on_leave?: Prisma.SortOrder
@@ -378,7 +357,6 @@ export type DoctorAvailabilityMinOrderByAggregateInput = {
   availability_id?: Prisma.SortOrder
   doctor_user_id?: Prisma.SortOrder
   clinic_id?: Prisma.SortOrder
-  available_date?: Prisma.SortOrder
   available_timestart?: Prisma.SortOrder
   available_timeend?: Prisma.SortOrder
   is_on_leave?: Prisma.SortOrder
@@ -471,7 +449,6 @@ export type DoctorAvailabilityUncheckedUpdateManyWithoutDoctorNestedInput = {
 
 export type DoctorAvailabilityCreateWithoutClinicInput = {
   availability_id?: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -482,7 +459,6 @@ export type DoctorAvailabilityCreateWithoutClinicInput = {
 export type DoctorAvailabilityUncheckedCreateWithoutClinicInput = {
   availability_id?: string
   doctor_user_id: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -522,7 +498,6 @@ export type DoctorAvailabilityScalarWhereInput = {
   availability_id?: Prisma.StringFilter<"DoctorAvailability"> | string
   doctor_user_id?: Prisma.StringFilter<"DoctorAvailability"> | string
   clinic_id?: Prisma.StringFilter<"DoctorAvailability"> | string
-  available_date?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   available_timestart?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   available_timeend?: Prisma.DateTimeFilter<"DoctorAvailability"> | Date | string
   is_on_leave?: Prisma.BoolFilter<"DoctorAvailability"> | boolean
@@ -531,7 +506,6 @@ export type DoctorAvailabilityScalarWhereInput = {
 
 export type DoctorAvailabilityCreateWithoutDoctorInput = {
   availability_id?: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -542,7 +516,6 @@ export type DoctorAvailabilityCreateWithoutDoctorInput = {
 export type DoctorAvailabilityUncheckedCreateWithoutDoctorInput = {
   availability_id?: string
   clinic_id: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -578,7 +551,6 @@ export type DoctorAvailabilityUpdateManyWithWhereWithoutDoctorInput = {
 export type DoctorAvailabilityCreateManyClinicInput = {
   availability_id?: string
   doctor_user_id: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -587,7 +559,6 @@ export type DoctorAvailabilityCreateManyClinicInput = {
 
 export type DoctorAvailabilityUpdateWithoutClinicInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -598,7 +569,6 @@ export type DoctorAvailabilityUpdateWithoutClinicInput = {
 export type DoctorAvailabilityUncheckedUpdateWithoutClinicInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
   doctor_user_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -608,7 +578,6 @@ export type DoctorAvailabilityUncheckedUpdateWithoutClinicInput = {
 export type DoctorAvailabilityUncheckedUpdateManyWithoutClinicInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
   doctor_user_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -618,7 +587,6 @@ export type DoctorAvailabilityUncheckedUpdateManyWithoutClinicInput = {
 export type DoctorAvailabilityCreateManyDoctorInput = {
   availability_id?: string
   clinic_id: string
-  available_date: Date | string
   available_timestart: Date | string
   available_timeend: Date | string
   is_on_leave?: boolean
@@ -627,7 +595,6 @@ export type DoctorAvailabilityCreateManyDoctorInput = {
 
 export type DoctorAvailabilityUpdateWithoutDoctorInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -638,7 +605,6 @@ export type DoctorAvailabilityUpdateWithoutDoctorInput = {
 export type DoctorAvailabilityUncheckedUpdateWithoutDoctorInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
   clinic_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -648,7 +614,6 @@ export type DoctorAvailabilityUncheckedUpdateWithoutDoctorInput = {
 export type DoctorAvailabilityUncheckedUpdateManyWithoutDoctorInput = {
   availability_id?: Prisma.StringFieldUpdateOperationsInput | string
   clinic_id?: Prisma.StringFieldUpdateOperationsInput | string
-  available_date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timestart?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   available_timeend?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   is_on_leave?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -661,7 +626,6 @@ export type DoctorAvailabilitySelect<ExtArgs extends runtime.Types.Extensions.In
   availability_id?: boolean
   doctor_user_id?: boolean
   clinic_id?: boolean
-  available_date?: boolean
   available_timestart?: boolean
   available_timeend?: boolean
   is_on_leave?: boolean
@@ -674,7 +638,6 @@ export type DoctorAvailabilitySelectCreateManyAndReturn<ExtArgs extends runtime.
   availability_id?: boolean
   doctor_user_id?: boolean
   clinic_id?: boolean
-  available_date?: boolean
   available_timestart?: boolean
   available_timeend?: boolean
   is_on_leave?: boolean
@@ -687,7 +650,6 @@ export type DoctorAvailabilitySelectUpdateManyAndReturn<ExtArgs extends runtime.
   availability_id?: boolean
   doctor_user_id?: boolean
   clinic_id?: boolean
-  available_date?: boolean
   available_timestart?: boolean
   available_timeend?: boolean
   is_on_leave?: boolean
@@ -700,14 +662,13 @@ export type DoctorAvailabilitySelectScalar = {
   availability_id?: boolean
   doctor_user_id?: boolean
   clinic_id?: boolean
-  available_date?: boolean
   available_timestart?: boolean
   available_timeend?: boolean
   is_on_leave?: boolean
   archivedAt?: boolean
 }
 
-export type DoctorAvailabilityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"availability_id" | "doctor_user_id" | "clinic_id" | "available_date" | "available_timestart" | "available_timeend" | "is_on_leave" | "archivedAt", ExtArgs["result"]["doctorAvailability"]>
+export type DoctorAvailabilityOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"availability_id" | "doctor_user_id" | "clinic_id" | "available_timestart" | "available_timeend" | "is_on_leave" | "archivedAt", ExtArgs["result"]["doctorAvailability"]>
 export type DoctorAvailabilityInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   clinic?: boolean | Prisma.ClinicDefaultArgs<ExtArgs>
   doctor?: boolean | Prisma.UsersDefaultArgs<ExtArgs>
@@ -731,7 +692,6 @@ export type $DoctorAvailabilityPayload<ExtArgs extends runtime.Types.Extensions.
     availability_id: string
     doctor_user_id: string
     clinic_id: string
-    available_date: Date
     available_timestart: Date
     available_timeend: Date
     is_on_leave: boolean
@@ -1164,7 +1124,6 @@ export interface DoctorAvailabilityFieldRefs {
   readonly availability_id: Prisma.FieldRef<"DoctorAvailability", 'String'>
   readonly doctor_user_id: Prisma.FieldRef<"DoctorAvailability", 'String'>
   readonly clinic_id: Prisma.FieldRef<"DoctorAvailability", 'String'>
-  readonly available_date: Prisma.FieldRef<"DoctorAvailability", 'DateTime'>
   readonly available_timestart: Prisma.FieldRef<"DoctorAvailability", 'DateTime'>
   readonly available_timeend: Prisma.FieldRef<"DoctorAvailability", 'DateTime'>
   readonly is_on_leave: Prisma.FieldRef<"DoctorAvailability", 'Boolean'>

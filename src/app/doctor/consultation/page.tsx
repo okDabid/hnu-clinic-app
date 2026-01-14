@@ -13,7 +13,6 @@ import { Role } from "@prisma/client";
 
 function serializeSlot(slot: {
     availability_id: string;
-    available_date: Date;
     available_timestart: Date;
     available_timeend: Date;
     is_on_leave: boolean;
@@ -21,7 +20,6 @@ function serializeSlot(slot: {
 }) {
     return {
         availability_id: slot.availability_id,
-        available_date: slot.available_date.toISOString(),
         available_timestart: slot.available_timestart.toISOString(),
         available_timeend: slot.available_timeend.toISOString(),
         is_on_leave: slot.is_on_leave,
@@ -54,7 +52,7 @@ export default async function DoctorConsultationPage() {
         prisma.doctorAvailability.findMany({
             where,
             include: { clinic: { select: { clinic_id: true, clinic_name: true } } },
-            orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
+            orderBy: [{ available_timestart: "asc" }],
         }),
         prisma.clinic.findMany({
             select: { clinic_id: true, clinic_name: true },

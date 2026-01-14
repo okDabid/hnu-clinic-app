@@ -106,7 +106,7 @@ export function DoctorConsultationPageClient({
     const [totalSlots, setTotalSlots] = useState(initialSlots.total);
     const initialSelectedDate =
         initialSlots.slots.length > 0
-            ? toManilaDateString(initialSlots.slots[0].available_date)
+            ? toManilaDateString(initialSlots.slots[0].available_timestart)
             : formatManilaISODate(new Date());
     const [selectedDate, setSelectedDate] = useState<string>(initialSelectedDate);
     const [calendarMonth, setCalendarMonth] = useState<Date>(() =>
@@ -150,7 +150,7 @@ export function DoctorConsultationPageClient({
     const displayedMonthSlotsByDate = useMemo(() => {
         const map = new Map<string, Availability[]>();
         for (const slot of displayedMonthSlots) {
-            const dateKey = toManilaDateString(slot.available_date);
+            const dateKey = toManilaDateString(slot.available_timestart);
             if (!map.has(dateKey)) {
                 map.set(dateKey, []);
             }
@@ -180,7 +180,7 @@ export function DoctorConsultationPageClient({
         if (!selectedDate || !selectedDateMonthKey) return [];
         const monthSlots = calendarCache[selectedDateMonthKey] ?? [];
         const items = monthSlots.filter(
-            (slot) => toManilaDateString(slot.available_date) === selectedDate
+            (slot) => toManilaDateString(slot.available_timestart) === selectedDate
         );
         return sortSlotsForDay(items);
     }, [calendarCache, selectedDate, selectedDateMonthKey]);
@@ -203,7 +203,7 @@ export function DoctorConsultationPageClient({
     const sortedSlots = useMemo(() => {
         const slotsWithDateKeys = slots.map((slot) => ({
             slot,
-            dateKey: toManilaDateString(slot.available_date),
+            dateKey: toManilaDateString(slot.available_timestart),
         }));
 
         return slotsWithDateKeys
@@ -222,7 +222,7 @@ export function DoctorConsultationPageClient({
             sortedSlots
                 .filter(
                     (slot) =>
-                        slot.is_on_leave && toManilaDateString(slot.available_date) >= todayKey
+                        slot.is_on_leave && toManilaDateString(slot.available_timestart) >= todayKey
                 )
                 .slice(0, 4),
         [sortedSlots, todayKey]
@@ -242,7 +242,7 @@ export function DoctorConsultationPageClient({
         const coveredDays = new Set<string>();
 
         for (const slot of displayedMonthSlots) {
-            const dateKey = toManilaDateString(slot.available_date);
+            const dateKey = toManilaDateString(slot.available_timestart);
             coveredDays.add(dateKey);
             if (slot.is_on_leave) {
                 onLeave += 1;
@@ -404,7 +404,7 @@ export function DoctorConsultationPageClient({
                     context === "inline" && "bg-white/90"
                 )}
                 onClick={() => {
-                    const slotDate = toManilaDateString(slot.available_date);
+                    const slotDate = toManilaDateString(slot.available_timestart);
                     setSelectedDate(slotDate);
                     setEditingSlot(slot);
                     setFormData({
@@ -602,16 +602,16 @@ export function DoctorConsultationPageClient({
         if (!selectedDate) return;
         const monthKey = getMonthKeyFromISODate(selectedDate);
         const monthSlots = calendarCache[monthKey];
-        if (monthSlots && monthSlots.some((slot) => toManilaDateString(slot.available_date) === selectedDate)) {
+        if (monthSlots && monthSlots.some((slot) => toManilaDateString(slot.available_timestart) === selectedDate)) {
             return;
         }
 
         if (slots.length === 0) return;
         const selectionExists = slots.some(
-            (slot) => toManilaDateString(slot.available_date) === selectedDate
+            (slot) => toManilaDateString(slot.available_timestart) === selectedDate
         );
         if (!selectionExists) {
-            const firstSlotDate = toManilaDateString(slots[0].available_date);
+            const firstSlotDate = toManilaDateString(slots[0].available_timestart);
             setSelectedDate(firstSlotDate);
         }
     }, [calendarCache, slots, selectedDate]);
@@ -654,7 +654,6 @@ export function DoctorConsultationPageClient({
             ? {
                 availability_id: editingSlot!.availability_id,
                 clinic_id: formData.clinic_id,
-                available_date: formData.available_date,
                 available_timestart: formData.available_timestart,
                 available_timeend: formData.available_timeend,
                 is_on_leave: formData.is_on_leave,
@@ -1038,7 +1037,7 @@ export function DoctorConsultationPageClient({
                                                 className="rounded-2xl border border-amber-200 bg-white/80 p-4 text-sm text-amber-900 shadow-sm"
                                             >
                                                 <p className="text-sm font-semibold text-amber-800">
-                                                    {toManilaDateString(slot.available_date)} · {formatTimeRange(slot.available_timestart, slot.available_timeend)}
+                                                    {toManilaDateString(slot.available_timestart)} · {formatTimeRange(slot.available_timestart, slot.available_timeend)}
                                                 </p>
                                                 <p className="mt-1 text-sm text-amber-800/80">{slot.clinic.clinic_name}</p>
                                                 <p className="mt-2 text-xs text-amber-700">

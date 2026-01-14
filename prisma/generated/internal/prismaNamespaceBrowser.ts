@@ -192,7 +192,6 @@ export const DoctorAvailabilityScalarFieldEnum = {
   availability_id: 'availability_id',
   doctor_user_id: 'doctor_user_id',
   clinic_id: 'clinic_id',
-  available_date: 'available_date',
   available_timestart: 'available_timestart',
   available_timeend: 'available_timeend',
   is_on_leave: 'is_on_leave',

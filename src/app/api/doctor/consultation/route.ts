@@ -99,12 +99,12 @@ export async function GET(req: Request) {
                 where: {
                     doctor_user_id: doctor.user_id,
                     archivedAt: null,
-                    available_date: { gte: monthStart, lt: monthEndExclusive },
+                    available_timestart: { gte: monthStart, lt: monthEndExclusive },
                 },
                 include: {
                     clinic: { select: { clinic_id: true, clinic_name: true } },
                 },
-                orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
+                orderBy: [{ available_timestart: "asc" }],
             });
 
             return NextResponse.json({ month: monthKey, slots });
@@ -133,7 +133,7 @@ export async function GET(req: Request) {
             include: {
                 clinic: { select: { clinic_id: true, clinic_name: true } },
             },
-            orderBy: [{ available_date: "asc" }, { available_timestart: "asc" }],
+            orderBy: [{ available_timestart: "asc" }],
             skip,
             take: pageSize,
         });
@@ -254,7 +254,6 @@ async function postHandler(req: Request) {
             toCreate.push({
                 doctor_user_id: doctorId,
                 clinic_id,
-                available_date: startOfManilaDay(manilaDate),
                 available_timestart: slotStart,
                 available_timeend: slotEnd,
                 is_on_leave: false,
@@ -290,7 +289,7 @@ async function postHandler(req: Request) {
             where: {
                 doctor_user_id: doctorId,
                 archivedAt: null,
-                available_date: { gte: rangeStart, lt: endExclusive },
+                available_timestart: { gte: rangeStart, lt: endExclusive },
             },
         });
 
@@ -309,12 +308,11 @@ async function postHandler(req: Request) {
                 doctor_user_id: doctorId,
                 archivedAt: null,
                 clinic_id: { not: clinic_id },
-                available_date: { gte: rangeStart, lte: rangeEnd },
+                available_timestart: { gte: rangeStart, lte: rangeEnd },
             },
             select: {
                 availability_id: true,
                 clinic_id: true,
-                available_date: true,
                 available_timestart: true,
                 available_timeend: true,
             },
@@ -325,12 +323,11 @@ async function postHandler(req: Request) {
                 doctor_user_id: { not: doctorId },
                 clinic_id,
                 archivedAt: null,
-                available_date: { gte: rangeStart, lte: rangeEnd },
+                available_timestart: { gte: rangeStart, lte: rangeEnd },
             },
             select: {
                 availability_id: true,
                 doctor_user_id: true,
-                available_date: true,
                 available_timestart: true,
                 available_timeend: true,
             },
@@ -339,7 +336,7 @@ async function postHandler(req: Request) {
         for (const candidate of candidateSlots) {
             const candidateDate = candidate.date;
             for (const existing of conflicting) {
-                const existingDate = formatManilaISODate(existing.available_date);
+                const existingDate = formatManilaISODate(existing.available_timestart);
                 if (existingDate !== candidateDate) continue;
 
                 if (
@@ -350,7 +347,7 @@ async function postHandler(req: Request) {
                         existing.available_timeend,
                     )
                 ) {
-                    const conflictStart = formatManilaISODate(existing.available_date);
+                    const conflictStart = formatManilaISODate(existing.available_timestart);
                     const conflictStartTime = toManilaTimeString(
                         existing.available_timestart.toISOString(),
                     );
@@ -367,7 +364,7 @@ async function postHandler(req: Request) {
             }
 
             for (const existing of conflictingWithinClinic) {
-                const existingDate = formatManilaISODate(existing.available_date);
+                const existingDate = formatManilaISODate(existing.available_timestart);
                 if (existingDate !== candidateDate) continue;
 
                 const hasSameRange =
@@ -375,7 +372,7 @@ async function postHandler(req: Request) {
                     existing.available_timeend.getTime() === candidate.end.getTime();
 
                 if (hasSameRange) {
-                    const conflictStart = formatManilaISODate(existing.available_date);
+                    const conflictStart = formatManilaISODate(existing.available_timestart);
                     const conflictStartTime = toManilaTimeString(
                         existing.available_timestart.toISOString(),
                     );
@@ -398,7 +395,7 @@ async function postHandler(req: Request) {
                     doctor_user_id: doctorId,
                     clinic_id,
                     archivedAt: null,
-                    available_date: { gte: rangeStart, lte: rangeEnd },
+                    available_timestart: { gte: rangeStart, lte: rangeEnd },
                 },
             });
 
@@ -459,7 +456,6 @@ export async function PUT(req: Request) {
         const {
             availability_id,
             clinic_id,
-            available_date,
             available_timestart,
             available_timeend,
             is_on_leave,
@@ -493,7 +489,7 @@ export async function PUT(req: Request) {
             }
         }
 
-        const targetDate = available_date ?? formatManilaISODate(existing.available_date);
+        const targetDate = formatManilaISODate(existing.available_timestart);
 
         const targetStartTime = available_timestart
             ? available_timestart
@@ -554,7 +550,7 @@ export async function PUT(req: Request) {
                 doctor_user_id: doctor.user_id,
                 archivedAt: null,
                 availability_id: { not: availability_id },
-                available_date: { gte: dayStart, lte: dayEnd },
+                available_timestart: { gte: dayStart, lte: dayEnd },
             },
         });
 
@@ -571,7 +567,6 @@ export async function PUT(req: Request) {
 
         const updateData: Prisma.DoctorAvailabilityUpdateInput = {
             clinic: { connect: { clinic_id: targetClinicId } },
-            available_date: dayStart,
             available_timestart: newStart,
             available_timeend: newEnd,
             is_on_leave: targetIsOnLeave,

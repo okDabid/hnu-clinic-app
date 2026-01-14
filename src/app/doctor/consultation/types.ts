@@ -5,7 +5,6 @@ export type Clinic = {
 
 export type Availability = {
     availability_id: string;
-    available_date: string;
     available_timestart: string;
     available_timeend: string;
     is_on_leave: boolean;

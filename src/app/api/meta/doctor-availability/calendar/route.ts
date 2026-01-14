@@ -59,12 +59,12 @@ async function handler(req: Request) {
                     clinic_id,
                     doctor_user_id,
                     archivedAt: null,
-                    available_date: {
+                    available_timestart: {
                         gte: startOfManilaDay(formatManilaDateOnly(start)),
                         lte: endOfManilaDay(formatManilaDateOnly(end)),
                     },
                 },
-                orderBy: { available_date: "asc" },
+                orderBy: { available_timestart: "asc" },
             })
         );
 
@@ -72,7 +72,7 @@ async function handler(req: Request) {
         const leaveDates = new Set<string>();
 
         for (const availability of availabilities) {
-            const dateKey = formatManilaDateOnly(availability.available_date);
+            const dateKey = formatManilaDateOnly(availability.available_timestart);
             if (availability.is_on_leave) {
                 leaveDates.add(dateKey);
                 continue;

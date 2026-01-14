@@ -41,7 +41,7 @@ async function handler(req: Request) {
                         clinic_id,
                         doctor_user_id,
                         archivedAt: null,
-                        available_date: { gte: dayStart, lte: dayEnd },
+                        available_timestart: { gte: dayStart, lte: dayEnd },
                     },
                     orderBy: { available_timestart: "asc" },
                 }),
