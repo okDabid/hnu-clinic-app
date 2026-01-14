@@ -12,7 +12,6 @@ import {
 } from "@prisma/client";
 import { handleAuthError, requireRole } from "@/lib/authorization";
 import { isAllowedNameSuffix } from "@/lib/validation";
-import { autoDeactivateOldStudents } from "@/lib/auto-deactivate-students";
 
 // Generate random password (8 chars)
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -271,9 +270,6 @@ export async function POST(req: Request) {
 export async function GET() {
     try {
         await requireRole([Role.NURSE]);
-
-        // Run auto-deactivation helper (kept separate for reuse and scheduling)
-        await autoDeactivateOldStudents();
 
         const users = await prisma.users.findMany({
             include: { student: true, employee: true },
