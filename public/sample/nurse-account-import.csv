@@ -1,5 +1,5 @@
 role,fname,mname,lname,suffix,password,patienttype,student_id,employee_id,working_scholar,department,program,year_level,specialization,email,phone,address,allergies,bloodtype,medical_cond,emergencyco_name,emergencyco_num,emergencyco_relation
 NURSE,Jamie,,Villanueva,,NrsPass!101,,,101,,,,,,jamie.villanueva@hnu.edu.ph,09171234567,"Unit 12, Bluewave Residence",Latex,O+,Asthma,Pat Villanueva,09179876543,Sibling
-DOCTOR,Alex,Monterde,Lim,Jr.,DocPass!234,,,202,,,,,Physician,alex.lim@hnu.edu.ph,09172345678,"Unit 3B, Sunrise Apartments",,A-,Hypertension,Ivy Lim,09177654321,Spouse
+DOCTOR,Alex,Monterde,Lim,Jr.,DocPass!234,,,202,,,,,Dentist,alex.lim@hnu.edu.ph,09172345678,"Unit 3B, Sunrise Apartments",,A-,Hypertension,Ivy Lim,09177654321,Spouse
 PATIENT,Ana,Reyes,Santos,,AnaPwd2024,student,06190371,,true,HEALTH_SCIENCES,BS Nursing,THIRD_YEAR,,ana.santos@hnu.edu.ph,09173456789,"Dormitory 3, Room 12",Peanuts,B+,None,Liza Santos,09174567890,Mother
 PATIENT,Carlos,,Diaz,,EmpSecure445,employee,,445,false,,,,,carlos.diaz@hnu.edu.ph,09175678901,City Heights Subdivision,,O-,Migraine,Maria Diaz,09171239876,Spouse
