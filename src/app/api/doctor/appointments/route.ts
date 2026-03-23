@@ -40,7 +40,7 @@ export async function GET() {
             orderBy: { appointment_date: "desc" },
         });
 
-        const formatted = appointments.map((a) => ({
+        const formatted = appointments.map((a: { appointment_id: any; clinic_id: any; doctor_user_id: any; patient: { student: { fname: any; lname: any; }; employee: { fname: any; lname: any; }; username: any; }; clinic: { clinic_name: any; }; appointment_timestart: string | Date; status: any; consultation: any; }) => ({
             id: a.appointment_id,
             clinicId: a.clinic_id,
             doctorId: a.doctor_user_id,

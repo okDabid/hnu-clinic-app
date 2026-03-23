@@ -3,14 +3,16 @@ import type { NextConfig } from "next";
 const prismaRuntimeLibraryAlias = "./node_modules/prisma/prisma-client/runtime/library.js";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@sparticuz/chromium"],
+  serverExternalPackages: ["@sparticuz/chromium", "@prisma/client"],
 
   experimental: {},
+  
   turbopack: {
     resolveAlias: {
       "@prisma/client/runtime/library": prismaRuntimeLibraryAlias,
     },
   },
+
   webpack: (config) => {
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
@@ -19,6 +21,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+
   outputFileTracingIncludes: {
     "/api/doctor/appointments/[id]/certificate": [
       "./node_modules/@sparticuz/chromium/**/*",
@@ -27,6 +30,7 @@ const nextConfig: NextConfig = {
   },
 
   allowedDevOrigins: ["http://192.168.254.104:3000", "http://localhost:3000"],
+  
   env: {
     TZ: "Asia/Manila",
   },
