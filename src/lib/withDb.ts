@@ -2,28 +2,26 @@
 import prisma from "@/lib/prisma";
 
 /**
- * Runs a Prisma operation safely, reconnecting only when needed.
- * Avoids redundant $connect() calls to prevent cold-start delays.
+ * Runs a Prisma operation. 
+ * In Prisma 6.19/7, the Driver Adapter (pg) manages the connection pool.
+ * We no longer need to manually manage $connect/$disconnect cycles.
  */
 export async function withDb<T>(op: () => Promise<T>): Promise<T> {
     try {
-        // Prisma auto-connects lazily, so no need to call $connect() every time
         return await op();
     } catch (e: unknown) {
         const err = e instanceof Error ? e : new Error(String(e));
-        const msg = err.message ?? "";
+        
+        // Log the error for your clinic app's stability monitoring
+        console.error("Database Operation Failed:", err.message);
+
+        // If you still want a retry mechanism for specific transient errors:
         const code = (err as { code?: string }).code;
+        const isTransient = code === "P1001" || code === "P1009";
 
-        const isConnDrop =
-            msg.includes("Server has closed the connection") ||
-            code === "P1001" || // can't reach DB
-            code === "P1009";   // database not reachable
-
-        if (isConnDrop) {
-            console.warn("Prisma connection dropped — reconnecting...");
-            try { await prisma.$disconnect(); } catch { }
-            await prisma.$connect();
-            return await op();
+        if (isTransient) {
+            console.warn("Transient DB error detected. Retrying once...");
+            return await op(); // Simple one-time retry
         }
 
         throw err;
