@@ -36,6 +36,9 @@
       ],
       "@prisma/client": [
         "./prisma/generated/client"
+      ],
+      "@prisma/client/runtime/library": [
+        "./node_modules/prisma/prisma-client/runtime/library.js"
       ]
     }
   },

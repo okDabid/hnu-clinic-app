@@ -23,6 +23,16 @@ import {
     getPatientEmail,
 } from "@/lib/appointment-email";
 
+type AvailabilityWindow = {
+    available_timestart: Date;
+    available_timeend: Date;
+};
+
+type AppointmentWindow = {
+    appointment_timestart: Date;
+    appointment_timeend: Date;
+};
+
 
 function shapeResponse(appointment: {
     appointment_id: string;
@@ -162,7 +172,7 @@ export async function PATCH(
 
             await archiveExpiredDutyHours({ doctor_user_id: appointment.doctor_user_id });
 
-            const availabilities = await prisma.doctorAvailability.findMany({
+            const availabilities: AvailabilityWindow[] = await prisma.doctorAvailability.findMany({
                 where: {
                     doctor_user_id: appointment.doctor_user_id,
                     clinic_id: appointment.clinic_id,
@@ -184,7 +194,7 @@ export async function PATCH(
                 );
             }
 
-            const overlapping = await prisma.appointment.findMany({
+            const overlapping: AppointmentWindow[] = await prisma.appointment.findMany({
                 where: {
                     doctor_user_id: appointment.doctor_user_id,
                     appointment_timestart: { gte: dayStart, lte: dayEnd },
