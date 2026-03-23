@@ -1,8 +1,6 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-
 import prisma from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { normalizeResetContact } from "@/lib/password-reset";
@@ -90,7 +88,7 @@ async function handler(req: Request) {
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
         // Atomic token handling with rate limit
-        const createdToken = await prisma.$transaction(async (tx) => {
+        const createdToken = await prisma.$transaction(async (tx: any) => {
             await tx.passwordResetToken.deleteMany({
                 where: { userId: user.user_id, contact: normalized.normalized },
             });
@@ -109,10 +107,12 @@ async function handler(req: Request) {
                         },
                         select: { id: true, token: true },
                     });
-                } catch (error) {
+                } catch (error: unknown) {
                     if (
-                        error instanceof Prisma.PrismaClientKnownRequestError &&
-                        error.code === "P2002"
+                        typeof error === "object" &&
+                        error !== null &&
+                        "code" in error &&
+                        (error as { code?: string }).code === "P2002"
                     ) {
                         continue;
                     }
