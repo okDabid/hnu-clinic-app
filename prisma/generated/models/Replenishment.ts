@@ -1324,6 +1324,11 @@ export type ReplenishmentFindManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Skip the first `n` Replenishments.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Replenishments.
+   */
   distinct?: Prisma.ReplenishmentScalarFieldEnum | Prisma.ReplenishmentScalarFieldEnum[]
 }
 

@@ -976,6 +976,11 @@ export type RateLimitBucketFindManyArgs<ExtArgs extends runtime.Types.Extensions
    * Skip the first `n` RateLimitBuckets.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of RateLimitBuckets.
+   */
   distinct?: Prisma.RateLimitBucketScalarFieldEnum | Prisma.RateLimitBucketScalarFieldEnum[]
 }
 

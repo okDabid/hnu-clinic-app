@@ -1324,6 +1324,11 @@ export type DoctorAvailabilityFindManyArgs<ExtArgs extends runtime.Types.Extensi
    * Skip the first `n` DoctorAvailabilities.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of DoctorAvailabilities.
+   */
   distinct?: Prisma.DoctorAvailabilityScalarFieldEnum | Prisma.DoctorAvailabilityScalarFieldEnum[]
 }
 
