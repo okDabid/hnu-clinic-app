@@ -170,7 +170,7 @@ export default function LoginPageClient() {
                 setResendCooldown(60);
                 return true;
             }
-            if (handleRateLimitError(res, data, "Too many reset attempts. Please wait before trying again.")) {
+            if (handleRateLimitError(res, data, "Too many reset attempts. Please wait before trying again")) {
                 return false;
             }
             toast.error(data.error || "Account not found");
