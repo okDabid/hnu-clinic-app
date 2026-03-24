@@ -107,7 +107,7 @@ export default function LearnMorePage() {
                                 Platform Overview
                             </span>
                             <h2 className="text-3xl font-bold leading-tight text-primary md:text-5xl">
-                                HNU Clinic’s digital system keeps campus healthcare organized, secure, and accessible.
+                                HNU Clinic’s digital system keeps campus healthcare organized, secure, and accessible
                             </h2>
                             <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
                                 From streamlined appointment requests to comprehensive visit documentation, the platform supports every stage of the patient journey for students, faculty, and staff.
