@@ -66,35 +66,45 @@ export default function AboutPage() {
             {/* Hero Section */}
             <section className="relative overflow-hidden">
                 <div className="absolute inset-0 -z-10 bg-linear-to-br from-primary/15 via-white to-primary/5" />
-                <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
-                <div className="max-w-6xl mx-auto px-6 md:px-12 py-20 md:py-24">
-                    <div className="max-w-3xl space-y-6 text-center md:text-left">
-                        <span className="inline-flex items-center justify-center rounded-full border border-primary/20 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
+                <div className="absolute inset-y-0 right-0 -z-10 h-full w-full md:w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(22,163,74,0.15),transparent_60%)]" />
+                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-12 px-6 py-16 md:flex-row md:px-12 md:py-24">
+                    <div className="max-w-xl space-y-6 text-center md:text-left">
+                        <span className="inline-flex items-center rounded-full border border-primary/20 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wider text-primary">
                             Our Story
                         </span>
-                        <h1 className="text-3xl md:text-5xl font-bold text-primary leading-tight">
+                        <h1 className="text-3xl font-bold leading-tight text-primary md:text-5xl">
                             Caring for the Holy Name University community with compassion and technology.
                         </h1>
-                        <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                        <p className="text-base leading-relaxed text-muted-foreground md:text-lg">
                             HNU Clinic is the dedicated health partner for students, faculty, and staff. We blend professional expertise with digital tools that make every visit organized, respectful, and centered on well-being.
                         </p>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                            {[{
+                                title: "Integrated Services",
+                                description: "Medical, dental, and primary care working as one.",
+                            }, {
+                                title: "Collaborative Team",
+                                description: "Doctors, dentists, and nurses aligned for each patient.",
+                            }, {
+                                title: "Guided by Care",
+                                description: "Every interaction anchored in safety and respect.",
+                            }].map((item) => (
+                                <div key={item.title} className="rounded-2xl border border-primary/20 bg-white/80 p-5 text-center shadow-sm sm:text-left">
+                                    <p className="text-sm font-semibold text-primary">{item.title}</p>
+                                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    <div className="mt-12 grid gap-4 sm:grid-cols-3">
-                        {[{
-                            title: "Integrated Services",
-                            description: "Medical, dental, and primary care working as one.",
-                        }, {
-                            title: "Collaborative Team",
-                            description: "Doctors, dentists, and nurses aligned for each patient.",
-                        }, {
-                            title: "Guided by Care",
-                            description: "Every interaction anchored in safety and respect.",
-                        }].map((item) => (
-                            <div key={item.title} className="rounded-2xl border border-primary/20 bg-white/80 p-5 text-center shadow-sm">
-                                <p className="text-sm font-semibold text-primary">{item.title}</p>
-                                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.description}</p>
-                            </div>
-                        ))}
+                    <div className="flex flex-1 justify-center md:justify-end">
+                        <Image
+                            src="/header-illustration.svg"
+                            alt="HNU clinic team supporting patient care"
+                            width={800}
+                            height={600}
+                            priority
+                            className="h-auto w-full max-w-md drop-shadow-xl md:max-w-lg lg:max-w-xl"
+                        />
                     </div>
                 </div>
             </section>
