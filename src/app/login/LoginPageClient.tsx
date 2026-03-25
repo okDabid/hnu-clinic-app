@@ -421,7 +421,7 @@ export default function LoginPageClient() {
             </div>
 
             <p className="relative pb-8 text-center text-xs text-slate-500">
-                © {new Date().getFullYear()} HNU Clinic Capstone Project
+                © 2025 HNU Clinic Capstone Project
             </p>
 
             {/* Forgot Password Modal */}
