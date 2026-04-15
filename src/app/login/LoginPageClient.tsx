@@ -110,7 +110,7 @@ export default function LoginPageClient() {
 
             if (result?.error) {
                 const message = result.error.includes("inactive")
-                    ? "Your account is inactive. Please contact the administrator."
+                    ? "Your account has been deactivated. Please contact the administrator."
                     : result.error;
 
                 toast.error(message, { position: "top-center" });
