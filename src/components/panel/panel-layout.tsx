@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -65,14 +65,7 @@ export function PanelLayout({
     const pathname = usePathname();
     const router = useRouter();
     const hasRedirectedRef = useRef(false);
-    const { data: session, status } = useSession({
-        required: true,
-        onUnauthenticated() {
-            if (hasRedirectedRef.current) return;
-            hasRedirectedRef.current = true;
-            router.replace("/login");
-        },
-    });
+    const { data: session, status } = useSession();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const fullName = session?.user?.name ?? defaultName;
@@ -83,12 +76,24 @@ export function PanelLayout({
         return initials || fallbackInitials;
     }, [fullName, fallbackInitials]);
 
-    if (status === "loading") {
+    useEffect(() => {
+        if (status !== "unauthenticated") return;
+        if (hasRedirectedRef.current) return;
+
+        hasRedirectedRef.current = true;
+        router.replace("/login");
+    }, [router, status]);
+
+    if (status === "loading" && !session) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-white p-6" aria-busy>
                 <p className="text-sm font-medium text-muted-foreground">Verifying your session…</p>
             </div>
         );
+    }
+
+    if (status === "unauthenticated") {
+        return null;
     }
 
     async function handleLogout() {
