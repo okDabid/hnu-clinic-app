@@ -1,0 +1,7 @@
+role,fname,mname,lname,suffix,password,patienttype,student_id,employee_id,working_scholar,department,program,year_level,specialization,email,phone,address,allergies,bloodtype,medical_cond,emergencyco_name,emergencyco_num,emergencyco_relation
+DOCTOR,Adrian,Cruz,Mercado,Jr.,BlueTiger!47,,,003,,,,,Physician,adrian.mercado@hnu.edu.ph,09170000004,"Mansasa, Tagbilaran City",,AB+,Hypertension,Paula Mercado,09179990004,Spouse
+PATIENT,Jerome,Atienza,Ramos,,SunnyCode#92,student,06315801,,true,ENGINEERING_AND_COMPUTER_STUDIES,BS Information Technology,SECOND_YEAR,,jerome.ramos@hnu.edu.ph,09170000006,"University Dorm A, Room 14",Dust,A+,None,Elena Ramos,09179990006,Mother
+PATIENT,Katrina,Louise,Tan,,FastRiver@31,student,06425690,,false,BUSINESS_AND_ACCOUNTANCY,BS Accountancy,THIRD_YEAR,,katrina.tan@hnu.edu.ph,09170000007,"University Dorm B, Room 22",Peanuts,B-,Migraine,Victor Tan,09179990007,Father
+PATIENT,Russel,,Navarro,,PixelMoon$58,student,06219472,,false,HEALTH_SCIENCES,BS Nursing,FIRST_YEAR,,russel.navarro@hnu.edu.ph,09170000008,"Cogon, Tagbilaran City",,O+,None,Maria Navarro,09179990008,Mother
+PATIENT,Marvin,Dela,Cruz,II,GreenLeaf&76,employee,,8792,false,,,,,marvin.cruz@hnu.edu.ph,09170000009,"Bool District, Tagbilaran City",Shellfish,AB-,Diabetes,Ana Cruz,09179990009,Spouse
+PATIENT,Eliza,Mae,Garcia,,BrightSky*24,employee,,6371,false,,,,,eliza.garcia@hnu.edu.ph,09170000010,"Taloto, Tagbilaran City",,A+,None,Rico Garcia,09179990010,Husband
