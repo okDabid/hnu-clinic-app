@@ -219,7 +219,7 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
         <header className="sticky top-0 z-50 w-full border-b border-green-100/70 bg-white/85 shadow-[0_12px_40px_-24px_rgba(16,185,129,0.55)] backdrop-blur supports-backdrop-filter:bg-white/70">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                 <Link
-                    href="/"
+                    href="/home"
                     className="group flex items-center gap-3 rounded-2xl px-2 py-1 transition hover:bg-green-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                     onClick={closeMenu}
                 >
@@ -293,7 +293,7 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                             </Link>
                         );
                     })}
-                    <Link href="/login" aria-label="Login to HNU Clinic">
+                    <Link href="/disclaimer" aria-label="Login to HNU Clinic">
                         <Button className="ml-2 rounded-full bg-green-600 px-5 font-semibold shadow-sm transition hover:bg-green-700">
                             Login
                         </Button>
@@ -338,7 +338,7 @@ export function SiteHeader({ navigation }: { navigation: SiteHeaderNavItem[] }) 
                                 );
                             })}
                         </div>
-                        <Link href="/login" onClick={closeMenu}>
+                        <Link href="/disclaimer" onClick={closeMenu}>
                             <Button className="mt-2 w-full rounded-full bg-green-600 py-2 text-sm font-semibold hover:bg-green-700">
                                 Login
                             </Button>

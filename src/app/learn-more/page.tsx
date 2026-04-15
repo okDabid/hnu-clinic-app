@@ -113,7 +113,7 @@ export default function LearnMorePage() {
                                 From streamlined appointment requests to comprehensive visit documentation, the platform supports every stage of the patient journey for students, faculty, and staff.
                             </p>
                             <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
-                                <Link href="/login">
+                                <Link href="/disclaimer">
                                     <Button size="lg" className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
                                         Go to Portal
                                     </Button>
@@ -279,7 +279,7 @@ export default function LearnMorePage() {
                             Log in to the HNU Clinic portal to manage appointments, update records, and keep your patient data secured.
                         </p>
                         <div className="mt-8 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
-                            <Link href="/login" className="w-full sm:w-auto">
+                            <Link href="/disclaimer" className="w-full sm:w-auto">
                                 <Button size="lg" className="w-full sm:w-auto rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90">
                                     Access the portal
                                 </Button>
