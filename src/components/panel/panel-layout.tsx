@@ -5,10 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { LogOut, Menu, type LucideIcon } from "lucide-react";
+import { Bell, LogOut, Menu, Search, type LucideIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
     Sheet,
     SheetContent,
@@ -16,12 +18,6 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export type PanelNavItem = {
@@ -85,7 +81,7 @@ export function PanelLayout({
 
     if (status === "loading") {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-white p-6" aria-busy>
+            <div className="flex min-h-screen items-center justify-center bg-background p-6" aria-busy>
                 <p className="text-sm font-medium text-muted-foreground">Verifying your session…</p>
             </div>
         );
@@ -113,7 +109,7 @@ export function PanelLayout({
     };
 
     const navLinks = (
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-2" aria-label={`${panelLabel} navigation`}>
             {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = isActiveNav(item.href);
@@ -123,21 +119,16 @@ export function PanelLayout({
                         key={item.href}
                         href={item.href}
                         className={cn(
-                            "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition-colors",
-                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                            "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                             isActive
-                                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                ? "bg-primary text-primary-foreground shadow-sm"
                                 : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
                         )}
                         onClick={() => setMobileOpen(false)}
                     >
-                        <Icon
-                            className={cn(
-                                "h-5 w-5",
-                                isActive ? "text-primary-foreground" : "text-primary"
-                            )}
-                        />
-                        <span className="whitespace-nowrap">{item.label}</span>
+                        <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-primary")} />
+                        <span className="truncate">{item.label}</span>
                     </Link>
                 );
             })}
@@ -145,172 +136,122 @@ export function PanelLayout({
     );
 
     return (
-        <div className="relative flex min-h-screen bg-white">
-            <aside className="sticky left-0 top-0 hidden h-screen w-16 flex-col items-center border-r border-primary/10 bg-white py-6 lg:flex shadow-md">
-                <TooltipProvider delayDuration={75}>
-                    <div className="relative flex h-full w-full flex-col items-center gap-6 px-3">
-                        <div className="flex h-12 w-12 items-center justify-center">
-                            <Image
-                                src="/clinic-illustration.svg"
-                                alt="HNU Clinic Health Record & Appointment System emblem"
-                                width={44}
-                                height={44}
-                                className="h-9 w-9 object-contain"
+        <div className="min-h-screen bg-muted/20">
+            <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-border/80 bg-white/95 p-4 shadow-sm backdrop-blur lg:block">
+                <div className="flex h-full flex-col gap-6">
+                    <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-3">
+                        <Image
+                            src="/clinic-illustration.svg"
+                            alt="HNU Clinic emblem"
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 object-contain"
+                        />
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">{panelLabel}</p>
+                            <p className="text-sm font-semibold text-primary">Care Operations</p>
+                        </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border/70 bg-white p-3">{navLinks}</div>
+
+                    <div className="mt-auto rounded-2xl border border-border/70 bg-white p-3">
+                        <div className="mb-3 flex items-center gap-3">
+                            <Avatar className="h-10 w-10 border border-primary/15">
+                                <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                                <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-foreground">{fullName}</p>
+                                <p className="text-xs text-muted-foreground">Signed in</p>
+                            </div>
+                        </div>
+                        <Button
+                            variant="outline"
+                            className="w-full justify-start rounded-xl border-primary/20 text-primary hover:bg-primary/10"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                        >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            {isLoggingOut ? "Signing out..." : "Logout"}
+                        </Button>
+                    </div>
+                </div>
+            </aside>
+
+            <div className="flex min-h-screen flex-1 flex-col lg:pl-64">
+                <header className="sticky top-0 z-30 border-b border-border/70 bg-white/95 px-4 py-3 backdrop-blur md:px-6 lg:px-8">
+                    <div className="flex flex-wrap items-center gap-3 md:gap-4">
+                        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                            <SheetTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="rounded-xl border-primary/20 text-primary hover:bg-primary/10 lg:hidden"
+                                    aria-label={sheetAriaLabel}
+                                >
+                                    <Menu className="h-5 w-5" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="w-80 max-w-[85vw] border-r border-primary/15 bg-white p-0">
+                                <SheetHeader className="border-b border-primary/15 p-6">
+                                    <SheetTitle className="text-left text-lg text-primary">{sheetTitle}</SheetTitle>
+                                </SheetHeader>
+                                <div className="space-y-4 p-6">{navLinks}</div>
+                            </SheetContent>
+                        </Sheet>
+
+                        <div className="relative min-w-[220px] flex-1">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                aria-label="Search dashboard"
+                                placeholder="Search patients, appointments, inventory..."
+                                className="h-10 rounded-xl border-border/70 bg-muted/40 pl-9"
                             />
                         </div>
 
-                        <Tooltip delayDuration={0}>
-                            <TooltipTrigger asChild>
-                                <Avatar className="h-12 w-12 border border-primary/15">
-                                    <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                                    <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
-                                </Avatar>
-                            </TooltipTrigger>
-                            <TooltipContent
-                                side="right"
-                                hideArrow
-                                className="flex items-center gap-3 border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
-                            >
-                                <div className="space-y-0.5">
-                                    <p className="text-sm font-semibold leading-none">{fullName}</p>
-                                    <p className="text-xs text-muted-foreground">Signed in</p>
-                                </div>
-                            </TooltipContent>
-                        </Tooltip>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="relative h-10 w-10 rounded-xl border-border/70"
+                            aria-label="Notifications"
+                        >
+                            <Bell className="h-4 w-4 text-primary" />
+                            <Badge className="absolute -right-1 -top-1 h-5 min-w-5 rounded-full bg-primary px-1.5 text-[10px]">3</Badge>
+                        </Button>
 
-                        <div className="flex-1 space-y-2 overflow-y-auto pb-4">
-                            <nav className="flex flex-col items-center gap-3">
-                                {navItems.map((item) => {
-                                    const Icon = item.icon;
-                                    const isActive = isActiveNav(item.href);
-
-                                    return (
-                                        <Tooltip key={item.href} delayDuration={0}>
-                                            <TooltipTrigger asChild>
-                                                <Link
-                                                    href={item.href}
-                                                    className={cn(
-                                                        "flex h-12 w-12 items-center justify-center rounded-2xl transition",
-                                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
-                                                        isActive
-                                                            ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                                                            : "text-primary hover:bg-primary/10"
-                                                    )}
-                                                    aria-label={item.label}
-                                                >
-                                                    <Icon className="h-5 w-5" />
-                                                </Link>
-                                            </TooltipTrigger>
-                                            <TooltipContent
-                                                side="right"
-                                                hideArrow
-                                                className="rounded-xl border border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
-                                            >
-                                                <p className="text-sm font-semibold leading-none">{item.label}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    );
-                                })}
-                            </nav>
-                        </div>
-
-                        <Tooltip delayDuration={0}>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    className="flex h-12 w-12 items-center justify-center rounded-2xl text-primary hover:bg-primary/10"
-                                    onClick={handleLogout}
-                                    disabled={isLoggingOut}
-                                    aria-label="Logout"
-                                >
-                                    {isLoggingOut ? "…" : <LogOut className="h-5 w-5" />}
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent
-                                side="right"
-                                hideArrow
-                                className="rounded-xl border border-primary/10 bg-white px-3 py-2 text-primary shadow-lg"
-                            >
-                                <p className="text-sm font-semibold leading-none">Logout</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                </TooltipProvider>
-            </aside>
-
-            <div className="flex min-h-screen flex-1 min-w-0 flex-col px-4 pb-8 pt-6 md:px-6 lg:px-10">
-                <header className="sticky top-0 z-30 mb-6 rounded-3xl border border-primary/15 bg-white px-4 py-4 shadow-sm md:px-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-center md:justify-between">
-                        <div className="space-y-3 min-w-0">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-primary/80">{panelLabel}</p>
-                            <h2 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h2>
-                            {description ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
-                        </div>
-
-                        <div className="flex w-full flex-wrap items-center gap-3 self-start md:w-auto md:self-auto">
-                            {actions}
-                            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                                <SheetTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="rounded-xl border-primary/20 text-primary hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white lg:hidden"
-                                        aria-label={sheetAriaLabel}
-                                    >
-                                        <Menu className="h-5 w-5" />
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="right" className="w-80 max-w-[85vw] border-l border-primary/15 bg-white p-0">
-                                    <SheetHeader className="border-b border-primary/15 bg-white/80 p-6">
-                                        <SheetTitle className="flex items-center gap-3 text-lg text-primary">
-                                            <Menu className="h-5 w-5" />
-                                            {sheetTitle}
-                                        </SheetTitle>
-                                    </SheetHeader>
-                                    <div className="flex h-full flex-col gap-6 overflow-y-auto px-6 py-6">
-                                        <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
-                                            <Avatar className="h-11 w-11 border border-primary/15">
-                                                <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
-                                                <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="text-xs text-primary/80">Signed in as</p>
-                                                <p className="text-sm font-semibold text-primary">{fullName}</p>
-                                            </div>
-                                        </div>
-
-                                        {navLinks}
-
-                                        <Button
-                                            variant="default"
-                                            className="w-full gap-2 rounded-xl bg-primary font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-                                            onClick={handleLogout}
-                                            disabled={isLoggingOut}
-                                        >
-                                            {isLoggingOut ? (
-                                                "Signing out..."
-                                            ) : (
-                                                <>
-                                                    <LogOut className="h-4 w-4" />
-                                                    Logout
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
+                        <div className="hidden items-center gap-2 rounded-xl border border-border/70 bg-white px-3 py-2 md:flex">
+                            <Avatar className="h-8 w-8 border border-primary/15">
+                                <AvatarImage src={session?.user?.image ?? undefined} alt={fullName} />
+                                <AvatarFallback className="bg-primary/15 text-primary">{avatarFallback}</AvatarFallback>
+                            </Avatar>
+                            <p className="max-w-40 truncate text-sm font-medium text-foreground">{fullName}</p>
                         </div>
                     </div>
                 </header>
 
-                <main className="flex-1 space-y-6">{children}</main>
+                <main className="flex-1 space-y-6 p-4 md:p-6 lg:p-8">
+                    <section className="rounded-2xl border border-border/70 bg-white p-5 shadow-sm">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">{panelLabel}</p>
+                                <h1 className="text-2xl font-semibold text-primary md:text-3xl">{title}</h1>
+                                {description ? <p className="max-w-3xl text-sm text-muted-foreground">{description}</p> : null}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">{actions}</div>
+                        </div>
+                    </section>
+                    {children}
+                </main>
 
-                <footer className="mt-10 rounded-3xl border border-primary/15 bg-white/80 px-6 py-4 text-center text-sm text-muted-foreground shadow-sm backdrop-blur">
-                    {footerNote ?? (
-                        <>
-                            © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System – {panelLabel}
-                        </>
-                    )}
+                <footer className="px-4 pb-6 md:px-6 lg:px-8">
+                    <div className="rounded-2xl border border-border/70 bg-white px-5 py-3 text-center text-sm text-muted-foreground shadow-sm">
+                        {footerNote ?? (
+                            <>
+                                © {new Date().getFullYear()} HNU Clinic Health Record &amp; Appointment System – {panelLabel}
+                            </>
+                        )}
+                    </div>
                 </footer>
             </div>
         </div>

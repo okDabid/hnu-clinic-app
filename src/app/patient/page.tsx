@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, CalendarDays, FileText, Stethoscope, User } from "lucide-react";
+import { Bell, CalendarDays, FileText, Stethoscope, User, BarChart3 } from "lucide-react";
 
+import { ActivityFeed, type ActivityItem } from "@/components/dashboard/activity-feed";
 import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
+import { OverviewMetrics } from "@/components/dashboard/overview-metrics";
 import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
 import PatientLayout from "@/components/patient/patient-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { useDashboardUser } from "@/hooks/use-dashboard-user";
 
 const quickActions = [
@@ -41,10 +44,18 @@ const quickActions = [
     },
 ];
 
-const wellnessHighlights = [
-    "Arrive 10 minutes early to allow time for screening and paperwork.",
-    "Keep your emergency contact details up to date for faster coordination.",
-    "Bring your student/employee ID whenever you have a scheduled visit.",
+const overviewStats = [
+    { label: "Upcoming appointments", value: "2", trend: "Next: Apr 21" },
+    { label: "Unread notifications", value: "4", trend: "2 schedule updates" },
+    { label: "Profile completion", value: "88%", trend: "Add emergency contact" },
+    { label: "Certificate status", value: "Active", trend: "Valid for 23 days" },
+];
+
+const activityFeed: ActivityItem[] = [
+    { label: "Appointment confirmed", detail: "April 21, 2026 • 10:30 AM", type: "success" },
+    { label: "Reminder issued", detail: "Bring school/work ID", type: "info" },
+    { label: "Reschedule pending", detail: "Awaiting clinic approval", type: "warning" },
+    { label: "Incomplete profile", detail: "Emergency number missing", type: "error" },
 ];
 
 export default function PatientDashboardPage() {
@@ -53,18 +64,47 @@ export default function PatientDashboardPage() {
     return (
         <PatientLayout
             title="Dashboard overview"
-            description="A personalized snapshot of your activity with HNU Clinic. Access appointments, account information, and announcements at a glance."
+            description="A clear snapshot of your clinic activity, appointments, and profile updates in one place."
             actions={
-                <Button asChild className="hidden rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 md:flex">
+                <Button asChild className="rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
                     <Link href="/patient/appointments">Schedule visit</Link>
                 </Button>
             }
         >
             <DashboardWelcome
                 heading={`Hello, ${firstName}`}
-                description="Stay on top of your health journey. From this dashboard you can update your profile, manage bookings, and monitor clinic communications tailored for you."
-                className="bg-linear-to-r"
+                description="Manage bookings faster, monitor updates instantly, and keep your clinic profile complete for smoother visits."
             />
+
+            <OverviewMetrics metrics={overviewStats} />
+
+            <section className="grid gap-5 xl:grid-cols-[2fr_1fr]">
+                <Card className="rounded-2xl border-border/70 bg-white shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base text-primary">
+                            <BarChart3 className="h-4 w-4" /> Personal care progress
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Appointment readiness</span>
+                                <span className="font-medium text-primary">72%</span>
+                            </div>
+                            <Progress value={72} className="h-2" />
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Profile completeness</span>
+                                <span className="font-medium text-primary">88%</span>
+                            </div>
+                            <Progress value={88} className="h-2" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <ActivityFeed items={activityFeed} />
+            </section>
 
             <QuickActionsGrid
                 actions={quickActions}
@@ -72,43 +112,12 @@ export default function PatientDashboardPage() {
                     title: "Clinic insights",
                     icon: Stethoscope,
                     description: [
-                        "Walk-ins are accommodated based on availability. Booking ahead ensures your preferred doctor and service are ready when you arrive.",
-                        "Keep notifications enabled to receive movement updates, instructions, and reminders directly from the clinic team.",
+                        "Booking ahead ensures your preferred clinic and schedule are available.",
+                        "Enable notifications to avoid missed reminders and schedule changes.",
                     ],
                     className: "bg-linear-to-br",
                 }}
             />
-
-            <section className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">How to prepare for your next appointment</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <p>
-                            Updating your personal details before the visit helps our staff deliver faster care.
-                        </p>
-                        <p>
-                            If you need to adjust the schedule, request a reschedule from the Appointments page. The clinic will confirm availability and notify you through email and the portal.
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">Wellness reminders</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-sm text-muted-foreground">
-                        <ul className="space-y-2">
-                            {wellnessHighlights.map((tip) => (
-                                <li key={tip} className="flex items-start gap-2 rounded-2xl bg-primary/10 p-3">
-                                    <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-                                    <span>{tip}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-            </section>
         </PatientLayout>
     );
 }

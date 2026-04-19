@@ -163,6 +163,7 @@ export default function ScholarAppointmentsPage() {
     const [initializing, setInitializing] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("active");
+    const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -535,6 +536,19 @@ export default function ScholarAppointmentsPage() {
         () => filteredAppointments.slice((currentPage - 1) * pageSize, currentPage * pageSize),
         [currentPage, filteredAppointments, pageSize]
     );
+    const groupedAppointments = useMemo(
+        () =>
+            filteredAppointments.reduce<Record<string, ScholarAppointment[]>>((acc, appointment) => {
+                const dateKey = toManilaDateString(appointment.start) ?? "";
+                if (!dateKey) return acc;
+                if (!acc[dateKey]) {
+                    acc[dateKey] = [];
+                }
+                acc[dateKey].push(appointment);
+                return acc;
+            }, {}),
+        [filteredAppointments]
+    );
 
     useEffect(() => {
         setCurrentPage(1);
@@ -833,10 +847,57 @@ export default function ScholarAppointmentsPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
+                            <div className="space-y-2 sm:col-span-2">
+                                <Label className="text-sm font-medium text-primary">View mode</Label>
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        variant={viewMode === "list" ? "default" : "outline"}
+                                        onClick={() => setViewMode("list")}
+                                    >
+                                        List
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant={viewMode === "calendar" ? "default" : "outline"}
+                                        onClick={() => setViewMode("calendar")}
+                                    >
+                                        Calendar
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <Table>
+                        {viewMode === "calendar" ? (
+                            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                                {Object.keys(groupedAppointments).length === 0 ? (
+                                    <p className="col-span-full rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                                        No appointments match your filters.
+                                    </p>
+                                ) : (
+                                    Object.entries(groupedAppointments)
+                                        .sort(([a], [b]) => a.localeCompare(b))
+                                        .map(([date, dayAppointments]) => (
+                                            <div key={date} className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+                                                <p className="text-sm font-semibold text-primary">{formatDateOnly(`${date}T00:00:00+08:00`)}</p>
+                                                <p className="mb-3 text-xs text-muted-foreground">{dayAppointments.length} appointments</p>
+                                                <div className="space-y-2">
+                                                    {dayAppointments.slice(0, 4).map((appointment) => (
+                                                        <div key={appointment.id} className="rounded-xl border border-border/70 bg-white p-2.5 text-xs">
+                                                            <p className="font-medium text-foreground">{appointment.patient.name}</p>
+                                                            <p className="text-muted-foreground">
+                                                                {appointment.clinic.name || "Clinic"} • {formatTimeWindow(appointment.start, appointment.end)}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))
+                                )}
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <Table>
                                 <TableHeader>
                                     <TableRow className="text-xs uppercase tracking-wide text-muted-foreground">
                                         <TableHead className="min-w-30">Patient</TableHead>
@@ -898,15 +959,18 @@ export default function ScholarAppointmentsPage() {
                                         ))
                                     )}
                                 </TableBody>
-                            </Table>
-                        </div>
-                        <TablePagination
-                            currentPage={currentPage}
-                            totalItems={filteredAppointments.length}
-                            pageSize={pageSize}
-                            loading={loading}
-                            onPageChange={setCurrentPage}
-                        />
+                                </Table>
+                            </div>
+                        )}
+                        {viewMode === "list" ? (
+                            <TablePagination
+                                currentPage={currentPage}
+                                totalItems={filteredAppointments.length}
+                                pageSize={pageSize}
+                                loading={loading}
+                                onPageChange={setCurrentPage}
+                            />
+                        ) : null}
                     </div>
                 </AppointmentPanel>
             </div>

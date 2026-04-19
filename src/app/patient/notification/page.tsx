@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import PatientLayout from "@/components/patient/patient-layout";
+import { OverviewMetrics } from "@/components/dashboard/overview-metrics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -73,6 +74,13 @@ const statusUpdates = [
     },
 ];
 
+const overviewStats = [
+    { label: "Alert channels", value: "2", trend: "Email + Portal" },
+    { label: "Status guides", value: "4", trend: "Approved, Moved, Completed, Cancelled" },
+    { label: "Follow-up tips", value: "4", trend: "Actionable reminders included" },
+    { label: "Notification cards", value: "3", trend: "High-priority update types" },
+];
+
 export default function PatientNotificationPage() {
     const { data: session, status } = useSession();
 
@@ -97,6 +105,7 @@ export default function PatientNotificationPage() {
             }
         >
             <div className="mx-auto w-full max-w-5xl space-y-8">
+                <OverviewMetrics metrics={overviewStats} />
                 <Card className="rounded-3xl border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 shadow-sm">
                     <CardHeader className="space-y-2 text-center">
                         <CardTitle className="text-3xl font-semibold text-primary">Stay informed, stay prepared</CardTitle>
