@@ -21,7 +21,7 @@ interface HighlightCardProps {
 }
 
 interface QuickActionsGridProps {
-    actions: QuickAction[];
+    actions: readonly QuickAction[];
     highlight: HighlightCardProps;
     className?: string;
 }

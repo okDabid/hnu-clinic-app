@@ -8,13 +8,17 @@ import {
     Stethoscope,
     UserCog,
     Clock4,
+    BarChart3,
 } from "lucide-react";
 
+import { ActivityFeed, type ActivityItem } from "@/components/dashboard/activity-feed";
 import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
+import { OverviewMetrics } from "@/components/dashboard/overview-metrics";
 import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
 import DoctorLayout from "@/components/doctor/doctor-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { useDashboardUser } from "@/hooks/use-dashboard-user";
 
 const managementAreas = [
@@ -60,10 +64,18 @@ const managementAreas = [
     },
 ];
 
-const operationalHighlights = [
-    "Coordinate with the nursing team before updating consultation slots to prevent scheduling conflicts.",
-    "All appointment adjustments notify the patient automatically—include clear notes for reschedules or cancellations.",
-    "Document dispensed medicines within the same day to keep the inventory ledger accurate.",
+const overviewStats = [
+    { label: "Today’s consultations", value: "18", trend: "5 in queue" },
+    { label: "Pending follow-ups", value: "12", trend: "3 urgent" },
+    { label: "Available duty slots", value: "9", trend: "Next: 2:00 PM" },
+    { label: "Dispense requests", value: "7", trend: "2 awaiting review" },
+];
+
+const activityFeed: ActivityItem[] = [
+    { label: "Consultation completed", detail: "John Paul • General Checkup", type: "success" },
+    { label: "Appointment rescheduled", detail: "Moved to April 20, 2026", type: "warning" },
+    { label: "Prescription submitted", detail: "3 medicines added to dispense", type: "info" },
+    { label: "Critical case escalation", detail: "Nurse flagged urgent symptoms", type: "error" },
 ];
 
 export default function DoctorDashboardPage() {
@@ -72,18 +84,47 @@ export default function DoctorDashboardPage() {
     return (
         <DoctorLayout
             title="Clinical operations overview"
-            description="Monitor your upcoming schedule, manage patient interactions, and streamline coordination with the HNU Clinic team."
+            description="Monitor your schedule, manage consultations, and coordinate with nurses and scholars from one efficient dashboard."
             actions={
-                <Button asChild className="hidden rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 md:flex">
+                <Button asChild className="rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
                     <Link href="/doctor/consultation">Update availability</Link>
                 </Button>
             }
         >
             <DashboardWelcome
                 heading={`Good day, Dr. ${firstName}`}
-                description="Review key updates for the day, respond to appointment movements, and keep your consultation schedule aligned with campus demand."
-                className="bg-linear-to-r"
+                description="Review high-priority updates quickly and keep consultation operations moving with less friction."
             />
+
+            <OverviewMetrics metrics={overviewStats} />
+
+            <section className="grid gap-5 xl:grid-cols-[2fr_1fr]">
+                <Card className="rounded-2xl border-border/70 bg-white shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base text-primary">
+                            <BarChart3 className="h-4 w-4" /> Workload & treatment trend
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-5">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Consultation load</span>
+                                <span className="font-medium text-primary">68%</span>
+                            </div>
+                            <Progress value={68} className="h-2" />
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Prescription completion</span>
+                                <span className="font-medium text-primary">81%</span>
+                            </div>
+                            <Progress value={81} className="h-2" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <ActivityFeed items={activityFeed} />
+            </section>
 
             <QuickActionsGrid
                 actions={managementAreas}
@@ -91,46 +132,12 @@ export default function DoctorDashboardPage() {
                     title: "Clinic insights",
                     icon: Stethoscope,
                     description: [
-                        "Align your consultation blocks with high-demand clinics to reduce wait times and improve patient satisfaction.",
-                        "Use the dispensing log to monitor supply usage so the pharmacy team can replenish critical medicines on schedule.",
+                        "Align consultation blocks with high-demand clinics to reduce wait times.",
+                        "Maintain same-day prescription logs to support inventory accuracy.",
                     ],
                     className: "bg-linear-to-br",
                 }}
             />
-
-            <section className="flex flex-row items-start justify-between gap-3">
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">Operational checklist</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <ul className="space-y-2">
-                            {operationalHighlights.map((item) => (
-                                <li key={item} className="flex items-start gap-2 rounded-2xl bg-primary/10 p-3">
-                                    <span className="mt-1 flex h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-                                    <span>{item}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">Resources</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        <p>
-                            Access updated clinic forms, incident templates, and medication guides to keep documentation consistent across the team.
-                        </p>
-                        <Button asChild variant="outline" className="w-full rounded-xl border-primary/30 text-primary hover:bg-primary/10">
-                            <Link href="/doctor/dispense">Go to dispensing log</Link>
-                        </Button>
-                        <Button asChild variant="ghost" className="w-full rounded-xl bg-primary/10 text-primary hover:bg-primary/20">
-                            <Link href="/doctor/patients">Browse patient records</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </section>
         </DoctorLayout>
     );
 }

@@ -3,17 +3,16 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import {
-    CalendarDays,
-    ClipboardList,
-    FileSpreadsheet,
-    NotebookPen,
-    Users2,
-} from "lucide-react";
+import { CalendarDays, ClipboardList, NotebookPen, Users2, BarChart3 } from "lucide-react";
 
+import { ActivityFeed, type ActivityItem } from "@/components/dashboard/activity-feed";
+import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
+import { OverviewMetrics } from "@/components/dashboard/overview-metrics";
+import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
 import ScholarLayout from "@/components/scholar/scholar-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 const workflowHighlights = [
     {
@@ -42,29 +41,19 @@ const workflowHighlights = [
     },
 ] as const;
 
-const supportChecklist = [
-    "Confirm the day’s appointment roster at least one hour before clinic opening.",
-    "Log every walk-in case in the shared tracker so nurses can assign the next available slot.",
-    "Escalate urgent symptoms directly to the nurse channel to alert the medical team immediately.",
+const overviewStats = [
+    { label: "Today’s bookings", value: "31", trend: "6 pending confirmation" },
+    { label: "Patient check-ins", value: "24", trend: "3 walk-ins" },
+    { label: "Pending endorsements", value: "9", trend: "2 urgent handoffs" },
+    { label: "Desk response time", value: "4m", trend: "Avg this shift" },
 ];
 
-const documentationTips = [
-    {
-        label: "Schedule walk-ins",
-        description: "Document walk-in for visibility across the clinic.",
-        href: "/scholar/appointments",
-    },
-    {
-        label: "Sync patient information",
-        description: "Verify program, year level, and contact details during intake.",
-        href: "/scholar/patients",
-    },
-    {
-        label: "Refresh personal records",
-        description: "Review your profile and confirm that emergency contacts are current.",
-        href: "/scholar/account",
-    },
-] as const;
+const activityFeed: ActivityItem[] = [
+    { label: "Walk-in logged", detail: "Nursing team alerted", type: "info" },
+    { label: "Patient profile updated", detail: "Contact number corrected", type: "success" },
+    { label: "Queue delay warning", detail: "Clinic B at 85% load", type: "warning" },
+    { label: "Missing chart note", detail: "Follow-up required", type: "error" },
+];
 
 export default function ScholarDashboardPage() {
     const { data: session } = useSession();
@@ -78,103 +67,58 @@ export default function ScholarDashboardPage() {
             actions={
                 <Button
                     asChild
-                    className="hidden rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 md:flex"
+                    className="rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
                 >
                     <Link href="/scholar/appointments">Review appointments</Link>
                 </Button>
             }
         >
-            <section className="rounded-3xl border border-primary/20 bg-linear-to-r from-primary/10 via-white to-primary/5 p-6 shadow-sm">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-3">
-                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">Welcome back</p>
-                        <h3 className="text-3xl font-semibold text-primary md:text-4xl">Good day, Scholar {firstName}</h3>
-                        <p className="max-w-2xl text-sm text-muted-foreground">
-                            Keep the clinic desk synchronized—double-check booking requests, guide students through intake, and
-                            flag any priority concerns early so the team can respond quickly.
-                        </p>
-                    </div>
-                </div>
-            </section>
+            <DashboardWelcome
+                heading={`Good day, Scholar ${firstName}`}
+                description="Keep the clinic desk synchronized with quick visibility of queue health, patient intake, and endorsements."
+            />
 
-            <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {workflowHighlights.map(({ title, description, href, icon: Icon, cta }) => (
-                    <Card
-                        key={title}
-                        className="h-full rounded-3xl border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                    >
-                        <CardHeader className="flex flex-row items-start justify-between gap-3">
-                            <div className="space-y-1">
-                                <CardTitle className="flex items-center gap-3 text-lg text-primary">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                        <Icon className="h-5 w-5" />
-                                    </span>
-                                    {title}
-                                </CardTitle>
-                                <p className="text-sm font-normal text-muted-foreground">{description}</p>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <Button
-                                asChild
-                                variant="ghost"
-                                className="rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary hover:bg-primary/20"
-                            >
-                                <Link href={href}>{cta}</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ))}
-                <Card className="h-full rounded-3xl border-primary/20 bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md">
+            <OverviewMetrics metrics={overviewStats} />
+
+            <section className="grid gap-5 xl:grid-cols-[2fr_1fr]">
+                <Card className="rounded-2xl border-border/70 bg-white shadow-sm">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-lg">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
-                                <NotebookPen className="h-5 w-5" />
-                            </span>
-                            Coordination insights
+                        <CardTitle className="flex items-center gap-2 text-base text-primary">
+                            <BarChart3 className="h-4 w-4" /> Intake & queue trend
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3 text-sm leading-relaxed text-white/90">
-                        <p>
-                            Share status updates in the clinic chat when appointment queues change so the medical team can adapt their rounds.
-                        </p>
-                        <p>
-                            Keep intake forms organized before handoff—complete profiles help nurses and doctors focus on care instead of paperwork.
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">Checklist for smooth clinic flow</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm text-muted-foreground">
-                        {supportChecklist.map((item) => (
-                            <div key={item} className="flex gap-3">
-                                <FileSpreadsheet className="mt-1 h-4 w-4 text-primary" />
-                                <p>{item}</p>
+                    <CardContent className="space-y-5">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Intake completion</span>
+                                <span className="font-medium text-primary">79%</span>
                             </div>
-                        ))}
-                    </CardContent>
-                </Card>
-                <Card className="rounded-3xl border-primary/20 bg-white/80 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-primary">Documentation shortcuts</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-sm text-muted-foreground">
-                        {documentationTips.map(({ label, description, href }) => (
-                            <div key={label} className="space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                                <div className="flex items-center justify-between">
-                                    <p className="font-semibold text-primary">{label}</p>
-                                    <Button asChild variant="link" className="h-auto p-0 text-sm font-semibold text-primary">
-                                        <Link href={href}>Open</Link>
-                                    </Button>
-                                </div>
-                                <p>{description}</p>
+                            <Progress value={79} className="h-2" />
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">On-time endorsements</span>
+                                <span className="font-medium text-primary">84%</span>
                             </div>
-                        ))}
+                            <Progress value={84} className="h-2" />
+                        </div>
                     </CardContent>
                 </Card>
+
+                <ActivityFeed items={activityFeed} title="Coordination activity" />
             </section>
+
+            <QuickActionsGrid
+                actions={workflowHighlights}
+                highlight={{
+                    title: "Coordination insights",
+                    icon: NotebookPen,
+                    description: [
+                        "Share queue changes early so nurses and doctors can adapt rounds quickly.",
+                        "Complete intake details before handoff to reduce repeated patient questions.",
+                    ],
+                }}
+            />
         </ScholarLayout>
     );
 }
