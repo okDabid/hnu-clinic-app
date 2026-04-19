@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LucideIcon } from "lucide-react";
+import { ArrowUpRight, LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,29 +34,34 @@ export function QuickActionsGrid({ actions, highlight, className }: QuickActions
             {actions.map(({ title: actionTitle, description, href, icon: Icon, cta }) => (
                 <Card
                     key={actionTitle}
-                    className="h-full rounded-3xl border-primary/20 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                    className="group h-full rounded-3xl border-white/70 bg-white/85 shadow-sm shadow-slate-900/5 transition duration-200 hover:-translate-y-1 hover:shadow-lg"
                 >
-                    <CardHeader className="flex flex-row items-start justify-between gap-3">
-                        <div className="space-y-1">
-                            <CardTitle className="flex items-center gap-3 text-lg text-primary">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                                    <Icon className="h-5 w-5" />
-                                </span>
-                                {actionTitle}
-                            </CardTitle>
-                            <p className="text-sm font-normal text-muted-foreground">{description}</p>
-                        </div>
+                    <CardHeader className="space-y-4">
+                        <CardTitle className="flex items-start gap-3 text-lg text-slate-900">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                                <Icon className="h-5 w-5" />
+                            </span>
+                            <span>{actionTitle}</span>
+                        </CardTitle>
+                        <p className="text-sm font-normal leading-relaxed text-slate-600">{description}</p>
                     </CardHeader>
                     <CardContent>
-                        <Button asChild variant="ghost" className="rounded-xl bg-primary/10 px-3 text-sm font-semibold text-primary hover:bg-primary/20">
-                            <Link href={href}>{cta}</Link>
+                        <Button
+                            asChild
+                            variant="ghost"
+                            className="h-10 rounded-xl border border-primary/20 bg-primary/5 px-3 text-sm font-semibold text-primary hover:bg-primary/15"
+                        >
+                            <Link href={href} className="inline-flex items-center gap-2">
+                                {cta}
+                                <ArrowUpRight className="h-4 w-4" />
+                            </Link>
                         </Button>
                     </CardContent>
                 </Card>
             ))}
             <Card
                 className={cn(
-                    "h-full rounded-3xl border-primary/20 bg-linear-to-br from-primary via-emerald-500 to-emerald-400 text-primary-foreground shadow-md",
+                    "h-full rounded-3xl border-0 bg-linear-to-br from-slate-900 via-slate-800 to-emerald-700 text-primary-foreground shadow-lg shadow-slate-900/30",
                     highlightClassName,
                 )}
             >
