@@ -83,6 +83,18 @@ export default function PatientMedicalCertificatePage() {
             const pdfUrl = "/api/patient/medical-certificate/empty";
             const response = await fetch(pdfUrl, { cache: "no-store" });
 
+            if (typeof window !== "undefined") {
+                const anchor = document.createElement("a");
+                anchor.href = "/api/patient/medical-certificate/empty";
+                anchor.target = "_blank";
+                anchor.rel = "noopener noreferrer";
+
+                document.body.appendChild(anchor);
+                anchor.click();
+                anchor.remove();
+                return;
+            }
+
             const blob = await response.blob();
 
             if (typeof window !== "undefined") {
