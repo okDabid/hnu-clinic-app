@@ -1,42 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import {
-    BarChart3,
-    ClipboardCheck,
-    Package,
-    Users,
-} from "lucide-react";
+import { BarChart3 } from "lucide-react";
 
 import { DashboardWelcome } from "@/components/dashboard/dashboard-welcome";
 import { QuickActionsGrid } from "@/components/dashboard/quick-actions-grid";
 import { NurseLayout } from "@/components/nurse/nurse-layout";
 import { Button } from "@/components/ui/button";
 import { useDashboardUser } from "@/hooks/use-dashboard-user";
+import { nurseDashboardContent } from "@/lib/dashboard-content";
 
-const quickActions = [
-    {
-        title: "Supervise inventory",
-        description: "Monitor critical stock levels, log replenishments, and flag expiring supplies.",
-        href: "/nurse/inventory",
-        icon: Package,
-        cta: "Review inventory",
-    },
-    {
-        title: "Support patient records",
-        description: "Update consultation notes, upload vitals, and prepare charts for the medical team.",
-        href: "/nurse/records",
-        icon: ClipboardCheck,
-        cta: "View records",
-    },
-    {
-        title: "Administer accounts",
-        description: "Create new profiles, reset credentials, and keep access permissions current.",
-        href: "/nurse/accounts",
-        icon: Users,
-        cta: "Manage accounts",
-    },
-];
+const { quickActions } = nurseDashboardContent;
 
 export default function NurseDashboardPage() {
     const { firstName } = useDashboardUser("Nurse");
